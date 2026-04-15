@@ -754,24 +754,15 @@ async function takePhotoWithCountdown() {
     showPhotoStrip();
   }
 }
-// function capturePhoto() {
-//   const video = document.getElementById('videoFeed');
-//   const canvas = document.getElementById('captureCanvas');
-//   const { W, H } = getPhotoDimensions();
-//   canvas.width = W; canvas.height = H;
-//   const ctx = canvas.getContext('2d');
-//   ctx.save(); ctx.scale(-1, 1); ctx.translate(-W, 0);
-//   ctx.drawImage(video, 0, 0, W, H);
-//   ctx.restore();
-//   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
-// }
-  function capturePhoto() {
+// ============================
+// CAPTURE FOTO (FIXED)
+// ============================
+function capturePhoto() {
   const video = document.getElementById('videoFeed');
   const canvas = document.getElementById('captureCanvas');
 
   const isPortrait = orientation === 'portrait';
 
-  // ukuran per foto
   const targetW = isPortrait ? 1080 : 640;
   const targetH = isPortrait ? 640 : 1080;
 
@@ -800,7 +791,6 @@ async function takePhotoWithCountdown() {
     sy = (vh - sHeight) / 2;
   }
 
-  // mirror
   ctx.save();
   ctx.scale(-1, 1);
   ctx.translate(-targetW, 0);
@@ -811,197 +801,340 @@ async function takePhotoWithCountdown() {
 
   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
 }
-  
-// ══════════════════════════════════════════════════
-//  PHOTO STRIP RENDER
-// ══════════════════════════════════════════════════
-function buildFrameOptions(containerId, callback) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  FRAMES.forEach(f => {
-    const btn = document.createElement('button');
-    btn.className = 'frame-opt' + (f.id === selectedFrame.id ? ' active' : '');
-    btn.textContent = f.label;
-    btn.onclick = () => {
-      selectedFrame = f;
-      container.querySelectorAll('.frame-opt').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (callback) callback();
-    };
-    container.appendChild(btn);
-  });
-}
 
-function showPhotoStrip() {
-  buildFrameOptions('frameOptions', renderStrip);
-  renderStrip();
-  showScreen('photoStripScreen');
-}
 
+// ============================
+// RENDER STRIP (FIXED TOTAL)
+// ============================
 function renderStrip() {
   const canvas = document.getElementById('stripCanvas');
-  // const { W: PHOTO_W, H: PHOTO_H } = getPhotoDimensions();
+  const ctx = canvas.getContext('2d');
+
   const isPortrait = orientation === 'portrait';
-
-let PHOTO_W, PHOTO_H;
-let STRIP_W, STRIP_H;
-
-if (isPortrait) {
-  PHOTO_W = 1080;
-  PHOTO_H = 640;
-
-  STRIP_W = 1080;
-  STRIP_H = 1920;
-} else {
-  PHOTO_W = 640;
-  PHOTO_H = 1080;
-
-  STRIP_W = 1920;
-  STRIP_H = 1080;
-}
-
-  
-  const FRAME_H = Math.round(PHOTO_H * 0.055); // responsive frame height
-  const isPortrait = orientation === 'portrait';
-
-  // Layout: portrait → stack vertically; landscape → horizontal strip
-  let STRIP_W, STRIP_H;
   const hasFrame = selectedFrame.id !== 'none';
 
+  let PHOTO_W, PHOTO_H, STRIP_W, STRIP_H;
+
   if (isPortrait) {
-    STRIP_W = PHOTO_W + (hasFrame ? FRAME_H * 2 : 0);
-    STRIP_H = PHOTO_H * CONFIG.PHOTO_COUNT + (hasFrame ? FRAME_H * 2 : 0);
+    PHOTO_W = 1080;
+    PHOTO_H = 640;
+    STRIP_W = 1080;
+    STRIP_H = 1920;
   } else {
-    STRIP_W = PHOTO_W * CONFIG.PHOTO_COUNT;
-    STRIP_H = PHOTO_H + (hasFrame ? FRAME_H * 2 : 0);
+    PHOTO_W = 640;
+    PHOTO_H = 1080;
+    STRIP_W = 1920;
+    STRIP_H = 1080;
   }
+
+  const FRAME_H = 80;
 
   canvas.width = STRIP_W;
   canvas.height = STRIP_H;
-  const ctx = canvas.getContext('2d');
+
   ctx.clearRect(0, 0, STRIP_W, STRIP_H);
 
+  // background frame
   if (hasFrame) {
     ctx.fillStyle = selectedFrame.bg;
     ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    drawFramePattern(ctx, STRIP_W, STRIP_H, selectedFrame);
   }
 
-//   let loadedCount = 0;
-//   photoshots.forEach((src, i) => {
-//     const img = new Image();
-//     img.src = src;
-//     const drawImg = () => {
-//       if (isPortrait) {
-//         const xOff = hasFrame ? FRAME_H : 0;
-//         const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
-//         ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
-//       } else {
-//         const xOff = i * PHOTO_W;
-//         const yOff = hasFrame ? FRAME_H : 0;
-//         ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
-//       }
-//       loadedCount++;
-//       if (loadedCount === photoshots.length && hasFrame) {
-//         drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
-//       }
-//     };
-//     img.complete ? drawImg() : (img.onload = drawImg);
-//   });
-
-//   if (hasFrame && photoshots.length === 0) {
-//     drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
-//   }
-// }
   let loadedCount = 0;
 
-photoshots.forEach((src, i) => {
-  const img = new Image();
-  img.src = src;
+  photoshots.forEach((src, i) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
 
-  img.onload = () => {
-    if (isPortrait) {
-      const xOff = hasFrame ? FRAME_H : 0;
-      const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
+    img.onload = () => {
+      if (isPortrait) {
+        ctx.drawImage(img, 0, i * PHOTO_H, PHOTO_W, PHOTO_H);
+      } else {
+        ctx.drawImage(img, i * PHOTO_W, 0, PHOTO_W, PHOTO_H);
+      }
 
-      ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
-    } else {
-      const xOff = i * PHOTO_W;
-      const yOff = hasFrame ? FRAME_H : 0;
+      loadedCount++;
 
-      ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
-    }
+      if (loadedCount === photoshots.length && hasFrame) {
+        drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H);
+      }
+    };
 
-    loadedCount++;
-
-    // setelah semua foto tergambar → baru gambar frame text
-    if (loadedCount === photoshots.length && hasFrame) {
-      drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
-    }
-  };
-});
-
-function drawFramePattern(ctx, W, H, frame) {
-  ctx.save(); ctx.globalAlpha = 0.1;
-  // diamond ornaments
-  for (let i = 0; i < 12; i++) {
-    const x = (i / 12) * W + W / 24;
-    const size = Math.min(W, H) * 0.012;
-    ctx.beginPath();
-    ctx.moveTo(x, 4); ctx.lineTo(x + size, 4 + size);
-    ctx.lineTo(x, 4 + size * 2); ctx.lineTo(x - size, 4 + size);
-    ctx.closePath();
-    ctx.fillStyle = frame.text;
-    ctx.fill();
-  }
-  for (let i = 0; i < 12; i++) {
-    const x = (i / 12) * W + W / 24;
-    const size = Math.min(W, H) * 0.012;
-    ctx.beginPath();
-    ctx.moveTo(x, H - 4); ctx.lineTo(x + size, H - 4 - size);
-    ctx.lineTo(x, H - 4 - size * 2); ctx.lineTo(x - size, H - 4 - size);
-    ctx.closePath();
-    ctx.fillStyle = frame.text;
-    ctx.fill();
-  }
-  ctx.restore();
+    img.onerror = img.onload;
+  });
 }
 
-function drawFrameText(ctx, W, H, FRAME_H, isPortrait) {
-  const coupleName = CONFIG.FIXED_NAME;
-  const dateStr = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+
+// ============================
+// FRAME TEXT (FIXED)
+// ============================
+function drawFrameText(ctx, W, H, FRAME_H) {
+  const coupleName = "Rizky and Rasya";
+  const dateStr = new Date().toLocaleDateString('id-ID');
 
   ctx.save();
-  ctx.fillStyle = selectedFrame.text;
-  ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 8;
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
 
-  const topY    = FRAME_H / 2;
-  const bottomY = H - FRAME_H / 2;
+  ctx.font = `italic ${FRAME_H * 0.5}px serif`;
+  ctx.fillText(coupleName, W / 2, FRAME_H / 2);
 
-  // Top — couple name
-  ctx.font = `italic ${Math.round(FRAME_H * 0.52)}px 'Cormorant Garamond', serif`;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(coupleName, W / 2, topY);
+  ctx.font = `${FRAME_H * 0.35}px sans-serif`;
+  ctx.fillText(dateStr, W / 2, H - FRAME_H / 2);
 
-  // Bottom — date
-  ctx.font = `${Math.round(FRAME_H * 0.36)}px 'Montserrat', sans-serif`;
-  ctx.fillText(dateStr, W / 2, bottomY);
   ctx.restore();
 }
 
-async function preloadAllImages() {
-  return Promise.all(photoshots.map(src => new Promise(res => {
-    const img = new Image(); img.onload = res; img.onerror = res; img.src = src;
-  })));
-}
-async function getStripBlob() {
-  await preloadAllImages();
-  renderStrip();
-  await delay(600);
-  return new Promise(res => document.getElementById('stripCanvas').toBlob(res, 'image/jpeg', 0.95));
-}
+  
+// function capturePhoto() {
+//   const video = document.getElementById('videoFeed');
+//   const canvas = document.getElementById('captureCanvas');
+//   const { W, H } = getPhotoDimensions();
+//   canvas.width = W; canvas.height = H;
+//   const ctx = canvas.getContext('2d');
+//   ctx.save(); ctx.scale(-1, 1); ctx.translate(-W, 0);
+//   ctx.drawImage(video, 0, 0, W, H);
+//   ctx.restore();
+//   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
+// }
+//   function capturePhoto() {
+//   const video = document.getElementById('videoFeed');
+//   const canvas = document.getElementById('captureCanvas');
+
+//   const isPortrait = orientation === 'portrait';
+
+//   // ukuran per foto
+//   const targetW = isPortrait ? 1080 : 640;
+//   const targetH = isPortrait ? 640 : 1080;
+
+//   canvas.width = targetW;
+//   canvas.height = targetH;
+
+//   const ctx = canvas.getContext('2d');
+
+//   const vw = video.videoWidth;
+//   const vh = video.videoHeight;
+
+//   const targetRatio = targetW / targetH;
+//   const videoRatio = vw / vh;
+
+//   let sx, sy, sWidth, sHeight;
+
+//   if (videoRatio > targetRatio) {
+//     sHeight = vh;
+//     sWidth = vh * targetRatio;
+//     sx = (vw - sWidth) / 2;
+//     sy = 0;
+//   } else {
+//     sWidth = vw;
+//     sHeight = vw / targetRatio;
+//     sx = 0;
+//     sy = (vh - sHeight) / 2;
+//   }
+
+//   // mirror
+//   ctx.save();
+//   ctx.scale(-1, 1);
+//   ctx.translate(-targetW, 0);
+
+//   ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
+
+//   ctx.restore();
+
+//   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
+// }
+  
+// // ══════════════════════════════════════════════════
+// //  PHOTO STRIP RENDER
+// // ══════════════════════════════════════════════════
+// function buildFrameOptions(containerId, callback) {
+//   const container = document.getElementById(containerId);
+//   container.innerHTML = '';
+//   FRAMES.forEach(f => {
+//     const btn = document.createElement('button');
+//     btn.className = 'frame-opt' + (f.id === selectedFrame.id ? ' active' : '');
+//     btn.textContent = f.label;
+//     btn.onclick = () => {
+//       selectedFrame = f;
+//       container.querySelectorAll('.frame-opt').forEach(b => b.classList.remove('active'));
+//       btn.classList.add('active');
+//       if (callback) callback();
+//     };
+//     container.appendChild(btn);
+//   });
+// }
+
+// function showPhotoStrip() {
+//   buildFrameOptions('frameOptions', renderStrip);
+//   renderStrip();
+//   showScreen('photoStripScreen');
+// }
+
+// function renderStrip() {
+//   const canvas = document.getElementById('stripCanvas');
+//   // const { W: PHOTO_W, H: PHOTO_H } = getPhotoDimensions();
+//   const isPortrait = orientation === 'portrait';
+
+// let PHOTO_W, PHOTO_H;
+// let STRIP_W, STRIP_H;
+
+// if (isPortrait) {
+//   PHOTO_W = 1080;
+//   PHOTO_H = 640;
+
+//   STRIP_W = 1080;
+//   STRIP_H = 1920;
+// } else {
+//   PHOTO_W = 640;
+//   PHOTO_H = 1080;
+
+//   STRIP_W = 1920;
+//   STRIP_H = 1080;
+// }
+
+  
+//   const FRAME_H = Math.round(PHOTO_H * 0.055); // responsive frame height
+//   const isPortrait = orientation === 'portrait';
+
+//   // Layout: portrait → stack vertically; landscape → horizontal strip
+//   let STRIP_W, STRIP_H;
+//   const hasFrame = selectedFrame.id !== 'none';
+
+//   if (isPortrait) {
+//     STRIP_W = PHOTO_W + (hasFrame ? FRAME_H * 2 : 0);
+//     STRIP_H = PHOTO_H * CONFIG.PHOTO_COUNT + (hasFrame ? FRAME_H * 2 : 0);
+//   } else {
+//     STRIP_W = PHOTO_W * CONFIG.PHOTO_COUNT;
+//     STRIP_H = PHOTO_H + (hasFrame ? FRAME_H * 2 : 0);
+//   }
+
+//   canvas.width = STRIP_W;
+//   canvas.height = STRIP_H;
+//   const ctx = canvas.getContext('2d');
+//   ctx.clearRect(0, 0, STRIP_W, STRIP_H);
+
+//   if (hasFrame) {
+//     ctx.fillStyle = selectedFrame.bg;
+//     ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+//     drawFramePattern(ctx, STRIP_W, STRIP_H, selectedFrame);
+//   }
+
+// //   let loadedCount = 0;
+// //   photoshots.forEach((src, i) => {
+// //     const img = new Image();
+// //     img.src = src;
+// //     const drawImg = () => {
+// //       if (isPortrait) {
+// //         const xOff = hasFrame ? FRAME_H : 0;
+// //         const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
+// //         ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+// //       } else {
+// //         const xOff = i * PHOTO_W;
+// //         const yOff = hasFrame ? FRAME_H : 0;
+// //         ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+// //       }
+// //       loadedCount++;
+// //       if (loadedCount === photoshots.length && hasFrame) {
+// //         drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
+// //       }
+// //     };
+// //     img.complete ? drawImg() : (img.onload = drawImg);
+// //   });
+
+// //   if (hasFrame && photoshots.length === 0) {
+// //     drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
+// //   }
+// // }
+//   let loadedCount = 0;
+
+// photoshots.forEach((src, i) => {
+//   const img = new Image();
+//   img.src = src;
+
+//   img.onload = () => {
+//     if (isPortrait) {
+//       const xOff = hasFrame ? FRAME_H : 0;
+//       const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
+
+//       ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+//     } else {
+//       const xOff = i * PHOTO_W;
+//       const yOff = hasFrame ? FRAME_H : 0;
+
+//       ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+//     }
+
+//     loadedCount++;
+
+//     // setelah semua foto tergambar → baru gambar frame text
+//     if (loadedCount === photoshots.length && hasFrame) {
+//       drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
+//     }
+//   };
+// });
+
+// function drawFramePattern(ctx, W, H, frame) {
+//   ctx.save(); ctx.globalAlpha = 0.1;
+//   // diamond ornaments
+//   for (let i = 0; i < 12; i++) {
+//     const x = (i / 12) * W + W / 24;
+//     const size = Math.min(W, H) * 0.012;
+//     ctx.beginPath();
+//     ctx.moveTo(x, 4); ctx.lineTo(x + size, 4 + size);
+//     ctx.lineTo(x, 4 + size * 2); ctx.lineTo(x - size, 4 + size);
+//     ctx.closePath();
+//     ctx.fillStyle = frame.text;
+//     ctx.fill();
+//   }
+//   for (let i = 0; i < 12; i++) {
+//     const x = (i / 12) * W + W / 24;
+//     const size = Math.min(W, H) * 0.012;
+//     ctx.beginPath();
+//     ctx.moveTo(x, H - 4); ctx.lineTo(x + size, H - 4 - size);
+//     ctx.lineTo(x, H - 4 - size * 2); ctx.lineTo(x - size, H - 4 - size);
+//     ctx.closePath();
+//     ctx.fillStyle = frame.text;
+//     ctx.fill();
+//   }
+//   ctx.restore();
+// }
+
+// function drawFrameText(ctx, W, H, FRAME_H, isPortrait) {
+//   const coupleName = CONFIG.FIXED_NAME;
+//   const dateStr = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+
+//   ctx.save();
+//   ctx.fillStyle = selectedFrame.text;
+//   ctx.textAlign = 'center';
+//   ctx.shadowColor = 'rgba(0,0,0,0.5)';
+//   ctx.shadowBlur = 8;
+
+//   const topY    = FRAME_H / 2;
+//   const bottomY = H - FRAME_H / 2;
+
+//   // Top — couple name
+//   ctx.font = `italic ${Math.round(FRAME_H * 0.52)}px 'Cormorant Garamond', serif`;
+//   ctx.textBaseline = 'middle';
+//   ctx.fillText(coupleName, W / 2, topY);
+
+//   // Bottom — date
+//   ctx.font = `${Math.round(FRAME_H * 0.36)}px 'Montserrat', sans-serif`;
+//   ctx.fillText(dateStr, W / 2, bottomY);
+//   ctx.restore();
+// }
+
+// async function preloadAllImages() {
+//   return Promise.all(photoshots.map(src => new Promise(res => {
+//     const img = new Image(); img.onload = res; img.onerror = res; img.src = src;
+//   })));
+// }
+// async function getStripBlob() {
+//   await preloadAllImages();
+//   renderStrip();
+//   await delay(600);
+//   return new Promise(res => document.getElementById('stripCanvas').toBlob(res, 'image/jpeg', 0.95));
+// }
 
 // ══════════════════════════════════════════════════
 //  VIDEO RECORDING
