@@ -765,8 +765,7 @@ async function takePhotoWithCountdown() {
 //   ctx.restore();
 //   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
 // }
-  
-function capturePhoto() {
+  function capturePhoto() {
   const video = document.getElementById('videoFeed');
   const canvas = document.getElementById('captureCanvas');
   const { W, H } = getPhotoDimensions();
@@ -776,30 +775,30 @@ function capturePhoto() {
 
   const ctx = canvas.getContext('2d');
 
-  const videoW = video.videoWidth;
-  const videoH = video.videoHeight;
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
 
+  // Hitung rasio
   const targetRatio = W / H;
-  const videoRatio = videoW / videoH;
+  const videoRatio = vw / vh;
 
   let sx, sy, sWidth, sHeight;
 
-  // 🔥 COVER CROP LOGIC
   if (videoRatio > targetRatio) {
     // Video lebih lebar → crop kiri kanan
-    sHeight = videoH;
-    sWidth = videoH * targetRatio;
-    sx = (videoW - sWidth) / 2;
+    sHeight = vh;
+    sWidth = vh * targetRatio;
+    sx = (vw - sWidth) / 2;
     sy = 0;
   } else {
     // Video lebih tinggi → crop atas bawah
-    sWidth = videoW;
-    sHeight = videoW / targetRatio;
+    sWidth = vw;
+    sHeight = vw / targetRatio;
     sx = 0;
-    sy = (videoH - sHeight) / 2;
+    sy = (vh - sHeight) / 2;
   }
 
-  // Mirror (kamera depan)
+  // Mirror + draw
   ctx.save();
   ctx.scale(-1, 1);
   ctx.translate(-W, 0);
@@ -807,7 +806,7 @@ function capturePhoto() {
   ctx.drawImage(
     video,
     sx, sy, sWidth, sHeight, // crop area
-    0, 0, W, H              // hasil final fix size
+    0, 0, W, H              // output
   );
 
   ctx.restore();
