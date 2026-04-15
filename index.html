@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RR Wedding Booth</title>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:sans-serif;
+  overflow:hidden;
+}
+
+/* VIDEO */
+video{
+  width:100%;
+  height:100vh;
+  object-fit:cover;
+  transform:scaleX(-1);
+}
+
+/* LOGO */
+.logo{
+  position:absolute;
+  top:20px;
+  left:20px;
+  color:gold;
+  font-size:24px;
+  font-weight:bold;
+}
+
+/* BUTTON HP */
+.capture-btn{
+  position:absolute;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:white;
+  border:5px solid rgba(255,255,255,0.5);
+}
+.capture-btn::after{
+  content:'';
+  display:block;
+  width:60px;
+  height:60px;
+  background:red;
+  border-radius:50%;
+  margin:auto;
+}
+
+/* POPUP */
+#popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+canvas{display:none}
+</style>
+</head>
+
+<body>
+
+<div class="logo">RR</div>
+
+<video id="video" autoplay playsinline></video>
+<button class="capture-btn" id="btn"></button>
+
+<div id="popup"></div>
+
+<canvas id="canvas"></canvas>
+<canvas id="frameCanvas"></canvas>
+
+<script>
+// ================= CONFIG =================
+const CLIENT_ID = "942449256988-6ti7hbeguhg8e847ptrlc32538ugtgll.apps.googleusercontent.com";
+const API_KEY = "AIzaSyByV2tNcF-gnstgueKsBJS2PGU3oBBzTE0";
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+let tokenClient, accessToken=null;
+
+// ================= DEVICE =================
+const isMobile = /Android|iPhone/i.test(navigator.userAgent);
+let ORIENTATION = isMobile ? 'portrait' : 'landscape';
+
+function getSize(){
+  return ORIENTATION==='portrait'
+    ? {w:1080,h:1920}
+    : {w:1920,h:1080};
+}
+
+// ================= GOOGLE =================
+function initGoogle(){
+  gapi.load('client', async()=>{
+    await gapi.client.init({apiKey:API_KEY});
+  });
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback:(res)=>{
+      accessToken = res.access_token;
+      alert("Login berhasil!");
+    }
+  });
+
+  tokenClient.requestAccessToken();
+}
+
+// ================= CAMERA =================
+let video=document.getElementById('video');
+let canvas=document.getElementById('canvas');
+let ctx=canvas.getContext('2d');
+
+navigator.mediaDevices.getUserMedia({video:true,audio:true})
+.then(stream=>{
+  video.srcObject=stream;
+  window.stream=stream;
+});
+
+// ================= STATE =================
+let mode=null;
+let chunks=[];
+let recorder;
+let finalBlob;
+let TIMER=true;
+
+// ================= UI =================
+const popup=document.getElementById('popup');
+
+function show(html){
+  popup.innerHTML=html;
+  popup.style.display='flex';
+}
+function hide(){ popup.style.display='none'; }
+
+// ================= COUNTDOWN =================
+async function countdown(n){
+  if(!TIMER) return;
+  for(let i=n;i>0;i--){
+    show("<h1>"+i+"</h1>");
+    await new Promise(r=>setTimeout(r,1000));
+  }
+  hide();
+}
+
+// ================= PHOTO =================
+async function takePhoto(){
+  await countdown(3);
+
+  let size=getSize();
+  canvas.width=size.w;
+  canvas.height=size.h;
+
+  let shots=[];
+
+  for(let i=0;i<3;i++){
+    ctx.save();
+    ctx.scale(-1,1);
+    ctx.drawImage(video,-size.w,0,size.w,size.h);
+    ctx.restore();
+
+    shots.push(canvas.toDataURL());
+    await new Promise(r=>setTimeout(r,500));
+  }
+
+  createStrip(shots);
+}
+
+function createStrip(imgs){
+  let fc=document.getElementById('frameCanvas');
+  let fctx=fc.getContext('2d');
+
+  fc.width=1080;
+  fc.height=1920;
+
+  fctx.fillStyle='white';
+  fctx.fillRect(0,0,fc.width,fc.height);
+
+  imgs.forEach((src,i)=>{
+    let img=new Image();
+    img.src=src;
+    img.onload=()=>{
+      fctx.drawImage(img,100,100+i*500,880,400);
+
+      if(i===2){
+        fctx.fillStyle='black';
+        fctx.font='40px serif';
+        fctx.textAlign='center';
+        fctx.fillText("Rizky and Rasya - Wedding Booth",540,1850);
+
+        fc.toBlob(b=>{
+          finalBlob=b;
+          showResult(URL.createObjectURL(b),'photo');
+        });
+      }
+    }
+  });
+}
+
+// ================= VIDEO =================
+async function recordVideo(){
+  await countdown(3);
+
+  chunks=[];
+  recorder=new MediaRecorder(window.stream);
+
+  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.start();
+
+  show("<h2>Recording...</h2>");
+
+  setTimeout(()=>recorder.stop(),60000);
+
+  recorder.onstop=()=>{
+    finalBlob=new Blob(chunks,{type:'video/webm'});
+    showResult(URL.createObjectURL(finalBlob),'video');
+  }
+}
+
+// ================= RESULT =================
+function showResult(url,type){
+  let html="<h2>Hasil</h2>";
+
+  if(type==='photo')
+    html+=`<img src="${url}" width="90%">`;
+  else
+    html+=`<video src="${url}" controls width="90%"></video>`;
+
+  html+=`
+  <br><input id="name" placeholder="Nama file">
+  <br><button onclick="upload('${type}')">Upload Drive</button>
+  <button onclick="location.reload()">Ulang</button>
+  <div id="qr"></div>
+  `;
+
+  show(html);
+}
+
+// ================= UPLOAD =================
+async function upload(type){
+  if(!accessToken) return alert("Login dulu!");
+
+  let name=document.getElementById('name').value || "Wedding";
+
+  const form=new FormData();
+  form.append("metadata", new Blob([JSON.stringify({
+    name:name+(type==='photo'?'.jpg':'.webm')
+  })],{type:"application/json"}));
+
+  form.append("file", finalBlob);
+
+  let res=await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method:"POST",
+      headers:new Headers({
+        "Authorization":"Bearer "+accessToken
+      }),
+      body:form
+    }
+  );
+
+  let file=await res.json();
+  let link=`https://drive.google.com/file/d/${file.id}/view`;
+
+  document.getElementById('qr').innerHTML="";
+  new QRCode(document.getElementById('qr'), link);
+
+  alert("Upload berhasil!");
+}
+
+// ================= CONTROL =================
+document.getElementById('btn').onclick=()=>{
+  if(mode==='photo') takePhoto();
+  if(mode==='video') recordVideo();
+};
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='1'){ mode='photo'; alert("Mode Foto"); }
+  if(e.key==='2'){ mode='video'; alert("Mode Video"); }
+});
+
+// ================= INIT =================
+initGoogle();
+
+</script>
+</body>
+</html>
