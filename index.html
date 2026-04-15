@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Camera PRO - Drive Upload</title>
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<style>
+body { margin:0; font-family:Arial; background:#000; color:#fff; text-align:center; }
+video, canvas { width:100%; max-height:80vh; }
+.popup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.9); padding:20px; border-radius:10px; display:none; width:90%; max-width:400px; }
+input { padding:8px; width:80%; margin:5px; }
+button { padding:10px 15px; margin:5px; }
+</style>
+</head>
+<body>
+
+<h2>Wedding Camera Booth PRO (Drive Upload)</h2>
+
+<button onclick="initGoogle()">Login Google</button>
+
+<video id="video" autoplay></video>
+<canvas id="canvas"></canvas>
+<canvas id="frameCanvas"></canvas>
+
+<div id="popup" class="popup"></div>
+
+<button onclick="location.reload()">Home</button>
+
+<script>
+const CLIENT_ID = "ISI_CLIENT_ID_KAMU";
+const API_KEY = "ISI_API_KEY_KAMU";
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+let tokenClient;
+let accessToken = null;
+
+function initGoogle(){
+  gapi.load('client', async ()=>{
+    await gapi.client.init({ apiKey: API_KEY });
+  });
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (tokenResponse)=>{
+      accessToken = tokenResponse.access_token;
+      alert("Login berhasil!");
+    }
+  });
+
+  tokenClient.requestAccessToken();
+}
+
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let ctx = canvas.getContext('2d');
+let frameCanvas = document.getElementById('frameCanvas');
+let fctx = frameCanvas.getContext('2d');
+let popup = document.getElementById('popup');
+
+let mode = null;
+let mediaRecorder;
+let chunks = [];
+let finalBlob;
+
+let bride = "Siti";
+let groom = "Andi";
+
+navigator.mediaDevices.getUserMedia({ video:true, audio:true })
+.then(stream=>{ video.srcObject = stream; window.stream=stream; });
+
+function showPopup(html){ popup.innerHTML=html; popup.style.display='block'; }
+function hidePopup(){ popup.style.display='none'; }
+
+async function countdown(s,text=""){
+ for(let i=s;i>0;i--){ showPopup(`<h2>${text} ${i}</h2>`); await new Promise(r=>setTimeout(r,1000)); }
+ hidePopup();
+}
+
+document.addEventListener('keydown', async e=>{
+ if(e.key==='1'){ mode='photo'; showPopup('<h2>MODE FOTO</h2>'); setTimeout(hidePopup,1000);} 
+ if(e.key==='2'){ mode='video'; showPopup('<h2>MODE VIDEO</h2>'); setTimeout(hidePopup,1000);} 
+ if(e.key==='Enter'){
+  if(mode==='photo') takePhoto();
+  if(mode==='video') recordVideo();
+ }
+});
+
+async function takePhoto(){
+ await countdown(5,'Foto dalam');
+ canvas.width=video.videoWidth;
+ canvas.height=video.videoHeight;
+ let imgs=[];
+ for(let i=0;i<3;i++){
+  ctx.drawImage(video,0,0);
+  imgs.push(canvas.toDataURL());
+  await new Promise(r=>setTimeout(r,500));
+ }
+ createStrip(imgs);
+}
+
+function createStrip(imgs){
+ frameCanvas.width=600;
+ frameCanvas.height=1200;
+ fctx.fillStyle='white'; fctx.fillRect(0,0,600,1200);
+ imgs.forEach((src,i)=>{
+  let img=new Image(); img.src=src;
+  img.onload=()=>{
+    fctx.drawImage(img,50,50+i*350,500,300);
+    if(i===2){
+      fctx.fillStyle='black';
+      fctx.font='30px serif';
+      fctx.textAlign='center';
+      fctx.fillText(`${groom} & ${bride}`,300,1100);
+      frameCanvas.toBlob(blob=>{
+        finalBlob=blob;
+        showResult(URL.createObjectURL(blob),'photo');
+      });
+    }
+  }
+ });
+}
+
+async function recordVideo(){
+ await countdown(3,'Rekam dalam');
+ chunks=[];
+ mediaRecorder=new MediaRecorder(window.stream);
+ mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+ mediaRecorder.start();
+ showPopup('<h2>Recording...</h2>');
+ setTimeout(()=>mediaRecorder.stop(),60000);
+ mediaRecorder.onstop=()=>{
+  finalBlob=new Blob(chunks,{type:'video/mp4'});
+  showResult(URL.createObjectURL(finalBlob),'video');
+ };
+}
+
+function showResult(url,type){
+ let html='<h3>Hasil</h3>';
+ if(type==='photo') html+=`<img src="${url}" width="100%">`;
+ else html+=`<video src="${url}" controls width="100%"></video>`;
+ html+=`
+ <input id="filename" placeholder="Nama file"><br>
+ <button onclick="uploadDrive('${type}')">Upload & QR</button>
+ <button onclick="location.reload()">Ulang</button>
+ <div id="qrcode"></div>
+ `;
+ showPopup(html);
+}
+
+async function uploadDrive(type){
+ if(!accessToken) return alert('Login Google dulu!');
+ let name=document.getElementById('filename').value;
+ if(!name) return alert('Isi nama file');
+
+ const metadata = { name: name + (type==='photo'?'.png':'.mp4') };
+ const form = new FormData();
+ form.append("metadata", new Blob([JSON.stringify(metadata)], {type:"application/json"}));
+ form.append("file", finalBlob);
+
+ const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",{
+  method:"POST",
+  headers: new Headers({"Authorization":"Bearer "+accessToken}),
+  body: form
+ });
+
+ const file = await res.json();
+
+ const link = `https://drive.google.com/file/d/${file.id}/view`;
+
+ document.getElementById('qrcode').innerHTML='';
+ QRCode.toCanvas(document.getElementById('qrcode'), link);
+
+ alert('Upload berhasil!');
+}
+
+</script>
+
+</body>
+</html>
