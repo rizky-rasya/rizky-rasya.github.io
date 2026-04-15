@@ -1124,17 +1124,17 @@ function drawFrameText(ctx, W, H, FRAME_H) {
 //   ctx.restore();
 // }
 
-// async function preloadAllImages() {
-//   return Promise.all(photoshots.map(src => new Promise(res => {
-//     const img = new Image(); img.onload = res; img.onerror = res; img.src = src;
-//   })));
-// }
-// async function getStripBlob() {
-//   await preloadAllImages();
-//   renderStrip();
-//   await delay(600);
-//   return new Promise(res => document.getElementById('stripCanvas').toBlob(res, 'image/jpeg', 0.95));
-// }
+async function preloadAllImages() {
+  return Promise.all(photoshots.map(src => new Promise(res => {
+    const img = new Image(); img.onload = res; img.onerror = res; img.src = src;
+  })));
+}
+async function getStripBlob() {
+  await preloadAllImages();
+  renderStrip();
+  await delay(600);
+  return new Promise(res => document.getElementById('stripCanvas').toBlob(res, 'image/jpeg', 0.95));
+}
 
 // ══════════════════════════════════════════════════
 //  VIDEO RECORDING
