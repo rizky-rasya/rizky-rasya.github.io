@@ -768,46 +768,44 @@ async function takePhotoWithCountdown() {
   function capturePhoto() {
   const video = document.getElementById('videoFeed');
   const canvas = document.getElementById('captureCanvas');
-  const { W, H } = getPhotoDimensions();
 
-  canvas.width = W;
-  canvas.height = H;
+  const isPortrait = orientation === 'portrait';
+
+  // ukuran per foto
+  const targetW = isPortrait ? 1080 : 640;
+  const targetH = isPortrait ? 640 : 1080;
+
+  canvas.width = targetW;
+  canvas.height = targetH;
 
   const ctx = canvas.getContext('2d');
 
   const vw = video.videoWidth;
   const vh = video.videoHeight;
 
-  // Hitung rasio
-  const targetRatio = W / H;
+  const targetRatio = targetW / targetH;
   const videoRatio = vw / vh;
 
   let sx, sy, sWidth, sHeight;
 
   if (videoRatio > targetRatio) {
-    // Video lebih lebar → crop kiri kanan
     sHeight = vh;
     sWidth = vh * targetRatio;
     sx = (vw - sWidth) / 2;
     sy = 0;
   } else {
-    // Video lebih tinggi → crop atas bawah
     sWidth = vw;
     sHeight = vw / targetRatio;
     sx = 0;
     sy = (vh - sHeight) / 2;
   }
 
-  // Mirror + draw
+  // mirror
   ctx.save();
   ctx.scale(-1, 1);
-  ctx.translate(-W, 0);
+  ctx.translate(-targetW, 0);
 
-  ctx.drawImage(
-    video,
-    sx, sy, sWidth, sHeight, // crop area
-    0, 0, W, H              // output
-  );
+  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
 
   ctx.restore();
 
@@ -842,7 +840,27 @@ function showPhotoStrip() {
 
 function renderStrip() {
   const canvas = document.getElementById('stripCanvas');
-  const { W: PHOTO_W, H: PHOTO_H } = getPhotoDimensions();
+  // const { W: PHOTO_W, H: PHOTO_H } = getPhotoDimensions();
+  const isPortrait = orientation === 'portrait';
+
+let PHOTO_W, PHOTO_H;
+let STRIP_W, STRIP_H;
+
+if (isPortrait) {
+  PHOTO_W = 1080;
+  PHOTO_H = 640;
+
+  STRIP_W = 1080;
+  STRIP_H = 1920;
+} else {
+  PHOTO_W = 640;
+  PHOTO_H = 1080;
+
+  STRIP_W = 1920;
+  STRIP_H = 1080;
+}
+
+  
   const FRAME_H = Math.round(PHOTO_H * 0.055); // responsive frame height
   const isPortrait = orientation === 'portrait';
 
@@ -869,32 +887,59 @@ function renderStrip() {
     drawFramePattern(ctx, STRIP_W, STRIP_H, selectedFrame);
   }
 
-  let loadedCount = 0;
-  photoshots.forEach((src, i) => {
-    const img = new Image();
-    img.src = src;
-    const drawImg = () => {
-      if (isPortrait) {
-        const xOff = hasFrame ? FRAME_H : 0;
-        const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
-        ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
-      } else {
-        const xOff = i * PHOTO_W;
-        const yOff = hasFrame ? FRAME_H : 0;
-        ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
-      }
-      loadedCount++;
-      if (loadedCount === photoshots.length && hasFrame) {
-        drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
-      }
-    };
-    img.complete ? drawImg() : (img.onload = drawImg);
-  });
+//   let loadedCount = 0;
+//   photoshots.forEach((src, i) => {
+//     const img = new Image();
+//     img.src = src;
+//     const drawImg = () => {
+//       if (isPortrait) {
+//         const xOff = hasFrame ? FRAME_H : 0;
+//         const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
+//         ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+//       } else {
+//         const xOff = i * PHOTO_W;
+//         const yOff = hasFrame ? FRAME_H : 0;
+//         ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+//       }
+//       loadedCount++;
+//       if (loadedCount === photoshots.length && hasFrame) {
+//         drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
+//       }
+//     };
+//     img.complete ? drawImg() : (img.onload = drawImg);
+//   });
 
-  if (hasFrame && photoshots.length === 0) {
-    drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
-  }
-}
+//   if (hasFrame && photoshots.length === 0) {
+//     drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
+//   }
+// }
+  let loadedCount = 0;
+
+photoshots.forEach((src, i) => {
+  const img = new Image();
+  img.src = src;
+
+  img.onload = () => {
+    if (isPortrait) {
+      const xOff = hasFrame ? FRAME_H : 0;
+      const yOff = (hasFrame ? FRAME_H : 0) + i * PHOTO_H;
+
+      ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+    } else {
+      const xOff = i * PHOTO_W;
+      const yOff = hasFrame ? FRAME_H : 0;
+
+      ctx.drawImage(img, xOff, yOff, PHOTO_W, PHOTO_H);
+    }
+
+    loadedCount++;
+
+    // setelah semua foto tergambar → baru gambar frame text
+    if (loadedCount === photoshots.length && hasFrame) {
+      drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H, isPortrait);
+    }
+  };
+});
 
 function drawFramePattern(ctx, W, H, frame) {
   ctx.save(); ctx.globalAlpha = 0.1;
