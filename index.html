@@ -754,18 +754,67 @@ async function takePhotoWithCountdown() {
     showPhotoStrip();
   }
 }
+// function capturePhoto() {
+//   const video = document.getElementById('videoFeed');
+//   const canvas = document.getElementById('captureCanvas');
+//   const { W, H } = getPhotoDimensions();
+//   canvas.width = W; canvas.height = H;
+//   const ctx = canvas.getContext('2d');
+//   ctx.save(); ctx.scale(-1, 1); ctx.translate(-W, 0);
+//   ctx.drawImage(video, 0, 0, W, H);
+//   ctx.restore();
+//   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
+// }
+  
 function capturePhoto() {
   const video = document.getElementById('videoFeed');
   const canvas = document.getElementById('captureCanvas');
   const { W, H } = getPhotoDimensions();
-  canvas.width = W; canvas.height = H;
+
+  canvas.width = W;
+  canvas.height = H;
+
   const ctx = canvas.getContext('2d');
-  ctx.save(); ctx.scale(-1, 1); ctx.translate(-W, 0);
-  ctx.drawImage(video, 0, 0, W, H);
+
+  const videoW = video.videoWidth;
+  const videoH = video.videoHeight;
+
+  const targetRatio = W / H;
+  const videoRatio = videoW / videoH;
+
+  let sx, sy, sWidth, sHeight;
+
+  // 🔥 COVER CROP LOGIC
+  if (videoRatio > targetRatio) {
+    // Video lebih lebar → crop kiri kanan
+    sHeight = videoH;
+    sWidth = videoH * targetRatio;
+    sx = (videoW - sWidth) / 2;
+    sy = 0;
+  } else {
+    // Video lebih tinggi → crop atas bawah
+    sWidth = videoW;
+    sHeight = videoW / targetRatio;
+    sx = 0;
+    sy = (videoH - sHeight) / 2;
+  }
+
+  // Mirror (kamera depan)
+  ctx.save();
+  ctx.scale(-1, 1);
+  ctx.translate(-W, 0);
+
+  ctx.drawImage(
+    video,
+    sx, sy, sWidth, sHeight, // crop area
+    0, 0, W, H              // hasil final fix size
+  );
+
   ctx.restore();
+
   photoshots.push(canvas.toDataURL('image/jpeg', 0.92));
 }
-
+  
 // ══════════════════════════════════════════════════
 //  PHOTO STRIP RENDER
 // ══════════════════════════════════════════════════
