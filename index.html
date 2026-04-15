@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RR Wedding Booth</title>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+:root{
+  --gold:#c9a84c;
+}
+
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0e0b06;
+  color:white;
+  overflow:hidden;
+}
+
+/* SCREEN */
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  transition:.5s;
+}
+.hidden{opacity:0;pointer-events:none}
+
+/* HOME */
+.title{
+  font-size:3rem;
+  letter-spacing:.2em;
+  color:var(--gold);
+}
+.btn{
+  margin:10px;
+  padding:15px 30px;
+  border-radius:30px;
+  border:none;
+  background:linear-gradient(135deg,#c9a84c,#8b6914);
+  color:black;
+  font-weight:bold;
+}
+
+/* CAMERA */
+video{
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scaleX(-1);
+}
+
+/* LOGO */
+.logo{
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:120px;
+}
+
+/* CAPTURE */
+.capture{
+  position:absolute;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:white;
+  border:8px solid var(--gold);
+}
+
+/* COUNTDOWN */
+.countdown{
+  position:absolute;
+  font-size:6rem;
+  color:var(--gold);
+}
+
+/* RESULT */
+#preview{
+  max-width:300px;
+  border:4px solid var(--gold);
+}
+
+#qrcode{
+  background:white;
+  padding:10px;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen">
+  <div class="title">RR WEDDING</div>
+  <button class="btn" onclick="start()">📷 START</button>
+  <button class="btn" onclick="initGoogle()">🔐 LOGIN GOOGLE</button>
+  <button class="btn" onclick="toggleOrientation()">↔ ORIENTATION</button>
+  <button class="btn" onclick="toggleTimer()">⏱ TIMER</button>
+</div>
+
+<!-- CAMERA -->
+<div id="camera" class="screen hidden">
+  <img src="assets/logo-rr.png" class="logo">
+  <video id="video" autoplay playsinline></video>
+  <div id="cd" class="countdown"></div>
+  <button class="capture" onclick="capture()"></button>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen hidden">
+  <h2>Hasil</h2>
+  <img id="preview">
+  <div id="qrcode"></div>
+  <button class="btn" onclick="goHome()">🏠 HOME</button>
+</div>
+
+<canvas id="canvas" style="display:none"></canvas>
+<canvas id="frameCanvas" style="display:none"></canvas>
+
+<script>
+
+// ===== STATE =====
+let orientation='portrait';
+let useTimer=true;
+let finalBlob=null;
+
+// ===== GOOGLE =====
+const CLIENT_ID="942449256988-6ti7hbeguhg8e847ptrlc32538ugtgll.apps.googleusercontent.com";
+const API_KEY="AIzaSyByV2tNcF-gnstgueKsBJS2PGU3oBBzTE0";
+const SCOPES="https://www.googleapis.com/auth/drive.file";
+
+let tokenClient,accessToken=null;
+
+function initGoogle(){
+  gapi.load('client',async()=>{
+    await gapi.client.init({apiKey:API_KEY});
+  });
+
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,
+    scope:SCOPES,
+    callback:(res)=>{
+      accessToken=res.access_token;
+      alert("Login berhasil");
+    }
+  });
+
+  tokenClient.requestAccessToken();
+}
+
+// ===== NAV =====
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ===== CAMERA =====
+let video=document.getElementById('video');
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream=>{
+  video.srcObject=stream;
+});
+
+// ===== START =====
+function start(){
+  show('camera');
+}
+
+// ===== COUNTDOWN =====
+async function countdown(){
+  let el=document.getElementById('cd');
+  for(let i=3;i>0;i--){
+    el.innerText=i;
+    await new Promise(r=>setTimeout(r,800));
+  }
+  el.innerText='';
+}
+
+// ===== CAPTURE =====
+async function capture(){
+  if(useTimer) await countdown();
+
+  let canvas=document.getElementById('canvas');
+  let ctx=canvas.getContext('2d');
+
+  let W=orientation==='portrait'?1080:1920;
+  let H=orientation==='portrait'?1920:1080;
+
+  canvas.width=W;
+  canvas.height=H;
+
+  ctx.save();
+  ctx.scale(-1,1);
+  ctx.drawImage(video,-W,0,W,H);
+  ctx.restore();
+
+  createFrame(canvas.toDataURL());
+}
+
+// ===== FRAME =====
+function createFrame(src){
+
+  let fc=document.getElementById('frameCanvas');
+  let ctx=fc.getContext('2d');
+
+  let W=1080,H=1920;
+  fc.width=W;
+  fc.height=H;
+
+  let img=new Image();
+  img.src=src;
+
+  img.onload=()=>{
+
+    ctx.drawImage(img,0,0,W,H);
+
+    let logo=new Image();
+    logo.src="assets/logo-rr.png";
+
+    logo.onload=()=>{
+
+      // logo atas
+      ctx.drawImage(logo, W/2-100, 40, 200, 100);
+
+      // watermark
+      ctx.globalAlpha=0.05;
+      ctx.drawImage(logo, W/2-300, H/2-300, 600, 600);
+      ctx.globalAlpha=1;
+
+      fc.toBlob(blob=>{
+        showResult(blob);
+      });
+    }
+  }
+}
+
+// ===== RESULT =====
+function showResult(blob){
+
+  finalBlob=blob;
+
+  let url=URL.createObjectURL(blob);
+  document.getElementById('preview').src=url;
+
+  show('result');
+
+  autoDownload(blob);
+  autoUpload(blob);
+}
+
+// ===== DOWNLOAD =====
+function autoDownload(blob){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download="RR_Wedding_"+Date.now()+".jpg";
+  a.click();
+}
+
+// ===== UPLOAD =====
+async function autoUpload(blob){
+
+  if(!accessToken){
+    document.getElementById("qrcode").innerHTML="<p style='color:gold'>Login untuk QR</p>";
+    return;
+  }
+
+  document.getElementById("qrcode").innerHTML="Uploading...";
+
+  const form=new FormData();
+
+  form.append("metadata",new Blob([JSON.stringify({
+    name:"RR_"+Date.now()+".jpg"
+  })],{type:"application/json"}));
+
+  form.append("file",blob);
+
+  const res=await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method:"POST",
+      headers:new Headers({"Authorization":"Bearer "+accessToken}),
+      body:form
+    }
+  );
+
+  const file=await res.json();
+  let link=`https://drive.google.com/file/d/${file.id}/view`;
+
+  new QRCode(document.getElementById("qrcode"),link);
+}
+
+// ===== SETTINGS =====
+function toggleOrientation(){
+  orientation = orientation==='portrait'?'landscape':'portrait';
+  alert("Orientation: "+orientation);
+}
+
+function toggleTimer(){
+  useTimer=!useTimer;
+  alert("Timer: "+(useTimer?"ON":"OFF"));
+}
+
+// ===== HOME =====
+function goHome(){
+  show('home');
+}
+
+</script>
+
+</body>
+</html>
