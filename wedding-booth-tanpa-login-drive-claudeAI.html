@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Booth — Abadikan Momen Indah</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8d5a3;
+    --gold-dark: #8b6914;
+    --cream: #fdf6ec;
+    --ivory: #f5efe0;
+    --dark: #1a1208;
+    --dark2: #2d2010;
+    --rose: #c4747a;
+    --rose-light: #e8b4b8;
+    --bg: #0e0b06;
+    --text-light: #f0e8d0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-light);
+    min-height: 100vh;
+    overflow: hidden;
+    cursor: default;
+  }
+
+  /* ─── BACKGROUND ORNAMENT ─── */
+  .bg-ornament {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 10% 90%, rgba(196,116,122,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 30% 50% at 90% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+  }
+  .bg-ornament::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease, transform 0.6s ease; }
+  .screen.hidden { opacity: 0; pointer-events: none; transform: scale(0.97); }
+
+  /* ─── HOME SCREEN ─── */
+  #homeScreen {
+    gap: 2rem;
+    background: radial-gradient(ellipse 100% 80% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%);
+  }
+
+  .logo-area { text-align: center; }
+  .logo-icon { font-size: 3rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 20px rgba(201,168,76,0.5)); }
+  .logo-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--gold-light);
+    line-height: 1.1;
+  }
+  .logo-sub {
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 0.5rem;
+  }
+
+  .divider-ornament {
+    display: flex; align-items: center; gap: 1rem;
+    width: 100%; max-width: 400px;
+  }
+  .divider-ornament::before, .divider-ornament::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .divider-ornament span { color: var(--gold); font-size: 1.2rem; }
+
+  .keyboard-hints {
+    display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;
+  }
+  .hint-card {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 16px;
+    padding: 1.8rem 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .hint-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .hint-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(201,168,76,0.15); }
+  .hint-card:hover::before { opacity: 1; }
+  .hint-key {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px;
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    font-size: 1.8rem; font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+    box-shadow: 0 0 20px rgba(201,168,76,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    background: rgba(201,168,76,0.05);
+  }
+  .hint-label { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-light); }
+  .hint-desc { font-size: 0.75rem; color: rgba(240,232,208,0.5); margin-top: 0.3rem; }
+  .hint-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+
+  .footer-note {
+    font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(201,168,76,0.4);
+  }
+
+  /* ─── CAMERA SCREEN ─── */
+  #cameraScreen { background: #000; }
+
+  .camera-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+  #videoFeed {
+    width: 100%; height: 100%; object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  .camera-frame-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .frame-border {
+    position: absolute; inset: 20px;
+    border: 2px solid rgba(201,168,76,0.4);
+    border-radius: 4px;
+  }
+  .frame-corner {
+    position: absolute; width: 40px; height: 40px;
+    border-color: var(--gold);
+    border-style: solid;
+  }
+  .frame-corner.tl { top: 20px; left: 20px; border-width: 3px 0 0 3px; }
+  .frame-corner.tr { top: 20px; right: 20px; border-width: 3px 3px 0 0; }
+  .frame-corner.bl { bottom: 20px; left: 20px; border-width: 0 0 3px 3px; }
+  .frame-corner.br { bottom: 20px; right: 20px; border-width: 0 3px 3px 0; }
+
+  .camera-ui {
+    position: absolute; inset: 0; pointer-events: none;
+    display: flex; flex-direction: column;
+  }
+
+  .cam-top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 2rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+    pointer-events: all;
+  }
+
+  .cam-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; font-weight: 300;
+    letter-spacing: 0.2em; color: var(--gold-light);
+  }
+
+  .mode-badge {
+    padding: 0.4rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.65rem; letter-spacing: 0.25em;
+    text-transform: uppercase; font-weight: 600;
+    border: 1px solid;
+    transition: all 0.3s;
+  }
+  .mode-badge.photo { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); }
+  .mode-badge.video { background: rgba(196,116,122,0.15); border-color: var(--rose); color: var(--rose); }
+  .mode-badge.video.recording { animation: pulse-red 1s infinite; }
+  @keyframes pulse-red { 0%,100%{background:rgba(196,116,122,0.15);} 50%{background:rgba(196,116,122,0.35);} }
+
+  .rec-dot { width: 8px; height: 8px; background: var(--rose); border-radius: 50%; display: inline-block; margin-right: 6px; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+  .cam-bottom-bar {
+    margin-top: auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+    pointer-events: all;
+  }
+
+  .btn-home {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; padding: 0.6rem 1.2rem;
+    border-radius: 999px; font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .btn-home:hover { background: rgba(255,255,255,0.2); }
+
+  .cam-hint {
+    font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); text-align: center;
+  }
+
+  .video-timer {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem; font-weight: 300; color: #fff;
+    text-shadow: 0 0 40px rgba(201,168,76,0.8);
+    display: none;
+  }
+
+  .rec-timer {
+    font-size: 1rem; color: var(--rose); letter-spacing: 0.1em;
+  }
+
+  /* ─── POPUP OVERLAY ─── */
+  .popup-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(6px);
+  }
+  .popup-overlay.show { opacity: 1; pointer-events: all; }
+
+  .popup-box {
+    background: linear-gradient(145deg, #1e1508, #120d03);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 20px;
+    padding: 3rem 3.5rem;
+    text-align: center;
+    max-width: 420px; width: 90%;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.1);
+    transform: scale(0.9); transition: transform 0.3s;
+  }
+  .popup-overlay.show .popup-box { transform: scale(1); }
+
+  .popup-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .popup-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; font-weight: 300;
+    color: var(--gold-light); letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .popup-sub { font-size: 0.75rem; color: rgba(240,232,208,0.5); letter-spacing: 0.15em; }
+
+  .countdown-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 7rem; font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+    text-shadow: 0 0 60px rgba(201,168,76,0.5);
+    margin: 1rem 0;
+    transition: all 0.2s;
+  }
+
+  .popup-btn-row { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    color: var(--dark); padding: 0.8rem 2rem;
+    border: none; border-radius: 999px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase;
+    font-weight: 600; cursor: pointer; transition: all 0.3s;
+  }
+  .btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,168,76,0.3); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--gold-light); padding: 0.8rem 2rem;
+    border: 1px solid rgba(201,168,76,0.4); border-radius: 999px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .btn-outline:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+
+  /* ─── PHOTO STRIP SCREEN ─── */
+  #photoStripScreen { overflow-y: auto; padding: 2rem; }
+
+  .strip-container {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+    width: 100%; max-width: 900px;
+  }
+
+  .strip-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem; font-weight: 300;
+    color: var(--gold-light); letter-spacing: 0.15em;
+  }
+
+  .photo-strip-wrapper {
+    position: relative; cursor: pointer;
+  }
+
+  #photoStrip {
+    display: flex; gap: 0; background: #fff;
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 60px rgba(201,168,76,0.2);
+  }
+
+  .strip-photo { flex: 1; aspect-ratio: 4/3; object-fit: cover; display: block; }
+
+  .strip-frame-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    display: flex; flex-direction: column;
+  }
+
+  /* frame options */
+  .frame-top, .frame-bottom {
+    display: flex; align-items: center; justify-content: center; padding: 0.5rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    letter-spacing: 0.2em;
+  }
+  .frame-top { padding-top: 0.8rem; }
+  .frame-bottom { margin-top: auto; padding-bottom: 0.8rem; }
+
+  /* Frame selector */
+  .frame-selector { width: 100%; max-width: 700px; }
+  .frame-selector-title { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; text-align: center; }
+  .frame-options { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+  .frame-opt {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.7rem; letter-spacing: 0.15em;
+    cursor: pointer; transition: all 0.3s;
+    border: 1px solid rgba(201,168,76,0.3);
+    background: rgba(201,168,76,0.05);
+    color: var(--gold-light);
+  }
+  .frame-opt.active { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+  .frame-opt:hover:not(.active) { border-color: var(--gold); }
+
+  .couple-name-input {
+    background: rgba(201,168,76,0.05);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 10px; padding: 0.7rem 1.2rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; letter-spacing: 0.2em;
+    color: var(--text-light); width: 100%; max-width: 400px;
+    text-align: center; outline: none;
+    transition: border-color 0.3s;
+  }
+  .couple-name-input:focus { border-color: var(--gold); }
+  .couple-name-input::placeholder { color: rgba(201,168,76,0.3); }
+
+  /* ─── VIDEO REVIEW SCREEN ─── */
+  #videoReviewScreen { padding: 2rem; overflow-y: auto; }
+
+  .video-review-container { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; max-width: 800px; width: 100%; }
+
+  #reviewVideo {
+    width: 100%; border: 3px solid var(--gold);
+    box-shadow: 0 0 60px rgba(201,168,76,0.2);
+    background: #000;
+  }
+
+  /* ─── SAVE FORM ─── */
+  .save-form { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; max-width: 400px; }
+  .save-label { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); }
+  .save-input {
+    background: rgba(201,168,76,0.05);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 10px; padding: 0.8rem 1.5rem;
+    font-family: 'Montserrat', sans-serif; font-size: 0.9rem;
+    color: var(--text-light); width: 100%; outline: none;
+    transition: border-color 0.3s; text-align: center;
+  }
+  .save-input:focus { border-color: var(--gold); }
+
+  /* ─── SUCCESS SCREEN ─── */
+  #successScreen { gap: 1.5rem; }
+  .success-icon { font-size: 4rem; }
+  .success-title { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; color: var(--gold-light); letter-spacing: 0.15em; }
+  .success-sub { font-size: 0.75rem; color: rgba(240,232,208,0.5); letter-spacing: 0.2em; text-align: center; max-width: 350px; }
+
+  #qrCode { padding: 1rem; background: #fff; border-radius: 12px; border: 2px solid var(--gold); }
+  .qr-label { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); }
+
+  /* ─── CANVAS (hidden) ─── */
+  #captureCanvas { display: none; }
+  #frameCanvas { display: none; }
+
+  /* ─── FLASH ─── */
+  #flashOverlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: #fff; opacity: 0; pointer-events: none;
+    transition: opacity 0.1s;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .keyboard-hints { gap: 1rem; }
+    .hint-card { padding: 1.2rem 1.5rem; }
+    .popup-box { padding: 2rem 1.5rem; }
+    .countdown-big { font-size: 5rem; }
+  }
+
+  /* ─── UPLOADING STATE ─── */
+  .uploading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(201,168,76,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 1rem auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .progress-bar-wrap { width: 200px; height: 4px; background: rgba(201,168,76,0.15); border-radius: 999px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--gold); border-radius: 999px; width: 0%; transition: width 0.3s; }
+
+  /* ─── DOWNLOAD LINK ─── */
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: linear-gradient(135deg, #1a5c2a, #2a9444);
+    color: #fff; padding: 0.8rem 2rem;
+    border: none; border-radius: 999px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase;
+    font-weight: 600; cursor: pointer; transition: all 0.3s;
+    text-decoration: none;
+  }
+  .btn-download:hover { filter: brightness(1.1); transform: translateY(-1px); }
+</style>
+</head>
+<body>
+
+<div class="bg-ornament"></div>
+<div id="flashOverlay"></div>
+
+<!-- ═══ HOME SCREEN ═══ -->
+<div class="screen" id="homeScreen">
+  <div class="logo-area">
+    <div class="logo-icon">💍</div>
+    <div class="logo-title">Wedding Booth</div>
+    <div class="logo-sub">Abadikan Momen Indah Bersama</div>
+  </div>
+
+  <div class="divider-ornament"><span>✦</span></div>
+
+  <div class="keyboard-hints">
+    <div class="hint-card" onclick="activatePhotoMode()">
+      <span class="hint-icon">📷</span>
+      <div class="hint-key">1</div>
+      <div class="hint-label">Mode Foto</div>
+      <div class="hint-desc">3 foto lansekap berurutan</div>
+    </div>
+    <div class="hint-card" onclick="activateVideoMode()">
+      <span class="hint-icon">🎬</span>
+      <div class="hint-key">2</div>
+      <div class="hint-label">Mode Video</div>
+      <div class="hint-desc">Rekam hingga 1 menit</div>
+    </div>
+  </div>
+
+  <div class="footer-note">Tekan tombol 1 atau 2 untuk memulai</div>
+</div>
+
+<!-- ═══ CAMERA SCREEN ═══ -->
+<div class="screen hidden" id="cameraScreen">
+  <div class="camera-container">
+    <video id="videoFeed" autoplay muted playsinline></video>
+    <div class="camera-frame-overlay">
+      <div class="frame-corner tl"></div>
+      <div class="frame-corner tr"></div>
+      <div class="frame-corner bl"></div>
+      <div class="frame-corner br"></div>
+    </div>
+    <div class="video-timer" id="countdownDisplay"></div>
+    <div class="camera-ui">
+      <div class="cam-top-bar">
+        <div class="cam-logo">Wedding Booth</div>
+        <div class="mode-badge photo" id="modeBadge">📷 Foto</div>
+        <div class="rec-timer hidden" id="recTimer">●&nbsp;<span id="recTime">00:00</span></div>
+      </div>
+      <div class="cam-bottom-bar">
+        <button class="btn-home" onclick="goHome()">⌂&nbsp;&nbsp;Beranda</button>
+        <div class="cam-hint" id="camHint">Tekan <strong>Enter</strong> untuk memotret</div>
+        <div style="width:100px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHOTO STRIP REVIEW SCREEN ═══ -->
+<div class="screen hidden" id="photoStripScreen">
+  <div class="strip-container">
+    <div class="strip-title">✦ Preview Foto ✦</div>
+
+    <div class="frame-selector">
+      <div class="frame-selector-title">Pilih Bingkai Wedding</div>
+      <div class="frame-options" id="frameOptions"></div>
+    </div>
+
+    <input class="couple-name-input" id="coupleNameInput" placeholder="Nama Mempelai (contoh: Rina & Budi)" maxlength="50">
+
+    <div class="photo-strip-wrapper" id="photoStripWrapper">
+      <canvas id="stripCanvas" style="max-width:100%;border:3px solid var(--gold);box-shadow:0 0 60px rgba(201,168,76,0.2);display:block;"></canvas>
+    </div>
+
+    <div class="popup-btn-row">
+      <button class="btn-outline" onclick="retakePhoto()">↺&nbsp; Ulang Foto</button>
+      <button class="btn-gold" onclick="showSavePhotoForm()">💾&nbsp; Simpan Foto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIDEO REVIEW SCREEN ═══ -->
+<div class="screen hidden" id="videoReviewScreen">
+  <div class="video-review-container">
+    <div class="strip-title">✦ Preview Video ✦</div>
+    <video id="reviewVideo" controls style="border-radius:4px;"></video>
+
+    <div class="frame-selector">
+      <div class="frame-selector-title">Pilih Bingkai Video</div>
+      <div class="frame-options" id="videoFrameOptions"></div>
+    </div>
+    <input class="couple-name-input" id="videoCoupleNameInput" placeholder="Nama Mempelai (contoh: Rina & Budi)" maxlength="50">
+
+    <div class="popup-btn-row">
+      <button class="btn-outline" onclick="retakeVideo()">↺&nbsp; Ulang Video</button>
+      <button class="btn-gold" onclick="showSaveVideoForm()">💾&nbsp; Simpan Video</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUCCESS SCREEN ═══ -->
+<div class="screen hidden" id="successScreen">
+  <div class="success-icon">✨</div>
+  <div class="success-title">Tersimpan!</div>
+  <div class="success-sub" id="successMsg">Foto Anda telah berhasil disimpan dan siap diunduh.</div>
+  <div id="qrCode"></div>
+  <div class="qr-label">Scan untuk mengakses Google Drive</div>
+  <a id="downloadLink" class="btn-download" download>⬇&nbsp; Unduh Langsung</a>
+  <div class="popup-btn-row">
+    <button class="btn-gold" onclick="goHome()">🏠&nbsp; Kembali ke Beranda</button>
+    <button class="btn-outline" onclick="takeAnother()">✦&nbsp; Ambil Lagi</button>
+  </div>
+</div>
+
+<!-- ═══ POPUPS ═══ -->
+
+<!-- Mode notification popup -->
+<div class="popup-overlay" id="modePopup">
+  <div class="popup-box">
+    <div class="popup-icon" id="modePopupIcon">📷</div>
+    <div class="popup-title" id="modePopupTitle">MODE FOTO AKTIF</div>
+    <div class="popup-sub" id="modePopupSub">Tekan Enter untuk mulai memotret</div>
+  </div>
+</div>
+
+<!-- Countdown popup -->
+<div class="popup-overlay" id="countdownPopup">
+  <div class="popup-box">
+    <div class="popup-icon" id="cdPopupIcon">📷</div>
+    <div class="popup-title" id="cdPopupTitle">Bersiap!</div>
+    <div class="countdown-big" id="cdNumber">5</div>
+    <div class="popup-sub" id="cdPopupSub">Senyum ya! 😊</div>
+  </div>
+</div>
+
+<!-- Save photo form popup -->
+<div class="popup-overlay" id="savePhotoPopup">
+  <div class="popup-box">
+    <div class="popup-icon">💾</div>
+    <div class="popup-title">Simpan Foto</div>
+    <div class="popup-sub" style="margin-bottom:1.5rem">Masukkan nama untuk foto Anda</div>
+    <div class="save-form">
+      <div class="save-label">Nama File Foto</div>
+      <input class="save-input" id="photoFileName" placeholder="contoh: Rina_Budi_Wedding" maxlength="60">
+      <div id="uploadStatus"></div>
+      <div class="popup-btn-row" style="margin-top:0">
+        <button class="btn-outline" onclick="closeSavePhotoPopup()">Batal</button>
+        <button class="btn-gold" onclick="saveAndUploadPhoto()">Upload & Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save video form popup -->
+<div class="popup-overlay" id="saveVideoPopup">
+  <div class="popup-box">
+    <div class="popup-icon">🎬</div>
+    <div class="popup-title">Simpan Video</div>
+    <div class="popup-sub" style="margin-bottom:1.5rem">Masukkan nama untuk video Anda</div>
+    <div class="save-form">
+      <div class="save-label">Nama File Video</div>
+      <input class="save-input" id="videoFileName" placeholder="contoh: Rina_Budi_Moments" maxlength="60">
+      <div id="videoUploadStatus"></div>
+      <div class="popup-btn-row" style="margin-top:0">
+        <button class="btn-outline" onclick="closeSaveVideoPopup()">Batal</button>
+        <button class="btn-gold" onclick="saveAndUploadVideo()">Upload & Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="captureCanvas" style="display:none"></canvas>
+
+<script>
+// ══════════════════════════════════════════════════
+//  CONFIGURATION — GANTI SESUAI KEBUTUHAN ANDA
+// ══════════════════════════════════════════════════
+const CONFIG = {
+  // URL folder Google Drive Anda (buat folder publik, lalu paste link share-nya di sini)
+  GOOGLE_DRIVE_FOLDER_URL: 'https://drive.google.com/drive/folders/YOUR_FOLDER_ID_HERE',
+
+  // Jika menggunakan Google Apps Script Web App untuk upload, masukkan URL-nya di sini
+  // Jika kosong, file hanya akan didownload secara lokal
+  GOOGLE_APPS_SCRIPT_URL: '',
+
+  PHOTO_COUNT: 3,
+  PHOTO_COUNTDOWN: 5,
+  VIDEO_START_COUNTDOWN: 3,
+  MAX_VIDEO_SECONDS: 60,
+};
+
+// ══════════════════════════════════════════════════
+//  FRAME THEMES
+// ══════════════════════════════════════════════════
+const FRAMES = [
+  { id: 'classic',  label: '✦ Classic Gold',   bg: '#c9a84c', text: '#fff',   pattern: 'classic'  },
+  { id: 'rose',     label: '❀ Rose Blush',     bg: '#c4747a', text: '#fff',   pattern: 'rose'     },
+  { id: 'ivory',    label: '🤍 Ivory Elegance', bg: '#8b7355', text: '#fdf6ec', pattern: 'ivory'  },
+  { id: 'midnight', label: '✨ Midnight Blue',  bg: '#2c4a7c', text: '#e8d5a3', pattern: 'midnight'},
+  { id: 'spring',   label: '🌸 Spring Bloom',   bg: '#b77aa8', text: '#fff',   pattern: 'spring'  },
+  { id: 'none',     label: 'Tanpa Bingkai',     bg: null,       text: null,    pattern: 'none'    },
+];
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let currentMode = null; // 'photo' | 'video'
+let currentScreen = 'homeScreen';
+let mediaStream = null;
+let photoshots = [];
+let selectedFrame = FRAMES[0];
+let mediaRecorder = null;
+let recordedChunks = [];
+let videoBlob = null;
+let recordingInterval = null;
+let recordingSeconds = 0;
+let finalPhotoBlob = null;
+
+// ══════════════════════════════════════════════════
+//  SCREEN NAVIGATION
+// ══════════════════════════════════════════════════
+function showScreen(id) {
+  document.getElementById(currentScreen).classList.add('hidden');
+  document.getElementById(id).classList.remove('hidden');
+  currentScreen = id;
+}
+
+// ══════════════════════════════════════════════════
+//  CAMERA INIT
+// ══════════════════════════════════════════════════
+async function startCamera() {
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+      audio: true
+    });
+    document.getElementById('videoFeed').srcObject = mediaStream;
+  } catch (e) {
+    alert('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.');
+  }
+}
+
+function stopCamera() {
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+}
+
+// ══════════════════════════════════════════════════
+//  HOME
+// ══════════════════════════════════════════════════
+function goHome() {
+  stopCamera();
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  clearInterval(recordingInterval);
+  hideAllPopups();
+  photoshots = [];
+  recordedChunks = [];
+  showScreen('homeScreen');
+}
+
+// ══════════════════════════════════════════════════
+//  MODE ACTIVATION
+// ══════════════════════════════════════════════════
+async function activatePhotoMode() {
+  currentMode = 'photo';
+  await startCamera();
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = '📷 Foto';
+  badge.className = 'mode-badge photo';
+  document.getElementById('camHint').innerHTML = 'Tekan <strong>Enter</strong> untuk memotret';
+  document.getElementById('recTimer').classList.add('hidden');
+  showScreen('cameraScreen');
+  showModePopup('photo');
+}
+
+async function activateVideoMode() {
+  currentMode = 'video';
+  await startCamera();
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = '🎬 Video';
+  badge.className = 'mode-badge video';
+  document.getElementById('camHint').innerHTML = 'Tekan <strong>Enter</strong> untuk mulai merekam';
+  document.getElementById('recTimer').classList.add('hidden');
+  showScreen('cameraScreen');
+  showModePopup('video');
+}
+
+// ══════════════════════════════════════════════════
+//  MODE POPUP
+// ══════════════════════════════════════════════════
+function showModePopup(mode) {
+  const popup = document.getElementById('modePopup');
+  if (mode === 'photo') {
+    document.getElementById('modePopupIcon').textContent = '📷';
+    document.getElementById('modePopupTitle').textContent = 'MODE FOTO AKTIF';
+    document.getElementById('modePopupSub').textContent = 'Tekan Enter untuk mulai memotret';
+  } else {
+    document.getElementById('modePopupIcon').textContent = '🎬';
+    document.getElementById('modePopupTitle').textContent = 'MODE VIDEO AKTIF';
+    document.getElementById('modePopupSub').textContent = 'Tekan Enter untuk mulai merekam';
+  }
+  popup.classList.add('show');
+  setTimeout(() => popup.classList.remove('show'), 2200);
+}
+
+function hideAllPopups() {
+  document.querySelectorAll('.popup-overlay').forEach(p => p.classList.remove('show'));
+}
+
+// ══════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════
+document.addEventListener('keydown', async (e) => {
+  if (e.key === '1') { activatePhotoMode(); return; }
+  if (e.key === '2') { activateVideoMode(); return; }
+
+  if (e.key === 'Enter') {
+    if (currentScreen !== 'cameraScreen') return;
+    if (currentMode === 'photo') await startPhotoSequence();
+    if (currentMode === 'video') {
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') await startVideoRecording();
+      else stopVideoRecording();
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════
+//  PHOTO SEQUENCE
+// ══════════════════════════════════════════════════
+async function startPhotoSequence() {
+  photoshots = [];
+  await takePhotoWithCountdown();
+}
+
+async function takePhotoWithCountdown() {
+  const shotNum = photoshots.length + 1;
+  // Show countdown popup
+  const cdPopup = document.getElementById('countdownPopup');
+  document.getElementById('cdPopupIcon').textContent = '📷';
+  document.getElementById('cdPopupTitle').textContent = `Foto ${shotNum} dari ${CONFIG.PHOTO_COUNT}`;
+  document.getElementById('cdPopupSub').textContent = 'Senyum ya! 😊';
+  cdPopup.classList.add('show');
+
+  await countdown(CONFIG.PHOTO_COUNTDOWN, 'cdNumber');
+  cdPopup.classList.remove('show');
+
+  flash();
+  capturePhoto();
+
+  if (photoshots.length < CONFIG.PHOTO_COUNT) {
+    await delay(800);
+    await takePhotoWithCountdown();
+  } else {
+    await delay(400);
+    showPhotoStrip();
+  }
+}
+
+function capturePhoto() {
+  const video = document.getElementById('videoFeed');
+  const canvas = document.getElementById('captureCanvas');
+  const W = 1280, H = 960;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.save(); ctx.scale(-1, 1); ctx.translate(-W, 0);
+  ctx.drawImage(video, 0, 0, W, H);
+  ctx.restore();
+  const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+  photoshots.push(dataURL);
+}
+
+// ══════════════════════════════════════════════════
+//  PHOTO STRIP RENDER
+// ══════════════════════════════════════════════════
+function buildFrameOptions(containerId, callback) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  FRAMES.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'frame-opt' + (f.id === selectedFrame.id ? ' active' : '');
+    btn.textContent = f.label;
+    btn.onclick = () => {
+      selectedFrame = f;
+      container.querySelectorAll('.frame-opt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (callback) callback();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function showPhotoStrip() {
+  buildFrameOptions('frameOptions', renderStrip);
+  document.getElementById('coupleNameInput').oninput = renderStrip;
+  renderStrip();
+  showScreen('photoStripScreen');
+}
+
+function renderStrip() {
+  const canvas = document.getElementById('stripCanvas');
+  const FRAME_H = 60;
+  const PHOTO_W = 960, PHOTO_H = 720;
+  const STRIP_W = PHOTO_W * CONFIG.PHOTO_COUNT;
+  const hasFrame = selectedFrame.id !== 'none';
+  const STRIP_H = PHOTO_H + (hasFrame ? FRAME_H * 2 : 0);
+
+  canvas.width = STRIP_W;
+  canvas.height = STRIP_H;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, STRIP_W, STRIP_H);
+
+  if (hasFrame) {
+    // Draw frame bg
+    ctx.fillStyle = selectedFrame.bg;
+    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    drawFramePattern(ctx, STRIP_W, STRIP_H, selectedFrame);
+  }
+
+  // Draw photos
+  photoshots.forEach((src, i) => {
+    const img = new Image();
+    img.src = src;
+    const y = hasFrame ? FRAME_H : 0;
+    img.onload = () => {
+      ctx.drawImage(img, i * PHOTO_W, y, PHOTO_W, PHOTO_H);
+      // Re-draw overlays after each image load
+      if (hasFrame) drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H);
+    };
+    if (img.complete) {
+      ctx.drawImage(img, i * PHOTO_W, y, PHOTO_W, PHOTO_H);
+    }
+  });
+
+  if (hasFrame) {
+    drawFrameText(ctx, STRIP_W, STRIP_H, FRAME_H);
+  }
+}
+
+function drawFramePattern(ctx, W, H, frame) {
+  // Decorative pattern
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  for (let i = 0; i < 20; i++) {
+    ctx.beginPath();
+    ctx.arc(Math.random() * W, Math.random() * H, Math.random() * 40 + 10, 0, Math.PI * 2);
+    ctx.strokeStyle = frame.text;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawFrameText(ctx, W, H, FRAME_H) {
+  const coupleName = document.getElementById('coupleNameInput').value || '~ Wedding Day ~';
+  const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  ctx.save();
+  ctx.fillStyle = selectedFrame.text;
+
+  // Top text
+  ctx.font = `bold ${FRAME_H * 0.5}px Cormorant Garamond, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 6;
+  ctx.fillText(coupleName, W / 2, FRAME_H / 2);
+
+  // Bottom text
+  ctx.font = `${FRAME_H * 0.35}px Montserrat, sans-serif`;
+  ctx.fillText(dateStr, W / 2, H - FRAME_H / 2);
+  ctx.restore();
+}
+
+async function preloadAllImages() {
+  return Promise.all(photoshots.map(src => new Promise(res => {
+    const img = new Image(); img.onload = res; img.onerror = res; img.src = src;
+  })));
+}
+
+async function getStripBlob() {
+  await preloadAllImages();
+  renderStrip();
+  await delay(500); // let canvas render
+  return new Promise(res => document.getElementById('stripCanvas').toBlob(res, 'image/jpeg', 0.95));
+}
+
+// ══════════════════════════════════════════════════
+//  VIDEO RECORDING
+// ══════════════════════════════════════════════════
+async function startVideoRecording() {
+  recordedChunks = [];
+  const cdPopup = document.getElementById('countdownPopup');
+  document.getElementById('cdPopupIcon').textContent = '🎬';
+  document.getElementById('cdPopupTitle').textContent = 'Mulai Merekam';
+  document.getElementById('cdPopupSub').textContent = 'Pastikan Anda sudah siap!';
+  cdPopup.classList.add('show');
+
+  await countdown(CONFIG.VIDEO_START_COUNTDOWN, 'cdNumber');
+  cdPopup.classList.remove('show');
+
+  const badge = document.getElementById('modeBadge');
+  badge.innerHTML = '<span class="rec-dot"></span> REC';
+  badge.className = 'mode-badge video recording';
+  document.getElementById('camHint').innerHTML = 'Tekan <strong>Enter</strong> untuk stop';
+  document.getElementById('recTimer').classList.remove('hidden');
+
+  recordingSeconds = 0;
+  recordingInterval = setInterval(() => {
+    recordingSeconds++;
+    const m = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+    const s = String(recordingSeconds % 60).padStart(2, '0');
+    document.getElementById('recTime').textContent = m + ':' + s;
+    if (recordingSeconds >= CONFIG.MAX_VIDEO_SECONDS) stopVideoRecording();
+  }, 1000);
+
+  try {
+    mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+  } catch (e) {
+    mediaRecorder = new MediaRecorder(mediaStream);
+  }
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = showVideoReview;
+  mediaRecorder.start(100);
+}
+
+function stopVideoRecording() {
+  clearInterval(recordingInterval);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+function showVideoReview() {
+  videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(videoBlob);
+  const vid = document.getElementById('reviewVideo');
+  vid.src = url;
+  buildFrameOptions('videoFrameOptions', () => {});
+  showScreen('videoReviewScreen');
+}
+
+function retakeVideo() {
+  recordedChunks = [];
+  videoBlob = null;
+  document.getElementById('modeBadge').textContent = '🎬 Video';
+  document.getElementById('modeBadge').className = 'mode-badge video';
+  document.getElementById('camHint').innerHTML = 'Tekan <strong>Enter</strong> untuk mulai merekam';
+  document.getElementById('recTimer').classList.add('hidden');
+  showScreen('cameraScreen');
+}
+
+function retakePhoto() {
+  photoshots = [];
+  document.getElementById('modeBadge').textContent = '📷 Foto';
+  document.getElementById('modeBadge').className = 'mode-badge photo';
+  showScreen('cameraScreen');
+}
+
+// ══════════════════════════════════════════════════
+//  SAVE FORMS
+// ══════════════════════════════════════════════════
+function showSavePhotoForm() {
+  const couple = document.getElementById('coupleNameInput').value || 'Wedding';
+  document.getElementById('photoFileName').value = couple.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_Photo';
+  document.getElementById('uploadStatus').innerHTML = '';
+  document.getElementById('savePhotoPopup').classList.add('show');
+}
+function closeSavePhotoPopup() { document.getElementById('savePhotoPopup').classList.remove('show'); }
+
+function showSaveVideoForm() {
+  const couple = document.getElementById('videoCoupleNameInput').value || 'Wedding';
+  document.getElementById('videoFileName').value = couple.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_Video';
+  document.getElementById('videoUploadStatus').innerHTML = '';
+  document.getElementById('saveVideoPopup').classList.add('show');
+}
+function closeSaveVideoPopup() { document.getElementById('saveVideoPopup').classList.remove('show'); }
+
+// ══════════════════════════════════════════════════
+//  UPLOAD / SAVE
+// ══════════════════════════════════════════════════
+async function saveAndUploadPhoto() {
+  const name = document.getElementById('photoFileName').value.trim() || 'Wedding_Photo';
+  const statusEl = document.getElementById('uploadStatus');
+
+  statusEl.innerHTML = `<div class="uploading-spinner"></div><div style="font-size:.7rem;color:var(--gold);letter-spacing:.2em;text-align:center">Menyiapkan foto...</div>`;
+
+  finalPhotoBlob = await getStripBlob();
+
+  if (CONFIG.GOOGLE_APPS_SCRIPT_URL) {
+    statusEl.innerHTML = `<div class="uploading-spinner"></div><div style="font-size:.7rem;color:var(--gold);letter-spacing:.2em;text-align:center">Mengupload ke Google Drive...</div><div class="progress-bar-wrap" style="margin:0.5rem auto"><div class="progress-bar" id="progressBar"></div></div>`;
+    await uploadToGDrive(finalPhotoBlob, name + '.jpg', 'image/jpeg', 'progressBar');
+  }
+
+  closeSavePhotoPopup();
+  showSuccessScreen(finalPhotoBlob, name + '.jpg', 'image/jpeg', 'photo');
+}
+
+async function saveAndUploadVideo() {
+  const name = document.getElementById('videoFileName').value.trim() || 'Wedding_Video';
+  const statusEl = document.getElementById('videoUploadStatus');
+
+  statusEl.innerHTML = `<div class="uploading-spinner"></div><div style="font-size:.7rem;color:var(--gold);letter-spacing:.2em;text-align:center">Menyiapkan video...</div>`;
+
+  if (CONFIG.GOOGLE_APPS_SCRIPT_URL) {
+    statusEl.innerHTML = `<div class="uploading-spinner"></div><div style="font-size:.7rem;color:var(--gold);letter-spacing:.2em;text-align:center">Mengupload ke Google Drive...</div><div class="progress-bar-wrap" style="margin:0.5rem auto"><div class="progress-bar" id="videoProgressBar"></div></div>`;
+    await uploadToGDrive(videoBlob, name + '.webm', 'video/webm', 'videoProgressBar');
+  }
+
+  closeSaveVideoPopup();
+  showSuccessScreen(videoBlob, name + '.webm', 'video/webm', 'video');
+}
+
+async function uploadToGDrive(blob, filename, mimeType, progressBarId) {
+  const pb = document.getElementById(progressBarId);
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      if (pb) pb.style.width = '40%';
+      try {
+        const res = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ filename, mimeType, data: base64 }),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (pb) pb.style.width = '100%';
+        await delay(300);
+        resolve(await res.json());
+      } catch (e) {
+        if (pb) pb.style.width = '100%';
+        resolve(null);
+      }
+    };
+    if (pb) pb.style.width = '20%';
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  SUCCESS SCREEN
+// ══════════════════════════════════════════════════
+function showSuccessScreen(blob, filename, mimeType, type) {
+  stopCamera();
+
+  // QR Code
+  const qrEl = document.getElementById('qrCode');
+  qrEl.innerHTML = '';
+  new QRCode(qrEl, {
+    text: CONFIG.GOOGLE_DRIVE_FOLDER_URL,
+    width: 160, height: 160,
+    colorDark: '#1a1208', colorLight: '#ffffff',
+  });
+
+  // Download link
+  const url = URL.createObjectURL(blob);
+  const dl = document.getElementById('downloadLink');
+  dl.href = url;
+  dl.download = filename;
+
+  document.getElementById('successMsg').textContent =
+    type === 'photo'
+      ? `Foto "${filename}" siap diunduh. Scan QR untuk akses folder Google Drive.`
+      : `Video "${filename}" siap diunduh. Scan QR untuk akses folder Google Drive.`;
+
+  showScreen('successScreen');
+}
+
+function takeAnother() {
+  photoshots = [];
+  recordedChunks = [];
+  videoBlob = null;
+  finalPhotoBlob = null;
+  if (currentMode === 'photo') activatePhotoMode();
+  else if (currentMode === 'video') activateVideoMode();
+  else goHome();
+}
+
+// ══════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function flash() {
+  const f = document.getElementById('flashOverlay');
+  f.style.opacity = '1';
+  setTimeout(() => { f.style.opacity = '0'; }, 120);
+}
+
+async function countdown(from, elId) {
+  for (let i = from; i >= 1; i--) {
+    const el = document.getElementById(elId);
+    if (el) { el.textContent = i; el.style.transform = 'scale(1.2)'; }
+    await delay(200);
+    if (el) el.style.transform = 'scale(1)';
+    await delay(800);
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  APPS SCRIPT HELPER (paste di Google Apps Script)
+// ══════════════════════════════════════════════════
+/*
+  GOOGLE APPS SCRIPT (deploy sebagai Web App - Anyone):
+
+  function doPost(e) {
+    var data = JSON.parse(e.postData.contents);
+    var folder = DriveApp.getFolderById('YOUR_FOLDER_ID');
+    var bytes = Utilities.base64Decode(data.data);
+    var blob = Utilities.newBlob(bytes, data.mimeType, data.filename);
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      url: file.getUrl()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+*/
+</script>
+</body>
+</html>
