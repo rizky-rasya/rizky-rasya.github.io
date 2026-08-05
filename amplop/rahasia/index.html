@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <style>
-        /* ===== RESET & TOKENS ===== */
+        /* ===== RESET & TOKENS (sama seperti sebelumnya) ===== */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -178,9 +178,28 @@
             border: 1px solid var(--border);
             width: 100%;
             transition: background var(--transition);
+            margin-bottom: 0.3rem;
         }
         .sidebar .theme-toggle:hover {
             background: var(--border);
+        }
+        .sidebar .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            color: #b55a4a;
+            background: transparent;
+            border: 1px solid #b55a4a;
+            width: 100%;
+            transition: background var(--transition), color var(--transition);
+            margin-top: 0.3rem;
+        }
+        .sidebar .logout-btn:hover {
+            background: #b55a4a;
+            color: #fff;
         }
 
         /* ===== MAIN ===== */
@@ -484,6 +503,83 @@
             margin-top: 1rem;
         }
 
+        /* ===== LOGIN SCREEN ===== */
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1.5rem;
+            transition: opacity 0.5s ease;
+        }
+        #loginScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loginScreen .login-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem 2rem 2.2rem;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        #loginScreen .login-box h2 {
+            font-weight: 600;
+            font-size: 1.4rem;
+            margin: 0 0 0.3rem;
+            color: var(--gold);
+        }
+        #loginScreen .login-box p {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin: 0 0 1.5rem;
+        }
+        #loginScreen .login-box .field {
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+        #loginScreen .login-box .field label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.2rem;
+        }
+        #loginScreen .login-box .field input {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        #loginScreen .login-box .btn {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 999px;
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+            transition: opacity var(--transition);
+            margin-top: 0.5rem;
+        }
+        #loginScreen .login-box .btn:hover {
+            opacity: 0.85;
+        }
+        #loginScreen .login-box .login-error {
+            color: #b55a4a;
+            font-size: 0.8rem;
+            margin-top: 0.8rem;
+            min-height: 1.2em;
+        }
+
         /* ===== RESPONSIVE ===== */
         .mobile-toggle {
             display: none;
@@ -647,39 +743,29 @@
                 transform: translateY(0);
             }
         }
-
-        /* checkbox styling */
-        .checklist {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .checklist input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--gold);
-            cursor: pointer;
-            margin: 0;
-        }
-        .checklist label {
-            font-size: 0.7rem;
-            color: var(--muted);
-            cursor: pointer;
-        }
-
-        /* refresh & reset buttons */
-        .action-buttons {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-        }
-        .action-buttons .btn-sm {
-            font-size: 0.7rem;
-        }
     </style>
 </head>
 <body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 Dashboard</h2>
+            <p>Masuk untuk mengelola undangan</p>
+            <form id="loginForm">
+                <div class="field">
+                    <label for="loginUser">Username</label>
+                    <input type="text" id="loginUser" placeholder="username" required />
+                </div>
+                <div class="field">
+                    <label for="loginPass">Password</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" required />
+                </div>
+                <button type="submit" class="btn">Masuk</button>
+                <div class="login-error" id="loginError"></div>
+            </form>
+        </div>
+    </div>
 
     <!-- ===== MOBILE TOGGLE ===== -->
     <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle sidebar">☰</button>
@@ -711,6 +797,10 @@
         <button class="theme-toggle" id="themeToggle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/></svg>
             <span id="themeLabel">Tema Gelap</span>
+        </button>
+        <button class="logout-btn" id="logoutBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Keluar
         </button>
     </aside>
 
@@ -895,11 +985,65 @@
     <!-- ===== SCRIPTS ===== -->
     <script>
         // ========================================================================
-        //  KONFIGURASI
+        //  KONFIGURASI & KREDENSIAL
+        // ========================================================================
+        const USER_CREDENTIALS = {
+            username: 'rr',
+            password: 'Love'
+        };
+
+        // ========================================================================
+        //  LOGIN / LOGOUT
+        // ========================================================================
+        function checkLogin() {
+            const loggedIn = localStorage.getItem('undangan_logged_in') === 'true';
+            if (loggedIn) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                // Tampilkan konten
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('mobileToggle').style.display = 'flex';
+                // Inisialisasi dashboard jika belum
+                if (typeof initDashboard === 'function') initDashboard();
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'none';
+                document.getElementById('mobileToggle').style.display = 'none';
+            }
+        }
+
+        function performLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            const errorEl = document.getElementById('loginError');
+            if (user === USER_CREDENTIALS.username && pass === USER_CREDENTIALS.password) {
+                localStorage.setItem('undangan_logged_in', 'true');
+                errorEl.textContent = '';
+                checkLogin();
+                // Refresh data setelah login
+                if (typeof refreshAll === 'function') refreshAll();
+            } else {
+                errorEl.textContent = '❌ Username atau password salah.';
+            }
+        }
+
+        function performLogout() {
+            if (confirm('Yakin ingin keluar?')) {
+                localStorage.removeItem('undangan_logged_in');
+                checkLogin();
+                // Reset tampilan
+                document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
+                document.getElementById('section-dashboard').style.display = 'block';
+            }
+        }
+
+        // ========================================================================
+        //  DOM REFS & GLOBAL STATE (sama seperti sebelumnya)
         // ========================================================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5JuYoFu250nEQ0oJdwN_4PcP5AEyyxc17KE99PIIGidNmU3bjnQ26WW6bGEOz0jjboTg/exec";
 
-        // Fallback jika API tidak bisa diakses
         const FALLBACK_CONFIG = {
             nama_panggilan_pria: "Rizky",
             nama_panggilan_wanita: "Rasya",
@@ -921,7 +1065,6 @@
             base_url: "https://rizky-rasya.github.io/amplop/"
         };
 
-        // Default template WA
         const DEFAULT_TEMPLATE =
             `Assalamu'alaikum Warahmatullahi Wabarakatuh.
 
@@ -941,25 +1084,18 @@
         Wassalamu'alaikum Warahmatullahi Wabarakatuh.
         $nama_pria & $nama_wanita sekeluarga.`;
 
-        // ========================================================================
-        //  STATE
-        // ========================================================================
         let configData = { ...FALLBACK_CONFIG };
         let allGuests = [];
         let filteredGuests = [];
         let confirmations = [];
-        let sentStatus = {}; // key: nomor_hp (string) -> true/false
+        let sentStatus = {};
 
         // ========================================================================
-        //  DOM REFS
+        //  DOM UTILITY
         // ========================================================================
         const $ = (id) => document.getElementById(id);
         const qs = (sel, ctx = document) => ctx.querySelector(sel);
         const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
-
-        const sections = ['dashboard', 'guests', 'send', 'template'];
-        const sectionEls = {};
-        sections.forEach(s => sectionEls[s] = $(`section-${s}`));
 
         // ========================================================================
         //  TOAST
@@ -975,7 +1111,7 @@
         }
 
         // ========================================================================
-        //  API
+        //  API (sama)
         // ========================================================================
         async function apiGet(action, params = {}) {
             if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_URL') === 0) {
@@ -1007,7 +1143,6 @@
                     configData = { ...FALLBACK_CONFIG, ...res.data };
                 }
             } catch (_) { /* pakai fallback */ }
-            // Update header
             const names = `${configData.nama_panggilan_wanita} & ${configData.nama_panggilan_pria}`;
             $('headerNames').textContent = names;
             document.title = `Dashboard · ${names}`;
@@ -1016,15 +1151,12 @@
 
         async function fetchGuests() {
             try {
-                // Coba ambil dari API — jika belum ada endpoint, kita pakai data mock
-                // Untuk production, tambahkan endpoint di Apps Script: action=guests
                 const res = await apiGet('guests');
                 if (res.ok && Array.isArray(res.data)) {
                     allGuests = res.data;
                     return;
                 }
             } catch (_) { /* lanjut ke mock */ }
-            // --- MOCK DATA (sesuai struktur sheet) ---
             allGuests = [{
                 no: 1,
                 nama_tamu: 'Bapak Contoh Nama',
@@ -1062,10 +1194,8 @@
                 nomor_hp: '81234567894',
                 link_undangan: configData.base_url + '?to=' + encodeURIComponent('Bapak Dedi Mulyadi')
             }];
-            // Normalize hp: pastikan string
             allGuests.forEach(g => {
                 g.nomor_hp = String(g.nomor_hp || '').replace(/[^0-9]/g, '');
-                // Jika mulai 0, ganti 62
                 if (g.nomor_hp.startsWith('0')) {
                     g.nomor_hp = '62' + g.nomor_hp.slice(1);
                 }
@@ -1137,8 +1267,13 @@
         }
 
         // ========================================================================
-        //  RENDER HELPERS
+        //  HELPERS
         // ========================================================================
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+                "'": '&#39;' }[m]));
+        }
+
         function formatPhoneForWA(hp) {
             let s = String(hp || '').replace(/[^0-9]/g, '');
             if (s.startsWith('0')) s = '62' + s.slice(1);
@@ -1181,7 +1316,7 @@
         }
 
         // ========================================================================
-        //  RENDER: STATS
+        //  RENDER FUNCTIONS
         // ========================================================================
         function renderStats() {
             const total = allGuests.length;
@@ -1205,7 +1340,6 @@
             $('statTidakPct').textContent = pct(tidak);
             $('statRaguPct').textContent = pct(ragu);
 
-            // recent comments
             const recent = confirmations.slice(0, 5);
             if (recent.length === 0) {
                 $('recentComments').innerHTML = '<span class="text-muted">Belum ada konfirmasi.</span>';
@@ -1220,19 +1354,10 @@
                 $('recentBadge').textContent = confirmations.length;
             }
 
-            // update waktu
             const now = new Date();
             $('lastUpdate').textContent = 'Terakhir: ' + now.toLocaleString('id-ID');
         }
 
-        function escapeHtml(str) {
-            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
-                "'": '&#39;' }[m]));
-        }
-
-        // ========================================================================
-        //  RENDER: GUEST LIST (tab Daftar Tamu)
-        // ========================================================================
         function renderGuestList(filter = 'all', search = '') {
             const tbody = $('guestTableBody');
             let list = [...allGuests];
@@ -1263,9 +1388,6 @@
             }).join('');
         }
 
-        // ========================================================================
-        //  RENDER: SEND WA (tab Kirim WA)
-        // ========================================================================
         function renderSendList(filter = 'all', search = '') {
             const tbody = $('sendTableBody');
             let list = [...allGuests];
@@ -1299,7 +1421,6 @@
               </tr>`;
             }).join('');
 
-            // Attach event listeners
             qsa('.send-wa-btn', tbody).forEach(btn => {
                 btn.addEventListener('click', () => {
                     const hp = btn.dataset.hp;
@@ -1310,42 +1431,25 @@
             });
         }
 
-        // ========================================================================
-        //  SEND WA ACTION
-        // ========================================================================
         async function sendWA(hp, nama, link, btn) {
             if (!hp) return showToast('Nomor HP tidak valid.', 'error');
             if (isSent(hp)) {
                 showToast(`Undangan untuk ${nama} sudah terkirim.`, 'error');
                 return;
             }
-
-            // Ambil template
             let template = loadTemplate();
-            // Build guest object for variable replacement
             const guest = allGuests.find(g => g.nomor_hp === hp) || { nama_tamu: nama, link_undangan: link || '' };
             const message = replaceVariables(template, guest, configData);
-
-            // Build WA link
             const waLink = buildWALink(hp, message);
-
-            // Mark as sent
             markSent(hp);
-
-            // Update button
             if (btn) {
                 btn.textContent = '✅ Terkirim';
                 btn.disabled = true;
                 btn.classList.remove('primary');
                 btn.classList.add('success');
             }
-
-            // Buka WA di tab baru (atau langsung)
             window.open(waLink, '_blank');
-
             showToast(`Undangan untuk ${nama} dikirim via WhatsApp.`, 'success');
-
-            // Refresh semua tampilan
             renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
             renderSendList(getActiveFilter('send'), $('sendSearch').value);
             renderStats();
@@ -1357,11 +1461,7 @@
             return active ? active.dataset.jenis : 'all';
         }
 
-        // ========================================================================
-        //  RENDER: TEMPLATE EDITOR
-        // ========================================================================
         function renderTemplateEditor() {
-            // Variables
             const vars = [
                 { key: '$nama_tamu', label: 'Nama Tamu' },
                 { key: '$nama_pria', label: 'Nama Pria' },
@@ -1402,21 +1502,17 @@
                 textarea.dispatchEvent(new Event('input'));
             });
 
-            // Load template
             const template = loadTemplate();
             $('templateText').value = template;
             $('templateText').addEventListener('input', () => {
-                // auto-save on change (debounced)
                 clearTimeout(window._templateSaveTimer);
                 window._templateSaveTimer = setTimeout(() => {
                     saveTemplate($('templateText').value);
                 }, 600);
             });
 
-            // Preview
             $('previewTemplateBtn').addEventListener('click', () => {
                 const text = $('templateText').value;
-                // Use first guest as sample
                 const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
                 const preview = replaceVariables(text, sampleGuest, configData);
                 const previewEl = $('templatePreview');
@@ -1424,14 +1520,12 @@
                 showToast('Pratinjau diperbarui.', 'success');
             });
 
-            // Save
             $('saveTemplateBtn').addEventListener('click', () => {
                 const text = $('templateText').value;
                 saveTemplate(text);
                 showToast('Template disimpan.', 'success');
             });
 
-            // Reset
             $('resetTemplateBtn').addEventListener('click', () => {
                 if (confirm('Reset template ke default?')) {
                     $('templateText').value = DEFAULT_TEMPLATE;
@@ -1440,7 +1534,6 @@
                 }
             });
 
-            // Preview on load with sample
             setTimeout(() => {
                 const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
                 const preview = replaceVariables($('templateText').value, sampleGuest, configData);
@@ -1449,13 +1542,12 @@
         }
 
         // ========================================================================
-        //  FILTER BUTTONS
+        //  FILTERS
         // ========================================================================
         function setupFilters() {
             ['jenisFilter', 'sendJenisFilter'].forEach(id => {
                 const container = $(id);
                 if (!container) return;
-                // Collect unique jenis
                 const jenisSet = new Set(allGuests.map(g => g.jenis_tamu).filter(Boolean));
                 const jenisList = ['all', ...jenisSet];
                 container.innerHTML = jenisList.map(j =>
@@ -1474,7 +1566,6 @@
                 });
             });
 
-            // Search
             $('guestSearch').addEventListener('input', () => {
                 const filter = getActiveFilter('guest');
                 renderGuestList(filter, $('guestSearch').value);
@@ -1486,26 +1577,21 @@
         }
 
         // ========================================================================
-        //  REFRESH & RESET ACTIONS
+        //  REFRESH & RESET
         // ========================================================================
-
-        // Refresh all data
         async function refreshAll() {
             showToast('Memuat ulang data...', 'success');
             try {
                 await fetchConfig();
                 await fetchGuests();
                 await fetchConfirmations();
-                // Re-render semua
                 renderStats();
-                // Pertahankan filter dan search
                 const guestFilter = getActiveFilter('guest');
                 const guestSearch = $('guestSearch').value;
                 renderGuestList(guestFilter, guestSearch);
                 const sendFilter = getActiveFilter('send');
                 const sendSearch = $('sendSearch').value;
                 renderSendList(sendFilter, sendSearch);
-                // Template editor tidak perlu reload, tapi kita update preview dengan data terbaru
                 const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
                 const preview = replaceVariables($('templateText').value, sampleGuest, configData);
                 $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
@@ -1515,12 +1601,10 @@
             }
         }
 
-        // Reset sent status
         function resetSentStatus() {
             if (!confirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim.')) return;
             sentStatus = {};
             saveSentStatus();
-            // Render ulang
             renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
             renderSendList(getActiveFilter('send'), $('sendSearch').value);
             renderStats();
@@ -1537,7 +1621,6 @@
             qsa('.sidebar nav a').forEach(a => {
                 a.classList.toggle('active', a.dataset.section === section);
             });
-            // Update title
             const titles = {
                 dashboard: 'Dashboard',
                 guests: 'Daftar Tamu',
@@ -1545,11 +1628,13 @@
                 template: 'Template Pesan'
             };
             $('pageTitle').textContent = titles[section] || 'Dashboard';
-            // Close mobile sidebar
             closeSidebar();
         }
 
-        // Sidebar nav
+        const sections = ['dashboard', 'guests', 'send', 'template'];
+        const sectionEls = {};
+        sections.forEach(s => sectionEls[s] = $(`section-${s}`));
+
         qsa('.sidebar nav a').forEach(a => {
             a.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1562,10 +1647,8 @@
         //  SIDEBAR MOBILE
         // ========================================================================
         function toggleSidebar() {
-            const sidebar = $('sidebar');
-            const overlay = $('sidebarOverlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('open');
+            $('sidebar').classList.toggle('open');
+            $('sidebarOverlay').classList.toggle('open');
         }
 
         function closeSidebar() {
@@ -1588,7 +1671,6 @@
             $('themeLabel').textContent = next === 'night' ? 'Tema Terang' : 'Tema Gelap';
         }
 
-        // Init theme
         (function initTheme() {
             const saved = localStorage.getItem('undangan-theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -1599,45 +1681,25 @@
         })();
 
         // ========================================================================
-        //  INIT
+        //  INIT DASHBOARD (dipanggil setelah login)
         // ========================================================================
-        async function init() {
-            // Load sent status
+        async function initDashboard() {
             loadSentStatus();
-
-            // Fetch config
             await fetchConfig();
-
-            // Fetch guests
             await fetchGuests();
-
-            // Fetch confirmations
             await fetchConfirmations();
-
-            // Setup filters
             setupFilters();
-
-            // Render all
             renderStats();
             renderGuestList('all', '');
             renderSendList('all', '');
             renderTemplateEditor();
-
-            // Navigate to dashboard
             navigateTo('dashboard');
-
-            // Update waktu
             $('lastUpdate').textContent = 'Dimuat: ' + new Date().toLocaleString('id-ID');
 
-            // --- Event listeners for refresh buttons ---
             document.querySelectorAll('.refresh-btn').forEach(btn => {
                 btn.addEventListener('click', refreshAll);
             });
-
-            // --- Reset status button ---
             $('resetStatusBtn').addEventListener('click', resetSentStatus);
-
-            // --- Send All ---
             $('sendAllBtn').addEventListener('click', async () => {
                 const filter = getActiveFilter('send');
                 const search = $('sendSearch').value;
@@ -1653,7 +1715,6 @@
                     return;
                 }
                 if (!confirm(`Kirim undangan ke ${unsent.length} tamu yang belum dikirim?`)) return;
-
                 let count = 0;
                 for (const g of unsent) {
                     const template = loadTemplate();
@@ -1662,7 +1723,6 @@
                     markSent(g.nomor_hp);
                     window.open(waLink, '_blank');
                     count++;
-                    // jeda kecil agar tidak overload
                     await new Promise(r => setTimeout(r, 300));
                 }
                 showToast(`✅ ${count} undangan dikirim.`, 'success');
@@ -1674,10 +1734,45 @@
             console.log('✅ Dashboard siap. Total tamu:', allGuests.length);
         }
 
-        init().catch(err => {
-            console.error('Init error:', err);
-            showToast('Gagal memuat data. Periksa koneksi dan konfigurasi.', 'error');
-        });
+        // ========================================================================
+        //  INIT LOGIN
+        // ========================================================================
+        document.getElementById('loginForm').addEventListener('submit', performLogin);
+        document.getElementById('logoutBtn').addEventListener('click', performLogout);
+
+        // Cek status login saat halaman dimuat
+        checkLogin();
+
+        // Jika sudah login, init dashboard dijalankan dari checkLogin
+        // Tapi checkLogin memanggil initDashboard jika sudah login.
+        // Namun initDashboard didefinisikan di atas, dan checkLogin dipanggil di bawah.
+        // Perbaiki: checkLogin panggil initDashboard jika sudah login.
+        // Override checkLogin agar memanggil initDashboard.
+        const originalCheckLogin = checkLogin;
+        checkLogin = function() {
+            const loggedIn = localStorage.getItem('undangan_logged_in') === 'true';
+            if (loggedIn) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('mobileToggle').style.display = 'flex';
+                if (typeof initDashboard === 'function') {
+                    // Pastikan hanya dijalankan sekali
+                    if (!window._dashboardInited) {
+                        window._dashboardInited = true;
+                        initDashboard();
+                    }
+                }
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'none';
+                document.getElementById('mobileToggle').style.display = 'none';
+                window._dashboardInited = false;
+            }
+        };
+        // Jalankan checkLogin
+        checkLogin();
     </script>
 </body>
 </html>
