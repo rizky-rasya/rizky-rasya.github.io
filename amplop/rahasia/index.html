@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <style>
-        /* ===== RESET & TOKENS (sama seperti sebelumnya) ===== */
+        /* ===== RESET & TOKENS ===== */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -743,6 +743,25 @@
                 transform: translateY(0);
             }
         }
+
+        /* warning banner */
+        .warning-banner {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        html[data-theme="night"] .warning-banner {
+            background: #3a2e1a;
+            color: #e4c97a;
+            border-color: #c9943a;
+        }
     </style>
 </head>
 <body>
@@ -755,7 +774,7 @@
             <form id="loginForm">
                 <div class="field">
                     <label for="loginUser">Username</label>
-                    <input type="text" id="loginUser" placeholder="username" required />
+                    <input type="text" id="loginUser" placeholder="rr" required />
                 </div>
                 <div class="field">
                     <label for="loginPass">Password</label>
@@ -853,6 +872,9 @@
                         <button class="btn-sm gold-outline refresh-btn" data-target="guests">🔄 Refresh</button>
                     </div>
                 </div>
+                <div id="guestWarning" class="warning-banner" style="display:none;">
+                    ⚠️ Menggunakan data contoh (mock). Data tidak diambil dari sheet. Periksa endpoint API.
+                </div>
                 <div class="toolbar">
                     <div class="filter-group" id="jenisFilter">
                         <button class="active" data-jenis="all">Semua</button>
@@ -889,6 +911,9 @@
                         <span class="badge" id="sendCount">0 tamu</span>
                         <button class="btn-sm gold-outline refresh-btn" data-target="send">🔄 Refresh</button>
                     </div>
+                </div>
+                <div id="sendWarning" class="warning-banner" style="display:none;">
+                    ⚠️ Menggunakan data contoh (mock). Data tidak diambil dari sheet. Periksa endpoint API.
                 </div>
                 <div class="toolbar">
                     <div class="filter-group" id="sendJenisFilter">
@@ -999,17 +1024,21 @@
             const loggedIn = localStorage.getItem('undangan_logged_in') === 'true';
             if (loggedIn) {
                 document.getElementById('loginScreen').classList.add('hidden');
-                // Tampilkan konten
                 document.getElementById('mainContent').style.display = 'block';
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('mobileToggle').style.display = 'flex';
-                // Inisialisasi dashboard jika belum
-                if (typeof initDashboard === 'function') initDashboard();
+                if (typeof initDashboard === 'function') {
+                    if (!window._dashboardInited) {
+                        window._dashboardInited = true;
+                        initDashboard();
+                    }
+                }
             } else {
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('mainContent').style.display = 'none';
                 document.getElementById('sidebar').style.display = 'none';
                 document.getElementById('mobileToggle').style.display = 'none';
+                window._dashboardInited = false;
             }
         }
 
@@ -1022,7 +1051,6 @@
                 localStorage.setItem('undangan_logged_in', 'true');
                 errorEl.textContent = '';
                 checkLogin();
-                // Refresh data setelah login
                 if (typeof refreshAll === 'function') refreshAll();
             } else {
                 errorEl.textContent = '❌ Username atau password salah.';
@@ -1033,14 +1061,13 @@
             if (confirm('Yakin ingin keluar?')) {
                 localStorage.removeItem('undangan_logged_in');
                 checkLogin();
-                // Reset tampilan
                 document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
                 document.getElementById('section-dashboard').style.display = 'block';
             }
         }
 
         // ========================================================================
-        //  DOM REFS & GLOBAL STATE (sama seperti sebelumnya)
+        //  DOM REFS & GLOBAL STATE
         // ========================================================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5JuYoFu250nEQ0oJdwN_4Pc5AEyyxc17KE99PIIGidNmU3bjnQ26WW6bGEOz0jjboTg/exec";
 
@@ -1086,9 +1113,9 @@
 
         let configData = { ...FALLBACK_CONFIG };
         let allGuests = [];
-        let filteredGuests = [];
         let confirmations = [];
         let sentStatus = {};
+        let usingMockData = false;
 
         // ========================================================================
         //  DOM UTILITY
@@ -1111,7 +1138,7 @@
         }
 
         // ========================================================================
-        //  API (sama)
+        //  API
         // ========================================================================
         async function apiGet(action, params = {}) {
             if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_URL') === 0) {
@@ -1134,7 +1161,7 @@
         }
 
         // ========================================================================
-        //  DATA FETCH
+        //  DATA FETCH — PRIORITAS API, MOCK HANYA SEBAGAI FALLBACK DENGAN PERINGATAN
         // ========================================================================
         async function fetchConfig() {
             try {
@@ -1150,49 +1177,51 @@
         }
 
         async function fetchGuests() {
+            // Reset
+            allGuests = [];
+            usingMockData = false;
+            // Sembunyikan warning
+            $('guestWarning').style.display = 'none';
+            $('sendWarning').style.display = 'none';
+
             try {
                 const res = await apiGet('guests');
-                if (res.ok && Array.isArray(res.data)) {
+                if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
                     allGuests = res.data;
+                    console.log('✅ Data tamu dari API:', allGuests.length, 'tamu');
                     return;
+                } else {
+                    console.warn('⚠️ API /guests tidak mengembalikan data valid:', res);
                 }
-            } catch (_) { /* lanjut ke mock */ }
+            } catch (err) {
+                console.warn('⚠️ Gagal mengambil data dari API:', err.message);
+            }
+
+            // Jika gagal, gunakan mock tapi tampilkan peringatan
+            console.warn('⚠️ Menggunakan data contoh (mock) karena API tidak tersedia.');
+            usingMockData = true;
+            $('guestWarning').style.display = 'flex';
+            $('sendWarning').style.display = 'flex';
+
+            // Data mock hanya sebagai fallback
             allGuests = [{
                 no: 1,
-                nama_tamu: 'Bapak Contoh Nama',
+                nama_tamu: 'Bapak Contoh Nama (MOCK)',
                 jenis_tamu: 'Keluarga',
                 nomor_hp: '81234567890',
                 link_undangan: configData.base_url + '?to=' + encodeURIComponent('Bapak Contoh Nama')
             }, {
                 no: 2,
-                nama_tamu: 'Ibu Contoh Nama',
+                nama_tamu: 'Ibu Contoh Nama (MOCK)',
                 jenis_tamu: 'Teman Kantor',
                 nomor_hp: '81234567891',
                 link_undangan: configData.base_url + '?to=' + encodeURIComponent('Ibu Contoh Nama')
             }, {
                 no: 3,
-                nama_tamu: 'Ibu Siapa Contoh',
+                nama_tamu: 'Ibu Siapa Contoh (MOCK)',
                 jenis_tamu: 'Teman Kantor',
                 nomor_hp: '6281234567891',
                 link_undangan: configData.base_url + '?to=' + encodeURIComponent('Ibu Siapa Contoh')
-            }, {
-                no: 4,
-                nama_tamu: 'Bapak Ahmad Fauzi',
-                jenis_tamu: 'Keluarga',
-                nomor_hp: '81234567892',
-                link_undangan: configData.base_url + '?to=' + encodeURIComponent('Bapak Ahmad Fauzi')
-            }, {
-                no: 5,
-                nama_tamu: 'Ibu Siti Rahayu',
-                jenis_tamu: 'Teman Kantor',
-                nomor_hp: '81234567893',
-                link_undangan: configData.base_url + '?to=' + encodeURIComponent('Ibu Siti Rahayu')
-            }, {
-                no: 6,
-                nama_tamu: 'Bapak Dedi Mulyadi',
-                jenis_tamu: 'Saudara',
-                nomor_hp: '81234567894',
-                link_undangan: configData.base_url + '?to=' + encodeURIComponent('Bapak Dedi Mulyadi')
             }];
             allGuests.forEach(g => {
                 g.nomor_hp = String(g.nomor_hp || '').replace(/[^0-9]/g, '');
@@ -1215,10 +1244,6 @@
                 { timestamp: '2026-08-04 21:37:39', nama: 'oke', presensi: 'Tidak Hadir', ucapan_doa: 'aaa' },
                 { timestamp: '2026-08-04 22:26:19', nama: 'Cho kyu', presensi: 'Hadir',
                 ucapan_doa: 'Semoga bahagia dunia akhirat' },
-                { timestamp: '2026-08-05 08:15:00', nama: 'Siti Rahayu', presensi: 'Hadir',
-                ucapan_doa: 'Barakallah, semoga sakinah mawaddah warahmah' },
-                { timestamp: '2026-08-05 09:30:00', nama: 'Ahmad Fauzi', presensi: 'Tidak Hadir',
-                ucapan_doa: 'Mohon maaf tidak bisa hadir, doa terbaik dari jauh' },
             ];
         }
 
@@ -1366,8 +1391,7 @@
                 const q = search.trim().toLowerCase();
                 list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
             }
-            filteredGuests = list;
-            $('guestCount').textContent = list.length + ' tamu';
+            $('guestCount').textContent = list.length + ' tamu' + (usingMockData ? ' (MOCK)' : '');
 
             if (list.length === 0) {
                 tbody.innerHTML =
@@ -1396,7 +1420,7 @@
                 const q = search.trim().toLowerCase();
                 list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
             }
-            $('sendCount').textContent = list.length + ' tamu';
+            $('sendCount').textContent = list.length + ' tamu' + (usingMockData ? ' (MOCK)' : '');
 
             if (list.length === 0) {
                 tbody.innerHTML =
@@ -1580,7 +1604,7 @@
         //  REFRESH & RESET
         // ========================================================================
         async function refreshAll() {
-            showToast('Memuat ulang data...', 'success');
+            showToast('Memuat ulang data dari sheet...', 'success');
             try {
                 await fetchConfig();
                 await fetchGuests();
@@ -1595,7 +1619,11 @@
                 const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
                 const preview = replaceVariables($('templateText').value, sampleGuest, configData);
                 $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
-                showToast('Data berhasil diperbarui.', 'success');
+                if (usingMockData) {
+                    showToast('⚠️ Data menggunakan MOCK karena API tidak tersedia.', 'error');
+                } else {
+                    showToast('✅ Data berhasil diperbarui dari sheet.', 'success');
+                }
             } catch (e) {
                 showToast('Gagal refresh: ' + e.message, 'error');
             }
@@ -1681,7 +1709,7 @@
         })();
 
         // ========================================================================
-        //  INIT DASHBOARD (dipanggil setelah login)
+        //  INIT DASHBOARD
         // ========================================================================
         async function initDashboard() {
             loadSentStatus();
@@ -1731,7 +1759,11 @@
                 renderStats();
             });
 
-            console.log('✅ Dashboard siap. Total tamu:', allGuests.length);
+            if (usingMockData) {
+                showToast('⚠️ Data menggunakan MOCK karena API /guests tidak tersedia. Tambahkan endpoint di Apps Script.', 'error');
+            } else {
+                console.log('✅ Dashboard siap. Total tamu dari sheet:', allGuests.length);
+            }
         }
 
         // ========================================================================
@@ -1740,37 +1772,6 @@
         document.getElementById('loginForm').addEventListener('submit', performLogin);
         document.getElementById('logoutBtn').addEventListener('click', performLogout);
 
-        // Cek status login saat halaman dimuat
-        checkLogin();
-
-        // Jika sudah login, init dashboard dijalankan dari checkLogin
-        // Tapi checkLogin memanggil initDashboard jika sudah login.
-        // Namun initDashboard didefinisikan di atas, dan checkLogin dipanggil di bawah.
-        // Perbaiki: checkLogin panggil initDashboard jika sudah login.
-        // Override checkLogin agar memanggil initDashboard.
-        const originalCheckLogin = checkLogin;
-        checkLogin = function() {
-            const loggedIn = localStorage.getItem('undangan_logged_in') === 'true';
-            if (loggedIn) {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainContent').style.display = 'block';
-                document.getElementById('sidebar').style.display = 'flex';
-                document.getElementById('mobileToggle').style.display = 'flex';
-                if (typeof initDashboard === 'function') {
-                    // Pastikan hanya dijalankan sekali
-                    if (!window._dashboardInited) {
-                        window._dashboardInited = true;
-                        initDashboard();
-                    }
-                }
-            } else {
-                document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('mainContent').style.display = 'none';
-                document.getElementById('sidebar').style.display = 'none';
-                document.getElementById('mobileToggle').style.display = 'none';
-                window._dashboardInited = false;
-            }
-        };
         // Jalankan checkLogin
         checkLogin();
     </script>
