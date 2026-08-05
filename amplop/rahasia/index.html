@@ -319,6 +319,9 @@
             padding: 0.4rem 0.8rem;
             font-size: 0.8rem;
         }
+        .panel .toolbar .btn-sm {
+            margin-left: 0.2rem;
+        }
 
         /* ===== TABLE ===== */
         .table-wrap {
@@ -663,6 +666,17 @@
             color: var(--muted);
             cursor: pointer;
         }
+
+        /* refresh & reset buttons */
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+        .action-buttons .btn-sm {
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
@@ -728,7 +742,10 @@
             <div class="panel">
                 <div class="panel-title">
                     <span>📋 Konfirmasi Terbaru</span>
-                    <span class="badge" id="recentBadge">—</span>
+                    <div class="action-buttons">
+                        <span class="badge" id="recentBadge">—</span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="dashboard">🔄 Refresh</button>
+                    </div>
                 </div>
                 <div id="recentComments" style="font-size:0.85rem;color:var(--muted);min-height:60px;">
                     <span class="loading-dots">Memuat</span>
@@ -741,7 +758,10 @@
             <div class="panel">
                 <div class="panel-title">
                     <span>📋 Daftar Tamu</span>
-                    <span class="badge" id="guestCount">0 tamu</span>
+                    <div class="action-buttons">
+                        <span class="badge" id="guestCount">0 tamu</span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="guests">🔄 Refresh</button>
+                    </div>
                 </div>
                 <div class="toolbar">
                     <div class="filter-group" id="jenisFilter">
@@ -775,7 +795,10 @@
             <div class="panel">
                 <div class="panel-title">
                     <span>📨 Kirim Undangan via WhatsApp</span>
-                    <span class="badge" id="sendCount">0 tamu</span>
+                    <div class="action-buttons">
+                        <span class="badge" id="sendCount">0 tamu</span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="send">🔄 Refresh</button>
+                    </div>
                 </div>
                 <div class="toolbar">
                     <div class="filter-group" id="sendJenisFilter">
@@ -784,7 +807,8 @@
                     <div class="search-box">
                         <input type="text" id="sendSearch" placeholder="Cari nama..." />
                     </div>
-                    <button class="btn-sm gold-outline" id="sendAllBtn">Kirim Semua</button>
+                    <button class="btn-sm primary" id="sendAllBtn">Kirim Semua</button>
+                    <button class="btn-sm danger" id="resetStatusBtn">↺ Reset Status</button>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -811,7 +835,10 @@
             <div class="panel template-editor">
                 <div class="panel-title">
                     <span>✏️ Pengaturan Template Pesan WA</span>
-                    <span class="badge">Gunakan <code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">$nama_tamu</code> dan lainnya</span>
+                    <div class="action-buttons">
+                        <span class="badge">Gunakan <code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">$nama_tamu</code></span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="template">🔄 Refresh</button>
+                    </div>
                 </div>
                 <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.6rem;">
                     Klik tombol variabel untuk menyisipkan ke template. Pesan akan diganti dengan data tamu saat dikirim.
@@ -870,7 +897,7 @@
         // ========================================================================
         //  KONFIGURASI
         // ========================================================================
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5JuYoFu250nEQ0oJdwN_4Pc5AEyyxc17KE99PIIGidNmU3bjnQ26WW6bGEOz0jjboTg/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5JuYoFu250nEQ0oJdwN_4PcP5AEyyxc17KE99PIIGidNmU3bjnQ26WW6bGEOz0jjboTg/exec";
 
         // Fallback jika API tidak bisa diakses
         const FALLBACK_CONFIG = {
@@ -1459,40 +1486,46 @@
         }
 
         // ========================================================================
-        //  SEND ALL
+        //  REFRESH & RESET ACTIONS
         // ========================================================================
-        $('sendAllBtn').addEventListener('click', async () => {
-            const filter = getActiveFilter('send');
-            const search = $('sendSearch').value;
-            let list = [...allGuests];
-            if (filter !== 'all') list = list.filter(g => g.jenis_tamu === filter);
-            if (search.trim()) {
-                const q = search.trim().toLowerCase();
-                list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
-            }
-            const unsent = list.filter(g => !isSent(g.nomor_hp));
-            if (unsent.length === 0) {
-                showToast('Semua tamu sudah terkirim.', 'error');
-                return;
-            }
-            if (!confirm(`Kirim undangan ke ${unsent.length} tamu yang belum dikirim?`)) return;
 
-            let count = 0;
-            for (const g of unsent) {
-                const template = loadTemplate();
-                const message = replaceVariables(template, g, configData);
-                const waLink = buildWALink(g.nomor_hp, message);
-                markSent(g.nomor_hp);
-                window.open(waLink, '_blank');
-                count++;
-                // jeda kecil agar tidak overload
-                await new Promise(r => setTimeout(r, 300));
+        // Refresh all data
+        async function refreshAll() {
+            showToast('Memuat ulang data...', 'success');
+            try {
+                await fetchConfig();
+                await fetchGuests();
+                await fetchConfirmations();
+                // Re-render semua
+                renderStats();
+                // Pertahankan filter dan search
+                const guestFilter = getActiveFilter('guest');
+                const guestSearch = $('guestSearch').value;
+                renderGuestList(guestFilter, guestSearch);
+                const sendFilter = getActiveFilter('send');
+                const sendSearch = $('sendSearch').value;
+                renderSendList(sendFilter, sendSearch);
+                // Template editor tidak perlu reload, tapi kita update preview dengan data terbaru
+                const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
+                const preview = replaceVariables($('templateText').value, sampleGuest, configData);
+                $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
+                showToast('Data berhasil diperbarui.', 'success');
+            } catch (e) {
+                showToast('Gagal refresh: ' + e.message, 'error');
             }
-            showToast(`✅ ${count} undangan dikirim.`, 'success');
+        }
+
+        // Reset sent status
+        function resetSentStatus() {
+            if (!confirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim.')) return;
+            sentStatus = {};
+            saveSentStatus();
+            // Render ulang
             renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
             renderSendList(getActiveFilter('send'), $('sendSearch').value);
             renderStats();
-        });
+            showToast('Status WA direset ke "Belum" untuk semua tamu.', 'success');
+        }
 
         // ========================================================================
         //  NAVIGATION
@@ -1595,6 +1628,48 @@
 
             // Update waktu
             $('lastUpdate').textContent = 'Dimuat: ' + new Date().toLocaleString('id-ID');
+
+            // --- Event listeners for refresh buttons ---
+            document.querySelectorAll('.refresh-btn').forEach(btn => {
+                btn.addEventListener('click', refreshAll);
+            });
+
+            // --- Reset status button ---
+            $('resetStatusBtn').addEventListener('click', resetSentStatus);
+
+            // --- Send All ---
+            $('sendAllBtn').addEventListener('click', async () => {
+                const filter = getActiveFilter('send');
+                const search = $('sendSearch').value;
+                let list = [...allGuests];
+                if (filter !== 'all') list = list.filter(g => g.jenis_tamu === filter);
+                if (search.trim()) {
+                    const q = search.trim().toLowerCase();
+                    list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
+                }
+                const unsent = list.filter(g => !isSent(g.nomor_hp));
+                if (unsent.length === 0) {
+                    showToast('Semua tamu sudah terkirim.', 'error');
+                    return;
+                }
+                if (!confirm(`Kirim undangan ke ${unsent.length} tamu yang belum dikirim?`)) return;
+
+                let count = 0;
+                for (const g of unsent) {
+                    const template = loadTemplate();
+                    const message = replaceVariables(template, g, configData);
+                    const waLink = buildWALink(g.nomor_hp, message);
+                    markSent(g.nomor_hp);
+                    window.open(waLink, '_blank');
+                    count++;
+                    // jeda kecil agar tidak overload
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                showToast(`✅ ${count} undangan dikirim.`, 'success');
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                renderStats();
+            });
 
             console.log('✅ Dashboard siap. Total tamu:', allGuests.length);
         }
