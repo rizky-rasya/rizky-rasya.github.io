@@ -1010,18 +1010,37 @@
     <!-- ===== SCRIPTS ===== -->
     <script>
         // ========================================================================
-        //  KONFIGURASI & KREDENSIAL
+        //  SESI LOGIN
+        //  Tidak ada kredensial tersimpan di file ini. Username & password
+        //  divalidasi di server (Apps Script) terhadap sheet AkunAdmin, lalu
+        //  server mengeluarkan token sesi (berlaku 6 jam) yang disimpan di
+        //  localStorage. Setiap panggilan API yang sensitif (guests,
+        //  update_status, reset_status, save_template) WAJIB menyertakan
+        //  token ini dan divalidasi ulang di server setiap kali dipanggil.
         // ========================================================================
-        const USER_CREDENTIALS = {
-            username: 'rr',
-            password: 'Love'
-        };
+        const TOKEN_KEY = 'undangan_admin_token';
+        const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
+        const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
+        const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+
+        /** Kalau respons API menandakan sesi tidak valid/kedaluwarsa, paksa logout. */
+        function handleSessionError(message) {
+            if (!message) return false;
+            const lower = message.toLowerCase();
+            if (lower.indexOf('sesi') !== -1) {
+                clearToken();
+                checkLogin();
+                showToast('Sesi berakhir, silakan login kembali.', 'error');
+                return true;
+            }
+            return false;
+        }
 
         // ========================================================================
         //  LOGIN / LOGOUT
         // ========================================================================
         function checkLogin() {
-            const loggedIn = localStorage.getItem('undangan_logged_in') === 'true';
+            const loggedIn = !!getToken();
             if (loggedIn) {
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainContent').style.display = 'block';
@@ -1042,24 +1061,36 @@
             }
         }
 
-        function performLogin(e) {
+        async function performLogin(e) {
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
             const errorEl = document.getElementById('loginError');
-            if (user === USER_CREDENTIALS.username && pass === USER_CREDENTIALS.password) {
-                localStorage.setItem('undangan_logged_in', 'true');
-                errorEl.textContent = '';
-                checkLogin();
-                if (typeof refreshAll === 'function') refreshAll();
-            } else {
-                errorEl.textContent = '❌ Username atau password salah.';
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            errorEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Memeriksa…';
+            try {
+                const res = await apiPost({ action: 'login', username: user, password: pass });
+                if (res.ok) {
+                    setToken(res.token);
+                    checkLogin();
+                    if (typeof refreshAll === 'function') refreshAll();
+                } else {
+                    errorEl.textContent = '❌ ' + (res.error || 'Username atau password salah.');
+                }
+            } catch (err) {
+                errorEl.textContent = '❌ Tidak bisa terhubung ke server: ' + err.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Masuk';
             }
         }
 
         function performLogout() {
             if (confirm('Yakin ingin keluar?')) {
-                localStorage.removeItem('undangan_logged_in');
+                clearToken();
                 checkLogin();
                 document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
                 document.getElementById('section-dashboard').style.display = 'block';
@@ -1114,7 +1145,6 @@
         let configData = { ...FALLBACK_CONFIG };
         let allGuests = [];
         let confirmations = [];
-        let sentStatus = {};
         let usingMockData = false;
 
         // ========================================================================
@@ -1185,9 +1215,14 @@
             $('sendWarning').style.display = 'none';
 
             try {
-                const res = await apiGet('guests');
+                const res = await apiGet('guests', { token: getToken() });
+                if (handleSessionError(res.error)) return;
                 if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
-                    allGuests = res.data;
+                    allGuests = res.data.map(g => ({
+                        ...g,
+                        nomor_hp: String(g.nomor_hp || '').trim(),
+                        status_kirim: g.status_kirim === true || String(g.status_kirim).toUpperCase() === 'TRUE'
+                    }));
                     console.log('✅ Data tamu dari API:', allGuests.length, 'tamu');
                     return;
                 } else {
@@ -1248,47 +1283,51 @@
         }
 
         // ========================================================================
-        //  SENT STATUS (localStorage)
+        //  STATUS KIRIM — sumber kebenaran adalah sheet NamaTamuUndangan,
+        //  bukan localStorage, supaya konsisten di semua perangkat/browser.
         // ========================================================================
-        function loadSentStatus() {
-            try {
-                const raw = localStorage.getItem('undangan_sent_status');
-                if (raw) sentStatus = JSON.parse(raw);
-                else sentStatus = {};
-            } catch (_) { sentStatus = {}; }
-        }
-
-        function saveSentStatus() {
-            try {
-                localStorage.setItem('undangan_sent_status', JSON.stringify(sentStatus));
-            } catch (_) {}
-        }
-
-        function markSent(hp) {
-            if (!hp) return;
-            sentStatus[hp] = true;
-            saveSentStatus();
-        }
-
         function isSent(hp) {
-            return !!sentStatus[hp];
+            const g = allGuests.find(x => x.nomor_hp === hp);
+            return !!(g && g.status_kirim);
+        }
+
+        /** Update status di UI dulu (responsif), lalu sinkronkan ke sheet lewat API. */
+        async function markSent(hp) {
+            if (!hp) return;
+            const g = allGuests.find(x => x.nomor_hp === hp);
+            if (!g) return;
+            g.status_kirim = true;
+            g.tanggal_kirim = new Date().toISOString();
+            try {
+                const res = await apiPost({ action: 'update_status', token: getToken(), row: g._row, status: true });
+                if (!res.ok) throw new Error(res.error || 'Gagal menyimpan status.');
+            } catch (err) {
+                if (!handleSessionError(err.message)) {
+                    showToast('Gagal menyimpan status ke sheet: ' + err.message, 'error');
+                }
+            }
         }
 
         // ========================================================================
-        //  TEMPLATE (localStorage)
+        //  TEMPLATE — disimpan di sheet DataMempelai (field template_pesan_wa)
+        //  lewat API, bukan localStorage.
         // ========================================================================
         function loadTemplate() {
-            try {
-                const raw = localStorage.getItem('undangan_template');
-                if (raw) return raw;
-            } catch (_) {}
-            return DEFAULT_TEMPLATE;
+            return (configData.template_pesan_wa && String(configData.template_pesan_wa).trim())
+                ? configData.template_pesan_wa
+                : DEFAULT_TEMPLATE;
         }
 
-        function saveTemplate(text) {
+        async function saveTemplate(text) {
+            configData.template_pesan_wa = text;
             try {
-                localStorage.setItem('undangan_template', text);
-            } catch (_) {}
+                const res = await apiPost({ action: 'save_template', token: getToken(), text: text });
+                if (!res.ok) throw new Error(res.error || 'Gagal menyimpan template.');
+            } catch (err) {
+                if (!handleSessionError(err.message)) {
+                    showToast('Gagal menyimpan template: ' + err.message, 'error');
+                }
+            }
         }
 
         // ========================================================================
@@ -1465,7 +1504,7 @@
             const guest = allGuests.find(g => g.nomor_hp === hp) || { nama_tamu: nama, link_undangan: link || '' };
             const message = replaceVariables(template, guest, configData);
             const waLink = buildWALink(hp, message);
-            markSent(hp);
+            await markSent(hp);
             if (btn) {
                 btn.textContent = '✅ Terkirim';
                 btn.disabled = true;
@@ -1544,16 +1583,16 @@
                 showToast('Pratinjau diperbarui.', 'success');
             });
 
-            $('saveTemplateBtn').addEventListener('click', () => {
+            $('saveTemplateBtn').addEventListener('click', async () => {
                 const text = $('templateText').value;
-                saveTemplate(text);
+                await saveTemplate(text);
                 showToast('Template disimpan.', 'success');
             });
 
-            $('resetTemplateBtn').addEventListener('click', () => {
+            $('resetTemplateBtn').addEventListener('click', async () => {
                 if (confirm('Reset template ke default?')) {
                     $('templateText').value = DEFAULT_TEMPLATE;
-                    saveTemplate(DEFAULT_TEMPLATE);
+                    await saveTemplate(DEFAULT_TEMPLATE);
                     showToast('Template direset ke default.', 'success');
                 }
             });
@@ -1629,14 +1668,21 @@
             }
         }
 
-        function resetSentStatus() {
-            if (!confirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim.')) return;
-            sentStatus = {};
-            saveSentStatus();
-            renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
-            renderSendList(getActiveFilter('send'), $('sendSearch').value);
-            renderStats();
-            showToast('Status WA direset ke "Belum" untuk semua tamu.', 'success');
+        async function resetSentStatus() {
+            if (!confirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim di sheet.')) return;
+            try {
+                const res = await apiPost({ action: 'reset_status', token: getToken() });
+                if (!res.ok) throw new Error(res.error || 'Gagal reset status.');
+                allGuests.forEach(g => { g.status_kirim = false; g.tanggal_kirim = ''; });
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                renderStats();
+                showToast('Status WA direset ke "Belum" untuk semua tamu.', 'success');
+            } catch (err) {
+                if (!handleSessionError(err.message)) {
+                    showToast('Gagal reset status: ' + err.message, 'error');
+                }
+            }
         }
 
         // ========================================================================
@@ -1712,7 +1758,6 @@
         //  INIT DASHBOARD
         // ========================================================================
         async function initDashboard() {
-            loadSentStatus();
             await fetchConfig();
             await fetchGuests();
             await fetchConfirmations();
@@ -1748,7 +1793,7 @@
                     const template = loadTemplate();
                     const message = replaceVariables(template, g, configData);
                     const waLink = buildWALink(g.nomor_hp, message);
-                    markSent(g.nomor_hp);
+                    await markSent(g.nomor_hp);
                     window.open(waLink, '_blank');
                     count++;
                     await new Promise(r => setTimeout(r, 300));
