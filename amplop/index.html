@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undangan Pernikahan</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        input, select, textarea, button { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        .comment-box { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>Konfirmasi Kehadiran & Ucapan</h2>
+    
+    <!-- Form Input -->
+    <form id="rsvpForm">
+        <label>Nama:</label>
+        <input type="text" id="nama" required>
+        
+        <label>Konfirmasi Kehadiran:</label>
+        <select id="kehadiran">
+            <option value="Hadir">Hadir</option>
+            <option value="Tidak Hadir">Tidak Hadir</option>
+        </select>
+        
+        <label>Komentar / Ucapan:</label>
+        <textarea id="komentar" rows="3" required></textarea>
+        
+        <button type="submit" id="submitBtn">Kirim</button>
+    </form>
+
+    <hr>
+
+    <h3>Daftar Ucapan & Kehadiran</h3>
+    <div id="daftarKomentar">Memuat ucapan...</div>
+
+    <script>
+        // Ganti dengan Web App URL yang Anda dapatkan dari Google Apps Script
+        const SCRIPT_URL = "URL_GOOGLE_APPS_SCRIPT_ANDA_DISAHKAN_DI_SINI";
+
+        const form = document.getElementById('rsvpForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const daftarKomentar = document.getElementById('daftarKomentar');
+
+        // Fungsi untuk mengambil dan menampilkan data dari Spreadsheet
+        function loadComments() {
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    daftarKomentar.innerHTML = "";
+                    // Balik urutan agar yang terbaru berada di atas
+                    data.reverse().forEach(row => {
+                        const div = document.createElement('div');
+                        div.className = 'comment-box';
+                        div.innerHTML = `<strong>${row.nama}</strong> (${row.kehadiran})<br><p>${row.komentar}</p>`;
+                        daftarKomentar.appendChild(div);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    daftarKomentar.innerHTML = "Gagal memuat ucapan.";
+                });
+        }
+
+        // Fungsi saat form disubmit
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Mengirim...";
+
+            const data = {
+                nama: document.getElementById('nama').value,
+                kehadiran: document.getElementById('kehadiran').value,
+                komentar: document.getElementById('komentar').value
+            };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                // Mode no-cors terkadang dibutuhkan untuk Apps Script, namun dengan JSON.stringify 
+                // pastikan penanganan responnya sesuai. Cara standar:
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert('Konfirmasi berhasil terkirim!');
+                form.reset();
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Kirim";
+                loadComments(); // Refresh daftar komentar otomatis
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan, silahkan coba lagi.');
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Kirim";
+            });
+        });
+
+        // Muat komentar saat halaman pertama kali dibuka
+        loadComments();
+    </script>
+</body>
+</html>
