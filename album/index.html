@@ -2,255 +2,525 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Album — Bagikan Momenmu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bagikan Momen — Wedding Album</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family:'Segoe UI', sans-serif;
-    background:linear-gradient(135deg,#fdf6f0 0%,#f3e7db 100%);
-    min-height:100vh;
-    display:flex; justify-content:center; align-items:flex-start;
-    padding:30px 16px;
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; background:#111; overflow:hidden; }
+  body { font-family:'Segoe UI', sans-serif; color:#fff; }
+
+  #app { position:relative; width:100%; height:100%; display:flex; flex-direction:column; }
+
+  /* ---------- LAYAR STATUS (loading / error / butuh izin) ---------- */
+  #statusScreen {
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:30px; background:#1a1a1a; z-index:50; gap:14px;
   }
-  .card {
-    background:#fff; width:100%; max-width:460px;
-    border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,.08);
-    padding:32px 28px;
+  #statusScreen .icon { font-size:44px; }
+  #statusScreen h2 { font-size:18px; }
+  #statusScreen p { font-size:14px; color:#bbb; max-width:320px; line-height:1.5; }
+  #statusScreen button { margin-top:10px; padding:12px 28px; border-radius:30px; border:none; background:#c99b6a; color:#fff; font-weight:700; font-size:14px; }
+
+  /* ---------- HEADER ---------- */
+  header {
+    position:absolute; top:0; left:0; right:0; z-index:20; padding:16px 18px;
+    display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(180deg, rgba(0,0,0,.55), transparent);
   }
-  h1 { text-align:center; font-size:22px; color:#3a2e28; margin-bottom:4px; }
-  .subtitle { text-align:center; color:#8a7b6e; font-size:14px; margin-bottom:26px; }
-  .input-group { margin-bottom:18px; }
-  label { display:block; margin-bottom:6px; font-size:13px; color:#5c4d43; font-weight:600; }
-  input[type=text], select {
-    width:100%; padding:12px; border:1.5px solid #e6dcd2; border-radius:10px;
-    font-size:14px; background:#fffaf6;
+  header .brand { font-size:15px; font-weight:700; }
+  header .brand small { display:block; font-size:11px; font-weight:400; opacity:.8; }
+  header a.nav-link { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,.15); padding:8px 14px; border-radius:20px; }
+
+  /* ---------- CAMERA VIEW ---------- */
+  #cameraWrap { position:relative; flex:1; background:#000; overflow:hidden; }
+  #liveVideo, #recordedVideo { width:100%; height:100%; object-fit:cover; display:block; }
+  #photoCanvasPreview { width:100%; height:100%; object-fit:cover; display:none; }
+  #recordedVideo { display:none; }
+
+  .rec-badge {
+    position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:15;
+    background:rgba(224,82,82,.9); padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700;
+    display:none; align-items:center; gap:6px;
   }
-  input:focus, select:focus { outline:none; border-color:#c99b6a; }
-  .tabs { display:flex; gap:8px; margin-bottom:18px; }
-  .tab-btn {
-    flex:1; padding:10px; border-radius:10px; border:1.5px solid #e6dcd2;
-    background:#fff; cursor:pointer; font-size:13px; font-weight:600; color:#8a7b6e;
+  .rec-badge .dot { width:8px; height:8px; border-radius:50%; background:#fff; animation:blink 1s infinite; }
+  @keyframes blink { 50% { opacity:.2; } }
+
+  /* ---------- VOICE MODE ---------- */
+  #voiceWrap {
+    display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:20px;
+    background:radial-gradient(circle at center, #2a2320, #111);
   }
-  .tab-btn.active { background:#c99b6a; color:#fff; border-color:#c99b6a; }
-  .upload-zone {
-    border:2px dashed #d9c6b0; border-radius:14px; padding:24px; text-align:center;
-    color:#a08d7d; cursor:pointer; margin-bottom:18px; font-size:13px;
+  .vn-orb {
+    width:150px; height:150px; border-radius:50%;
+    background:linear-gradient(135deg,#c99b6a,#8a6a45);
+    display:flex; align-items:center; justify-content:center; font-size:50px;
+    box-shadow:0 0 0 8px rgba(201,155,106,.15);
   }
-  .upload-zone.dragover { background:#fdf6ee; border-color:#c99b6a; }
-  #preview { margin-top:12px; display:none; }
-  #preview img, #preview video { width:100%; border-radius:10px; max-height:260px; object-fit:cover; }
-  .record-controls { display:none; gap:10px; margin-bottom:18px; }
-  .record-controls button {
-    flex:1; padding:12px; border-radius:10px; border:none; font-weight:600; cursor:pointer;
+  .vn-orb.recording { animation:pulse 1.4s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(224,82,82,.4);} 70%{box-shadow:0 0 0 26px rgba(224,82,82,0);} 100%{box-shadow:0 0 0 0 rgba(224,82,82,0);} }
+  #vnTimer { font-size:22px; font-weight:700; letter-spacing:1px; }
+  #vnHint { font-size:13px; color:#bbb; text-align:center; }
+  #vnPlayer { width:85%; display:none; }
+
+  /* ---------- BOTTOM CONTROLS ---------- */
+  #controls {
+    position:relative; z-index:20; padding:18px 18px 26px; background:linear-gradient(0deg, rgba(0,0,0,.7), transparent);
   }
-  #recordBtn { background:#e6dcd2; color:#5c4d43; }
-  #recordBtn.recording { background:#e05252; color:#fff; }
-  button.submit {
-    width:100%; padding:14px; border:none; border-radius:12px;
-    background:linear-gradient(135deg,#c99b6a,#a97c4f); color:#fff;
-    font-size:15px; font-weight:700; cursor:pointer; margin-top:6px;
+  .mode-switch { display:flex; justify-content:center; gap:22px; margin-bottom:18px; }
+  .mode-switch button {
+    background:none; border:none; color:rgba(255,255,255,.55); font-size:13px; font-weight:700; padding:6px 4px; border-bottom:2px solid transparent;
   }
-  button.submit:disabled { opacity:.5; cursor:not-allowed; }
-  .msg { margin-top:16px; padding:12px; border-radius:10px; font-size:13px; text-align:center; display:none; }
-  .msg.success { background:#e8f5e9; color:#2e7d32; display:block; }
-  .msg.error { background:#fdecea; color:#c62828; display:block; }
-  .footer-link { text-align:center; margin-top:22px; }
-  .footer-link a { color:#a97c4f; font-size:13px; text-decoration:none; }
+  .mode-switch button.active { color:#fff; border-color:#c99b6a; }
+
+  .capture-row { display:flex; align-items:center; justify-content:center; gap:36px; }
+  .side-btn { width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.15); border:none; color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; }
+
+  #shutterBtn {
+    width:74px; height:74px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,.4);
+  }
+  #shutterBtn.video-mode { background:#e05252; }
+  #shutterBtn.recording { border-radius:14px; width:34px; height:34px; }
+
+  .vn-controls { display:none; gap:16px; justify-content:center; align-items:center; }
+  .vn-controls button {
+    padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px;
+  }
+  #vnRecordBtn { background:#e05252; color:#fff; width:64px; height:64px; border-radius:50%; font-size:22px; padding:0; }
+  #vnRedoBtn { background:rgba(255,255,255,.15); color:#fff; }
+  #vnPlayBtn { background:rgba(255,255,255,.15); color:#fff; }
+  #vnSendBtn { background:#c99b6a; color:#fff; }
+
+  /* ---------- REVIEW (setelah foto/video diambil) ---------- */
+  .review-row { display:none; gap:14px; justify-content:center; align-items:center; }
+  .review-row button { padding:14px 24px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
+  #retakeBtn { background:rgba(255,255,255,.15); color:#fff; }
+  #sendMediaBtn { background:#c99b6a; color:#fff; }
+
+  .name-field { max-width:400px; margin:0 auto 14px; }
+  .name-field input {
+    width:100%; padding:12px 14px; border-radius:10px; border:1.5px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08); color:#fff; font-size:14px;
+  }
+  .name-field input::placeholder { color:rgba(255,255,255,.5); }
+
+  .toast {
+    position:absolute; bottom:110px; left:50%; transform:translateX(-50%); z-index:60;
+    background:#222; padding:12px 20px; border-radius:10px; font-size:13px; max-width:85%; text-align:center; display:none;
+  }
+  .toast.success { background:#2e7d32; }
+  .toast.error { background:#c62828; }
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>💍 Bagikan Momenmu</h1>
-  <p class="subtitle">Unggah foto, video, atau ucapan suara untuk kami</p>
+<div id="app">
 
-  <div class="input-group">
-    <label>Kode Undangan (Wedding ID)</label>
-    <input type="text" id="weddingId" placeholder="contoh: rizky-rasya">
+  <div id="statusScreen">
+    <div class="icon">💍</div>
+    <h2 id="statusTitle">Menyiapkan kamera...</h2>
+    <p id="statusText">Mohon tunggu sebentar</p>
+    <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
   </div>
 
-  <div class="input-group">
-    <label>Nama Kamu</label>
-    <input type="text" id="guestName" placeholder="Nama lengkap">
+  <header>
+    <div class="brand"><span id="brandName">Wedding Album</span><small id="brandDate"></small></div>
+    <a class="nav-link" href="#" id="toAlbumLink">Lihat Album →</a>
+  </header>
+
+  <div class="rec-badge" id="recBadge"><span class="dot"></span> <span id="recTimer">00:00</span></div>
+
+  <div id="cameraWrap">
+    <video id="liveVideo" autoplay playsinline muted></video>
+    <canvas id="photoCanvasPreview"></canvas>
+    <video id="recordedVideo" playsinline controls></video>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-type="photo">📷 Foto</button>
-    <button class="tab-btn" data-type="video">🎥 Video</button>
-    <button class="tab-btn" data-type="voice">🎤 Suara</button>
+  <div id="voiceWrap">
+    <div class="vn-orb" id="vnOrb">🎤</div>
+    <div id="vnTimer">00:00</div>
+    <p id="vnHint">Tekan tombol merah untuk mulai merekam ucapanmu</p>
+    <audio id="vnPlayer" controls></audio>
   </div>
 
-  <div class="upload-zone" id="uploadZone">
-    Klik atau seret file foto/video ke sini
-    <input type="file" id="fileInput" accept="image/*" style="display:none">
+  <div class="toast" id="toast"></div>
+
+  <div id="controls">
+    <div class="name-field">
+      <input type="text" id="guestName" placeholder="Nama kamu" maxlength="40">
+    </div>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button data-mode="photo" class="active">FOTO</button>
+      <button data-mode="video">VIDEO</button>
+      <button data-mode="voice">SUARA</button>
+    </div>
+
+    <div class="capture-row" id="captureRow">
+      <button class="side-btn" id="flipBtn" title="Ganti kamera">🔄</button>
+      <button id="shutterBtn"></button>
+      <div style="width:44px;"></div>
+    </div>
+
+    <div class="vn-controls" id="vnControlsIdle">
+      <button id="vnRecordBtn">●</button>
+    </div>
+    <div class="vn-controls" id="vnControlsReview">
+      <button id="vnRedoBtn">↺ Ulang</button>
+      <button id="vnPlayBtn">▶ Putar</button>
+      <button id="vnSendBtn">Kirim ✓</button>
+    </div>
+
+    <div class="review-row" id="reviewRow">
+      <button id="retakeBtn">↺ Ambil Ulang</button>
+      <button id="sendMediaBtn">Kirim ✓</button>
+    </div>
   </div>
-
-  <div class="record-controls" id="recordControls">
-    <button id="recordBtn" type="button">🎤 Mulai Rekam</button>
-  </div>
-
-  <div id="preview"></div>
-
-  <button class="submit" id="submitBtn" disabled>Kirim</button>
-  <div class="msg" id="msg"></div>
-
-  <div class="footer-link"><a href="album.html">Lihat album →</a></div>
 </div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoVccnn-X22zwecURau54A58cgx7mBohD6snmDklpeBL87qzLrhEaGSICawUQP42TA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
-let currentType = 'photo';
-let selectedBlob = null;
-let selectedFilename = null;
-let selectedMime = null;
-
-const tabs = document.querySelectorAll('.tab-btn');
-const uploadZone = document.getElementById('uploadZone');
-const fileInput = document.getElementById('fileInput');
-const recordControls = document.getElementById('recordControls');
-const recordBtn = document.getElementById('recordBtn');
-const preview = document.getElementById('preview');
-const submitBtn = document.getElementById('submitBtn');
-const msgEl = document.getElementById('msg');
-
-// preload wedding_id dari URL kalau ada (?w=rizky-rasya)
+// ============================================
+// WEDDING ID — HANYA DARI LINK, TERSIMPAN OTOMATIS, TIDAK BISA DIKETIK MANUAL
+// ============================================
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('w')) document.getElementById('weddingId').value = urlParams.get('w');
+let weddingId = urlParams.get('w');
 
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    currentType = tab.dataset.type;
-    resetSelection();
+if (weddingId) {
+  localStorage.setItem('active_wedding_id', weddingId);
+} else {
+  weddingId = localStorage.getItem('active_wedding_id');
+}
 
-    if (currentType === 'voice') {
-      uploadZone.style.display = 'none';
-      recordControls.style.display = 'flex';
-    } else {
-      uploadZone.style.display = 'block';
-      recordControls.style.display = 'none';
-      fileInput.accept = currentType === 'photo' ? 'image/*' : 'video/*';
+document.getElementById('toAlbumLink').href = weddingId ? `album.html?w=${encodeURIComponent(weddingId)}` : '#';
+
+if (!weddingId) {
+  showStatus('Tautan Tidak Lengkap', 'Link ini belum berisi kode undangan. Minta mempelai untuk mengirimkan ulang link undangan yang benar.', false);
+  throw new Error('no wedding id');
+}
+
+// ============================================
+// STATE
+// ============================================
+let weddingSettings = null;
+let activeFilterCss = 'none';
+let currentMode = 'photo'; // photo | video | voice
+let currentFacing = 'environment';
+let liveStream = null;
+let capturedBlob = null, capturedMime = null, capturedExt = null;
+let mediaRecorder = null, recordedChunks = [];
+let recordTimer = null, recordSeconds = 0;
+let vnRecorder = null, vnChunks = [], vnBlob = null;
+let vnTimer = null, vnSeconds = 0;
+
+const liveVideo = document.getElementById('liveVideo');
+const photoCanvas = document.getElementById('photoCanvasPreview');
+const recordedVideo = document.getElementById('recordedVideo');
+
+// ============================================
+// INIT
+// ============================================
+init();
+
+async function init() {
+  try {
+    const settingsRes = await fetch(`${APPS_SCRIPT_URL}?action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
+    const settings = await settingsRes.json();
+    if (!settings.success) {
+      showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid.', false);
+      return;
     }
+    weddingSettings = settings;
+    document.getElementById('brandName').textContent = `${settings.groom_name} & ${settings.bride_name}`;
+    if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
+
+    // ambil filter aktif tunggal yang ditentukan admin
+    if (settings.allow_filter !== false) {
+      const filterRes = await fetch(`${APPS_SCRIPT_URL}?action=getFilters&wedding_id=${encodeURIComponent(weddingId)}`);
+      const filterData = await filterRes.json();
+      if (filterData.success && filterData.active_filter_id) {
+        const match = filterData.filters.find(f => String(f.filter_id) === String(filterData.active_filter_id));
+        if (match) activeFilterCss = match.css_filter || 'none';
+      }
+    }
+
+    setupModeSwitch(settings);
+    await startCamera();
+    hideStatus();
+  } catch (err) {
+    showStatus('Gagal Memuat', 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu lalu coba lagi.', true);
+  }
+}
+
+function setupModeSwitch(settings) {
+  const btns = document.querySelectorAll('#modeSwitch button');
+  btns.forEach(btn => {
+    const mode = btn.dataset.mode;
+    if (mode === 'video' && settings.allow_video !== true) { btn.style.display = 'none'; return; }
+    if (mode === 'voice' && settings.allow_voice !== true) { btn.style.display = 'none'; return; }
+    btn.addEventListener('click', () => switchMode(mode));
   });
-});
-
-function resetSelection() {
-  selectedBlob = null;
-  selectedFilename = null;
-  selectedMime = null;
-  preview.style.display = 'none';
-  preview.innerHTML = '';
-  submitBtn.disabled = true;
-  fileInput.value = '';
 }
 
-uploadZone.addEventListener('click', () => fileInput.click());
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+function switchMode(mode) {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  currentMode = mode;
+  resetCapture();
+  document.querySelectorAll('#modeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
 
-function handleFile(file) {
-  const maxMB = 15;
-  if (file.size > maxMB * 1024 * 1024) {
-    showMsg(`File terlalu besar. Maksimal ${maxMB}MB.`, 'error');
-    return;
-  }
-  selectedBlob = file;
-  selectedFilename = file.name;
-  selectedMime = file.type;
+  document.getElementById('cameraWrap').style.display = mode === 'voice' ? 'none' : 'block';
+  document.getElementById('voiceWrap').style.display = mode === 'voice' ? 'flex' : 'none';
+  document.getElementById('captureRow').style.display = mode === 'voice' ? 'none' : 'flex';
+  document.getElementById('vnControlsIdle').style.display = mode === 'voice' ? 'flex' : 'none';
 
-  preview.style.display = 'block';
-  preview.innerHTML = '';
-  if (currentType === 'photo') {
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    preview.appendChild(img);
-  } else {
-    const video = document.createElement('video');
-    video.src = URL.createObjectURL(file);
-    video.controls = true;
-    preview.appendChild(video);
-  }
-  submitBtn.disabled = false;
+  const shutter = document.getElementById('shutterBtn');
+  shutter.classList.toggle('video-mode', mode === 'video');
+
+  if (mode === 'voice') stopCameraStream();
+  else if (!liveStream) startCamera();
 }
 
-// ----- Voice recording -----
-let mediaRecorder, audioChunks = [], isRecording = false;
+// ============================================
+// KAMERA
+// ============================================
+async function startCamera() {
+  try {
+    stopCameraStream();
+    liveStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacing },
+      audio: currentMode === 'video'
+    });
+    liveVideo.srcObject = liveStream;
+    liveVideo.style.filter = activeFilterCss;
+  } catch (err) {
+    showStatus('Izin Kamera Diperlukan', 'Kami butuh akses kamera untuk membantumu mengambil foto/video. Aktifkan izin kamera di pengaturan browser, lalu muat ulang halaman.', true);
+  }
+}
 
-recordBtn.addEventListener('click', async () => {
-  if (!isRecording) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunks = [];
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunks, { type: 'audio/webm' });
-        selectedBlob = blob;
-        selectedFilename = 'voice-note.webm';
-        selectedMime = 'audio/webm';
+function stopCameraStream() {
+  if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
+}
 
-        preview.style.display = 'block';
-        preview.innerHTML = '';
-        const audio = document.createElement('audio');
-        audio.src = URL.createObjectURL(blob);
-        audio.controls = true;
-        audio.style.width = '100%';
-        preview.appendChild(audio);
-        submitBtn.disabled = false;
-      };
-      mediaRecorder.start();
-      isRecording = true;
-      recordBtn.textContent = '⏹ Berhenti Rekam';
-      recordBtn.classList.add('recording');
-    } catch (err) {
-      showMsg('Tidak bisa mengakses mikrofon: ' + err.message, 'error');
+document.getElementById('flipBtn').addEventListener('click', () => {
+  currentFacing = currentFacing === 'environment' ? 'user' : 'environment';
+  startCamera();
+});
+
+// ============================================
+// SHUTTER — foto / video
+// ============================================
+const shutterBtn = document.getElementById('shutterBtn');
+shutterBtn.addEventListener('click', () => {
+  if (currentMode === 'photo') takePhoto();
+  else if (currentMode === 'video') {
+    if (mediaRecorder && mediaRecorder.state === 'recording') stopVideoRecording();
+    else startVideoRecording();
+  }
+});
+
+function takePhoto() {
+  const vw = liveVideo.videoWidth, vh = liveVideo.videoHeight;
+  photoCanvas.width = vw; photoCanvas.height = vh;
+  const ctx = photoCanvas.getContext('2d');
+  ctx.filter = activeFilterCss;
+  if (currentFacing === 'user') { ctx.translate(vw, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(liveVideo, 0, 0, vw, vh);
+
+  photoCanvas.toBlob(blob => {
+    capturedBlob = blob; capturedMime = 'image/jpeg'; capturedExt = 'jpg';
+    liveVideo.style.display = 'none';
+    photoCanvas.style.display = 'block';
+    showReview();
+  }, 'image/jpeg', 0.9);
+}
+
+function startVideoRecording() {
+  recordedChunks = [];
+  const maxSeconds = Number(weddingSettings.max_video_seconds) || 60;
+
+  // canvas pipeline supaya filter ikut terbakar ke hasil rekaman
+  const canvas = document.createElement('canvas');
+  canvas.width = liveVideo.videoWidth || 640;
+  canvas.height = liveVideo.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  let drawing = true;
+
+  function drawFrame() {
+    if (!drawing) return;
+    ctx.filter = activeFilterCss;
+    if (currentFacing === 'user') {
+      ctx.save(); ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+      ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    } else {
+      ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
     }
-  } else {
-    mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(t => t.stop());
-    isRecording = false;
-    recordBtn.textContent = '🎤 Mulai Rekam';
-    recordBtn.classList.remove('recording');
+    requestAnimationFrame(drawFrame);
   }
+  drawFrame();
+
+  const canvasStream = canvas.captureStream(30);
+  const audioTracks = liveStream.getAudioTracks();
+  const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+
+  mediaRecorder = new MediaRecorder(combined, { mimeType: 'video/webm;codecs=vp8,opus' });
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    drawing = false;
+    capturedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+    capturedMime = 'video/webm'; capturedExt = 'webm';
+    recordedVideo.src = URL.createObjectURL(capturedBlob);
+    liveVideo.style.display = 'none';
+    recordedVideo.style.display = 'block';
+    showReview();
+  };
+  mediaRecorder.start();
+
+  recordSeconds = 0;
+  document.getElementById('recBadge').style.display = 'flex';
+  shutterBtn.classList.add('recording');
+  updateRecTimer();
+  recordTimer = setInterval(() => {
+    recordSeconds++;
+    updateRecTimer();
+    if (recordSeconds >= maxSeconds) stopVideoRecording();
+  }, 1000);
+}
+
+function stopVideoRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  clearInterval(recordTimer);
+  document.getElementById('recBadge').style.display = 'none';
+  shutterBtn.classList.remove('recording');
+}
+
+function updateRecTimer() {
+  document.getElementById('recTimer').textContent = formatSeconds(recordSeconds);
+}
+
+// ============================================
+// REVIEW (FOTO/VIDEO)
+// ============================================
+function showReview() {
+  document.getElementById('captureRow').style.display = 'none';
+  document.getElementById('reviewRow').style.display = 'flex';
+}
+
+document.getElementById('retakeBtn').addEventListener('click', () => {
+  resetCapture();
+  document.getElementById('captureRow').style.display = 'flex';
+  document.getElementById('reviewRow').style.display = 'none';
+  liveVideo.style.display = 'block';
+  photoCanvas.style.display = 'none';
+  recordedVideo.style.display = 'none';
+  if (!liveStream) startCamera();
 });
 
-// ----- Submit -----
-submitBtn.addEventListener('click', async () => {
-  const weddingId = document.getElementById('weddingId').value.trim();
+document.getElementById('sendMediaBtn').addEventListener('click', () => sendMedia(currentMode));
+
+function resetCapture() {
+  capturedBlob = null; capturedMime = null; capturedExt = null;
+  recordedChunks = [];
+}
+
+// ============================================
+// VOICE NOTE — rekam / putar / ulang / kirim
+// ============================================
+const vnOrb = document.getElementById('vnOrb');
+const vnRecordBtn = document.getElementById('vnRecordBtn');
+const vnRedoBtn = document.getElementById('vnRedoBtn');
+const vnPlayBtn = document.getElementById('vnPlayBtn');
+const vnSendBtn = document.getElementById('vnSendBtn');
+const vnPlayer = document.getElementById('vnPlayer');
+
+vnRecordBtn.addEventListener('click', startVoiceRecording);
+vnRedoBtn.addEventListener('click', resetVoice);
+vnPlayBtn.addEventListener('click', () => { vnPlayer.play(); });
+vnSendBtn.addEventListener('click', () => sendMedia('voice'));
+
+async function startVoiceRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    vnChunks = [];
+    vnRecorder = new MediaRecorder(stream);
+    vnRecorder.ondataavailable = e => vnChunks.push(e.data);
+    vnRecorder.onstop = () => {
+      vnBlob = new Blob(vnChunks, { type: 'audio/webm' });
+      capturedBlob = vnBlob; capturedMime = 'audio/webm'; capturedExt = 'webm';
+      vnPlayer.src = URL.createObjectURL(vnBlob);
+      vnPlayer.style.display = 'block';
+      vnOrb.classList.remove('recording');
+      document.getElementById('vnControlsIdle').style.display = 'none';
+      document.getElementById('vnControlsReview').style.display = 'flex';
+      document.getElementById('vnHint').textContent = 'Dengarkan dulu sebelum mengirim';
+      stream.getTracks().forEach(t => t.stop());
+    };
+    vnRecorder.start();
+    vnOrb.classList.add('recording');
+    document.getElementById('vnHint').textContent = 'Sedang merekam...';
+
+    const maxSeconds = Number(weddingSettings.max_voice_seconds) || 60;
+    vnSeconds = 0;
+    updateVnTimer();
+    vnTimer = setInterval(() => {
+      vnSeconds++;
+      updateVnTimer();
+      if (vnSeconds >= maxSeconds) stopVoiceRecording();
+    }, 1000);
+
+    // ganti tombol rekam jadi tombol stop
+    vnRecordBtn.textContent = '■';
+    vnRecordBtn.onclick = stopVoiceRecording;
+  } catch (err) {
+    showToast('Tidak bisa mengakses mikrofon. Periksa izin mikrofon di browser kamu.', 'error');
+  }
+}
+
+function stopVoiceRecording() {
+  if (vnRecorder && vnRecorder.state === 'recording') vnRecorder.stop();
+  clearInterval(vnTimer);
+}
+
+function updateVnTimer() {
+  document.getElementById('vnTimer').textContent = formatSeconds(vnSeconds);
+}
+
+function resetVoice() {
+  capturedBlob = null;
+  vnPlayer.style.display = 'none';
+  vnPlayer.src = '';
+  document.getElementById('vnControlsReview').style.display = 'none';
+  document.getElementById('vnControlsIdle').style.display = 'flex';
+  document.getElementById('vnHint').textContent = 'Tekan tombol merah untuk mulai merekam ucapanmu';
+  vnRecordBtn.textContent = '●';
+  vnRecordBtn.onclick = startVoiceRecording;
+  vnSeconds = 0;
+  updateVnTimer();
+}
+
+// ============================================
+// KIRIM KE SERVER
+// ============================================
+async function sendMedia(type) {
   const guestName = document.getElementById('guestName').value.trim();
+  if (!guestName) { showToast('Isi nama kamu dulu ya', 'error'); return; }
+  if (!capturedBlob) { showToast('Ambil foto/video/suara dulu', 'error'); return; }
 
-  if (!weddingId || !guestName) {
-    showMsg('Mohon isi Kode Undangan dan Nama kamu.', 'error');
-    return;
-  }
-  if (!selectedBlob) {
-    showMsg('Pilih atau rekam file terlebih dahulu.', 'error');
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Mengunggah...';
+  const sendBtn = type === 'voice' ? vnSendBtn : document.getElementById('sendMediaBtn');
+  sendBtn.disabled = true;
+  const originalText = sendBtn.textContent;
+  sendBtn.textContent = 'Mengirim...';
 
   try {
-    const base64 = await blobToBase64(selectedBlob);
+    const base64 = await blobToBase64(capturedBlob);
     const payload = {
       action: 'uploadMedia',
       wedding_id: weddingId,
       guest_name: guestName,
-      media_type: currentType,
-      filename: selectedFilename,
-      mime_type: selectedMime,
+      media_type: type,
+      filename: `capture.${capturedExt}`,
+      mime_type: capturedMime,
       data: base64
     };
-
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -259,19 +529,27 @@ submitBtn.addEventListener('click', async () => {
     const result = await res.json();
 
     if (result.success) {
-      showMsg('Berhasil dikirim! Menunggu persetujuan mempelai. 🎉', 'success');
-      resetSelection();
-      document.getElementById('guestName').value = '';
+      showToast(result.message || 'Berhasil dikirim! 🎉', 'success');
+      if (type === 'voice') { resetVoice(); }
+      else {
+        resetCapture();
+        document.getElementById('captureRow').style.display = 'flex';
+        document.getElementById('reviewRow').style.display = 'none';
+        liveVideo.style.display = 'block';
+        photoCanvas.style.display = 'none';
+        recordedVideo.style.display = 'none';
+        if (!liveStream) startCamera();
+      }
     } else {
-      showMsg(result.message || 'Gagal mengunggah.', 'error');
+      showToast(result.message || 'Gagal mengirim', 'error');
     }
   } catch (err) {
-    showMsg('Gagal terhubung ke server: ' + err.message, 'error');
+    showToast('Gagal terhubung ke server: ' + err.message, 'error');
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Kirim';
+    sendBtn.disabled = false;
+    sendBtn.textContent = originalText;
   }
-});
+}
 
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
@@ -282,10 +560,36 @@ function blobToBase64(blob) {
   });
 }
 
-function showMsg(text, type) {
-  msgEl.textContent = text;
-  msgEl.className = 'msg ' + type;
-  setTimeout(() => { msgEl.style.display = 'none'; }, 6000);
+// ============================================
+// UI HELPERS
+// ============================================
+function showStatus(title, text, showRetry) {
+  document.getElementById('statusScreen').style.display = 'flex';
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusBtn').style.display = showRetry ? 'inline-block' : 'none';
+}
+function hideStatus() { document.getElementById('statusScreen').style.display = 'none'; }
+
+function showToast(text, type) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.className = 'toast ' + type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+function formatSeconds(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0');
+  const sec = String(s % 60).padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function formatDate(d) {
+  try {
+    const date = new Date(d);
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch (e) { return d; }
 }
 </script>
 </body>

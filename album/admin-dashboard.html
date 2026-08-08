@@ -3,24 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard — Wedding Album</title>
+<title>Dashboard Admin — Wedding Album</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Segoe UI', sans-serif; background:#f4f5f7; color:#2d2d2d; }
-  header {
-    background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;
-    box-shadow:0 1px 4px rgba(0,0,0,.06); position:sticky; top:0; z-index:10;
-  }
+  header { background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,.06); position:sticky; top:0; z-index:10; flex-wrap:wrap; gap:10px; }
   header h1 { font-size:18px; }
   header .actions button { margin-left:8px; padding:8px 14px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:13px; }
   header .actions button.logout { color:#c0392b; border-color:#f0c2bc; }
 
-  .tabs { display:flex; gap:6px; padding:16px 24px 0; }
-  .tab { padding:10px 18px; border-radius:10px 10px 0 0; cursor:pointer; background:#e8e9ee; font-size:14px; font-weight:600; color:#666; }
+  .tabs { display:flex; gap:6px; padding:16px 24px 0; flex-wrap:wrap; }
+  .tab { padding:10px 16px; border-radius:10px 10px 0 0; cursor:pointer; background:#e8e9ee; font-size:13px; font-weight:600; color:#666; }
   .tab.active { background:#fff; color:#333; }
 
   .panel { display:none; background:#fff; margin:0 24px 24px; padding:24px; border-radius:0 12px 12px 12px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
   .panel.active { display:block; }
+  .panel h3 { font-size:15px; margin-bottom:4px; }
+  .panel .desc { font-size:12px; color:#888; margin-bottom:18px; }
 
   .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
   .media-card { border:1px solid #eee; border-radius:12px; overflow:hidden; background:#fafafa; }
@@ -36,14 +35,18 @@
   .btn-reject { background:#c62828; color:#fff; }
   .empty-state { text-align:center; color:#999; padding:40px 0; font-size:14px; }
 
-  .form-group { margin-bottom:18px; max-width:420px; }
+  .form-group { margin-bottom:18px; max-width:440px; }
   .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#555; }
-  .form-group input[type=text], .form-group input[type=number], .form-group select, .form-group input[type=password] {
-    width:100%; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px;
+  .form-group input[type=text], .form-group input[type=number], .form-group select, .form-group input[type=password], .form-group textarea {
+    width:100%; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit;
   }
-  .toggle-row { display:flex; align-items:center; justify-content:space-between; max-width:420px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+  .color-row { display:flex; gap:12px; }
+  .color-row .form-group { flex:1; }
+  .color-row input[type=color] { width:100%; height:42px; border:1.5px solid #e0e0e0; border-radius:8px; padding:2px; cursor:pointer; }
+
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; max-width:440px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
   .save-btn { padding:12px 24px; border:none; border-radius:8px; background:#667eea; color:#fff; font-weight:700; cursor:pointer; margin-top:8px; }
-  .status-msg { margin-top:14px; font-size:13px; padding:10px; border-radius:8px; display:none; max-width:420px; }
+  .status-msg { margin-top:14px; font-size:13px; padding:10px; border-radius:8px; display:none; max-width:440px; }
   .status-msg.success { background:#e8f5e9; color:#2e7d32; display:block; }
   .status-msg.error { background:#fdecea; color:#c62828; display:block; }
 
@@ -51,6 +54,23 @@
   .link-box input { flex:1; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:13px; background:#fafafa; }
   .link-box button { padding:10px 14px; border:none; border-radius:8px; background:#667eea; color:#fff; cursor:pointer; font-size:13px; }
   .hint { font-size:12px; color:#999; margin-bottom:16px; }
+
+  /* --- FILTERS --- */
+  .filter-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:14px; max-width:760px; }
+  .filter-option { border:2px solid #eee; border-radius:12px; padding:10px; cursor:pointer; text-align:center; }
+  .filter-option.active { border-color:#667eea; background:#f4f5ff; }
+  .filter-swatch { width:100%; height:70px; border-radius:8px; margin-bottom:8px; background:linear-gradient(135deg,#f6c1a1,#8a6a45,#6a8fc9); background-size:cover; }
+  .filter-option span { font-size:12px; font-weight:600; }
+
+  /* --- FRAME/TEMA --- */
+  .theme-layout { display:flex; gap:32px; flex-wrap:wrap; }
+  .theme-form { flex:1; min-width:280px; }
+  .theme-preview-wrap { flex:1; min-width:260px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .theme-preview-wrap canvas { width:100%; max-width:320px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.1); }
+  .theme-preview-wrap .cap { font-size:12px; color:#999; }
+  .frame-style-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .frame-style-btn { padding:8px 14px; border-radius:8px; border:1.5px solid #e0e0e0; background:#fff; cursor:pointer; font-size:12px; }
+  .frame-style-btn.active { border-color:#667eea; background:#f4f5ff; color:#667eea; font-weight:700; }
 </style>
 </head>
 <body>
@@ -64,20 +84,81 @@
 </header>
 
 <div class="tabs">
-  <div class="tab active" data-tab="moderasi">Moderasi Media</div>
-  <div class="tab" data-tab="pengaturan">Pengaturan</div>
+  <div class="tab active" data-tab="moderasi">Moderasi</div>
+  <div class="tab" data-tab="filter">Filter Kamera</div>
+  <div class="tab" data-tab="tema">Tema & Frame</div>
+  <div class="tab" data-tab="pengaturan">Pengaturan Umum</div>
   <div class="tab" data-tab="tautan">Bagikan</div>
   <div class="tab" data-tab="akun">Akun</div>
 </div>
 
 <!-- MODERASI -->
 <div class="panel active" id="panel-moderasi">
+  <h3>Media Menunggu Persetujuan</h3>
+  <p class="desc">Setujui momen yang layak tampil, atau tolak yang tidak sesuai.</p>
   <div id="pendingGrid" class="grid"></div>
   <div id="pendingEmpty" class="empty-state" style="display:none;">Tidak ada media yang menunggu persetujuan 🎉</div>
 </div>
 
-<!-- PENGATURAN -->
+<!-- FILTER KAMERA -->
+<div class="panel" id="panel-filter">
+  <h3>Filter Kamera Tamu</h3>
+  <p class="desc">Pilih satu filter yang akan otomatis dipakai semua tamu saat memotret, supaya hasilnya seragam.</p>
+  <div class="filter-grid" id="filterGrid"></div>
+  <div class="status-msg" id="filterMsg"></div>
+</div>
+
+<!-- TEMA & FRAME -->
+<div class="panel" id="panel-tema">
+  <h3>Tema & Bingkai Foto</h3>
+  <p class="desc">Warna dan gaya bingkai ini dipakai di halaman kirim momen, album, dan saat tamu mengunduh foto/video/suara.</p>
+
+  <div class="theme-layout">
+    <div class="theme-form">
+      <div class="color-row">
+        <div class="form-group">
+          <label>Warna Utama</label>
+          <input type="color" id="primaryColor">
+        </div>
+        <div class="form-group">
+          <label>Warna Sekunder</label>
+          <input type="color" id="secondaryColor">
+        </div>
+      </div>
+
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:#555;">Gaya Bingkai</label>
+      <div class="frame-style-row" id="frameStyleRow">
+        <button class="frame-style-btn" data-style="elegant">Elegant</button>
+        <button class="frame-style-btn" data-style="modern">Modern</button>
+        <button class="frame-style-btn" data-style="floral-simple">Floral</button>
+        <button class="frame-style-btn" data-style="minimalist">Minimalist</button>
+      </div>
+
+      <div class="form-group">
+        <label>Judul di Halaman Kirim Momen</label>
+        <input type="text" id="indexHeadline" placeholder="Bagikan Momenmu">
+      </div>
+      <div class="form-group">
+        <label>Judul di Halaman Album</label>
+        <input type="text" id="albumHeadline" placeholder="Wedding Album">
+      </div>
+
+      <button class="save-btn" onclick="saveTheme()">Simpan Tema</button>
+      <div class="status-msg" id="themeMsg"></div>
+    </div>
+
+    <div class="theme-preview-wrap">
+      <canvas id="previewCanvas" width="600" height="600"></canvas>
+      <span class="cap">Pratinjau bingkai foto</span>
+    </div>
+  </div>
+</div>
+
+<!-- PENGATURAN UMUM -->
 <div class="panel" id="panel-pengaturan">
+  <h3>Pengaturan Umum</h3>
+  <p class="desc">Detail acara dan batasan unggahan tamu.</p>
+
   <div class="form-group">
     <label>Nama Mempelai Pria</label>
     <input type="text" id="groomName">
@@ -91,35 +172,41 @@
     <input type="text" id="weddingDate" placeholder="YYYY-MM-DD">
   </div>
   <div class="form-group">
-    <label>Tema</label>
-    <select id="theme">
-      <option value="classic">Classic</option>
-      <option value="modern">Modern</option>
-      <option value="rustic">Rustic</option>
-      <option value="minimalist">Minimalist</option>
-    </select>
+    <label>Maksimal Durasi Video (detik)</label>
+    <input type="number" id="maxVideoSeconds" min="5" max="300">
   </div>
   <div class="form-group">
-    <label>Maksimal Foto per Tamu</label>
-    <input type="number" id="maxPhoto" min="1">
+    <label>Maksimal Durasi Voice Note (detik)</label>
+    <input type="number" id="maxVoiceSeconds" min="5" max="300">
   </div>
   <div class="toggle-row">
-    <span>Izinkan upload video dari tamu</span>
+    <span>Izinkan tamu upload video</span>
     <input type="checkbox" id="allowVideo">
   </div>
   <div class="toggle-row">
-    <span>Izinkan upload voice note dari tamu</span>
+    <span>Izinkan tamu kirim voice note</span>
     <input type="checkbox" id="allowVoice">
   </div>
+  <div class="toggle-row">
+    <span>Aktifkan filter kamera untuk tamu</span>
+    <input type="checkbox" id="allowFilter">
+  </div>
+  <div class="toggle-row">
+    <span>Moderasi manual sebelum tampil di album</span>
+    <input type="checkbox" id="moderation">
+  </div>
+  <p class="hint" style="margin-top:6px;">Kalau moderasi dimatikan, momen dari tamu langsung tampil di album tanpa perlu kamu setujui dulu.</p>
+
   <button class="save-btn" onclick="saveSettings()">Simpan Pengaturan</button>
   <div class="status-msg" id="settingsMsg"></div>
 </div>
 
 <!-- TAUTAN -->
 <div class="panel" id="panel-tautan">
-  <p class="hint">Bagikan tautan ini ke tamu undangan agar mereka bisa upload foto/video, dan tautan album agar semua orang bisa melihat momen yang sudah disetujui.</p>
+  <h3>Bagikan ke Tamu</h3>
+  <p class="desc">Sebarkan tautan ini agar tamu bisa ikut mengabadikan momen, dan siapa saja bisa melihat album.</p>
   <div class="form-group">
-    <label>Link Upload untuk Tamu</label>
+    <label>Link untuk Tamu (kirim momen)</label>
     <div class="link-box">
       <input type="text" id="uploadLink" readonly>
       <button onclick="copyLink('uploadLink')">Salin</button>
@@ -136,6 +223,8 @@
 
 <!-- AKUN -->
 <div class="panel" id="panel-akun">
+  <h3>Keamanan Akun</h3>
+  <p class="desc">Ganti password kapan saja untuk menjaga panel admin tetap aman.</p>
   <div class="form-group">
     <label>Password Baru</label>
     <input type="password" id="newPassword" placeholder="Minimal 6 karakter">
@@ -149,14 +238,16 @@
 </div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoVccnn-X22zwecURau54A58cgx7mBohD6snmDklpeBL87qzLrhEaGSICawUQP42TA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 const weddingId = localStorage.getItem('wedding_id');
 const token = localStorage.getItem('admin_token');
+if (!weddingId || !token) window.location.href = 'admin-login.html';
 
-if (!weddingId || !token) {
-  window.location.href = 'admin-login.html';
-}
+let currentSettings = {};
+let filtersList = [];
+let selectedFilterId = null;
+let selectedFrameStyle = 'elegant';
 
 // ----- Tabs -----
 document.querySelectorAll('.tab').forEach(tab => {
@@ -165,19 +256,18 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'tema') drawPreview();
   });
 });
 
 async function callApi(payload, method = 'POST') {
   payload.wedding_id = weddingId;
   payload.token = token;
-
   if (method === 'GET') {
     const qs = new URLSearchParams(payload).toString();
     const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`);
     return res.json();
   }
-
   const res = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -210,36 +300,24 @@ async function loadPending() {
   const empty = document.getElementById('pendingEmpty');
   grid.innerHTML = '';
 
-  if (!data.success || !data.pending_media || data.pending_media.length === 0) {
-    empty.style.display = 'block';
-    return;
-  }
+  if (!data.success || !data.pending_media || data.pending_media.length === 0) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
   data.pending_media.forEach(item => {
     const card = document.createElement('div');
     card.className = 'media-card';
-
     let mediaHtml = '';
-    if (item.type === 'photo') {
-      mediaHtml = `<div class="media-wrap"><img src="${item.url}" loading="lazy"></div>`;
-    } else if (item.type === 'video') {
-      mediaHtml = `<div class="media-wrap"><video src="${item.url}" controls></video></div>`;
-    } else {
-      mediaHtml = `<div class="media-wrap"><audio src="${item.url}" controls></audio></div>`;
-    }
+    if (item.media_type === 'photo') mediaHtml = `<div class="media-wrap"><img src="${item.file_url}" loading="lazy"></div>`;
+    else if (item.media_type === 'video') mediaHtml = `<div class="media-wrap"><video src="${item.file_url}" controls></video></div>`;
+    else mediaHtml = `<div class="media-wrap"><audio src="${item.file_url}" controls></audio></div>`;
 
     card.innerHTML = `
       ${mediaHtml}
-      <div class="info">
-        <b>${escapeHtml(item.guest_name)}</b>
-        <span>${item.date} • ${item.time} • ${item.type}</span>
-      </div>
+      <div class="info"><b>${escapeHtml(item.guest_name)}</b><span>${item.date} • ${item.time} • ${item.media_type}</span></div>
       <div class="row">
-        <button class="btn-approve" onclick="moderate('${item.id}','approveMedia',this)">✓ Setujui</button>
-        <button class="btn-reject" onclick="moderate('${item.id}','rejectMedia',this)">✕ Tolak</button>
-      </div>
-    `;
+        <button class="btn-approve" onclick="moderate('${item.media_id}','approveMedia',this)">✓ Setujui</button>
+        <button class="btn-reject" onclick="moderate('${item.media_id}','rejectMedia',this)">✕ Tolak</button>
+      </div>`;
     grid.appendChild(card);
   });
 }
@@ -251,28 +329,152 @@ async function moderate(mediaId, action, btn) {
   loadPending();
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+// ----- Filter kamera -----
+async function loadFilters() {
+  const data = await callApi({ action: 'getFilters', wedding_id: weddingId }, 'GET');
+  if (!data.success) return;
+  filtersList = data.filters;
+  selectedFilterId = data.active_filter_id ? String(data.active_filter_id) : (filtersList[0] ? String(filtersList[0].filter_id) : null);
+  renderFilterGrid();
 }
 
-// ----- Pengaturan -----
+function renderFilterGrid() {
+  const grid = document.getElementById('filterGrid');
+  grid.innerHTML = '';
+  filtersList.forEach(f => {
+    const opt = document.createElement('div');
+    opt.className = 'filter-option' + (String(f.filter_id) === selectedFilterId ? ' active' : '');
+    opt.innerHTML = `<div class="filter-swatch" style="filter:${f.css_filter}"></div><span>${escapeHtml(f.name)}</span>`;
+    opt.addEventListener('click', () => {
+      selectedFilterId = String(f.filter_id);
+      renderFilterGrid();
+    });
+    grid.appendChild(opt);
+  });
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'save-btn';
+  saveBtn.style.gridColumn = '1 / -1';
+  saveBtn.textContent = 'Simpan Filter Aktif';
+  saveBtn.onclick = saveFilter;
+  grid.appendChild(saveBtn);
+}
+
+async function saveFilter() {
+  const data = await callApi({ action: 'updateSettings', active_filter_id: selectedFilterId });
+  if (handleAuthError(data)) return;
+  showStatus('filterMsg', data.success, data.success ? 'Filter aktif tersimpan, semua tamu akan pakai filter ini.' : data.message);
+}
+
+// ----- Tema & Frame -----
+document.querySelectorAll('.frame-style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedFrameStyle = btn.dataset.style;
+    document.querySelectorAll('.frame-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    drawPreview();
+  });
+});
+document.getElementById('primaryColor').addEventListener('input', drawPreview);
+document.getElementById('secondaryColor').addEventListener('input', drawPreview);
+
+function drawFrame(ctx, w, h, cfg) {
+  const barH = Math.round(h * 0.12);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#ddd';
+  ctx.fillRect(0, 0, w, h - barH); // area foto placeholder
+  ctx.fillStyle = 'rgba(0,0,0,0.08)';
+  for (let i=0;i<6;i++){ ctx.fillRect(0, (h-barH)/6*i, w, 2); }
+
+  ctx.fillStyle = cfg.primary;
+  if (cfg.style === 'minimalist') {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, h - barH, w, barH);
+  } else if (cfg.style === 'modern') {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(4, w * 0.006);
+    ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
+  } else if (cfg.style === 'floral-simple') {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.fillStyle = cfg.secondary;
+    const r = Math.max(4, w*0.006);
+    [[16,16],[w-16,16],[16,h-barH-16],[w-16,h-barH-16]].forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
+  } else {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.003);
+    const pad = w*0.015;
+    ctx.strokeRect(pad, pad, w-pad*2, h-pad*2-barH*0.15);
+  }
+
+  const centerY = h - barH/2;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.font = `700 ${Math.round(barH*0.3)}px Georgia, serif`;
+  ctx.fillText(`${cfg.groom || 'Rizky'} & ${cfg.bride || 'Amanda'}`, w/2, centerY - barH*0.08);
+  ctx.font = `400 ${Math.round(barH*0.2)}px Segoe UI, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(cfg.date || '8 Agustus 2026', w/2, centerY + barH*0.28);
+}
+
+function drawPreview() {
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  drawFrame(ctx, canvas.width, canvas.height, {
+    style: selectedFrameStyle,
+    primary: document.getElementById('primaryColor').value,
+    secondary: document.getElementById('secondaryColor').value,
+    groom: currentSettings.groom_name,
+    bride: currentSettings.bride_name,
+    date: currentSettings.date ? formatDate(currentSettings.date) : ''
+  });
+}
+
+async function saveTheme() {
+  const payload = {
+    action: 'updateSettings',
+    primary_color: document.getElementById('primaryColor').value,
+    secondary_color: document.getElementById('secondaryColor').value,
+    frame_style: selectedFrameStyle,
+    ui_config: JSON.stringify({
+      index_headline: document.getElementById('indexHeadline').value.trim(),
+      album_headline: document.getElementById('albumHeadline').value.trim()
+    })
+  };
+  const data = await callApi(payload);
+  if (handleAuthError(data)) return;
+  showStatus('themeMsg', data.success, data.message);
+}
+
+// ----- Pengaturan umum -----
 async function loadSettings() {
   const data = await callApi({ action: 'getSettings' }, 'GET');
   if (!data.success) return;
+  currentSettings = data;
 
   document.getElementById('groomName').value = data.groom_name || '';
   document.getElementById('brideName').value = data.bride_name || '';
-  document.getElementById('weddingDate').value = data.date || '';
-  document.getElementById('theme').value = data.theme || 'classic';
-  document.getElementById('maxPhoto').value = data.max_photo || 5;
+  document.getElementById('weddingDate').value = data.date ? new Date(data.date).toISOString().slice(0,10) : '';
+  document.getElementById('maxVideoSeconds').value = data.max_video_seconds || 60;
+  document.getElementById('maxVoiceSeconds').value = data.max_voice_seconds || 60;
   document.getElementById('allowVideo').checked = data.allow_video === true;
   document.getElementById('allowVoice').checked = data.allow_voice === true;
+  document.getElementById('allowFilter').checked = data.allow_filter === true;
+  document.getElementById('moderation').checked = data.moderation !== false;
+
+  document.getElementById('primaryColor').value = data.primary_color || '#8B7355';
+  document.getElementById('secondaryColor').value = data.secondary_color || '#D4C4A8';
+  selectedFrameStyle = data.frame_style || 'elegant';
+  document.querySelectorAll('.frame-style-btn').forEach(b => b.classList.toggle('active', b.dataset.style === selectedFrameStyle));
+
+  const uiConfig = data.ui_config || {};
+  document.getElementById('indexHeadline').value = uiConfig.index_headline || '';
+  document.getElementById('albumHeadline').value = uiConfig.album_headline || '';
 
   const base = window.location.href.replace(/admin-dashboard\.html.*$/, '');
   document.getElementById('uploadLink').value = `${base}index.html?w=${weddingId}`;
   document.getElementById('albumLink').value = `${base}album.html?w=${weddingId}`;
+
+  drawPreview();
 }
 
 async function saveSettings() {
@@ -281,10 +483,12 @@ async function saveSettings() {
     groom_name: document.getElementById('groomName').value.trim(),
     bride_name: document.getElementById('brideName').value.trim(),
     date: document.getElementById('weddingDate').value.trim(),
-    theme: document.getElementById('theme').value,
-    max_photo: document.getElementById('maxPhoto').value,
+    max_video_seconds: document.getElementById('maxVideoSeconds').value,
+    max_voice_seconds: document.getElementById('maxVoiceSeconds').value,
     allow_video: document.getElementById('allowVideo').checked,
-    allow_voice: document.getElementById('allowVoice').checked
+    allow_voice: document.getElementById('allowVoice').checked,
+    allow_filter: document.getElementById('allowFilter').checked,
+    moderation: document.getElementById('moderation').checked
   };
   const data = await callApi(payload);
   if (handleAuthError(data)) return;
@@ -302,22 +506,12 @@ function copyLink(id) {
 async function changePassword() {
   const newPass = document.getElementById('newPassword').value;
   const confirmPass = document.getElementById('confirmPassword').value;
-
-  if (newPass.length < 6) {
-    showStatus('accountMsg', false, 'Password minimal 6 karakter');
-    return;
-  }
-  if (newPass !== confirmPass) {
-    showStatus('accountMsg', false, 'Konfirmasi password tidak cocok');
-    return;
-  }
+  if (newPass.length < 6) { showStatus('accountMsg', false, 'Password minimal 6 karakter'); return; }
+  if (newPass !== confirmPass) { showStatus('accountMsg', false, 'Konfirmasi password tidak cocok'); return; }
   const data = await callApi({ action: 'changePassword', new_password: newPass });
   if (handleAuthError(data)) return;
   showStatus('accountMsg', data.success, data.message);
-  if (data.success) {
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-  }
+  if (data.success) { document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
 }
 
 function showStatus(elId, success, message) {
@@ -326,9 +520,12 @@ function showStatus(elId, success, message) {
   el.className = 'status-msg ' + (success ? 'success' : 'error');
   setTimeout(() => { el.style.display = 'none'; }, 5000);
 }
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function formatDate(d) { try { return new Date(d).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}); } catch(e){ return d; } }
 
 // ----- Init -----
 loadPending();
+loadFilters();
 loadSettings();
 </script>
 </body>
