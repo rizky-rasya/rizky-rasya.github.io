@@ -1,138 +1,292 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Album - Selamat Datang</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Album — Bagikan Momenmu</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI', sans-serif;
+    background:linear-gradient(135deg,#fdf6f0 0%,#f3e7db 100%);
+    min-height:100vh;
+    display:flex; justify-content:center; align-items:flex-start;
+    padding:30px 16px;
+  }
+  .card {
+    background:#fff; width:100%; max-width:460px;
+    border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,.08);
+    padding:32px 28px;
+  }
+  h1 { text-align:center; font-size:22px; color:#3a2e28; margin-bottom:4px; }
+  .subtitle { text-align:center; color:#8a7b6e; font-size:14px; margin-bottom:26px; }
+  .input-group { margin-bottom:18px; }
+  label { display:block; margin-bottom:6px; font-size:13px; color:#5c4d43; font-weight:600; }
+  input[type=text], select {
+    width:100%; padding:12px; border:1.5px solid #e6dcd2; border-radius:10px;
+    font-size:14px; background:#fffaf6;
+  }
+  input:focus, select:focus { outline:none; border-color:#c99b6a; }
+  .tabs { display:flex; gap:8px; margin-bottom:18px; }
+  .tab-btn {
+    flex:1; padding:10px; border-radius:10px; border:1.5px solid #e6dcd2;
+    background:#fff; cursor:pointer; font-size:13px; font-weight:600; color:#8a7b6e;
+  }
+  .tab-btn.active { background:#c99b6a; color:#fff; border-color:#c99b6a; }
+  .upload-zone {
+    border:2px dashed #d9c6b0; border-radius:14px; padding:24px; text-align:center;
+    color:#a08d7d; cursor:pointer; margin-bottom:18px; font-size:13px;
+  }
+  .upload-zone.dragover { background:#fdf6ee; border-color:#c99b6a; }
+  #preview { margin-top:12px; display:none; }
+  #preview img, #preview video { width:100%; border-radius:10px; max-height:260px; object-fit:cover; }
+  .record-controls { display:none; gap:10px; margin-bottom:18px; }
+  .record-controls button {
+    flex:1; padding:12px; border-radius:10px; border:none; font-weight:600; cursor:pointer;
+  }
+  #recordBtn { background:#e6dcd2; color:#5c4d43; }
+  #recordBtn.recording { background:#e05252; color:#fff; }
+  button.submit {
+    width:100%; padding:14px; border:none; border-radius:12px;
+    background:linear-gradient(135deg,#c99b6a,#a97c4f); color:#fff;
+    font-size:15px; font-weight:700; cursor:pointer; margin-top:6px;
+  }
+  button.submit:disabled { opacity:.5; cursor:not-allowed; }
+  .msg { margin-top:16px; padding:12px; border-radius:10px; font-size:13px; text-align:center; display:none; }
+  .msg.success { background:#e8f5e9; color:#2e7d32; display:block; }
+  .msg.error { background:#fdecea; color:#c62828; display:block; }
+  .footer-link { text-align:center; margin-top:22px; }
+  .footer-link a { color:#a97c4f; font-size:13px; text-decoration:none; }
+</style>
 </head>
-<body class="welcome-page">
-    <div class="welcome-container">
-        <div class="welcome-card">
-            <div class="welcome-floral">❦</div>
-            
-            <h1 class="welcome-title" id="coupleName">Wedding Album</h1>
-            <p class="welcome-date" id="weddingDate"></p>
-            
-            <div class="welcome-divider">
-                <span>❦</span>
-            </div>
-            
-            <p class="welcome-message">
-                Selamat datang! Bagikan momen terbaikmu di pernikahan kami.
-            </p>
-            
-            <div class="welcome-form">
-                <div class="form-group">
-                    <label for="guestName">Siapa nama Anda?</label>
-                    <input type="text" 
-                           id="guestName" 
-                           placeholder="Masukkan nama Anda"
-                           maxlength="50"
-                           autocomplete="off">
-                </div>
-                
-                <button class="btn btn-primary btn-lg" id="startBtn" onclick="startCapture()">
-                    📷 Mulai Bagikan Momen
-                </button>
-            </div>
-            
-            <div class="welcome-links">
-                <a href="album.html" class="btn btn-outline btn-sm">
-                    📸 Lihat Album
-                </a>
-            </div>
-        </div>
-        
-        <footer class="welcome-footer">
-            <p>Dibuat dengan ❤️ • Wedding Album Digital</p>
-        </footer>
-    </div>
+<body>
+<div class="card">
+  <h1>💍 Bagikan Momenmu</h1>
+  <p class="subtitle">Unggah foto, video, atau ucapan suara untuk kami</p>
 
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script>
-        // Load wedding info
-        async function loadWeddingInfo() {
-            try {
-                const weddingId = getWeddingId();
-                const result = await api.getSettings(weddingId);
-                
-                if (result.success && result.settings) {
-                    const s = result.settings;
-                    document.getElementById('coupleName').textContent = 
-                        `${s.groom_name} & ${s.bride_name}`;
-                    document.getElementById('weddingDate').textContent = 
-                        formatDate(s.date);
-                    
-                    // Update theme colors
-                    if (s.primary_color) {
-                        document.documentElement.style.setProperty('--primary-color', s.primary_color);
-                    }
-                    if (s.secondary_color) {
-                        document.documentElement.style.setProperty('--secondary-color', s.secondary_color);
-                    }
-                    
-                    document.title = `Wedding Album - ${s.groom_name} & ${s.bride_name}`;
-                }
-            } catch (error) {
-                console.error('Gagal load:', error);
-            }
-        }
-        
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('id-ID', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
-        }
-        
-        function startCapture() {
-            const guestName = document.getElementById('guestName').value.trim();
-            
-            if (!guestName) {
-                showError('Mohon masukkan nama Anda terlebih dahulu');
-                return;
-            }
-            
-            // Simpan nama
-            setGuestName(guestName);
-            
-            // Redirect ke halaman kamera
-            window.location.href = 'camera.html';
-        }
-        
-        function showError(message) {
-            const input = document.getElementById('guestName');
-            input.style.borderColor = '#e74c3c';
-            input.placeholder = message;
-            input.classList.add('shake');
-            
-            setTimeout(() => {
-                input.style.borderColor = '';
-                input.classList.remove('shake');
-            }, 2000);
-        }
-        
-        // Enter key untuk submit
-        document.getElementById('guestName').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                startCapture();
-            }
-        });
-        
-        // Load saved name
-        const savedName = getGuestName();
-        if (savedName) {
-            document.getElementById('guestName').value = savedName;
-        }
-        
-        // Init
-        loadWeddingInfo();
-    </script>
+  <div class="input-group">
+    <label>Kode Undangan (Wedding ID)</label>
+    <input type="text" id="weddingId" placeholder="contoh: rizky-amanda">
+  </div>
+
+  <div class="input-group">
+    <label>Nama Kamu</label>
+    <input type="text" id="guestName" placeholder="Nama lengkap">
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-type="photo">📷 Foto</button>
+    <button class="tab-btn" data-type="video">🎥 Video</button>
+    <button class="tab-btn" data-type="voice">🎤 Suara</button>
+  </div>
+
+  <div class="upload-zone" id="uploadZone">
+    Klik atau seret file foto/video ke sini
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+  </div>
+
+  <div class="record-controls" id="recordControls">
+    <button id="recordBtn" type="button">🎤 Mulai Rekam</button>
+  </div>
+
+  <div id="preview"></div>
+
+  <button class="submit" id="submitBtn" disabled>Kirim</button>
+  <div class="msg" id="msg"></div>
+
+  <div class="footer-link"><a href="album.html">Lihat album →</a></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
+
+let currentType = 'photo';
+let selectedBlob = null;
+let selectedFilename = null;
+let selectedMime = null;
+
+const tabs = document.querySelectorAll('.tab-btn');
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const recordControls = document.getElementById('recordControls');
+const recordBtn = document.getElementById('recordBtn');
+const preview = document.getElementById('preview');
+const submitBtn = document.getElementById('submitBtn');
+const msgEl = document.getElementById('msg');
+
+// preload wedding_id dari URL kalau ada (?w=rizky-amanda)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('w')) document.getElementById('weddingId').value = urlParams.get('w');
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentType = tab.dataset.type;
+    resetSelection();
+
+    if (currentType === 'voice') {
+      uploadZone.style.display = 'none';
+      recordControls.style.display = 'flex';
+    } else {
+      uploadZone.style.display = 'block';
+      recordControls.style.display = 'none';
+      fileInput.accept = currentType === 'photo' ? 'image/*' : 'video/*';
+    }
+  });
+});
+
+function resetSelection() {
+  selectedBlob = null;
+  selectedFilename = null;
+  selectedMime = null;
+  preview.style.display = 'none';
+  preview.innerHTML = '';
+  submitBtn.disabled = true;
+  fileInput.value = '';
+}
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  const maxMB = 15;
+  if (file.size > maxMB * 1024 * 1024) {
+    showMsg(`File terlalu besar. Maksimal ${maxMB}MB.`, 'error');
+    return;
+  }
+  selectedBlob = file;
+  selectedFilename = file.name;
+  selectedMime = file.type;
+
+  preview.style.display = 'block';
+  preview.innerHTML = '';
+  if (currentType === 'photo') {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
+  } else {
+    const video = document.createElement('video');
+    video.src = URL.createObjectURL(file);
+    video.controls = true;
+    preview.appendChild(video);
+  }
+  submitBtn.disabled = false;
+}
+
+// ----- Voice recording -----
+let mediaRecorder, audioChunks = [], isRecording = false;
+
+recordBtn.addEventListener('click', async () => {
+  if (!isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        selectedBlob = blob;
+        selectedFilename = 'voice-note.webm';
+        selectedMime = 'audio/webm';
+
+        preview.style.display = 'block';
+        preview.innerHTML = '';
+        const audio = document.createElement('audio');
+        audio.src = URL.createObjectURL(blob);
+        audio.controls = true;
+        audio.style.width = '100%';
+        preview.appendChild(audio);
+        submitBtn.disabled = false;
+      };
+      mediaRecorder.start();
+      isRecording = true;
+      recordBtn.textContent = '⏹ Berhenti Rekam';
+      recordBtn.classList.add('recording');
+    } catch (err) {
+      showMsg('Tidak bisa mengakses mikrofon: ' + err.message, 'error');
+    }
+  } else {
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    isRecording = false;
+    recordBtn.textContent = '🎤 Mulai Rekam';
+    recordBtn.classList.remove('recording');
+  }
+});
+
+// ----- Submit -----
+submitBtn.addEventListener('click', async () => {
+  const weddingId = document.getElementById('weddingId').value.trim();
+  const guestName = document.getElementById('guestName').value.trim();
+
+  if (!weddingId || !guestName) {
+    showMsg('Mohon isi Kode Undangan dan Nama kamu.', 'error');
+    return;
+  }
+  if (!selectedBlob) {
+    showMsg('Pilih atau rekam file terlebih dahulu.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Mengunggah...';
+
+  try {
+    const base64 = await blobToBase64(selectedBlob);
+    const payload = {
+      action: 'uploadMedia',
+      wedding_id: weddingId,
+      guest_name: guestName,
+      media_type: currentType,
+      filename: selectedFilename,
+      mime_type: selectedMime,
+      data: base64
+    };
+
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      showMsg('Berhasil dikirim! Menunggu persetujuan mempelai. 🎉', 'success');
+      resetSelection();
+      document.getElementById('guestName').value = '';
+    } else {
+      showMsg(result.message || 'Gagal mengunggah.', 'error');
+    }
+  } catch (err) {
+    showMsg('Gagal terhubung ke server: ' + err.message, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Kirim';
+  }
+});
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function showMsg(text, type) {
+  msgEl.textContent = text;
+  msgEl.className = 'msg ' + type;
+  setTimeout(() => { msgEl.style.display = 'none'; }, 6000);
+}
+</script>
 </body>
 </html>
