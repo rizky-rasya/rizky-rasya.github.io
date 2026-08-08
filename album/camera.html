@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambil Momen - Wedding Album</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="camera-page">
+    <!-- Header -->
+    <header class="camera-header">
+        <a href="index.html" class="back-btn">← Kembali</a>
+        <span class="header-title">Bagikan Momen</span>
+        <span></span>
+    </header>
+    
+    <!-- Camera Container -->
+    <div class="camera-container">
+        <!-- Video Preview -->
+        <div class="camera-preview-wrapper" id="videoContainer">
+            <video id="cameraPreview" autoplay playsinline muted></video>
+            <canvas id="photoCanvas" style="display: none;"></canvas>
+            
+            <!-- Recording Timer -->
+            <div class="recording-timer" id="recordingTimer" style="display: none;">00:00</div>
+            
+            <!-- Photo Counter -->
+            <div class="photo-counter" id="photoCounter" style="display: none;">
+                <span id="photoCount">0/5</span>
+            </div>
+            
+            <!-- Switch Camera Button -->
+            <button class="switch-camera-btn" id="switchCameraBtn" title="Ganti Kamera">
+                🔄
+            </button>
+        </div>
+        
+        <!-- Voice Note UI -->
+        <div class="voice-container" id="voiceContainer" style="display: none;">
+            <div class="voice-animation">
+                <div class="voice-icon-large">🎙️</div>
+                <div class="voice-waves">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="recording-timer voice-timer" id="voiceTimer">00:00</div>
+            </div>
+        </div>
+        
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="photo">
+                📷 Foto
+            </button>
+            <button class="mode-btn" data-mode="video">
+                🎥 Video
+            </button>
+            <button class="mode-btn" data-mode="voice">
+                🎙️ Voice
+            </button>
+        </div>
+        
+        <!-- Filter Selector (hanya untuk foto) -->
+        <div class="filter-selector" id="photoControls">
+            <label>Filter:</label>
+            <select id="filterSelect">
+                <option value="none">Original</option>
+            </select>
+        </div>
+        
+        <!-- Capture Button -->
+        <div class="capture-area">
+            <button class="capture-btn" id="captureBtn">
+                📷 Ambil Foto
+            </button>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="capture-actions">
+            <button class="btn btn-outline btn-sm" id="resetBtn">
+                🔄 Ulangi
+            </button>
+            <button class="btn btn-primary btn-sm" id="doneBtn">
+                ✅ Selesai
+            </button>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/camera.js"></script>
+    <script>
+        // Inisialisasi kamera
+        let cameraModule;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            cameraModule = new CameraModule();
+        });
+        
+        // Cleanup saat meninggalkan halaman
+        window.addEventListener('beforeunload', () => {
+            if (cameraModule) {
+                cameraModule.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview - Wedding Album</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="preview-page">
+    <header class="preview-header">
+        <h2>Pratinjau</h2>
+        <p>Pastikan semuanya sudah sesuai sebelum dikirim</p>
+    </header>
+    
+    <div class="preview-container">
+        <!-- Preview Area -->
+        <div class="preview-area" id="previewArea">
+            <div class="loading">Memuat pratinjau...</div>
+        </div>
+        
+        <!-- Guest Info -->
+        <div class="preview-info">
+            <div class="preview-guest-name" id="previewGuestName"></div>
+            <div class="preview-caption-input">
+                <input type="text" id="captionInput" placeholder="Tambahkan pesan atau caption (opsional)" maxlength="200">
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="preview-actions">
+            <button class="btn btn-outline" onclick="goBack()">
+                ↻ Ambil Ulang
+            </button>
+            <button class="btn btn-primary btn-lg" id="sendBtn" onclick="sendMedia()">
+                ❤️ Kirim
+            </button>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Mengirim...</p>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        let captureData = null;
+        
+        // Load capture data
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataStr = sessionStorage.getItem('wedding_album_capture');
+            
+            if (!dataStr) {
+                alert('Tidak ada data. Silakan ambil foto/rekam terlebih dahulu.');
+                window.location.href = 'camera.html';
+                return;
+            }
+            
+            captureData = JSON.parse(dataStr);
+            
+            // Tampilkan preview
+            renderPreview();
+            
+            // Tampilkan nama tamu
+            const guestName = getGuestName();
+            document.getElementById('previewGuestName').textContent = 
+                `👤 ${guestName || 'Anonim'}`;
+        });
+        
+        function renderPreview() {
+            const previewArea = document.getElementById('previewArea');
+            
+            if (!captureData || !captureData.photos) return;
+            
+            if (captureData.mode === 'photo') {
+                // Tampilkan foto-foto
+                let html = '<div class="photo-grid">';
+                captureData.photos.forEach((photo, index) => {
+                    html += `
+                        <div class="preview-photo-item">
+                            <img src="${photo}" alt="Foto ${index + 1}">
+                            <span class="photo-number">${index + 1}</span>
+                        </div>`;
+                });
+                html += '</div>';
+                previewArea.innerHTML = html;
+            } else if (captureData.mode === 'video') {
+                const videoData = captureData.photos[0];
+                previewArea.innerHTML = `
+                    <div class="preview-video">
+                        <video controls autoplay loop>
+                            <source src="data:video/webm;base64,${videoData.data}" type="video/webm">
+                        </video>
+                    </div>`;
+            } else if (captureData.mode === 'voice') {
+                const voiceData = captureData.photos[0];
+                previewArea.innerHTML = `
+                    <div class="preview-voice">
+                        <div class="voice-player-preview">
+                            <span>🎙️</span>
+                            <audio controls>
+                                <source src="data:audio/webm;base64,${voiceData.data}" type="audio/webm">
+                            </audio>
+                        </div>
+                    </div>`;
+            }
+        }
+        
+        function goBack() {
+            window.location.href = 'camera.html';
+        }
+        
+        async function sendMedia() {
+            if (!captureData) return;
+            
+            const sendBtn = document.getElementById('sendBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            sendBtn.disabled = true;
+            loadingOverlay.style.display = 'flex';
+            
+            const weddingId = getWeddingId();
+            const guestName = getGuestName() || 'Anonim';
+            const caption = document.getElementById('captionInput')?.value || '';
+            
+            try {
+                if (captureData.mode === 'photo') {
+                    // Upload setiap foto
+                    for (let i = 0; i < captureData.photos.length; i++) {
+                        const photoData = captureData.photos[i].split(',')[1] || captureData.photos[i];
+                        
+                        const result = await api.uploadMedia(
+                            weddingId,
+                            guestName,
+                            'photo',
+                            photoData,
+                            caption
+                        );
+                        
+                        if (!result.success) {
+                            throw new Error(result.error || 'Gagal upload');
+                        }
+                    }
+                } else if (captureData.mode === 'video') {
+                    const videoData = captureData.photos[0].data;
+                    
+                    const result = await api.uploadMedia(
+                        weddingId,
+                        guestName,
+                        'video',
+                        videoData,
+                        caption
+                    );
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Gagal upload');
+                    }
+                } else if (captureData.mode === 'voice') {
+                    const voiceData = captureData.photos[0].data;
+                    
+                    const result = await api.uploadMedia(
+                        weddingId,
+                        guestName,
+                        'voice',
+                        voiceData,
+                        caption
+                    );
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Gagal upload');
+                    }
+                }
+                
+                // Bersihkan session storage
+                sessionStorage.removeItem('wedding_album_capture');
+                
+                // Redirect ke halaman sukses
+                window.location.href = 'success.html';
+                
+            } catch (error) {
+                alert('Gagal mengirim: ' + error.message);
+                sendBtn.disabled = false;
+                loadingOverlay.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
