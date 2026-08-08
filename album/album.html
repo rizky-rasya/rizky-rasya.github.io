@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Album</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', sans-serif; background:#faf6f2; color:#3a2e28; }
+  .hero { text-align:center; padding:50px 20px 30px; }
+  .hero h1 { font-size:26px; margin-bottom:6px; }
+  .hero p { color:#8a7b6e; font-size:14px; }
+  .container { max-width:1000px; margin:0 auto; padding:0 20px 60px; }
+  .filters { display:flex; gap:8px; justify-content:center; margin-bottom:26px; flex-wrap:wrap; }
+  .filters button { padding:8px 16px; border-radius:20px; border:1.5px solid #e6dcd2; background:#fff; cursor:pointer; font-size:13px; color:#8a7b6e; }
+  .filters button.active { background:#c99b6a; color:#fff; border-color:#c99b6a; }
+  .grid { columns:3 280px; column-gap:16px; }
+  .item { break-inside:avoid; margin-bottom:16px; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.05); }
+  .item img, .item video { width:100%; display:block; }
+  .item audio { width:90%; margin:16px 5%; }
+  .item .cap { padding:10px 12px; font-size:12px; color:#8a7b6e; }
+  .item .cap b { color:#3a2e28; }
+  .empty { text-align:center; color:#a08d7d; padding:60px 0; }
+  .loader { text-align:center; padding:60px 0; color:#a08d7d; }
+  @media (max-width:640px) { .grid { columns:1 280px; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1 id="titleText">💍 Wedding Album</h1>
+  <p id="subtitleText">Momen indah dari orang-orang terkasih</p>
+</div>
+
+<div class="container">
+  <div class="filters">
+    <button class="active" data-filter="all">Semua</button>
+    <button data-filter="photo">Foto</button>
+    <button data-filter="video">Video</button>
+    <button data-filter="voice">Suara</button>
+  </div>
+
+  <div id="loader" class="loader">Memuat album...</div>
+  <div id="grid" class="grid"></div>
+  <div id="empty" class="empty" style="display:none;">Belum ada momen yang dibagikan. Jadilah yang pertama!</div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
+
+const urlParams = new URLSearchParams(window.location.search);
+const weddingId = urlParams.get('w');
+
+let allMedia = [];
+let currentFilter = 'all';
+
+if (!weddingId) {
+  document.getElementById('loader').textContent = 'Kode undangan tidak ditemukan di tautan.';
+} else {
+  init();
+}
+
+async function init() {
+  try {
+    const settingsRes = await fetch(`${APPS_SCRIPT_URL}?action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
+    const settings = await settingsRes.json();
+    if (settings.success) {
+      document.getElementById('titleText').textContent = `💍 ${settings.groom_name} & ${settings.bride_name}`;
+      if (settings.date) document.getElementById('subtitleText').textContent = settings.date;
+    }
+  } catch (e) { /* biarkan judul default */ }
+
+  loadAlbum();
+}
+
+async function loadAlbum() {
+  const res = await fetch(`${APPS_SCRIPT_URL}?action=getAlbum&wedding_id=${encodeURIComponent(weddingId)}`);
+  const data = await res.json();
+  document.getElementById('loader').style.display = 'none';
+
+  if (!data.success || !data.media) {
+    document.getElementById('empty').style.display = 'block';
+    return;
+  }
+  allMedia = data.media;
+  render();
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  grid.innerHTML = '';
+
+  const items = currentFilter === 'all' ? allMedia : allMedia.filter(m => m.type === currentFilter);
+
+  if (items.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+
+    let mediaHtml = '';
+    if (item.type === 'photo') mediaHtml = `<img src="${item.url}" loading="lazy">`;
+    else if (item.type === 'video') mediaHtml = `<video src="${item.url}" controls></video>`;
+    else mediaHtml = `<audio src="${item.url}" controls></audio>`;
+
+    div.innerHTML = `${mediaHtml}<div class="cap"><b>${escapeHtml(item.guest_name)}</b> · ${item.date}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+document.querySelectorAll('.filters button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

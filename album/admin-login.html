@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Wedding Album</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI', sans-serif;
+    background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+    min-height:100vh; display:flex; justify-content:center; align-items:center; padding:16px;
+  }
+  .login-box { background:#fff; padding:40px 32px; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.12); width:100%; max-width:400px; }
+  .login-box h2 { text-align:center; margin-bottom:6px; color:#333; }
+  .login-box p.sub { text-align:center; color:#888; font-size:13px; margin-bottom:26px; }
+  .input-group { margin-bottom:18px; }
+  .input-group label { display:block; margin-bottom:8px; color:#555; font-weight:500; font-size:13px; }
+  .input-group input { width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; }
+  .input-group input:focus { outline:none; border-color:#667eea; }
+  button { width:100%; padding:14px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:not-allowed; }
+  .error-message { color:#e74c3c; text-align:center; margin-top:14px; font-size:13px; display:none; }
+</style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>🔐 Admin Panel</h2>
+    <p class="sub">Wedding Album — khusus mempelai</p>
+
+    <div class="input-group">
+      <label>Wedding ID</label>
+      <input type="text" id="weddingId" placeholder="contoh: rizky-amanda">
+    </div>
+    <div class="input-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Masukkan username">
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Masukkan password">
+    </div>
+    <button id="loginBtn" onclick="login()">Masuk</button>
+    <p class="error-message" id="errorMessage"></p>
+  </div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
+
+// kalau sudah ada token aktif, langsung ke dashboard
+if (localStorage.getItem('admin_token') && localStorage.getItem('wedding_id')) {
+  window.location.href = 'admin-dashboard.html';
+}
+
+async function login() {
+  const weddingId = document.getElementById('weddingId').value.trim();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const btn = document.getElementById('loginBtn');
+
+  if (!weddingId || !username || !password) {
+    showError('Mohon isi semua field');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+
+  try {
+    const payload = { action: 'adminLogin', wedding_id: weddingId, username, password };
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('wedding_id', data.wedding_id);
+      localStorage.setItem('admin_token', data.token);
+      window.location.href = 'admin-dashboard.html';
+    } else {
+      showError(data.message || 'Login gagal');
+    }
+  } catch (err) {
+    showError('Gagal terhubung ke server: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+  }
+}
+
+function showError(message) {
+  const el = document.getElementById('errorMessage');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+document.getElementById('password').addEventListener('keypress', e => {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>

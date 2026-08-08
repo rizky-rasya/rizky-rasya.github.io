@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Wedding Album</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', sans-serif; background:#f4f5f7; color:#2d2d2d; }
+  header {
+    background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 1px 4px rgba(0,0,0,.06); position:sticky; top:0; z-index:10;
+  }
+  header h1 { font-size:18px; }
+  header .actions button { margin-left:8px; padding:8px 14px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:13px; }
+  header .actions button.logout { color:#c0392b; border-color:#f0c2bc; }
+
+  .tabs { display:flex; gap:6px; padding:16px 24px 0; }
+  .tab { padding:10px 18px; border-radius:10px 10px 0 0; cursor:pointer; background:#e8e9ee; font-size:14px; font-weight:600; color:#666; }
+  .tab.active { background:#fff; color:#333; }
+
+  .panel { display:none; background:#fff; margin:0 24px 24px; padding:24px; border-radius:0 12px 12px 12px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .panel.active { display:block; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
+  .media-card { border:1px solid #eee; border-radius:12px; overflow:hidden; background:#fafafa; }
+  .media-card .media-wrap { width:100%; height:160px; background:#eee; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .media-card img, .media-card video { width:100%; height:100%; object-fit:cover; }
+  .media-card audio { width:90%; margin:20px 5%; }
+  .media-card .info { padding:10px 12px; }
+  .media-card .info b { font-size:13px; }
+  .media-card .info span { display:block; font-size:11px; color:#888; margin-top:2px; }
+  .media-card .row { display:flex; gap:8px; padding:0 12px 12px; }
+  .media-card button { flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; font-weight:600; cursor:pointer; }
+  .btn-approve { background:#2e7d32; color:#fff; }
+  .btn-reject { background:#c62828; color:#fff; }
+  .empty-state { text-align:center; color:#999; padding:40px 0; font-size:14px; }
+
+  .form-group { margin-bottom:18px; max-width:420px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#555; }
+  .form-group input[type=text], .form-group input[type=number], .form-group select, .form-group input[type=password] {
+    width:100%; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px;
+  }
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; max-width:420px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+  .save-btn { padding:12px 24px; border:none; border-radius:8px; background:#667eea; color:#fff; font-weight:700; cursor:pointer; margin-top:8px; }
+  .status-msg { margin-top:14px; font-size:13px; padding:10px; border-radius:8px; display:none; max-width:420px; }
+  .status-msg.success { background:#e8f5e9; color:#2e7d32; display:block; }
+  .status-msg.error { background:#fdecea; color:#c62828; display:block; }
+
+  .link-box { display:flex; gap:8px; max-width:520px; margin-bottom:6px; }
+  .link-box input { flex:1; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:13px; background:#fafafa; }
+  .link-box button { padding:10px 14px; border:none; border-radius:8px; background:#667eea; color:#fff; cursor:pointer; font-size:13px; }
+  .hint { font-size:12px; color:#999; margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💍 Dashboard Admin</h1>
+  <div class="actions">
+    <button onclick="loadPending()">🔄 Refresh</button>
+    <button class="logout" onclick="logout()">Keluar</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="moderasi">Moderasi Media</div>
+  <div class="tab" data-tab="pengaturan">Pengaturan</div>
+  <div class="tab" data-tab="tautan">Bagikan</div>
+  <div class="tab" data-tab="akun">Akun</div>
+</div>
+
+<!-- MODERASI -->
+<div class="panel active" id="panel-moderasi">
+  <div id="pendingGrid" class="grid"></div>
+  <div id="pendingEmpty" class="empty-state" style="display:none;">Tidak ada media yang menunggu persetujuan 🎉</div>
+</div>
+
+<!-- PENGATURAN -->
+<div class="panel" id="panel-pengaturan">
+  <div class="form-group">
+    <label>Nama Mempelai Pria</label>
+    <input type="text" id="groomName">
+  </div>
+  <div class="form-group">
+    <label>Nama Mempelai Wanita</label>
+    <input type="text" id="brideName">
+  </div>
+  <div class="form-group">
+    <label>Tanggal Pernikahan</label>
+    <input type="text" id="weddingDate" placeholder="YYYY-MM-DD">
+  </div>
+  <div class="form-group">
+    <label>Tema</label>
+    <select id="theme">
+      <option value="classic">Classic</option>
+      <option value="modern">Modern</option>
+      <option value="rustic">Rustic</option>
+      <option value="minimalist">Minimalist</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Maksimal Foto per Tamu</label>
+    <input type="number" id="maxPhoto" min="1">
+  </div>
+  <div class="toggle-row">
+    <span>Izinkan upload video dari tamu</span>
+    <input type="checkbox" id="allowVideo">
+  </div>
+  <div class="toggle-row">
+    <span>Izinkan upload voice note dari tamu</span>
+    <input type="checkbox" id="allowVoice">
+  </div>
+  <button class="save-btn" onclick="saveSettings()">Simpan Pengaturan</button>
+  <div class="status-msg" id="settingsMsg"></div>
+</div>
+
+<!-- TAUTAN -->
+<div class="panel" id="panel-tautan">
+  <p class="hint">Bagikan tautan ini ke tamu undangan agar mereka bisa upload foto/video, dan tautan album agar semua orang bisa melihat momen yang sudah disetujui.</p>
+  <div class="form-group">
+    <label>Link Upload untuk Tamu</label>
+    <div class="link-box">
+      <input type="text" id="uploadLink" readonly>
+      <button onclick="copyLink('uploadLink')">Salin</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Link Album Publik</label>
+    <div class="link-box">
+      <input type="text" id="albumLink" readonly>
+      <button onclick="copyLink('albumLink')">Salin</button>
+    </div>
+  </div>
+</div>
+
+<!-- AKUN -->
+<div class="panel" id="panel-akun">
+  <div class="form-group">
+    <label>Password Baru</label>
+    <input type="password" id="newPassword" placeholder="Minimal 6 karakter">
+  </div>
+  <div class="form-group">
+    <label>Ulangi Password Baru</label>
+    <input type="password" id="confirmPassword">
+  </div>
+  <button class="save-btn" onclick="changePassword()">Ganti Password</button>
+  <div class="status-msg" id="accountMsg"></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
+
+const weddingId = localStorage.getItem('wedding_id');
+const token = localStorage.getItem('admin_token');
+
+if (!weddingId || !token) {
+  window.location.href = 'admin-login.html';
+}
+
+// ----- Tabs -----
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+async function callApi(payload, method = 'POST') {
+  payload.wedding_id = weddingId;
+  payload.token = token;
+
+  if (method === 'GET') {
+    const qs = new URLSearchParams(payload).toString();
+    const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`);
+    return res.json();
+  }
+
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+function logout() {
+  localStorage.removeItem('wedding_id');
+  localStorage.removeItem('admin_token');
+  window.location.href = 'admin-login.html';
+}
+
+function handleAuthError(data) {
+  if (data && data.message && data.message.toLowerCase().includes('sesi')) {
+    alert('Sesi berakhir, silakan login ulang.');
+    logout();
+    return true;
+  }
+  return false;
+}
+
+// ----- Moderasi -----
+async function loadPending() {
+  const data = await callApi({ action: 'getPendingMedia' }, 'GET');
+  if (handleAuthError(data)) return;
+
+  const grid = document.getElementById('pendingGrid');
+  const empty = document.getElementById('pendingEmpty');
+  grid.innerHTML = '';
+
+  if (!data.success || !data.pending_media || data.pending_media.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  data.pending_media.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+
+    let mediaHtml = '';
+    if (item.type === 'photo') {
+      mediaHtml = `<div class="media-wrap"><img src="${item.url}" loading="lazy"></div>`;
+    } else if (item.type === 'video') {
+      mediaHtml = `<div class="media-wrap"><video src="${item.url}" controls></video></div>`;
+    } else {
+      mediaHtml = `<div class="media-wrap"><audio src="${item.url}" controls></audio></div>`;
+    }
+
+    card.innerHTML = `
+      ${mediaHtml}
+      <div class="info">
+        <b>${escapeHtml(item.guest_name)}</b>
+        <span>${item.date} • ${item.time} • ${item.type}</span>
+      </div>
+      <div class="row">
+        <button class="btn-approve" onclick="moderate('${item.id}','approveMedia',this)">✓ Setujui</button>
+        <button class="btn-reject" onclick="moderate('${item.id}','rejectMedia',this)">✕ Tolak</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function moderate(mediaId, action, btn) {
+  btn.disabled = true;
+  const data = await callApi({ action, media_id: mediaId });
+  if (handleAuthError(data)) return;
+  loadPending();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ----- Pengaturan -----
+async function loadSettings() {
+  const data = await callApi({ action: 'getSettings' }, 'GET');
+  if (!data.success) return;
+
+  document.getElementById('groomName').value = data.groom_name || '';
+  document.getElementById('brideName').value = data.bride_name || '';
+  document.getElementById('weddingDate').value = data.date || '';
+  document.getElementById('theme').value = data.theme || 'classic';
+  document.getElementById('maxPhoto').value = data.max_photo || 5;
+  document.getElementById('allowVideo').checked = data.allow_video === true;
+  document.getElementById('allowVoice').checked = data.allow_voice === true;
+
+  const base = window.location.href.replace(/admin-dashboard\.html.*$/, '');
+  document.getElementById('uploadLink').value = `${base}index.html?w=${weddingId}`;
+  document.getElementById('albumLink').value = `${base}album.html?w=${weddingId}`;
+}
+
+async function saveSettings() {
+  const payload = {
+    action: 'updateSettings',
+    groom_name: document.getElementById('groomName').value.trim(),
+    bride_name: document.getElementById('brideName').value.trim(),
+    date: document.getElementById('weddingDate').value.trim(),
+    theme: document.getElementById('theme').value,
+    max_photo: document.getElementById('maxPhoto').value,
+    allow_video: document.getElementById('allowVideo').checked,
+    allow_voice: document.getElementById('allowVoice').checked
+  };
+  const data = await callApi(payload);
+  if (handleAuthError(data)) return;
+  showStatus('settingsMsg', data.success, data.message);
+}
+
+// ----- Tautan -----
+function copyLink(id) {
+  const input = document.getElementById(id);
+  input.select();
+  navigator.clipboard.writeText(input.value);
+}
+
+// ----- Akun -----
+async function changePassword() {
+  const newPass = document.getElementById('newPassword').value;
+  const confirmPass = document.getElementById('confirmPassword').value;
+
+  if (newPass.length < 6) {
+    showStatus('accountMsg', false, 'Password minimal 6 karakter');
+    return;
+  }
+  if (newPass !== confirmPass) {
+    showStatus('accountMsg', false, 'Konfirmasi password tidak cocok');
+    return;
+  }
+  const data = await callApi({ action: 'changePassword', new_password: newPass });
+  if (handleAuthError(data)) return;
+  showStatus('accountMsg', data.success, data.message);
+  if (data.success) {
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+  }
+}
+
+function showStatus(elId, success, message) {
+  const el = document.getElementById(elId);
+  el.textContent = message;
+  el.className = 'status-msg ' + (success ? 'success' : 'error');
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ----- Init -----
+loadPending();
+loadSettings();
+</script>
+</body>
+</html>
