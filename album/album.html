@@ -74,7 +74,7 @@
 <canvas id="hiddenCanvas"></canvas>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaUOhr15zNkeqkv-V2ujXFgy62uOYiapxMp8kAv-fXdlOm3jGAaxhy65qWrzjtp19X/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 // wedding_id: URL menang, lalu fallback localStorage, lalu simpan lagi
 const urlParams = new URLSearchParams(window.location.search);
@@ -110,16 +110,27 @@ async function init() {
 }
 
 async function loadAlbum() {
-  const res = await fetch(`${APPS_SCRIPT_URL}?action=getAlbum&wedding_id=${encodeURIComponent(weddingId)}`);
-  const data = await res.json();
-  document.getElementById('loader').style.display = 'none';
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getAlbum&wedding_id=${encodeURIComponent(weddingId)}`);
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
 
-  if (!data.success || !data.media || data.media.length === 0) {
+    if (!data.success) {
+      showToast(data.message || 'Gagal memuat album', 'error');
+      document.getElementById('empty').style.display = 'block';
+      return;
+    }
+    if (!data.media || data.media.length === 0) {
+      document.getElementById('empty').style.display = 'block';
+      return;
+    }
+    allMedia = data.media;
+    render();
+  } catch (err) {
+    document.getElementById('loader').style.display = 'none';
+    showToast('Gagal terhubung ke server: ' + err.message, 'error');
     document.getElementById('empty').style.display = 'block';
-    return;
   }
-  allMedia = data.media;
-  render();
 }
 
 function render() {

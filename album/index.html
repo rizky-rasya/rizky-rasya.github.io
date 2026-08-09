@@ -177,7 +177,7 @@
 </div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaUOhr15zNkeqkv-V2ujXFgy62uOYiapxMp8kAv-fXdlOm3jGAaxhy65qWrzjtp19X/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 // ============================================
 // WEDDING ID — HANYA DARI LINK, TERSIMPAN OTOMATIS, TIDAK BISA DIKETIK MANUAL
@@ -530,6 +530,11 @@ async function sendMedia(type) {
 
     if (result.success) {
       showToast(result.message || 'Berhasil dikirim! 🎉', 'success');
+      if (result.warning) {
+        // Peringatan non-fatal dari server (mis. sharing Drive dibatasi
+        // kebijakan domain) — upload tetap berhasil, cuma info tambahan.
+        console.warn('Server warning:', result.warning);
+      }
       if (type === 'voice') { resetVoice(); }
       else {
         resetCapture();

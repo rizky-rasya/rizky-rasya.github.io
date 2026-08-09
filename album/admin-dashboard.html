@@ -71,6 +71,22 @@
   .frame-style-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
   .frame-style-btn { padding:8px 14px; border-radius:8px; border:1.5px solid #e0e0e0; background:#fff; cursor:pointer; font-size:12px; }
   .frame-style-btn.active { border-color:#667eea; background:#f4f5ff; color:#667eea; font-weight:700; }
+
+  .health-banner {
+    margin:16px 24px 0; padding:14px 18px; border-radius:10px; font-size:13px; line-height:1.6; display:none;
+  }
+  .health-banner.warn { background:#fff8e1; color:#8a6d00; border:1px solid #ffe082; }
+  .health-banner.error { background:#fdecea; color:#c62828; border:1px solid #f5c6c2; }
+  .health-banner.ok { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+  .health-banner ul { margin:6px 0 0 18px; }
+  .health-banner .dismiss { float:right; cursor:pointer; font-weight:700; opacity:.6; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99;
+    background:#222; color:#fff; padding:12px 22px; border-radius:10px; font-size:13px; display:none; max-width:88%; text-align:center;
+  }
+  .toast.success { background:#2e7d32; }
+  .toast.error { background:#c62828; }
 </style>
 </head>
 <body>
@@ -82,6 +98,8 @@
     <button class="logout" onclick="logout()">Keluar</button>
   </div>
 </header>
+
+<div class="health-banner" id="healthBanner"><span class="dismiss" onclick="document.getElementById('healthBanner').style.display='none'">✕</span><span id="healthBannerText"></span></div>
 
 <div class="tabs">
   <div class="tab active" data-tab="moderasi">Moderasi</div>
@@ -237,8 +255,10 @@
   <div class="status-msg" id="accountMsg"></div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaUOhr15zNkeqkv-V2ujXFgy62uOYiapxMp8kAv-fXdlOm3jGAaxhy65qWrzjtp19X/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 const weddingId = localStorage.getItem('wedding_id');
 const token = localStorage.getItem('admin_token');
@@ -324,9 +344,15 @@ async function loadPending() {
 
 async function moderate(mediaId, action, btn) {
   btn.disabled = true;
-  const data = await callApi({ action, media_id: mediaId });
-  if (handleAuthError(data)) return;
-  loadPending();
+  try {
+    const data = await callApi({ action, media_id: mediaId });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showToast(data.message || 'Gagal memproses media', 'error'); btn.disabled = false; return; }
+    loadPending();
+  } catch (err) {
+    showToast('Gagal terhubung ke server: ' + err.message, 'error');
+    btn.disabled = false;
+  }
 }
 
 // ----- Filter kamera -----
@@ -361,9 +387,13 @@ function renderFilterGrid() {
 }
 
 async function saveFilter() {
-  const data = await callApi({ action: 'updateSettings', active_filter_id: selectedFilterId });
-  if (handleAuthError(data)) return;
-  showStatus('filterMsg', data.success, data.success ? 'Filter aktif tersimpan, semua tamu akan pakai filter ini.' : data.message);
+  try {
+    const data = await callApi({ action: 'updateSettings', active_filter_id: selectedFilterId });
+    if (handleAuthError(data)) return;
+    showStatus('filterMsg', data.success, data.success ? 'Filter aktif tersimpan, semua tamu akan pakai filter ini.' : data.message);
+  } catch (err) {
+    showStatus('filterMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
 }
 
 // ----- Tema & Frame -----
@@ -440,9 +470,13 @@ async function saveTheme() {
       album_headline: document.getElementById('albumHeadline').value.trim()
     })
   };
-  const data = await callApi(payload);
-  if (handleAuthError(data)) return;
-  showStatus('themeMsg', data.success, data.message);
+  try {
+    const data = await callApi(payload);
+    if (handleAuthError(data)) return;
+    showStatus('themeMsg', data.success, data.message);
+  } catch (err) {
+    showStatus('themeMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
 }
 
 // ----- Pengaturan umum -----
@@ -490,9 +524,13 @@ async function saveSettings() {
     allow_filter: document.getElementById('allowFilter').checked,
     moderation: document.getElementById('moderation').checked
   };
-  const data = await callApi(payload);
-  if (handleAuthError(data)) return;
-  showStatus('settingsMsg', data.success, data.message);
+  try {
+    const data = await callApi(payload);
+    if (handleAuthError(data)) return;
+    showStatus('settingsMsg', data.success, data.message);
+  } catch (err) {
+    showStatus('settingsMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
 }
 
 // ----- Tautan -----
@@ -508,10 +546,14 @@ async function changePassword() {
   const confirmPass = document.getElementById('confirmPassword').value;
   if (newPass.length < 6) { showStatus('accountMsg', false, 'Password minimal 6 karakter'); return; }
   if (newPass !== confirmPass) { showStatus('accountMsg', false, 'Konfirmasi password tidak cocok'); return; }
-  const data = await callApi({ action: 'changePassword', new_password: newPass });
-  if (handleAuthError(data)) return;
-  showStatus('accountMsg', data.success, data.message);
-  if (data.success) { document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
+  try {
+    const data = await callApi({ action: 'changePassword', new_password: newPass });
+    if (handleAuthError(data)) return;
+    showStatus('accountMsg', data.success, data.message);
+    if (data.success) { document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
+  } catch (err) {
+    showStatus('accountMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
 }
 
 function showStatus(elId, success, message) {
@@ -523,10 +565,44 @@ function showStatus(elId, success, message) {
 function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 function formatDate(d) { try { return new Date(d).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}); } catch(e){ return d; } }
 
+function showToast(text, type) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 5000);
+}
+
+// ----- Notifikasi Kesehatan Sistem -----
+async function runHealthCheck() {
+  const banner = document.getElementById('healthBanner');
+  const textEl = document.getElementById('healthBannerText');
+  try {
+    const data = await callApi({ action: 'healthCheck' }, 'GET');
+    if (handleAuthError(data)) return;
+    if (!data.success) {
+      banner.className = 'health-banner error';
+      textEl.innerHTML = '⚠️ Tidak bisa memeriksa status sistem: ' + escapeHtml(data.message || '');
+      banner.style.display = 'block';
+      return;
+    }
+    if (data.issues && data.issues.length > 0) {
+      banner.className = 'health-banner warn';
+      textEl.innerHTML = '⚠️ Ada catatan dari sistem:<ul>' + data.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch (err) {
+    banner.className = 'health-banner error';
+    textEl.textContent = '⚠️ Tidak bisa terhubung ke server untuk memeriksa status sistem.';
+    banner.style.display = 'block';
+  }
+}
+
 // ----- Init -----
-loadPending();
-loadFilters();
-loadSettings();
+loadPending().catch(() => showToast('Gagal memuat media menunggu persetujuan', 'error'));
+loadFilters().catch(() => showToast('Gagal memuat daftar filter', 'error'));
+loadSettings().catch(() => showToast('Gagal memuat pengaturan', 'error'));
+runHealthCheck();
 </script>
 </body>
 </html>
