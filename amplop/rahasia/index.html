@@ -774,6 +774,49 @@
             color: #e4c97a;
             border-color: #c9943a;
         }
+
+        /* ===== TAB TEMA / TAMPILAN UNDANGAN ===== */
+        .preset-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:0.7rem; }
+        .preset-card{
+            border:2px solid var(--border); border-radius:12px; padding:0.7rem; cursor:pointer; text-align:left;
+            background:var(--surface); transition:border-color .15s; font-family:inherit;
+        }
+        .preset-card.active{ border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
+        .preset-swatch{ display:flex; gap:4px; margin-bottom:0.5rem; }
+        .preset-swatch span{ width:20px; height:20px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.12); }
+        .preset-name{ font-size:0.82rem; font-weight:600; }
+        .preset-desc{ font-size:0.68rem; color:var(--muted); margin-top:0.15rem; }
+
+        .tema-preview-toggle, .tema-color-tabs, .option-buttons{ display:flex; gap:0.5rem; margin-bottom:0.9rem; flex-wrap:wrap; }
+        .tema-preview-toggle .btn-sm.active, .tema-color-tabs .btn-sm.active, .option-buttons .btn-sm.active{
+            background:var(--gold); color:#fff; border-color:var(--gold);
+        }
+
+        .tema-preview-box{
+            border-radius: var(--tp-radius, 20px); padding:2.2rem 1.4rem; text-align:center;
+            background: var(--tp-bg,#FAF6EC); color:var(--tp-text,#2B2620);
+            border:1px solid var(--tp-line, rgba(184,137,43,.28)); transition: background .2s ease, color .2s ease;
+            font-family: var(--tp-font-body, 'Jost',sans-serif);
+        }
+        .tema-preview-box .tp-eyebrow{ font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--tp-gold,#B8892B); font-weight:600; }
+        .tema-preview-box .tp-title{ font-family:var(--tp-font-display,'Cormorant Garamond',serif); font-size:1.9rem; margin:0.5rem 0; }
+        .tema-preview-box .tp-quote{
+            font-family:var(--tp-font-display,'Cormorant Garamond',serif); font-style:italic; font-size:0.92rem;
+            background:var(--tp-surface,#fff); border:1px solid var(--tp-line,rgba(184,137,43,.28)); border-radius:var(--tp-radius,16px);
+            padding:0.9rem; margin:1.1rem auto; max-width:280px;
+        }
+        .tema-preview-box .tp-count{ display:flex; justify-content:center; gap:1.2rem; margin:1.1rem 0; font-family:var(--tp-font-display,'Cormorant Garamond',serif); font-size:1.4rem; color:var(--tp-gold,#B8892B); }
+        .tema-preview-box .tp-count small{ display:block; font-family:var(--tp-font-body,'Jost',sans-serif); font-size:0.6rem; color:var(--tp-muted,#7A7266); text-transform:uppercase; letter-spacing:.05em; }
+        .tema-preview-box .tp-btn{
+            font-family:var(--tp-font-body,'Jost',sans-serif); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+            border:1px solid var(--tp-gold,#B8892B); color:#fff; background:var(--tp-gold,#B8892B); padding:0.65rem 1.5rem; border-radius:999px; cursor:default; display:inline-block;
+        }
+
+        .color-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:0.8rem; }
+        .color-item label{ font-size:0.72rem; color:var(--muted); display:block; margin-bottom:0.3rem; }
+        .color-item .row{ display:flex; align-items:center; gap:0.4rem; }
+        .color-item input[type=color]{ width:34px; height:34px; border:1px solid var(--border); border-radius:8px; padding:0; cursor:pointer; background:none; flex:none; }
+        .color-item input[type=text]{ flex:1; min-width:0; font-size:0.72rem; padding:0.4rem 0.5rem; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-family:monospace; }
     </style>
 </head>
 <body>
@@ -786,7 +829,7 @@
             <form id="loginForm">
                 <div class="field">
                     <label for="loginUser">Username</label>
-                    <input type="text" id="loginUser" placeholder="Username" required />
+                    <input type="text" id="loginUser" placeholder="rr" required />
                 </div>
                 <div class="field">
                     <label for="loginPass">Password</label>
@@ -823,6 +866,10 @@
             <a href="#" data-section="template">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Template Pesan
+            </a>
+            <a href="#" data-section="tema">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h10a2 2 0 002-2v-4a2 2 0 00-2-2h-2.5M7 21v-4"/><circle cx="7" cy="7" r="1"/></svg>
+                Tampilan Undangan
             </a>
         </nav>
         <button class="theme-toggle" id="themeToggle">
@@ -1009,6 +1056,80 @@
                     <div><code>$dress_code</code> — Dress code</div>
                 </div>
             </div>
+        </div>
+
+        <!-- ===== SECTION: TEMA / TAMPILAN UNDANGAN ===== -->
+        <div id="section-tema" class="section-content" style="display:none;">
+
+            <div class="panel">
+                <div class="panel-title">
+                    <span>🎨 Preset Tema</span>
+                    <div class="action-buttons">
+                        <button class="btn-sm gold-outline refresh-btn" data-target="tema">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">
+                    Pilih preset sebagai titik awal, lalu sesuaikan warnanya sendiri kalau perlu. Semua pengaturan di tab ini berlaku untuk situs undangan (<code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">index.html</code>) yang dilihat tamu — bukan tampilan dashboard ini.
+                </p>
+                <div class="preset-grid" id="presetGrid"><!-- diisi JS --></div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>🖼️ Pratinjau</span></div>
+                <div class="tema-preview-toggle">
+                    <button class="btn-sm active" id="previewLightBtn" type="button">☀️ Mode Terang</button>
+                    <button class="btn-sm" id="previewNightBtn" type="button">🌙 Mode Gelap</button>
+                </div>
+                <div id="temaPreviewBox" class="tema-preview-box">
+                    <div class="tp-eyebrow">Undangan Pernikahan</div>
+                    <div class="tp-title">Wahyu &amp; Riski</div>
+                    <div class="tp-quote">"Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat."</div>
+                    <div class="tp-count">
+                        <span>12<small>Hari</small></span>
+                        <span>08<small>Jam</small></span>
+                        <span>45<small>Menit</small></span>
+                    </div>
+                    <span class="tp-btn">Buka Undangan</span>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>🎛️ Warna Kustom</span></div>
+                <div class="tema-color-tabs">
+                    <button class="btn-sm active" id="colorTabLight" type="button">Mode Terang</button>
+                    <button class="btn-sm" id="colorTabNight" type="button">Mode Gelap</button>
+                </div>
+                <div id="colorGridLight" class="color-grid"><!-- diisi JS --></div>
+                <div id="colorGridNight" class="color-grid" style="display:none;"><!-- diisi JS --></div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>◻️ Bentuk &amp; Tipografi</span></div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.5rem;">Bentuk sudut kartu/foto</p>
+                <div class="option-buttons" id="radiusButtons">
+                    <button class="btn-sm" data-radius="tajam" type="button">Tajam</button>
+                    <button class="btn-sm" data-radius="lembut" type="button">Lembut</button>
+                    <button class="btn-sm" data-radius="bulat" type="button">Bulat</button>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0.9rem 0 0.5rem;">Gaya font</p>
+                <div class="option-buttons" id="fontButtons">
+                    <button class="btn-sm" data-font="elegant" type="button">Elegant</button>
+                    <button class="btn-sm" data-font="modern" type="button">Modern</button>
+                    <button class="btn-sm" data-font="classic" type="button">Klasik</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="actions">
+                    <button class="btn-sm primary" id="saveTemaBtn">💾 Simpan Tampilan</button>
+                    <button class="btn-sm gold-outline" id="resetTemaBtn">↺ Reset ke Preset Bawaan</button>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;">
+                    Setelah disimpan, tamu yang membuka/refresh situs undangan langsung melihat tampilan barunya — tidak perlu upload ulang file apa pun.
+                </p>
+                <p class="msg" id="temaMsg" style="font-size:0.8rem;margin-top:0.4rem;"></p>
+            </div>
+
         </div>
 
         <!-- ===== FOOTER ===== -->
@@ -1212,11 +1333,275 @@
                 if (res.ok && res.data) {
                     configData = { ...FALLBACK_CONFIG, ...res.data };
                 }
+                if (res.ok && res.tema) {
+                    temaState = { ...FALLBACK_TEMA, ...res.tema };
+                }
             } catch (_) { /* pakai fallback */ }
             const names = `${configData.nama_panggilan_wanita} & ${configData.nama_panggilan_pria}`;
             $('headerNames').textContent = names;
             document.title = `Dashboard · ${names}`;
             return configData;
+        }
+
+        // ========================================================================
+        //  TEMA / TAMPILAN UNDANGAN — sinkron dengan index.html lewat sheet
+        //  PengaturanTema. Preview di sini memakai variabel CSS --tp-* yang sengaja
+        //  terpisah dari palet dashboard sendiri, supaya WYSIWYG akurat terlepas
+        //  dari tema gelap/terang yang sedang dipakai dashboard ini.
+        // ========================================================================
+        const FALLBACK_TEMA = {
+            preset_aktif: 'emerald_gold',
+            warna_bg_light: '#FAF6EC', warna_surface_light: '#FFFFFF', warna_surface2_light: '#F1EAD9',
+            warna_text_light: '#2B2620', warna_muted_light: '#7A7266',
+            warna_aksen_light: '#B8892B', warna_aksen_soft_light: '#9C6B2E',
+            warna_bg_night: '#0E1A13', warna_surface_night: '#15221A', warna_surface2_night: '#1B2A20',
+            warna_text_night: '#F2ECDD', warna_muted_night: '#A9B6A6',
+            warna_aksen_night: '#C9A24B', warna_aksen_soft_night: '#E4C97A',
+            radius_bentuk: 'lembut',
+            gaya_font: 'elegant'
+        };
+        let temaState = { ...FALLBACK_TEMA };
+        let temaPreviewMode = 'light';
+        let temaColorTab = 'light';
+
+        const TEMA_PRESETS = {
+            emerald_gold: {
+                nama: 'Emerald Gold', desc: 'Hijau tua & emas, klasik islami',
+                swatch: ['#0E1A13', '#B8892B', '#FAF6EC'],
+                warna_bg_light:'#FAF6EC', warna_surface_light:'#FFFFFF', warna_surface2_light:'#F1EAD9',
+                warna_text_light:'#2B2620', warna_muted_light:'#7A7266', warna_aksen_light:'#B8892B', warna_aksen_soft_light:'#9C6B2E',
+                warna_bg_night:'#0E1A13', warna_surface_night:'#15221A', warna_surface2_night:'#1B2A20',
+                warna_text_night:'#F2ECDD', warna_muted_night:'#A9B6A6', warna_aksen_night:'#C9A24B', warna_aksen_soft_night:'#E4C97A'
+            },
+            rose_blush: {
+                nama: 'Rose Blush', desc: 'Merah muda & rose-gold, romantis',
+                swatch: ['#1C1013', '#B8657A', '#FAF3F1'],
+                warna_bg_light:'#FAF3F1', warna_surface_light:'#FFFFFF', warna_surface2_light:'#F3E3DE',
+                warna_text_light:'#3A2A28', warna_muted_light:'#8C7370', warna_aksen_light:'#B8657A', warna_aksen_soft_light:'#9C4F63',
+                warna_bg_night:'#1C1013', warna_surface_night:'#241619', warna_surface2_night:'#2E1B1F',
+                warna_text_night:'#F5E6E4', warna_muted_night:'#C7A8A6', warna_aksen_night:'#E28FA0', warna_aksen_soft_night:'#F0B4C0'
+            },
+            ocean_teal: {
+                nama: 'Ocean Teal', desc: 'Biru-hijau tosca, tenang',
+                swatch: ['#0A1717', '#2E7D7B', '#F2F7F7'],
+                warna_bg_light:'#F2F7F7', warna_surface_light:'#FFFFFF', warna_surface2_light:'#E3EEEE',
+                warna_text_light:'#1F2E2E', warna_muted_light:'#5F7877', warna_aksen_light:'#2E7D7B', warna_aksen_soft_light:'#1F5E5C',
+                warna_bg_night:'#0A1717', warna_surface_night:'#102222', warna_surface2_night:'#163030',
+                warna_text_night:'#E4F1F1', warna_muted_night:'#9FBDBC', warna_aksen_night:'#4FB8B5', warna_aksen_soft_night:'#7ED4D1'
+            },
+            midnight_mono: {
+                nama: 'Midnight Mono', desc: 'Hitam-putih, minimalis',
+                swatch: ['#121212', '#3A3A36', '#F7F7F5'],
+                warna_bg_light:'#F7F7F5', warna_surface_light:'#FFFFFF', warna_surface2_light:'#EAEAE6',
+                warna_text_light:'#1C1C1A', warna_muted_light:'#6E6E68', warna_aksen_light:'#3A3A36', warna_aksen_soft_light:'#58584F',
+                warna_bg_night:'#121212', warna_surface_night:'#1A1A1A', warna_surface2_night:'#232323',
+                warna_text_night:'#F0F0EC', warna_muted_night:'#A6A6A0', warna_aksen_night:'#D8D8D2', warna_aksen_soft_night:'#B8B8B0'
+            }
+        };
+
+        const COLOR_FIELD_LABELS = {
+            warna_bg: 'Latar Belakang', warna_surface: 'Kartu/Permukaan', warna_surface2: 'Permukaan Sekunder',
+            warna_text: 'Teks Utama', warna_muted: 'Teks Redup', warna_aksen: 'Aksen / Emas', warna_aksen_soft: 'Aksen Lembut'
+        };
+        const COLOR_FIELD_BASES = ['warna_bg', 'warna_surface', 'warna_surface2', 'warna_text', 'warna_muted', 'warna_aksen', 'warna_aksen_soft'];
+
+        function detectActivePreset() {
+            for (const key of Object.keys(TEMA_PRESETS)) {
+                const p = TEMA_PRESETS[key];
+                const match = COLOR_FIELD_BASES.every(base =>
+                    (temaState[base + '_light'] || '').toUpperCase() === p[base + '_light'].toUpperCase() &&
+                    (temaState[base + '_night'] || '').toUpperCase() === p[base + '_night'].toUpperCase()
+                );
+                if (match) return key;
+            }
+            return 'custom';
+        }
+
+        function renderPresetGrid() {
+            const active = detectActivePreset();
+            const cards = Object.keys(TEMA_PRESETS).map(key => {
+                const p = TEMA_PRESETS[key];
+                return `<button type="button" class="preset-card ${key === active ? 'active' : ''}" data-preset="${key}">
+                    <div class="preset-swatch">${p.swatch.map(c => `<span style="background:${c};"></span>`).join('')}</div>
+                    <div class="preset-name">${p.nama}</div>
+                    <div class="preset-desc">${p.desc}</div>
+                </button>`;
+            }).join('');
+            const customActive = active === 'custom';
+            $('presetGrid').innerHTML = cards + `
+                <button type="button" class="preset-card ${customActive ? 'active' : ''}" data-preset="custom">
+                    <div class="preset-swatch"><span style="background:${temaState.warna_aksen_light};"></span><span style="background:${temaState.warna_bg_light};border:1px solid #ddd;"></span></div>
+                    <div class="preset-name">Kustom</div>
+                    <div class="preset-desc">Warna pilihan Anda sendiri</div>
+                </button>`;
+        }
+
+        function applyPreset(key) {
+            if (key === 'custom') { renderPresetGrid(); return; }
+            const p = TEMA_PRESETS[key];
+            if (!p) return;
+            COLOR_FIELD_BASES.forEach(base => {
+                temaState[base + '_light'] = p[base + '_light'];
+                temaState[base + '_night'] = p[base + '_night'];
+            });
+            temaState.preset_aktif = key;
+            renderPresetGrid();
+            renderColorGrids();
+            updateTemaPreview();
+        }
+
+        function renderColorGrids() {
+            const buildGrid = (mode) => COLOR_FIELD_BASES.map(base => {
+                const field = `${base}_${mode}`;
+                const val = temaState[field] || '#000000';
+                return `<div class="color-item">
+                    <label>${COLOR_FIELD_LABELS[base]}</label>
+                    <div class="row">
+                        <input type="color" data-field="${field}" value="${val}">
+                        <input type="text" data-field-text="${field}" value="${val}" maxlength="7">
+                    </div>
+                </div>`;
+            }).join('');
+            $('colorGridLight').innerHTML = buildGrid('light');
+            $('colorGridNight').innerHTML = buildGrid('night');
+        }
+
+        function hexToRgba(hex, alpha) {
+            const h = (hex || '#000000').replace('#', '');
+            const r = parseInt(h.substring(0, 2), 16) || 0;
+            const g = parseInt(h.substring(2, 4), 16) || 0;
+            const b = parseInt(h.substring(4, 6), 16) || 0;
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        const RADIUS_PX = { tajam: '10px', lembut: '20px', bulat: '32px' };
+        const FONT_PREVIEW = {
+            elegant: { display: "'Cormorant Garamond',serif", body: "'Jost',sans-serif" },
+            modern: { display: "'Poppins',sans-serif", body: "'Inter',sans-serif" },
+            classic: { display: "'Playfair Display',serif", body: "'Lato',sans-serif" }
+        };
+
+        function updateTemaPreview() {
+            const mode = temaPreviewMode;
+            const box = $('temaPreviewBox');
+            box.style.setProperty('--tp-bg', temaState[`warna_bg_${mode}`]);
+            box.style.setProperty('--tp-surface', temaState[`warna_surface_${mode}`]);
+            box.style.setProperty('--tp-text', temaState[`warna_text_${mode}`]);
+            box.style.setProperty('--tp-muted', temaState[`warna_muted_${mode}`]);
+            box.style.setProperty('--tp-gold', temaState[`warna_aksen_${mode}`]);
+            box.style.setProperty('--tp-line', hexToRgba(temaState[`warna_aksen_${mode}`], 0.28));
+            box.style.setProperty('--tp-radius', RADIUS_PX[temaState.radius_bentuk] || '20px');
+            const fonts = FONT_PREVIEW[temaState.gaya_font] || FONT_PREVIEW.elegant;
+            box.style.setProperty('--tp-font-display', fonts.display);
+            box.style.setProperty('--tp-font-body', fonts.body);
+        }
+
+        function renderTemaTab() {
+            renderPresetGrid();
+            renderColorGrids();
+            document.querySelectorAll('#radiusButtons [data-radius]').forEach(b =>
+                b.classList.toggle('active', b.dataset.radius === temaState.radius_bentuk));
+            document.querySelectorAll('#fontButtons [data-font]').forEach(b =>
+                b.classList.toggle('active', b.dataset.font === temaState.gaya_font));
+            updateTemaPreview();
+        }
+
+        function wireTemaEvents() {
+            $('presetGrid').addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-preset]');
+                if (btn) applyPreset(btn.dataset.preset);
+            });
+
+            $('previewLightBtn').addEventListener('click', () => {
+                temaPreviewMode = 'light';
+                $('previewLightBtn').classList.add('active');
+                $('previewNightBtn').classList.remove('active');
+                updateTemaPreview();
+            });
+            $('previewNightBtn').addEventListener('click', () => {
+                temaPreviewMode = 'night';
+                $('previewNightBtn').classList.add('active');
+                $('previewLightBtn').classList.remove('active');
+                updateTemaPreview();
+            });
+
+            $('colorTabLight').addEventListener('click', () => {
+                temaColorTab = 'light';
+                $('colorTabLight').classList.add('active');
+                $('colorTabNight').classList.remove('active');
+                $('colorGridLight').style.display = '';
+                $('colorGridNight').style.display = 'none';
+            });
+            $('colorTabNight').addEventListener('click', () => {
+                temaColorTab = 'night';
+                $('colorTabNight').classList.add('active');
+                $('colorTabLight').classList.remove('active');
+                $('colorGridNight').style.display = '';
+                $('colorGridLight').style.display = 'none';
+            });
+
+            ['colorGridLight', 'colorGridNight'].forEach(id => {
+                $(id).addEventListener('input', (e) => {
+                    const colorInput = e.target.matches('input[type=color]') ? e.target : null;
+                    const textInput = e.target.matches('input[type=text]') ? e.target : null;
+                    if (colorInput) {
+                        const field = colorInput.dataset.field;
+                        temaState[field] = colorInput.value;
+                        const twin = document.querySelector(`[data-field-text="${field}"]`);
+                        if (twin) twin.value = colorInput.value;
+                    } else if (textInput) {
+                        const field = textInput.dataset.fieldText;
+                        const val = textInput.value.trim();
+                        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+                            temaState[field] = val;
+                            const twin = document.querySelector(`[data-field="${field}"]`);
+                            if (twin) twin.value = val;
+                        }
+                    }
+                    temaState.preset_aktif = 'custom';
+                    renderPresetGrid();
+                    updateTemaPreview();
+                });
+            });
+
+            document.querySelectorAll('#radiusButtons [data-radius]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    temaState.radius_bentuk = btn.dataset.radius;
+                    document.querySelectorAll('#radiusButtons [data-radius]').forEach(b => b.classList.toggle('active', b === btn));
+                    updateTemaPreview();
+                });
+            });
+            document.querySelectorAll('#fontButtons [data-font]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    temaState.gaya_font = btn.dataset.font;
+                    document.querySelectorAll('#fontButtons [data-font]').forEach(b => b.classList.toggle('active', b === btn));
+                    updateTemaPreview();
+                });
+            });
+
+            $('saveTemaBtn').addEventListener('click', async () => {
+                const msg = $('temaMsg');
+                msg.textContent = 'Menyimpan...';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'save_theme', token: getToken(), tema: temaState });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan.');
+                    if (res.tema) temaState = { ...FALLBACK_TEMA, ...res.tema };
+                    msg.textContent = '✅ Tersimpan. Situs undangan tamu akan memakai tampilan baru ini.';
+                    msg.style.color = '#3f9a58';
+                    renderTemaTab();
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger, #c65b5b)';
+                }
+            });
+
+            $('resetTemaBtn').addEventListener('click', () => {
+                if (!confirm('Kembalikan ke preset "Emerald Gold" bawaan? Warna kustom yang belum disimpan akan hilang.')) return;
+                temaState = { ...FALLBACK_TEMA };
+                renderTemaTab();
+            });
         }
 
         async function fetchGuests() {
@@ -1694,6 +2079,7 @@
                 const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
                 const preview = replaceVariables($('templateText').value, sampleGuest, configData);
                 $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
+                renderTemaTab();
                 if (usingMockData) {
                     showToast('⚠️ Data menggunakan MOCK karena API tidak tersedia.', 'error');
                 } else {
@@ -1735,13 +2121,14 @@
                 dashboard: 'Dashboard',
                 guests: 'Daftar Tamu',
                 send: 'Kirim WA',
-                template: 'Template Pesan'
+                template: 'Template Pesan',
+                tema: 'Tampilan Undangan'
             };
             $('pageTitle').textContent = titles[section] || 'Dashboard';
             closeSidebar();
         }
 
-        const sections = ['dashboard', 'guests', 'send', 'template'];
+        const sections = ['dashboard', 'guests', 'send', 'template', 'tema'];
         const sectionEls = {};
         sections.forEach(s => sectionEls[s] = $(`section-${s}`));
 
@@ -1802,6 +2189,8 @@
             renderGuestList('all', '');
             renderSendList('all', '');
             renderTemplateEditor();
+            wireTemaEvents();
+            renderTemaTab();
             navigateTo('dashboard');
             $('lastUpdate').textContent = 'Dimuat: ' + new Date().toLocaleString('id-ID');
 
