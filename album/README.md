@@ -1,4 +1,48 @@
-# Wedding Album v2 — Panduan Setup & Perbaikan
+# Wedding Album v4 — Panduan Setup & Perbaikan
+
+## 🆕 Perbaikan Terbaru (Round 3)
+
+**1. Thumbnail tidak muncul + VN/video tanpa suara**
+Akar masalahnya: file berkualitas tinggi (sekarang tanpa kompresi kuat) sering melebihi batas ukuran respons Apps Script kalau diambil sekaligus dalam satu response — hasilnya file terpotong, sehingga video/audio jadi rusak (tidak ada suara) atau gagal ditampilkan. Diperbaiki dengan dua cara:
+- **Thumbnail ringan otomatis**: setiap foto/video yang diunggah sekarang menyertakan thumbnail kecil (dibuat di HP tamu sebelum upload), disimpan terpisah di folder `THUMBS`. Galeri album memuat thumbnail ini dulu (cepat), bukan file aslinya — file asli hanya diambil saat tombol Play atau Unduh ditekan.
+- **Pengambilan file utuh secara chunked**: saat video/voice note benar-benar diputar atau diunduh, file diambil bertahap per-potongan (2MB per potongan) lewat `getMediaMeta` + `getMediaChunk`, lalu disatukan di browser — jadi file besar tidak pernah terpotong walau tanpa kompresi.
+
+**2. Zoom tidak sengaja saat isi nama**
+Ditambahkan `user-scalable=no` di viewport, `touch-action: manipulation`, serta pemblokiran gesture pinch-zoom dan double-tap zoom lewat JavaScript — di `index.html`, `album.html`, `admin-dashboard.html`, dan `admin-login.html`.
+
+**3. Video tidak ada suara**
+Ditemukan bug nyata: saat tamu pindah dari mode Foto ke mode Video, sistem memakai ulang stream kamera lama yang direkam tanpa audio (karena mode Foto tidak minta izin mikrofon). Sekarang kamera selalu di-restart dengan permintaan audio yang benar setiap ganti mode.
+
+**4. Format video/VN — mp4/mp3**
+Browser (Web `MediaRecorder` API) tidak bisa merekam mp3 secara native, dan mp4 hanya didukung penuh oleh Safari/iOS — Chrome Android tetap merekam WebM walau diminta mp4 (ini keterbatasan platform, bukan keterbatasan sistem ini). Solusinya: sistem sekarang **otomatis mendeteksi format terbaik yang didukung tiap perangkat** — kalau tamu pakai iPhone, hasilnya otomatis mp4/m4a asli; kalau pakai Android, otomatis WebM (yang paling stabil di Android). Format ini konsisten dipakai untuk rekaman maupun unduhan berbingkai.
+
+**5. Multi-jepret foto**
+Mode Foto sekarang bisa mengambil hingga 5 foto berturut-turut tanpa menutup kamera — hasil tiap jepretan muncul sebagai filmstrip kecil di atas tombol, bisa dihapus satu-satu, dan dikirim sekaligus lewat tombol **Selesai & Kirim** (bisa juga cuma kirim 1 foto).
+
+**6. Kamera depan tidak mirror**
+Preview kamera depan sekarang diberi efek cermin (`scaleX(-1)`) supaya terasa alami saat swafoto, dan hasil jepretan/rekamannya dibuat konsisten dengan apa yang dilihat tamu di preview.
+
+**7. Kualitas dinaikkan**
+Resolusi kamera diminta ideal 1920×1080 (sebelumnya browser bebas pilih, sering jatuh ke resolusi rendah), kualitas JPEG foto dinaikkan ke 0.96, dan bitrate video/audio dinaikkan (6 Mbps video, 128 kbps audio). Catatan jujur: JPEG/H.264/AAC tetap format terkompresi secara teknis (tidak ada kamera HP yang benar-benar "tanpa kompresi" karena file mentah/RAW akan terlalu besar untuk diunggah lewat jaringan seluler) — pengaturan di atas sudah mendekati kualitas maksimal yang wajar untuk dipakai di HP.
+
+**8. Download lambat**
+Ditambahkan tombol **⬇ Asli** (unduh cepat, file apa adanya, ada indikator persen) terpisah dari **✨ Berbingkai** (proses re-render dengan bingkai — untuk video/voice note ini secara teknis butuh waktu kira-kira sama dengan durasi aslinya karena diproses ulang real-time di browser, sekarang dengan indikator persentase supaya jelas bukan macet).
+
+## 🔴 Kenapa Drive terisi tapi album & sheet MEDIA kosong? (Round 2, sudah diperbaiki)
+
+Ini bug yang sudah diperbaiki. Penyebabnya: kode lama memanggil `file.setSharing(...)` (supaya file bisa diakses publik) **sebelum** menyimpan baris ke sheet `MEDIA`. Kalau akun Google Workspace/organisasi kamu punya kebijakan yang memblokir sharing "Anyone with the link" — perintah itu melempar error `Akses ditolak: DriveApp`, dan seluruh proses berhenti di situ. File-nya sudah kepalang naik ke Drive, tapi baris sheet-nya tidak pernah sempat ditulis.
+
+**Perbaikan di `Code.gs` versi ini:**
+1. File sekarang dilayani lewat **proxy Apps Script sendiri** (`?action=serveFile&file_id=...`), bukan link Drive langsung — jadi sama sekali tidak butuh izin "Anyone with the link". Ini otomatis membuat file bisa ditampilkan di album meskipun domain kamu membatasi sharing publik.
+2. Baris di sheet `MEDIA` sekarang **selalu ditulis lebih dulu**, sebelum mencoba hal lain — jadi datanya tidak akan pernah hilang lagi meskipun ada langkah lanjutan yang gagal.
+3. Percobaan `setSharing` tetap dijalankan tapi sekarang **best-effort** (dibungkus try/catch) — kalau gagal, tidak akan menggagalkan upload, hanya menambahkan catatan peringatan di respons.
+
+**Yang perlu kamu lakukan:** ganti isi `Code.gs` dengan versi baru ini, deploy ulang (New version), lalu upload akan langsung bekerja normal. Upload foto/video/VN yang sudah lanjur ada di Drive tapi tidak tercatat di sheet MEDIA perlu ditambahkan manual ke sheet kalau kamu ingin menampilkannya (isi baris sesuai kolom, `file_id` bisa diambil dari URL file di Drive, `file_url` isi dengan `WEB_APP_URL?action=serveFile&file_id=ID_FILE_TERSEBUT`, `status` isi `approved`).
+
+## 🆕 Notifikasi Status Sistem
+
+Dashboard admin sekarang otomatis menjalankan pemeriksaan kesehatan (`healthCheck`) setiap dibuka — mengecek akses ke sheet `WEDDINGS`, `MEDIA`, folder Drive, dan kemampuan sharing. Kalau ada masalah, muncul banner kuning di atas dashboard dengan penjelasan yang bisa dibaca (bukan pesan teknis mentah). Notifikasi galat jaringan/API juga sudah ditambahkan sebagai toast di `index.html`, `album.html`, dan `admin-dashboard.html` — jadi kalau ada yang gagal, akan selalu ada pemberitahuan, bukan diam saja.
+
 
 ## 🔴 Kenapa kamu dapat error "Parameter action diperlukan"?
 
@@ -42,6 +86,8 @@ Sistem ini sekarang memakai persis nama kolom dari `Album-RasyaRizky.xlsx` yang 
 **Sheet `FILTERS`:** `filter_id, name, css_filter, active, wedding_id` — kamu sudah punya 7 filter bawaan, tidak perlu diubah.
 
 `admin_password` kamu **sudah dalam bentuk hash** (`1dd79e8c...`) — itu sudah benar sesuai sistem ini, jangan diganti ke plaintext.
+
+Di dalam folder Drive tiap wedding, sekarang akan otomatis muncul subfolder tambahan **`THUMBS`** berisi thumbnail kecil — ini normal dan diperlukan supaya galeri cepat dimuat, jangan dihapus.
 
 ## Langkah Setup dari Awal
 
