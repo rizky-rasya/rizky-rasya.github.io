@@ -2,11 +2,11 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 <title>Dashboard Admin — Wedding Album</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI', sans-serif; background:#f4f5f7; color:#2d2d2d; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  body { font-family:'Segoe UI', sans-serif; background:#f4f5f7; color:#2d2d2d; touch-action:pan-y; overscroll-behavior:none; }
   header { background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,.06); position:sticky; top:0; z-index:10; flex-wrap:wrap; gap:10px; }
   header h1 { font-size:18px; }
   header .actions button { margin-left:8px; padding:8px 14px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:13px; }
@@ -258,7 +258,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3Z20dUlbqn1XH9z8OaQoOiataPsDT8uIQoGAAnk_oJH81U349swbm2i9iOyXVckpG/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 const weddingId = localStorage.getItem('wedding_id');
 const token = localStorage.getItem('admin_token');
@@ -312,6 +312,46 @@ function handleAuthError(data) {
 }
 
 // ----- Moderasi -----
+function base64ToUint8_(base64) {
+  const byteChars = atob(base64);
+  const arr = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) arr[i] = byteChars.charCodeAt(i);
+  return arr;
+}
+
+const moderationBlobCache = new Map();
+
+async function getModerationBlobUrl(fileId) {
+  if (moderationBlobCache.has(fileId)) return moderationBlobCache.get(fileId);
+
+  const metaRes = await fetch(`${APPS_SCRIPT_URL}?action=getMediaMeta&file_id=${encodeURIComponent(fileId)}`);
+  const meta = await metaRes.json();
+  if (!meta.success) throw new Error(meta.message || 'File tidak ditemukan');
+
+  const parts = [];
+  let offset = 0, isLast = false, totalSize = meta.size || null, guard = 0;
+  while (!isLast && guard < 500) {
+    guard++;
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaChunk&file_id=${encodeURIComponent(fileId)}&offset=${offset}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal mengambil bagian file');
+    parts.push(base64ToUint8_(data.base64));
+    offset += data.chunkLength;
+    isLast = data.isLast || data.chunkLength === 0;
+    if (data.totalSize) totalSize = data.totalSize;
+  }
+
+  const totalLen = parts.reduce((s, p) => s + p.length, 0);
+  const combined = new Uint8Array(totalLen);
+  let pos = 0;
+  parts.forEach(p => { combined.set(p, pos); pos += p.length; });
+
+  const blob = new Blob([combined], { type: meta.mimeType });
+  const url = URL.createObjectURL(blob);
+  moderationBlobCache.set(fileId, url);
+  return url;
+}
+
 async function loadPending() {
   const data = await callApi({ action: 'getPendingMedia' }, 'GET');
   if (handleAuthError(data)) return;
@@ -326,19 +366,26 @@ async function loadPending() {
   data.pending_media.forEach(item => {
     const card = document.createElement('div');
     card.className = 'media-card';
-    let mediaHtml = '';
-    if (item.media_type === 'photo') mediaHtml = `<div class="media-wrap"><img src="${item.file_url}" loading="lazy"></div>`;
-    else if (item.media_type === 'video') mediaHtml = `<div class="media-wrap"><video src="${item.file_url}" controls></video></div>`;
-    else mediaHtml = `<div class="media-wrap"><audio src="${item.file_url}" controls></audio></div>`;
-
+    const uid = 'p_' + item.media_id;
     card.innerHTML = `
-      ${mediaHtml}
+      <div class="media-wrap" id="${uid}_box"><span style="font-size:12px;color:#999;">Memuat...</span></div>
       <div class="info"><b>${escapeHtml(item.guest_name)}</b><span>${item.date} • ${item.time} • ${item.media_type}</span></div>
       <div class="row">
         <button class="btn-approve" onclick="moderate('${item.media_id}','approveMedia',this)">✓ Setujui</button>
         <button class="btn-reject" onclick="moderate('${item.media_id}','rejectMedia',this)">✕ Tolak</button>
       </div>`;
     grid.appendChild(card);
+
+    getModerationBlobUrl(item.file_id).then(url => {
+      const box = document.getElementById(uid + '_box');
+      if (!box) return;
+      if (item.media_type === 'photo') box.innerHTML = `<img src="${url}" loading="lazy">`;
+      else if (item.media_type === 'video') box.innerHTML = `<video src="${url}" controls playsinline></video>`;
+      else box.innerHTML = `<audio src="${url}" controls></audio>`;
+    }).catch(() => {
+      const box = document.getElementById(uid + '_box');
+      if (box) box.innerHTML = `<span style="font-size:12px;color:#c62828;">Gagal memuat</span>`;
+    });
   });
 }
 
