@@ -84,7 +84,7 @@
 <canvas id="hiddenCanvas"></canvas>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTgWnTxFRqk3ALz8EKqjGbAENlAMXafqjpHNKb4p1uFJ2xPyDG7idBafSxykSdq3Qx/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 // ---- Cegah zoom tidak sengaja ----
 document.addEventListener('gesturestart', e => e.preventDefault());
@@ -346,15 +346,48 @@ const OUT_VIDEO_MIME = pickSupportedMime([
   { mime: 'video/webm', ext: 'webm' }
 ]);
 
-function getFrameConfig() {
+function getFrameConfig(type) {
   const w = weddingSettings || {};
+  const uiConfig = w.ui_config || {};
+  const frames = uiConfig.frames || {};
+  const customFrame = type ? frames[type] : null;
   return {
     style: w.frame_style || 'elegant', primary: w.primary_color || '#8B7355', secondary: w.secondary_color || '#D4C4A8',
-    groom: w.groom_name || '', bride: w.bride_name || '', date: w.date ? formatDate(w.date) : ''
+    groom: w.groom_name || '', bride: w.bride_name || '', date: w.date ? formatDate(w.date) : '',
+    customFrame: (customFrame && customFrame.type === 'custom' && customFrame.url) ? customFrame : null
   };
 }
 
-function drawFrame(ctx, w, h, cfg) {
+const customFrameImageCache = new Map();
+function loadCustomFrameImage(fileId) {
+  if (customFrameImageCache.has(fileId)) return customFrameImageCache.get(fileId);
+  const p = (async () => {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal memuat template bingkai');
+    const bytes = base64ToUint8(data.base64);
+    const blob = new Blob([bytes], { type: data.mimeType || 'image/png' });
+    const blobUrl = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = blobUrl;
+    });
+  })();
+  customFrameImageCache.set(fileId, p);
+  return p;
+}
+
+function drawFrame(ctx, w, h, cfg, customImg) {
+  // Kalau admin sudah pasang template PNG custom, timpakan itu saja
+  // (sudah otomatis disesuaikan ke ukuran w x h media tamu) — tidak perlu
+  // gambar bar/teks bawaan lagi.
+  if (customImg) {
+    ctx.drawImage(customImg, 0, 0, w, h);
+    return;
+  }
+
   const barH = Math.round(h * 0.12);
   ctx.fillStyle = cfg.primary;
   if (cfg.style === 'minimalist') {
@@ -388,17 +421,18 @@ async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
   btnEl.disabled = true; btnEl.textContent = '0%';
   try {
     const { url } = await fetchFileChunked(fileId, pct => { btnEl.textContent = pct + '%'; });
-    const cfg = getFrameConfig();
+    const cfg = getFrameConfig(type);
+    const customImg = cfg.customFrame ? await loadCustomFrameImage(cfg.customFrame.file_id) : null;
 
     if (type === 'photo') {
       btnEl.textContent = 'Membingkai...';
-      await downloadPhotoWithFrame(url, cfg, guestName);
+      await downloadPhotoWithFrame(url, cfg, guestName, customImg);
     } else if (type === 'video') {
       btnEl.textContent = '0%';
-      await downloadVideoWithFrame(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; });
+      await downloadVideoWithFrame(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; }, customImg);
     } else {
       btnEl.textContent = '0%';
-      await downloadAudioAsVideo(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; });
+      await downloadAudioAsVideo(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; }, customImg);
     }
     showToast('Unduhan siap! 🎉', 'success');
   } catch (err) {
@@ -408,7 +442,7 @@ async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
   }
 }
 
-function downloadPhotoWithFrame(blobUrl, cfg, guestName) {
+function downloadPhotoWithFrame(blobUrl, cfg, guestName, customImg) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -416,7 +450,7 @@ function downloadPhotoWithFrame(blobUrl, cfg, guestName) {
       canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      drawFrame(ctx, canvas.width, canvas.height, cfg);
+      drawFrame(ctx, canvas.width, canvas.height, cfg, customImg);
       canvas.toBlob(blob => { triggerDownload(blob, `wedding-${guestName}-${Date.now()}.jpg`); resolve(); }, 'image/jpeg', 0.96);
     };
     img.onerror = reject;
@@ -424,7 +458,7 @@ function downloadPhotoWithFrame(blobUrl, cfg, guestName) {
   });
 }
 
-function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress) {
+function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress, customImg) {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     video.src = blobUrl; video.muted = false; video.playsInline = true;
@@ -459,7 +493,7 @@ function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress) {
       function drawLoop() {
         if (!drawing) return;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        drawFrame(ctx, canvas.width, canvas.height, cfg);
+        drawFrame(ctx, canvas.width, canvas.height, cfg, customImg);
         onProgress(Math.min(99, Math.round((video.currentTime / duration) * 100)));
         requestAnimationFrame(drawLoop);
       }
@@ -473,7 +507,7 @@ function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress) {
   });
 }
 
-function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress) {
+function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress, customImg) {
   return new Promise((resolve, reject) => {
     const audio = document.createElement('audio');
     audio.src = blobUrl;
@@ -525,7 +559,7 @@ function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress) {
         ctx.fillText('🎤 Voice Note', cx, cy - 6);
         ctx.font = '400 15px Segoe UI, sans-serif'; ctx.fillText(guestName, cx, cy + 20);
 
-        drawFrame(ctx, canvas.width, canvas.height, cfg);
+        drawFrame(ctx, canvas.width, canvas.height, cfg, customImg);
         onProgress(Math.min(99, Math.round((audio.currentTime / duration) * 100)));
         requestAnimationFrame(drawLoop);
       }

@@ -72,6 +72,22 @@
   .frame-style-btn { padding:8px 14px; border-radius:8px; border:1.5px solid #e0e0e0; background:#fff; cursor:pointer; font-size:12px; }
   .frame-style-btn.active { border-color:#667eea; background:#f4f5ff; color:#667eea; font-weight:700; }
 
+  .frame-template-card {
+    display:flex; align-items:center; gap:12px; padding:12px; border:1.5px solid #eee; border-radius:10px; margin-bottom:10px; max-width:440px;
+  }
+  .frame-template-card .preview-box {
+    width:52px; height:52px; border-radius:8px; background:#f4f4f4 repeating-conic-gradient(#eee 0% 25%, #f8f8f8 0% 50%) 0 0/10px 10px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
+  }
+  .frame-template-card .preview-box img { max-width:100%; max-height:100%; }
+  .frame-template-card .info { flex:1; min-width:0; }
+  .frame-template-card .info b { font-size:13px; display:block; }
+  .frame-template-card .info span { font-size:11px; color:#999; }
+  .frame-template-card .actions { display:flex; gap:6px; flex-shrink:0; }
+  .frame-template-card .actions button { padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; font-size:11px; cursor:pointer; }
+  .frame-template-card .actions button.reset { color:#c62828; border-color:#f0c2bc; }
+  .frame-template-card input[type=file] { display:none; }
+
   .health-banner {
     margin:16px 24px 0; padding:14px 18px; border-radius:10px; font-size:13px; line-height:1.6; display:none;
   }
@@ -144,7 +160,8 @@
         </div>
       </div>
 
-      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:#555;">Gaya Bingkai</label>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:#555;">Gaya Bingkai Bawaan</label>
+      <p class="hint" style="margin-top:-4px;">Dipakai untuk jenis media manapun yang tidak memakai template custom di bawah.</p>
       <div class="frame-style-row" id="frameStyleRow">
         <button class="frame-style-btn" data-style="elegant">Elegant</button>
         <button class="frame-style-btn" data-style="modern">Modern</button>
@@ -152,7 +169,11 @@
         <button class="frame-style-btn" data-style="minimalist">Minimalist</button>
       </div>
 
-      <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:600;margin:20px 0 8px;color:#555;">Template Bingkai Custom (PNG)</label>
+      <p class="hint" style="margin-top:-4px;">Unggah PNG transparan sebagai bingkai sendiri untuk tiap jenis media. Bingkai akan otomatis disesuaikan ukurannya mengikuti ukuran foto/video/voice note tamu — tidak perlu diedit manual.</p>
+      <div id="frameTemplateList"></div>
+
+      <div class="form-group" style="margin-top:20px;">
         <label>Judul di Halaman Kirim Momen</label>
         <input type="text" id="indexHeadline" placeholder="Bagikan Momenmu">
       </div>
@@ -215,6 +236,33 @@
   </div>
   <p class="hint" style="margin-top:6px;">Kalau moderasi dimatikan, momen dari tamu langsung tampil di album tanpa perlu kamu setujui dulu.</p>
 
+  <h3 style="margin-top:28px;">Kualitas Media</h3>
+  <p class="desc">Atur seberapa tinggi kualitas foto/video/voice note yang diambil dari HP tamu. Kualitas lebih tinggi = file lebih besar dan lebih lambat diunggah di sinyal lemah.</p>
+
+  <div class="form-group">
+    <label>Kualitas Foto</label>
+    <select id="qualityPhoto">
+      <option value="standard">Standar — cepat, hemat kuota</option>
+      <option value="high">Tinggi — seimbang (disarankan)</option>
+      <option value="max">Maksimal — kualitas terbaik, file besar</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Kualitas Video</label>
+    <select id="qualityVideo">
+      <option value="standard">Standar — cepat, hemat kuota</option>
+      <option value="high">Tinggi — seimbang (disarankan)</option>
+      <option value="max">Maksimal — kualitas terbaik, file besar</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Kualitas Voice Note</label>
+    <select id="qualityVoice">
+      <option value="standard">Standar — hemat kuota</option>
+      <option value="high">Tinggi — jernih (disarankan)</option>
+    </select>
+  </div>
+
   <button class="save-btn" onclick="saveSettings()">Simpan Pengaturan</button>
   <div class="status-msg" id="settingsMsg"></div>
 </div>
@@ -258,7 +306,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTgWnTxFRqk3ALz8EKqjGbAENlAMXafqjpHNKb4p1uFJ2xPyDG7idBafSxykSdq3Qx/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec';
 
 const weddingId = localStorage.getItem('wedding_id');
 const token = localStorage.getItem('admin_token');
@@ -268,6 +316,12 @@ let currentSettings = {};
 let filtersList = [];
 let selectedFilterId = null;
 let selectedFrameStyle = 'elegant';
+let frameTemplates = {
+  photo: { type: 'builtin' },
+  video: { type: 'builtin' },
+  voice: { type: 'builtin' }
+};
+const FRAME_TYPE_LABELS = { photo: 'Foto', video: 'Video', voice: 'Voice Note' };
 
 // ----- Tabs -----
 document.querySelectorAll('.tab').forEach(tab => {
@@ -496,6 +550,20 @@ function drawFrame(ctx, w, h, cfg) {
 function drawPreview() {
   const canvas = document.getElementById('previewCanvas');
   const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const photoFrame = frameTemplates.photo || { type: 'builtin' };
+  if (photoFrame.type === 'custom' && photoFrame.url) {
+    // placeholder abu-abu sebagai pengganti foto tamu di pratinjau
+    ctx.fillStyle = '#ddd';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+    img.src = photoFrame.url;
+    return;
+  }
+
   drawFrame(ctx, canvas.width, canvas.height, {
     style: selectedFrameStyle,
     primary: document.getElementById('primaryColor').value,
@@ -506,16 +574,84 @@ function drawPreview() {
   });
 }
 
+// ----- Template Bingkai Custom (PNG) -----
+function renderFrameTemplateList() {
+  const container = document.getElementById('frameTemplateList');
+  container.innerHTML = '';
+
+  Object.keys(FRAME_TYPE_LABELS).forEach(mediaType => {
+    const tpl = frameTemplates[mediaType] || { type: 'builtin' };
+    const card = document.createElement('div');
+    card.className = 'frame-template-card';
+
+    const previewHtml = tpl.type === 'custom' && tpl.url
+      ? `<img src="${tpl.url}">`
+      : `<span style="font-size:10px;color:#bbb;text-align:center;">Bawaan</span>`;
+
+    card.innerHTML = `
+      <div class="preview-box">${previewHtml}</div>
+      <div class="info">
+        <b>${FRAME_TYPE_LABELS[mediaType]}</b>
+        <span>${tpl.type === 'custom' ? 'Pakai template custom' : 'Pakai gaya bawaan di atas'}</span>
+      </div>
+      <div class="actions">
+        <label class="upload-btn" style="padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;font-size:11px;cursor:pointer;">
+          Unggah PNG
+          <input type="file" accept="image/png" onchange="handleFrameUpload('${mediaType}', this)">
+        </label>
+        ${tpl.type === 'custom' ? `<button class="reset" onclick="resetFrameTemplate('${mediaType}')">Pakai Bawaan</button>` : ''}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+async function handleFrameUpload(mediaType, inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  if (file.type !== 'image/png') { showToast('Template bingkai harus format PNG', 'error'); inputEl.value = ''; return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('Ukuran PNG maksimal 5MB', 'error'); inputEl.value = ''; return; }
+
+  showToast(`Mengunggah template ${FRAME_TYPE_LABELS[mediaType]}...`, 'success');
+  try {
+    const base64 = await fileToBase64(file);
+    const data = await callApi({ action: 'uploadFrameTemplate', media_type: mediaType, data: base64, mime_type: 'image/png' });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showToast(data.message || 'Gagal mengunggah template', 'error'); return; }
+
+    frameTemplates[mediaType] = { type: 'custom', file_id: data.file_id, url: data.url };
+    renderFrameTemplateList();
+    drawPreview();
+    showToast(`Template bingkai ${FRAME_TYPE_LABELS[mediaType]} tersimpan. Jangan lupa klik Simpan Tema.`, 'success');
+  } catch (err) {
+    showToast('Gagal mengunggah: ' + err.message, 'error');
+  } finally {
+    inputEl.value = '';
+  }
+}
+
+function resetFrameTemplate(mediaType) {
+  frameTemplates[mediaType] = { type: 'builtin' };
+  renderFrameTemplateList();
+  drawPreview();
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+
 async function saveTheme() {
   const payload = {
     action: 'updateSettings',
     primary_color: document.getElementById('primaryColor').value,
     secondary_color: document.getElementById('secondaryColor').value,
     frame_style: selectedFrameStyle,
-    ui_config: JSON.stringify({
-      index_headline: document.getElementById('indexHeadline').value.trim(),
-      album_headline: document.getElementById('albumHeadline').value.trim()
-    })
+    ui_config: JSON.stringify(buildUiConfig())
   };
   try {
     const data = await callApi(payload);
@@ -550,12 +686,36 @@ async function loadSettings() {
   const uiConfig = data.ui_config || {};
   document.getElementById('indexHeadline').value = uiConfig.index_headline || '';
   document.getElementById('albumHeadline').value = uiConfig.album_headline || '';
+  frameTemplates = Object.assign({ photo:{type:'builtin'}, video:{type:'builtin'}, voice:{type:'builtin'} }, uiConfig.frames || {});
+  renderFrameTemplateList();
+
+  const quality = Object.assign({ photo:'high', video:'high', voice:'high' }, uiConfig.quality || {});
+  document.getElementById('qualityPhoto').value = quality.photo;
+  document.getElementById('qualityVideo').value = quality.video;
+  document.getElementById('qualityVoice').value = quality.voice;
 
   const base = window.location.href.replace(/admin-dashboard\.html.*$/, '');
   document.getElementById('uploadLink').value = `${base}index.html?w=${weddingId}`;
   document.getElementById('albumLink').value = `${base}album.html?w=${weddingId}`;
 
   drawPreview();
+}
+
+// Menggabungkan semua pengaturan tampilan (headline, frame custom, kualitas
+// media) jadi satu objek ui_config — dipakai baik dari tab Pengaturan Umum
+// maupun tab Tema & Frame, supaya menyimpan di satu tab tidak menghapus
+// pengaturan yang disimpan dari tab lainnya.
+function buildUiConfig() {
+  return {
+    index_headline: document.getElementById('indexHeadline').value.trim(),
+    album_headline: document.getElementById('albumHeadline').value.trim(),
+    frames: frameTemplates,
+    quality: {
+      photo: document.getElementById('qualityPhoto').value,
+      video: document.getElementById('qualityVideo').value,
+      voice: document.getElementById('qualityVoice').value
+    }
+  };
 }
 
 async function saveSettings() {
@@ -569,7 +729,8 @@ async function saveSettings() {
     allow_video: document.getElementById('allowVideo').checked,
     allow_voice: document.getElementById('allowVoice').checked,
     allow_filter: document.getElementById('allowFilter').checked,
-    moderation: document.getElementById('moderation').checked
+    moderation: document.getElementById('moderation').checked,
+    ui_config: JSON.stringify(buildUiConfig())
   };
   try {
     const data = await callApi(payload);

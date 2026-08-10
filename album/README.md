@@ -1,6 +1,25 @@
-# Wedding Album v4 — Panduan Setup & Perbaikan
+# Wedding Album v6 — Panduan Setup & Perbaikan
 
-## 🆕 Perbaikan Terbaru (Round 3)
+## 🆕 Fitur Baru (Round 5)
+
+**Pengaturan kualitas foto/video/VN dari dashboard admin**
+Tab **Pengaturan Umum** sekarang punya bagian **Kualitas Media** — admin bisa atur langsung tanpa perlu sentuh kode:
+- **Kualitas Foto**: Standar / Tinggi / Maksimal (mengatur kualitas JPEG dan resolusi kamera yang diminta ke HP tamu)
+- **Kualitas Video**: Standar / Tinggi / Maksimal (mengatur bitrate video+audio dan resolusi)
+- **Kualitas Voice Note**: Standar / Tinggi (mengatur bitrate audio)
+
+Pengaturan ini otomatis diambil `index.html` setiap tamu membuka halaman kirim momen, jadi berlaku langsung tanpa perlu deploy ulang apa pun. Opsi **Maksimal** menghasilkan file lebih besar dan lebih lambat diunggah di koneksi lemah — cocok kalau prioritas utama adalah kualitas cetak; **Standar** lebih hemat kuota dan cepat, cocok untuk acara dengan banyak tamu sekaligus.
+
+**1. Template bingkai custom (upload PNG sendiri)**
+Di tab **Tema & Frame** dashboard admin, sekarang ada kartu terpisah untuk **Foto**, **Video**, dan **Voice Note** — masing-masing bisa pakai **Gaya Bawaan** (4 pilihan) atau **unggah PNG sendiri** sebagai bingkai custom. Begitu PNG diunggah, sistem otomatis menyesuaikan ukurannya mengikuti dimensi asli tiap foto/video/voice note tamu saat proses unduh berbingkai. Klik "Pakai Bawaan" kapan saja untuk kembali tanpa kehilangan file PNG yang sudah diunggah.
+
+**2. Filter kamera dijamin terbakar ke hasil, bukan cuma preview**
+Sistem mendeteksi otomatis dukungan browser terhadap `ctx.filter`: kalau didukung, filter diproses cepat lewat jalur bawaan; kalau tidak (Safari versi lama), sistem otomatis beralih ke pemrosesan piksel manual supaya hasil akhir **selalu** sesuai filter aktif — berlaku untuk foto, thumbnail foto, dan video.
+
+**3. Pemisahan file thumbnail vs master (konfirmasi)**
+Thumbnail ringan (kualitas rendah, dibuat di HP tamu) dipakai untuk tampilan cepat di grid album, sedangkan tombol **⬇ Asli** dan **✨ Berbingkai** selalu memproses file master penuh tanpa kompresi tambahan.
+
+## 🆕 Perbaikan Round 3
 
 **1. Thumbnail tidak muncul + VN/video tanpa suara**
 Akar masalahnya: file berkualitas tinggi (sekarang tanpa kompresi kuat) sering melebihi batas ukuran respons Apps Script kalau diambil sekaligus dalam satu response — hasilnya file terpotong, sehingga video/audio jadi rusak (tidak ada suara) atau gagal ditampilkan. Diperbaiki dengan dua cara:
