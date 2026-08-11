@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<title>Wedding Album</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  body { font-family:'Segoe UI', sans-serif; background:#faf6f2; color:#3a2e28; touch-action:pan-y; overscroll-behavior:none; }
+  .hero { text-align:center; padding:44px 20px 24px; }
+  .hero h1 { font-size:24px; margin-bottom:6px; }
+  .hero p { color:#8a7b6e; font-size:13px; }
+  .topnav { display:flex; justify-content:center; gap:10px; padding:0 20px 8px; }
+  .topnav a { text-decoration:none; font-size:12px; color:#a97c4f; background:#fff; border:1px solid #e6dcd2; padding:8px 16px; border-radius:20px; }
+
+  .container { max-width:1000px; margin:0 auto; padding:0 20px 60px; }
+  .filters { display:flex; gap:8px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
+  .filters button { padding:8px 16px; border-radius:20px; border:1.5px solid #e6dcd2; background:#fff; cursor:pointer; font-size:13px; color:#8a7b6e; }
+  .filters button.active { background:#c99b6a; color:#fff; border-color:#c99b6a; }
+
+  .grid { columns:3 280px; column-gap:16px; }
+  .item { break-inside:avoid; margin-bottom:16px; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.05); position:relative; }
+  .item .media-box { position:relative; background:#eee; min-height:120px; display:flex; align-items:center; justify-content:center; }
+  .item img { width:100%; display:block; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .item video { width:100%; display:block; }
+  .item .audio-box { padding:26px 16px; display:flex; flex-direction:column; align-items:center; gap:10px; background:linear-gradient(135deg,#efe2d3,#f8f1e8); }
+  .audio-box .wave { font-size:30px; }
+  .play-toggle {
+    width:44px; height:44px; border-radius:50%; border:none; background:#c99b6a; color:#fff; font-size:16px; cursor:pointer;
+  }
+  .video-poster-btn {
+    position:absolute; inset:0; margin:auto; width:52px; height:52px; border-radius:50%;
+    background:rgba(0,0,0,.5); color:#fff; border:none; font-size:20px; cursor:pointer;
+  }
+  .spinner { font-size:12px; color:#a08d7d; padding:20px; text-align:center; }
+
+  .cap { padding:10px 12px; font-size:12px; color:#8a7b6e; }
+  .cap .who { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+  .cap b { color:#3a2e28; }
+  .dl-row { display:flex; gap:6px; }
+  .dl-btn { flex:1; border:none; background:#f1e6d8; color:#8a6a45; padding:7px 8px; border-radius:8px; font-size:11px; cursor:pointer; white-space:nowrap; }
+  .dl-btn.primary { background:#c99b6a; color:#fff; }
+  .dl-btn:disabled { opacity:.5; }
+
+  .empty { text-align:center; color:#a08d7d; padding:60px 0; }
+  .loader { text-align:center; padding:60px 0; color:#a08d7d; }
+  @media (max-width:640px) { .grid { columns:1 280px; } }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99;
+    background:#222; color:#fff; padding:12px 22px; border-radius:10px; font-size:13px; display:none; max-width:88%; text-align:center;
+  }
+  .toast.success { background:#2e7d32; }
+  .toast.error { background:#c62828; }
+
+  #hiddenCanvas { display:none; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1 id="titleText">💍 Wedding Album</h1>
+  <p id="subtitleText">Momen indah dari orang-orang terkasih</p>
+</div>
+
+<div class="topnav">
+  <a id="backToIndex" href="#">📷 Kirim Momen</a>
+</div>
+
+<div class="container">
+  <div class="filters">
+    <button class="active" data-filter="all">Semua</button>
+    <button data-filter="photo">Foto</button>
+    <button data-filter="video">Video</button>
+    <button data-filter="voice">Suara</button>
+  </div>
+
+  <div id="loader" class="loader">Memuat album...</div>
+  <div id="grid" class="grid"></div>
+  <div id="empty" class="empty" style="display:none;">Belum ada momen yang dibagikan. Jadilah yang pertama!</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<canvas id="hiddenCanvas"></canvas>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwanTSkndUEuo99UE6qnKAyixepALQk-wgEbPXxRDnwO9t1HE8-Y95t_l1Sotdf93Zg/exec';
+
+// ---- Cegah zoom tidak sengaja ----
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive:false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive:false });
+
+const urlParams = new URLSearchParams(window.location.search);
+let weddingId = urlParams.get('w');
+if (weddingId) localStorage.setItem('active_wedding_id', weddingId);
+else weddingId = localStorage.getItem('active_wedding_id');
+
+document.getElementById('backToIndex').href = weddingId ? `index.html?w=${encodeURIComponent(weddingId)}` : 'index.html';
+
+let allMedia = [];
+let currentFilter = 'all';
+let weddingSettings = null;
+let currentlyPlayingEl = null;
+const fullFileCache = new Map(); // file_id -> { blob, url, mimeType }
+
+if (!weddingId) {
+  document.getElementById('loader').textContent = 'Kode undangan tidak ditemukan. Buka dari link yang dibagikan mempelai.';
+} else {
+  init();
+}
+
+async function init() {
+  try {
+    const settingsRes = await fetch(`${APPS_SCRIPT_URL}?action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
+    const settings = await settingsRes.json();
+    if (settings.success) {
+      weddingSettings = settings;
+      document.getElementById('titleText').textContent = (settings.ui_config && settings.ui_config.album_headline) || `💍 ${settings.groom_name} & ${settings.bride_name}`;
+      if (settings.date) document.getElementById('subtitleText').textContent = formatDate(settings.date);
+    }
+  } catch (e) { /* biarkan judul default */ }
+  loadAlbum();
+}
+
+async function loadAlbum() {
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getAlbum&wedding_id=${encodeURIComponent(weddingId)}`);
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
+
+    if (!data.success) { showToast(data.message || 'Gagal memuat album', 'error'); document.getElementById('empty').style.display = 'block'; return; }
+    if (!data.media || data.media.length === 0) { document.getElementById('empty').style.display = 'block'; return; }
+    allMedia = data.media;
+    render();
+  } catch (err) {
+    document.getElementById('loader').style.display = 'none';
+    showToast('Gagal terhubung ke server: ' + err.message, 'error');
+    document.getElementById('empty').style.display = 'block';
+  }
+}
+
+// ============================================
+// AMBIL FILE UTUH SECARA CHUNKED — andal untuk file besar berkualitas
+// tinggi (menghindari batas ukuran respons Apps Script yang bisa memotong
+// file dan membuat video/voice note rusak atau kehilangan suara)
+// ============================================
+function base64ToUint8(base64) {
+  const byteChars = atob(base64);
+  const arr = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) arr[i] = byteChars.charCodeAt(i);
+  return arr;
+}
+
+async function fetchFileChunked(fileId, onProgress) {
+  if (fullFileCache.has(fileId)) return fullFileCache.get(fileId);
+
+  const metaRes = await fetch(`${APPS_SCRIPT_URL}?action=getMediaMeta&file_id=${encodeURIComponent(fileId)}`);
+  const meta = await metaRes.json();
+  if (!meta.success) throw new Error(meta.message || 'File tidak ditemukan');
+
+  const parts = [];
+  let offset = 0;
+  let isLast = false;
+  let totalSize = meta.size || null;
+  let guard = 0;
+
+  while (!isLast && guard < 500) {
+    guard++;
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaChunk&file_id=${encodeURIComponent(fileId)}&offset=${offset}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal mengambil bagian file');
+
+    const bytes = base64ToUint8(data.base64);
+    parts.push(bytes);
+    offset += data.chunkLength;
+    isLast = data.isLast || data.chunkLength === 0;
+    if (data.totalSize) totalSize = data.totalSize;
+    if (onProgress && totalSize) onProgress(Math.min(99, Math.round((offset / totalSize) * 100)));
+  }
+  if (onProgress) onProgress(100);
+
+  const totalLen = parts.reduce((s, p) => s + p.length, 0);
+  const combined = new Uint8Array(totalLen);
+  let pos = 0;
+  parts.forEach(p => { combined.set(p, pos); pos += p.length; });
+
+  const blob = new Blob([combined], { type: meta.mimeType });
+  const url = URL.createObjectURL(blob);
+  const result = { blob, url, mimeType: meta.mimeType, filename: meta.filename };
+  fullFileCache.set(fileId, result);
+  return result;
+}
+
+// ============================================
+// RENDER GRID — pakai thumbnail ringan (cepat), file utuh diambil
+// belakangan hanya saat pemutaran/unduh benar-benar diminta
+// ============================================
+function render() {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  grid.innerHTML = '';
+
+  const items = currentFilter === 'all' ? allMedia : allMedia.filter(m => m.media_type === currentFilter);
+  if (items.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const uiConfig = (weddingSettings && weddingSettings.ui_config) || {};
+  const previewOn = uiConfig.allow_preview !== false;
+  const originalOn = uiConfig.allow_download_original !== false;
+  const framedOn = uiConfig.allow_download_framed !== false;
+
+  const typeLabel = { photo: '📷 Foto', video: '🎥 Video', voice: '🎤 Voice Note' };
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    const uid = 'm_' + item.media_id;
+    const thumb = item.thumbnail_url || '';
+
+    let mediaHtml = '';
+    if (!previewOn) {
+      // Preview dimatikan admin — hanya info dasar, tanpa pratinjau media
+      mediaHtml = `<div class="media-box" style="min-height:100px;flex-direction:column;gap:6px;color:#a08d7d;">
+        <span style="font-size:26px;">${typeLabel[item.media_type].split(' ')[0]}</span>
+        <span style="font-size:11px;">${typeLabel[item.media_type].split(' ').slice(1).join(' ')} — unduh untuk melihat</span>
+      </div>`;
+    } else if (item.media_type === 'photo') {
+      mediaHtml = thumb
+        ? `<div class="media-box"><img src="${thumb}" loading="lazy"></div>`
+        : `<div class="media-box" id="${uid}_box"><span class="spinner">Memuat foto...</span></div>`;
+    } else if (item.media_type === 'video') {
+      mediaHtml = `
+        <div class="media-box" id="${uid}_box">
+          ${thumb ? `<img src="${thumb}" loading="lazy">` : ''}
+          <button class="video-poster-btn" onclick="playFullVideo('${item.file_id}','${uid}',this)">▶</button>
+        </div>`;
+    } else {
+      mediaHtml = `
+        <div class="audio-box">
+          <div class="wave">🎵</div>
+          <button class="play-toggle" onclick="playAudio('${item.file_id}','${uid}',this)" id="${uid}_btn">▶</button>
+        </div>`;
+    }
+
+    const dlButtons = [];
+    if (originalOn) dlButtons.push(`<button class="dl-btn" onclick="downloadOriginal('${item.file_id}','${item.media_type}','${escapeHtml(item.guest_name)}',this)">Unduh Asli</button>`);
+    if (framedOn) dlButtons.push(`<button class="dl-btn primary" onclick="downloadWithFrame('${item.media_id}','${item.file_id}','${item.media_type}','${escapeHtml(item.guest_name)}',this)">Unduh Berbingkai ✨</button>`);
+    if (dlButtons.length === 0) dlButtons.push(`<span style="font-size:11px;color:#bbb;">Unduhan dinonaktifkan admin</span>`);
+
+    div.innerHTML = `
+      ${mediaHtml}
+      <div class="cap">
+        <div class="who"><b>${escapeHtml(item.guest_name)}</b><span>${item.date}</span></div>
+        <div class="dl-row">${dlButtons.join('')}</div>
+      </div>`;
+    grid.appendChild(div);
+
+    if (previewOn && item.media_type === 'photo' && !thumb) loadPhotoFallback(item, uid);
+  });
+}
+
+// kalau foto lama belum punya thumbnail (diunggah sebelum fitur ini ada),
+// ambil file utuhnya sebagai fallback
+async function loadPhotoFallback(item, uid) {
+  try {
+    const { url } = await fetchFileChunked(item.file_id);
+    const box = document.getElementById(uid + '_box');
+    if (box) box.innerHTML = `<img src="${url}" loading="lazy">`;
+  } catch (err) {
+    const box = document.getElementById(uid + '_box');
+    if (box) box.innerHTML = `<span class="spinner">Gagal memuat</span>`;
+  }
+}
+
+async function playFullVideo(fileId, uid, btn) {
+  const box = document.getElementById(uid + '_box');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const { url } = await fetchFileChunked(fileId);
+    box.innerHTML = `<video id="${uid}" src="${url}" controls playsinline autoplay style="width:100%;display:block;"></video>`;
+    document.getElementById(uid).play();
+  } catch (err) {
+    showToast('Gagal memuat video: ' + err.message, 'error');
+    btn.disabled = false; btn.textContent = '▶';
+  }
+}
+
+async function playAudio(fileId, uid, btn) {
+  let audioEl = document.getElementById(uid);
+  if (!audioEl) {
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      const { url } = await fetchFileChunked(fileId);
+      audioEl = document.createElement('audio');
+      audioEl.id = uid; audioEl.src = url; audioEl.style.display = 'none';
+      document.body.appendChild(audioEl);
+      audioEl.onended = () => { btn.textContent = '▶'; };
+    } catch (err) {
+      showToast('Gagal memuat suara: ' + err.message, 'error');
+      btn.disabled = false; btn.textContent = '▶';
+      return;
+    }
+    btn.disabled = false;
+  }
+  if (currentlyPlayingEl && currentlyPlayingEl !== audioEl) {
+    currentlyPlayingEl.pause();
+    const otherBtn = document.getElementById(currentlyPlayingEl.id + '_btn');
+    if (otherBtn) otherBtn.textContent = '▶';
+  }
+  if (audioEl.paused) { audioEl.play(); btn.textContent = '⏸'; currentlyPlayingEl = audioEl; }
+  else { audioEl.pause(); btn.textContent = '▶'; }
+}
+
+document.querySelectorAll('.filters button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+// ============================================
+// UNDUH ASLI (langsung, file utuh apa adanya)
+// ============================================
+async function downloadOriginal(fileId, type, guestName, btnEl) {
+  const originalText = btnEl.textContent;
+  btnEl.disabled = true; btnEl.textContent = '0%';
+  try {
+    const { blob, mimeType } = await fetchFileChunked(fileId, pct => { btnEl.textContent = pct + '%'; });
+    const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('webm') ? 'webm' : mimeType.includes('jpeg') ? 'jpg' : 'bin';
+    triggerDownload(blob, `wedding-${guestName}-${Date.now()}.${ext}`);
+    showToast('Unduhan siap! 🎉', 'success');
+  } catch (err) {
+    showToast('Gagal mengunduh: ' + err.message, 'error');
+  } finally {
+    btnEl.disabled = false; btnEl.textContent = originalText;
+  }
+}
+
+// ============================================
+// UNDUH DENGAN BINGKAI AESTHETIC (perlu proses render ulang, ada progres)
+// ============================================
+function pickSupportedMime(candidates) {
+  for (const c of candidates) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c.mime)) return c;
+  }
+  return candidates[candidates.length - 1];
+}
+const OUT_VIDEO_MIME = pickSupportedMime([
+  { mime: 'video/mp4;codecs=h264,aac', ext: 'mp4' },
+  { mime: 'video/mp4', ext: 'mp4' },
+  { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+  { mime: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+  { mime: 'video/webm', ext: 'webm' }
+]);
+
+function getFrameConfig(type) {
+  const w = weddingSettings || {};
+  const uiConfig = w.ui_config || {};
+  const frames = uiConfig.frames || {};
+  const customFrame = type ? frames[type] : null;
+  const voiceCfg = frames.voice || {};
+  return {
+    style: w.frame_style || 'elegant', primary: w.primary_color || '#8B7355', secondary: w.secondary_color || '#D4C4A8',
+    groom: w.groom_name || '', bride: w.bride_name || '', date: w.date ? formatDate(w.date) : '',
+    customFrame: (customFrame && customFrame.type === 'custom' && customFrame.url) ? customFrame : null,
+    voiceLabel: voiceCfg.label || '🎤 Voice Note',
+    voiceCenterColor: voiceCfg.centerColor || '#ffffff',
+    voiceBarColor: voiceCfg.barColor || w.primary_color || '#8B7355',
+    voiceShape: voiceCfg.shape || 'radial'
+  };
+}
+
+const customFrameImageCache = new Map();
+function loadCustomFrameImage(fileId) {
+  if (customFrameImageCache.has(fileId)) return customFrameImageCache.get(fileId);
+  const p = (async () => {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal memuat template bingkai');
+    const bytes = base64ToUint8(data.base64);
+    const blob = new Blob([bytes], { type: data.mimeType || 'image/png' });
+    const blobUrl = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = blobUrl;
+    });
+  })();
+  customFrameImageCache.set(fileId, p);
+  return p;
+}
+
+function drawFrame(ctx, w, h, cfg, customImg) {
+  // Kalau admin sudah pasang template PNG custom, timpakan itu saja
+  // (sudah otomatis disesuaikan ke ukuran w x h media tamu) — tidak perlu
+  // gambar bar/teks bawaan lagi.
+  if (customImg) {
+    ctx.drawImage(customImg, 0, 0, w, h);
+    return;
+  }
+
+  const barH = Math.round(h * 0.12);
+  ctx.fillStyle = cfg.primary;
+  if (cfg.style === 'minimalist') {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, h - barH, w, barH);
+  } else if (cfg.style === 'modern') {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(4, w * 0.006);
+    ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
+  } else if (cfg.style === 'floral-simple') {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.fillStyle = cfg.secondary;
+    const r = Math.max(4, w*0.006);
+    [[16,16],[w-16,16],[16,h-barH-16],[w-16,h-barH-16]].forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
+  } else {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.003);
+    const pad = w*0.015;
+    ctx.strokeRect(pad, pad, w-pad*2, h-pad*2-barH*0.15);
+  }
+  const centerY = h - barH/2;
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.font = `700 ${Math.round(barH*0.3)}px Georgia, serif`;
+  ctx.fillText(`${cfg.groom} & ${cfg.bride}`, w/2, centerY - barH*0.08);
+  ctx.font = `400 ${Math.round(barH*0.2)}px Segoe UI, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(cfg.date, w/2, centerY + barH*0.28);
+}
+
+async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
+  const originalText = btnEl.textContent;
+  btnEl.disabled = true; btnEl.textContent = '0%';
+  try {
+    const { url } = await fetchFileChunked(fileId, pct => { btnEl.textContent = pct + '%'; });
+    const cfg = getFrameConfig(type);
+    const customImg = cfg.customFrame ? await loadCustomFrameImage(cfg.customFrame.file_id) : null;
+
+    if (type === 'photo') {
+      btnEl.textContent = 'Membingkai...';
+      await downloadPhotoWithFrame(url, cfg, guestName, customImg);
+    } else if (type === 'video') {
+      btnEl.textContent = '0%';
+      await downloadVideoWithFrame(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; }, customImg);
+    } else {
+      btnEl.textContent = '0%';
+      await downloadAudioAsVideo(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; }, customImg);
+    }
+    showToast('Unduhan siap! 🎉', 'success');
+  } catch (err) {
+    showToast('Gagal menyiapkan unduhan: ' + err.message, 'error');
+  } finally {
+    btnEl.disabled = false; btnEl.textContent = originalText;
+  }
+}
+
+function downloadPhotoWithFrame(blobUrl, cfg, guestName, customImg) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('hiddenCanvas');
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      drawFrame(ctx, canvas.width, canvas.height, cfg, customImg);
+      canvas.toBlob(blob => { triggerDownload(blob, `wedding-${guestName}-${Date.now()}.jpg`); resolve(); }, 'image/jpeg', 0.96);
+    };
+    img.onerror = reject;
+    img.src = blobUrl;
+  });
+}
+
+function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress, customImg) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.src = blobUrl; video.muted = false; video.playsInline = true;
+
+    video.onloadedmetadata = () => {
+      const canvas = document.getElementById('hiddenCanvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      const duration = video.duration || 1;
+
+      const canvasStream = canvas.captureStream(30);
+      let audioTrack = [];
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaElementSource(video);
+        const dest = audioCtx.createMediaStreamDestination();
+        src.connect(dest); src.connect(audioCtx.destination);
+        audioTrack = dest.stream.getAudioTracks();
+      } catch (e) { /* lanjut tanpa audio jika gagal */ }
+
+      const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTrack]);
+      const recorder = new MediaRecorder(combined, { mimeType: OUT_VIDEO_MIME.mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 128000 });
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: OUT_VIDEO_MIME.mime });
+        triggerDownload(blob, `wedding-${guestName}-${Date.now()}.${OUT_VIDEO_MIME.ext}`);
+        resolve();
+      };
+
+      let drawing = true;
+      function drawLoop() {
+        if (!drawing) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        drawFrame(ctx, canvas.width, canvas.height, cfg, customImg);
+        onProgress(Math.min(99, Math.round((video.currentTime / duration) * 100)));
+        requestAnimationFrame(drawLoop);
+      }
+
+      video.onended = () => { drawing = false; onProgress(100); recorder.stop(); };
+      video.currentTime = 0;
+      recorder.start();
+      video.play().then(drawLoop);
+    };
+    video.onerror = reject;
+  });
+}
+
+// Menggambar audiogram — dipanggil baik saat proses render video sungguhan
+// (dataArray dari analyser real-time) maupun saat pratinjau statis di admin
+// dashboard (dataArray simulasi). Bentuk: 'radial' (lingkaran spike),
+// 'bars' (equalizer horizontal), atau 'pulse' (lingkaran polos berdenyut).
+function drawAudiogram(ctx, w, h, dataArray, cfg, guestName) {
+  const cx = w / 2, cy = h / 2;
+  const shape = cfg.voiceShape || 'radial';
+
+  if (shape === 'bars') {
+    const barCount = 32;
+    const barW = (w * 0.7) / barCount;
+    const startX = w * 0.15;
+    const baseY = cy + 130;
+    ctx.fillStyle = cfg.voiceBarColor;
+    for (let i = 0; i < barCount; i++) {
+      const value = dataArray[i % dataArray.length] / 255;
+      const barH = 10 + value * (h * 0.2);
+      ctx.fillRect(startX + i * barW, baseY - barH, barW * 0.7, barH);
+    }
+    ctx.fillStyle = cfg.voiceCenterColor;
+    ctx.beginPath(); ctx.arc(cx, cy, 90, 0, Math.PI * 2); ctx.fill();
+  } else if (shape === 'pulse') {
+    let avg = 0;
+    for (let i = 0; i < dataArray.length; i++) avg += dataArray[i];
+    avg = avg / dataArray.length / 255;
+    const radius = 100 + avg * 40;
+    ctx.fillStyle = cfg.voiceBarColor; ctx.globalAlpha = 0.25;
+    ctx.beginPath(); ctx.arc(cx, cy, radius + 20, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = cfg.voiceCenterColor;
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+  } else { // radial (default)
+    const radius = 140, bars = 48;
+    ctx.strokeStyle = cfg.voiceBarColor; ctx.lineWidth = 5;
+    for (let i = 0; i < bars; i++) {
+      const value = dataArray[i % dataArray.length] / 255;
+      const angle = (i / bars) * Math.PI * 2;
+      const barLen = 20 + value * 90;
+      const x1 = cx + Math.cos(angle)*radius, y1 = cy + Math.sin(angle)*radius;
+      const x2 = cx + Math.cos(angle)*(radius+barLen), y2 = cy + Math.sin(angle)*(radius+barLen);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+    ctx.fillStyle = cfg.voiceCenterColor;
+    ctx.beginPath(); ctx.arc(cx, cy, radius - 10, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.fillStyle = cfg.voiceBarColor; ctx.font = '600 26px Segoe UI, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(cfg.voiceLabel, cx, cy - 6);
+  ctx.font = '400 15px Segoe UI, sans-serif'; ctx.fillText(guestName, cx, cy + 20);
+}
+
+function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress, customImg) {
+  return new Promise((resolve, reject) => {
+    const audio = document.createElement('audio');
+    audio.src = blobUrl;
+
+    audio.onloadedmetadata = () => {
+      const canvas = document.getElementById('hiddenCanvas');
+      canvas.width = 720; canvas.height = 720;
+      const ctx = canvas.getContext('2d');
+      const duration = audio.duration || 1;
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = audioCtx.createMediaElementSource(audio);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const dest = audioCtx.createMediaStreamDestination();
+      src.connect(analyser); analyser.connect(dest); src.connect(audioCtx.destination);
+
+      const canvasStream = canvas.captureStream(30);
+      const combined = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+      const recorder = new MediaRecorder(combined, { mimeType: OUT_VIDEO_MIME.mime, videoBitsPerSecond: 4000000, audioBitsPerSecond: 128000 });
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: OUT_VIDEO_MIME.mime });
+        triggerDownload(blob, `wedding-vn-${guestName}-${Date.now()}.${OUT_VIDEO_MIME.ext}`);
+        resolve();
+      };
+
+      let drawing = true;
+      function drawLoop() {
+        if (!drawing) return;
+        analyser.getByteFrequencyData(dataArray);
+
+        // LAPIS 1 (paling bawah): background — kalau admin pasang template
+        // custom (PNG) untuk voice note, itu jadi backdrop di sini dulu,
+        // BUKAN ditimpakan belakangan, supaya audiogram di atasnya tetap
+        // kelihatan dan tidak ketutupan.
+        if (customImg) {
+          ctx.drawImage(customImg, 0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = cfg.secondary; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = cfg.primary; ctx.globalAlpha = 0.15; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1;
+        }
+
+        // LAPIS 2 (di atas background): audiogram — bentuk, warna, dan
+        // label semuanya bisa diatur admin dari dashboard
+        drawAudiogram(ctx, canvas.width, canvas.height, dataArray, cfg, guestName);
+
+        // LAPIS 3: bar nama mempelai + tanggal (gaya bawaan) — dilewati
+        // kalau memang sudah pakai template custom, karena template custom
+        // biasanya sudah punya elemen dekorasinya sendiri
+        if (!customImg) {
+          drawFrame(ctx, canvas.width, canvas.height, cfg, null);
+        }
+
+        onProgress(Math.min(99, Math.round((audio.currentTime / duration) * 100)));
+        requestAnimationFrame(drawLoop);
+      }
+
+      audio.onended = () => { drawing = false; onProgress(100); recorder.stop(); };
+      audio.currentTime = 0;
+      recorder.start();
+      audio.play().then(drawLoop);
+    };
+    audio.onerror = reject;
+  });
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function formatDate(d) { try { return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }); } catch (e) { return d; } }
+function showToast(text, type) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4500);
+}
+</script>
+</body>
+</html>
