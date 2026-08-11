@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<title>Dashboard Admin — Wedding Album</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  body { font-family:'Segoe UI', sans-serif; background:#f4f5f7; color:#2d2d2d; touch-action:pan-y; overscroll-behavior:none; }
+  header { background:#fff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,.06); position:sticky; top:0; z-index:10; flex-wrap:wrap; gap:10px; }
+  header h1 { font-size:18px; }
+  header .actions button { margin-left:8px; padding:8px 14px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:13px; }
+  header .actions button.logout { color:#c0392b; border-color:#f0c2bc; }
+
+  .tabs { display:flex; gap:6px; padding:16px 24px 0; flex-wrap:wrap; }
+  .tab { padding:10px 16px; border-radius:10px 10px 0 0; cursor:pointer; background:#e8e9ee; font-size:13px; font-weight:600; color:#666; }
+  .tab.active { background:#fff; color:#333; }
+
+  .panel { display:none; background:#fff; margin:0 24px 24px; padding:24px; border-radius:0 12px 12px 12px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .panel.active { display:block; }
+  .panel h3 { font-size:15px; margin-bottom:4px; }
+  .panel .desc { font-size:12px; color:#888; margin-bottom:18px; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
+  .media-card { border:1px solid #eee; border-radius:12px; overflow:hidden; background:#fafafa; }
+  .media-card .media-wrap { width:100%; height:160px; background:#eee; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .media-card img, .media-card video { width:100%; height:100%; object-fit:cover; }
+  .media-card audio { width:90%; margin:20px 5%; }
+  .media-card .info { padding:10px 12px; }
+  .media-card .info b { font-size:13px; }
+  .media-card .info span { display:block; font-size:11px; color:#888; margin-top:2px; }
+  .media-card .row { display:flex; gap:8px; padding:0 12px 12px; }
+  .media-card button { flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; font-weight:600; cursor:pointer; }
+  .btn-approve { background:#2e7d32; color:#fff; }
+  .btn-reject { background:#c62828; color:#fff; }
+  .empty-state { text-align:center; color:#999; padding:40px 0; font-size:14px; }
+
+  .form-group { margin-bottom:18px; max-width:440px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#555; }
+  .form-group input[type=text], .form-group input[type=number], .form-group select, .form-group input[type=password], .form-group textarea {
+    width:100%; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit;
+  }
+  .color-row { display:flex; gap:12px; }
+  .color-row .form-group { flex:1; }
+  .color-row input[type=color] { width:100%; height:42px; border:1.5px solid #e0e0e0; border-radius:8px; padding:2px; cursor:pointer; }
+
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; max-width:440px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+  .save-btn { padding:12px 24px; border:none; border-radius:8px; background:#667eea; color:#fff; font-weight:700; cursor:pointer; margin-top:8px; }
+  .status-msg { margin-top:14px; font-size:13px; padding:10px; border-radius:8px; display:none; max-width:440px; }
+  .status-msg.success { background:#e8f5e9; color:#2e7d32; display:block; }
+  .status-msg.error { background:#fdecea; color:#c62828; display:block; }
+
+  .link-box { display:flex; gap:8px; max-width:520px; margin-bottom:6px; }
+  .link-box input { flex:1; padding:10px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:13px; background:#fafafa; }
+  .link-box button { padding:10px 14px; border:none; border-radius:8px; background:#667eea; color:#fff; cursor:pointer; font-size:13px; }
+  .hint { font-size:12px; color:#999; margin-bottom:16px; }
+
+  /* --- FILTERS --- */
+  .filter-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:14px; max-width:760px; }
+  .filter-preview-wrap { margin-bottom:16px; }
+  .filter-preview-wrap canvas { width:100%; max-width:320px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.1); }
+  .slider-row { display:flex; align-items:center; gap:10px; max-width:400px; margin-bottom:10px; font-size:13px; }
+  .slider-row label { width:90px; flex-shrink:0; color:#555; }
+  .slider-row input[type=range] { flex:1; }
+  .slider-row span { width:44px; text-align:right; color:#888; font-size:12px; flex-shrink:0; }
+  .filter-option { border:2px solid #eee; border-radius:12px; padding:10px; cursor:pointer; text-align:center; }
+  .filter-option.active { border-color:#667eea; background:#f4f5ff; }
+  .filter-swatch { width:100%; height:70px; border-radius:8px; margin-bottom:8px; background:linear-gradient(135deg,#f6c1a1,#8a6a45,#6a8fc9); background-size:cover; }
+  .filter-option span { font-size:12px; font-weight:600; }
+
+  /* --- FRAME/TEMA --- */
+  .theme-layout { display:flex; gap:32px; flex-wrap:wrap; }
+  .theme-form { flex:1; min-width:280px; }
+  .theme-preview-wrap { flex:1; min-width:260px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .theme-preview-wrap canvas { width:100%; max-width:320px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.1); }
+  .theme-preview-wrap .cap { font-size:12px; color:#999; }
+  .frame-style-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .frame-style-btn { padding:8px 14px; border-radius:8px; border:1.5px solid #e0e0e0; background:#fff; cursor:pointer; font-size:12px; }
+  .frame-style-btn.active { border-color:#667eea; background:#f4f5ff; color:#667eea; font-weight:700; }
+
+  .frame-template-card {
+    display:flex; align-items:center; gap:12px; padding:12px; border:1.5px solid #eee; border-radius:10px; margin-bottom:10px; max-width:440px;
+  }
+  .frame-template-card .preview-box {
+    width:52px; height:52px; border-radius:8px; background:#f4f4f4 repeating-conic-gradient(#eee 0% 25%, #f8f8f8 0% 50%) 0 0/10px 10px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
+  }
+  .frame-template-card .preview-box img { max-width:100%; max-height:100%; }
+  .frame-template-card .info { flex:1; min-width:0; }
+  .frame-template-card .info b { font-size:13px; display:block; }
+  .frame-template-card .info span { font-size:11px; color:#999; }
+  .frame-template-card .actions { display:flex; gap:6px; flex-shrink:0; }
+  .frame-template-card .actions button { padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; font-size:11px; cursor:pointer; }
+  .frame-template-card .actions button.reset { color:#c62828; border-color:#f0c2bc; }
+  .frame-template-card input[type=file] { display:none; }
+
+  .health-banner {
+    margin:16px 24px 0; padding:14px 18px; border-radius:10px; font-size:13px; line-height:1.6; display:none;
+  }
+  .health-banner.warn { background:#fff8e1; color:#8a6d00; border:1px solid #ffe082; }
+  .health-banner.error { background:#fdecea; color:#c62828; border:1px solid #f5c6c2; }
+  .health-banner.ok { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+  .health-banner ul { margin:6px 0 0 18px; }
+  .health-banner .dismiss { float:right; cursor:pointer; font-weight:700; opacity:.6; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99;
+    background:#222; color:#fff; padding:12px 22px; border-radius:10px; font-size:13px; display:none; max-width:88%; text-align:center;
+  }
+  .toast.success { background:#2e7d32; }
+  .toast.error { background:#c62828; }
+
+  .quality-custom-panel { display:none; max-width:440px; padding:12px 14px; background:#f8f8fb; border-radius:10px; margin:-8px 0 16px; border:1px solid #eee; }
+  .quality-custom-panel.active { display:block; }
+
+  /* ---- MODAL POPUP (pengganti status-msg lama, tampil di tengah) ---- */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; display:none;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show { display:flex; }
+  .modal-box {
+    background:#fff; border-radius:14px; padding:26px 24px 22px; max-width:380px; width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.25); position:relative; text-align:center; animation:modalIn .15s ease-out;
+  }
+  @keyframes modalIn { from { transform:scale(.92); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .modal-box .modal-icon { font-size:34px; margin-bottom:10px; }
+  .modal-box .modal-text { font-size:14px; color:#333; line-height:1.5; white-space:pre-line; }
+  .modal-box .modal-close {
+    position:absolute; top:10px; right:12px; background:none; border:none; font-size:18px; color:#999; cursor:pointer; line-height:1;
+  }
+  .modal-box.success .modal-icon::before { content:'✅'; }
+  .modal-box.error .modal-icon::before { content:'⚠️'; }
+  .modal-box.info .modal-icon::before { content:'ℹ️'; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💍 Dashboard Admin</h1>
+  <div class="actions">
+    <button onclick="loadPending()">🔄 Refresh</button>
+    <button class="logout" onclick="logout()">Keluar</button>
+  </div>
+</header>
+
+<div class="health-banner" id="healthBanner"><span class="dismiss" onclick="document.getElementById('healthBanner').style.display='none'">✕</span><span id="healthBannerText"></span></div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="moderasi">Moderasi</div>
+  <div class="tab" data-tab="filter">Filter Kamera</div>
+  <div class="tab" data-tab="tema">Tema & Frame</div>
+  <div class="tab" data-tab="pengaturan">Pengaturan Umum</div>
+  <div class="tab" data-tab="tautan">Bagikan</div>
+  <div class="tab" data-tab="akun">Akun</div>
+</div>
+
+<!-- MODERASI -->
+<div class="panel active" id="panel-moderasi">
+  <h3>Media Menunggu Persetujuan</h3>
+  <p class="desc">Setujui momen yang layak tampil, atau tolak yang tidak sesuai.</p>
+  <div id="pendingGrid" class="grid"></div>
+  <div id="pendingEmpty" class="empty-state" style="display:none;">Tidak ada media yang menunggu persetujuan 🎉</div>
+</div>
+
+<!-- FILTER KAMERA -->
+<div class="panel" id="panel-filter">
+  <h3>Filter Kamera Tamu</h3>
+  <p class="desc">Pilih satu filter yang akan otomatis dipakai semua tamu saat memotret, supaya hasilnya seragam. Klik filter untuk melihat pratinjau langsung sebelum disimpan.</p>
+
+  <div class="filter-preview-wrap">
+    <canvas id="filterSampleCanvas" width="320" height="220"></canvas>
+  </div>
+
+  <div class="filter-grid" id="filterGrid"></div>
+  <button class="save-btn" onclick="saveFilter()" style="margin-top:14px;">Simpan Filter Aktif</button>
+
+  <h3 style="margin-top:32px;">Buat Filter Custom</h3>
+  <p class="desc">Atur sendiri efek warna, beri nama, lalu simpan sebagai pilihan filter baru. Pratinjau di atas ikut berubah saat kamu geser slider.</p>
+
+  <div class="form-group" style="max-width:300px;">
+    <label>Nama Filter</label>
+    <input type="text" id="customFilterName" placeholder="contoh: Senja Hangat">
+  </div>
+
+  <div class="slider-row"><label>Brightness</label><input type="range" id="cfBrightness" min="0" max="2" step="0.05" value="1"><span id="cfBrightnessVal">1.00</span></div>
+  <div class="slider-row"><label>Contrast</label><input type="range" id="cfContrast" min="0" max="2" step="0.05" value="1"><span id="cfContrastVal">1.00</span></div>
+  <div class="slider-row"><label>Saturate</label><input type="range" id="cfSaturate" min="0" max="2" step="0.05" value="1"><span id="cfSaturateVal">1.00</span></div>
+  <div class="slider-row"><label>Sepia</label><input type="range" id="cfSepia" min="0" max="1" step="0.05" value="0"><span id="cfSepiaVal">0.00</span></div>
+  <div class="slider-row"><label>Grayscale</label><input type="range" id="cfGrayscale" min="0" max="1" step="0.05" value="0"><span id="cfGrayscaleVal">0.00</span></div>
+  <div class="slider-row"><label>Hue Rotate</label><input type="range" id="cfHue" min="0" max="360" step="5" value="0"><span id="cfHueVal">0°</span></div>
+
+  <button class="save-btn" onclick="saveCustomFilter()" style="margin-top:14px;">+ Simpan Sebagai Filter Baru</button>
+  <div class="status-msg" id="filterMsg"></div>
+</div>
+
+<!-- TEMA & FRAME -->
+<div class="panel" id="panel-tema">
+  <h3>Tema & Bingkai Foto</h3>
+  <p class="desc">Warna dan gaya bingkai ini dipakai di halaman kirim momen, album, dan saat tamu mengunduh foto/video/suara.</p>
+
+  <div class="theme-layout">
+    <div class="theme-form">
+      <div class="color-row">
+        <div class="form-group">
+          <label>Warna Utama</label>
+          <input type="color" id="primaryColor">
+        </div>
+        <div class="form-group">
+          <label>Warna Sekunder</label>
+          <input type="color" id="secondaryColor">
+        </div>
+      </div>
+
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:#555;">Gaya Bingkai Bawaan</label>
+      <p class="hint" style="margin-top:-4px;">Dipakai untuk jenis media manapun yang tidak memakai template custom di bawah.</p>
+      <div class="frame-style-row" id="frameStyleRow">
+        <button class="frame-style-btn" data-style="elegant">Elegant</button>
+        <button class="frame-style-btn" data-style="modern">Modern</button>
+        <button class="frame-style-btn" data-style="floral-simple">Floral</button>
+        <button class="frame-style-btn" data-style="minimalist">Minimalist</button>
+      </div>
+
+      <label style="display:block;font-size:13px;font-weight:600;margin:20px 0 8px;color:#555;">Template Bingkai Custom (PNG)</label>
+      <p class="hint" style="margin-top:-4px;">Unggah PNG transparan sebagai bingkai sendiri untuk tiap jenis media. Bingkai akan otomatis disesuaikan ukurannya mengikuti ukuran foto/video/voice note tamu — tidak perlu diedit manual.</p>
+      <div id="frameTemplateList"></div>
+
+      <label style="display:block;font-size:13px;font-weight:600;margin:20px 0 8px;color:#555;">Tampilan Audiogram Voice Note</label>
+      <p class="hint" style="margin-top:-4px;">Audiogram selalu digambar di lapisan paling atas, jadi tidak akan tertutup meskipun kamu pasang template PNG custom untuk voice note.</p>
+      <div class="form-group">
+        <label>Label / Nama</label>
+        <input type="text" id="voiceLabel" placeholder="🎤 Voice Note">
+      </div>
+      <div class="color-row">
+        <div class="form-group">
+          <label>Warna Tengah</label>
+          <input type="color" id="voiceCenterColor">
+        </div>
+        <div class="form-group">
+          <label>Warna Audiogram</label>
+          <input type="color" id="voiceBarColor">
+        </div>
+      </div>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:#555;">Bentuk Audiogram</label>
+      <div class="frame-style-row" id="voiceShapeRow" style="margin-bottom:18px;">
+        <button class="frame-style-btn" data-shape="radial">Radial</button>
+        <button class="frame-style-btn" data-shape="bars">Bars</button>
+        <button class="frame-style-btn" data-shape="pulse">Pulse</button>
+      </div>
+
+      <div class="form-group" style="margin-top:20px;">
+        <label>Judul di Halaman Kirim Momen</label>
+        <input type="text" id="indexHeadline" placeholder="Bagikan Momenmu">
+      </div>
+      <div class="form-group">
+        <label>Judul di Halaman Album</label>
+        <input type="text" id="albumHeadline" placeholder="Wedding Album">
+      </div>
+
+      <button class="save-btn" onclick="saveTheme()">Simpan Tema</button>
+      <div class="status-msg" id="themeMsg"></div>
+    </div>
+
+    <div class="theme-preview-wrap">
+      <div class="frame-style-row" id="previewModeRow" style="margin-bottom:4px;">
+        <button class="frame-style-btn active" data-preview="photo">Foto</button>
+        <button class="frame-style-btn" data-preview="video">Video</button>
+        <button class="frame-style-btn" data-preview="voice">Voice Note</button>
+      </div>
+      <canvas id="previewCanvas" width="600" height="600"></canvas>
+      <span class="cap" id="previewCaption">Pratinjau bingkai foto</span>
+    </div>
+  </div>
+</div>
+
+<!-- PENGATURAN UMUM -->
+<div class="panel" id="panel-pengaturan">
+  <h3>Pengaturan Umum</h3>
+  <p class="desc">Detail acara dan batasan unggahan tamu.</p>
+
+  <div class="form-group">
+    <label>Nama Mempelai Pria</label>
+    <input type="text" id="groomName">
+  </div>
+  <div class="form-group">
+    <label>Nama Mempelai Wanita</label>
+    <input type="text" id="brideName">
+  </div>
+  <div class="form-group">
+    <label>Tanggal Pernikahan</label>
+    <input type="text" id="weddingDate" placeholder="YYYY-MM-DD">
+  </div>
+  <div class="form-group">
+    <label>Maksimal Durasi Video (detik)</label>
+    <input type="number" id="maxVideoSeconds" min="5" max="300">
+  </div>
+  <div class="form-group">
+    <label>Maksimal Durasi Voice Note (detik)</label>
+    <input type="number" id="maxVoiceSeconds" min="5" max="300">
+  </div>
+  <div class="toggle-row">
+    <span>Izinkan tamu upload video</span>
+    <input type="checkbox" id="allowVideo">
+  </div>
+  <div class="toggle-row">
+    <span>Izinkan tamu kirim voice note</span>
+    <input type="checkbox" id="allowVoice">
+  </div>
+  <div class="toggle-row">
+    <span>Aktifkan filter kamera untuk tamu</span>
+    <input type="checkbox" id="allowFilter">
+  </div>
+  <div class="toggle-row">
+    <span>Moderasi manual sebelum tampil di album</span>
+    <input type="checkbox" id="moderation">
+  </div>
+  <p class="hint" style="margin-top:6px;">Kalau moderasi dimatikan, momen dari tamu langsung tampil di album tanpa perlu kamu setujui dulu.</p>
+
+  <h3 style="margin-top:28px;">Kontrol Album</h3>
+  <p class="desc">Atur apa yang boleh dilihat/diunduh tamu lain di halaman album.</p>
+  <div class="toggle-row">
+    <span>Tampilkan pratinjau foto/video/suara di album</span>
+    <input type="checkbox" id="allowPreview">
+  </div>
+  <p class="hint" style="margin-top:-4px;">Kalau dimatikan, album hanya menampilkan info nama & tanggal — tamu harus mengunduh untuk melihat isinya.</p>
+  <div class="toggle-row">
+    <span>Izinkan tombol "Unduh Asli"</span>
+    <input type="checkbox" id="allowDownloadOriginal">
+  </div>
+  <div class="toggle-row">
+    <span>Izinkan tombol "Unduh Berbingkai ✨"</span>
+    <input type="checkbox" id="allowDownloadFramed">
+  </div>
+  <p class="hint" style="margin-top:-4px;">Kalau keduanya dimatikan, tamu tidak akan punya cara mengunduh media sama sekali — pastikan minimal satu tetap aktif.</p>
+
+  <h3 style="margin-top:28px;">Kualitas Media</h3>
+  <p class="desc">Atur seberapa tinggi kualitas foto/video/voice note yang diambil dari HP tamu. Kualitas lebih tinggi = file lebih besar dan lebih lambat diunggah di sinyal lemah.</p>
+
+  <div class="form-group">
+    <label>Kualitas Foto</label>
+    <select id="qualityPhoto">
+      <option value="standard">Standar — 1280×720, cepat & hemat kuota</option>
+      <option value="high">Tinggi — 1920×1080, seimbang (disarankan)</option>
+      <option value="max">Maksimal — 3840×2160, kualitas terbaik, file besar</option>
+      <option value="custom">Custom — atur sendiri</option>
+    </select>
+  </div>
+  <div class="quality-custom-panel" id="customPanelPhoto">
+    <div class="color-row">
+      <div class="form-group"><label>Lebar (px)</label><input type="number" id="customPhotoWidth" min="320" max="6000"></div>
+      <div class="form-group"><label>Tinggi (px)</label><input type="number" id="customPhotoHeight" min="320" max="6000"></div>
+    </div>
+    <div class="form-group">
+      <label>Kualitas JPEG (0.1–1.0)</label>
+      <input type="number" id="customPhotoJpeg" min="0.1" max="1" step="0.01">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Kualitas Video</label>
+    <select id="qualityVideo">
+      <option value="standard">Standar — 1280×720, cepat & hemat kuota</option>
+      <option value="high">Tinggi — 1920×1080, seimbang (disarankan)</option>
+      <option value="max">Maksimal — 1920×1080 bitrate tinggi, kualitas terbaik, file besar</option>
+      <option value="custom">Custom — atur sendiri</option>
+    </select>
+  </div>
+  <div class="quality-custom-panel" id="customPanelVideo">
+    <div class="color-row">
+      <div class="form-group"><label>Lebar (px)</label><input type="number" id="customVideoWidth" min="320" max="3840"></div>
+      <div class="form-group"><label>Tinggi (px)</label><input type="number" id="customVideoHeight" min="320" max="3840"></div>
+    </div>
+    <div class="color-row">
+      <div class="form-group"><label>Bitrate Video (kbps)</label><input type="number" id="customVideoBitrate" min="500" max="20000" step="100"></div>
+      <div class="form-group"><label>Bitrate Audio (kbps)</label><input type="number" id="customVideoAudioBitrate" min="32" max="320" step="8"></div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Kualitas Voice Note</label>
+    <select id="qualityVoice">
+      <option value="standard">Standar — 64kbps, hemat kuota</option>
+      <option value="high">Tinggi — 128kbps, jernih (disarankan)</option>
+      <option value="custom">Custom — atur sendiri</option>
+    </select>
+  </div>
+  <div class="quality-custom-panel" id="customPanelVoice">
+    <div class="form-group">
+      <label>Bitrate Audio (kbps)</label>
+      <input type="number" id="customVoiceBitrate" min="16" max="320" step="8">
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveSettings()">Simpan Pengaturan</button>
+  <div class="status-msg" id="settingsMsg"></div>
+</div>
+
+<!-- TAUTAN -->
+<div class="panel" id="panel-tautan">
+  <h3>Bagikan ke Tamu</h3>
+  <p class="desc">Sebarkan tautan ini agar tamu bisa ikut mengabadikan momen, dan siapa saja bisa melihat album.</p>
+  <div class="form-group">
+    <label>Link untuk Tamu (kirim momen)</label>
+    <div class="link-box">
+      <input type="text" id="uploadLink" readonly>
+      <button onclick="copyLink('uploadLink')">Salin</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Link Album Publik</label>
+    <div class="link-box">
+      <input type="text" id="albumLink" readonly>
+      <button onclick="copyLink('albumLink')">Salin</button>
+    </div>
+  </div>
+</div>
+
+<!-- AKUN -->
+<div class="panel" id="panel-akun">
+  <h3>Keamanan Akun</h3>
+  <p class="desc">Ganti password kapan saja untuk menjaga panel admin tetap aman.</p>
+  <div class="form-group">
+    <label>Password Baru</label>
+    <input type="password" id="newPassword" placeholder="Minimal 6 karakter">
+  </div>
+  <div class="form-group">
+    <label>Ulangi Password Baru</label>
+    <input type="password" id="confirmPassword">
+  </div>
+  <button class="save-btn" onclick="changePassword()">Ganti Password</button>
+  <div class="status-msg" id="accountMsg"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-box" id="modalBox">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-icon"></div>
+    <div class="modal-text" id="modalText"></div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBvnpXgBPVIhR4553aA84lyvXeZ6KLPwsPMgm9UoqIte-LF_l4z255YGicS8kFSuP5/exec';
+
+const weddingId = localStorage.getItem('wedding_id');
+const token = localStorage.getItem('admin_token');
+if (!weddingId || !token) window.location.href = 'admin-login.html';
+
+let currentSettings = {};
+let filtersList = [];
+let selectedFilterId = null;
+let selectedFrameStyle = 'elegant';
+let frameTemplates = {
+  photo: { type: 'builtin' },
+  video: { type: 'builtin' },
+  voice: { type: 'builtin', label: '🎤 Voice Note', centerColor: '#ffffff', barColor: '', shape: 'radial' }
+};
+const FRAME_TYPE_LABELS = { photo: 'Foto', video: 'Video', voice: 'Voice Note' };
+
+// ----- Toggle panel Custom di Kualitas Media -----
+['Photo', 'Video', 'Voice'].forEach(t => {
+  document.getElementById('quality' + t).addEventListener('change', function () {
+    document.getElementById('customPanel' + t).classList.toggle('active', this.value === 'custom');
+  });
+});
+
+// ----- Tabs -----
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'tema') drawPreview();
+  });
+});
+
+async function callApi(payload, method = 'POST') {
+  payload.wedding_id = weddingId;
+  payload.token = token;
+  if (method === 'GET') {
+    const qs = new URLSearchParams(payload).toString();
+    const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`);
+    return res.json();
+  }
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+function logout() {
+  localStorage.removeItem('wedding_id');
+  localStorage.removeItem('admin_token');
+  window.location.href = 'admin-login.html';
+}
+
+function handleAuthError(data) {
+  if (data && data.message && data.message.toLowerCase().includes('sesi')) {
+    alert('Sesi berakhir, silakan login ulang.');
+    logout();
+    return true;
+  }
+  return false;
+}
+
+// ----- Moderasi -----
+function base64ToUint8_(base64) {
+  const byteChars = atob(base64);
+  const arr = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) arr[i] = byteChars.charCodeAt(i);
+  return arr;
+}
+
+const moderationBlobCache = new Map();
+
+async function getModerationBlobUrl(fileId) {
+  if (moderationBlobCache.has(fileId)) return moderationBlobCache.get(fileId);
+
+  const metaRes = await fetch(`${APPS_SCRIPT_URL}?action=getMediaMeta&file_id=${encodeURIComponent(fileId)}`);
+  const meta = await metaRes.json();
+  if (!meta.success) throw new Error(meta.message || 'File tidak ditemukan');
+
+  const parts = [];
+  let offset = 0, isLast = false, totalSize = meta.size || null, guard = 0;
+  while (!isLast && guard < 500) {
+    guard++;
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaChunk&file_id=${encodeURIComponent(fileId)}&offset=${offset}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal mengambil bagian file');
+    parts.push(base64ToUint8_(data.base64));
+    offset += data.chunkLength;
+    isLast = data.isLast || data.chunkLength === 0;
+    if (data.totalSize) totalSize = data.totalSize;
+  }
+
+  const totalLen = parts.reduce((s, p) => s + p.length, 0);
+  const combined = new Uint8Array(totalLen);
+  let pos = 0;
+  parts.forEach(p => { combined.set(p, pos); pos += p.length; });
+
+  const blob = new Blob([combined], { type: meta.mimeType });
+  const url = URL.createObjectURL(blob);
+  moderationBlobCache.set(fileId, url);
+  return url;
+}
+
+async function loadPending() {
+  const data = await callApi({ action: 'getPendingMedia' }, 'GET');
+  if (handleAuthError(data)) return;
+
+  const grid = document.getElementById('pendingGrid');
+  const empty = document.getElementById('pendingEmpty');
+  grid.innerHTML = '';
+
+  if (!data.success || !data.pending_media || data.pending_media.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  data.pending_media.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    const uid = 'p_' + item.media_id;
+    card.innerHTML = `
+      <div class="media-wrap" id="${uid}_box"><span style="font-size:12px;color:#999;">Memuat...</span></div>
+      <div class="info"><b>${escapeHtml(item.guest_name)}</b><span>${item.date} • ${item.time} • ${item.media_type}</span></div>
+      <div class="row">
+        <button class="btn-approve" onclick="moderate('${item.media_id}','approveMedia',this)">✓ Setujui</button>
+        <button class="btn-reject" onclick="moderate('${item.media_id}','rejectMedia',this)">✕ Tolak</button>
+      </div>`;
+    grid.appendChild(card);
+
+    getModerationBlobUrl(item.file_id).then(url => {
+      const box = document.getElementById(uid + '_box');
+      if (!box) return;
+      if (item.media_type === 'photo') box.innerHTML = `<img src="${url}" loading="lazy">`;
+      else if (item.media_type === 'video') box.innerHTML = `<video src="${url}" controls playsinline></video>`;
+      else box.innerHTML = `<audio src="${url}" controls></audio>`;
+    }).catch(() => {
+      const box = document.getElementById(uid + '_box');
+      if (box) box.innerHTML = `<span style="font-size:12px;color:#c62828;">Gagal memuat</span>`;
+    });
+  });
+}
+
+async function moderate(mediaId, action, btn) {
+  btn.disabled = true;
+  try {
+    const data = await callApi({ action, media_id: mediaId });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showToast(data.message || 'Gagal memproses media', 'error'); btn.disabled = false; return; }
+    loadPending();
+  } catch (err) {
+    showToast('Gagal terhubung ke server: ' + err.message, 'error');
+    btn.disabled = false;
+  }
+}
+
+// ----- Filter kamera -----
+async function loadFilters() {
+  const data = await callApi({ action: 'getFilters', wedding_id: weddingId }, 'GET');
+  if (!data.success) return;
+  filtersList = data.filters;
+  selectedFilterId = data.active_filter_id ? String(data.active_filter_id) : (filtersList[0] ? String(filtersList[0].filter_id) : null);
+  drawSamplePhoto();
+  renderFilterGrid();
+}
+
+// Foto contoh dibuat langsung dari canvas (gradient + bentuk sederhana)
+// supaya tidak perlu bergantung pada file gambar dari luar — selalu
+// tersedia untuk pratinjau filter.
+function drawSamplePhoto() {
+  const canvas = document.getElementById('filterSampleCanvas');
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#f7d9a0'); grad.addColorStop(0.5, '#e8a87c'); grad.addColorStop(1, '#c8708a');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath(); ctx.arc(canvas.width * 0.75, canvas.height * 0.28, 34, 0, Math.PI * 2); ctx.fill(); // "matahari"
+
+  ctx.fillStyle = 'rgba(60,40,50,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height * 0.72);
+  ctx.lineTo(canvas.width * 0.3, canvas.height * 0.5);
+  ctx.lineTo(canvas.width * 0.55, canvas.height * 0.68);
+  ctx.lineTo(canvas.width * 0.8, canvas.height * 0.42);
+  ctx.lineTo(canvas.width, canvas.height * 0.6);
+  ctx.lineTo(canvas.width, canvas.height);
+  ctx.lineTo(0, canvas.height);
+  ctx.closePath(); ctx.fill(); // "gunung/siluet"
+
+  applyPreviewFilter(getSelectedFilterCss());
+}
+
+function applyPreviewFilter(cssFilter) {
+  document.getElementById('filterSampleCanvas').style.filter = cssFilter || 'none';
+}
+
+function getSelectedFilterCss() {
+  const f = filtersList.find(x => String(x.filter_id) === selectedFilterId);
+  return f ? f.css_filter : 'none';
+}
+
+function renderFilterGrid() {
+  const grid = document.getElementById('filterGrid');
+  grid.innerHTML = '';
+  filtersList.forEach(f => {
+    const opt = document.createElement('div');
+    opt.className = 'filter-option' + (String(f.filter_id) === selectedFilterId ? ' active' : '');
+    const isOwnCustom = f.wedding_id === weddingId;
+    opt.innerHTML = `
+      <div class="filter-swatch" style="filter:${f.css_filter}"></div>
+      <span>${escapeHtml(f.name)}</span>
+      ${isOwnCustom ? `<button class="reset" style="margin-top:6px;font-size:10px;padding:3px 8px;border-radius:6px;border:1px solid #f0c2bc;background:#fff;color:#c62828;" onclick="event.stopPropagation();deleteCustomFilterConfirm('${f.filter_id}')">Hapus</button>` : ''}
+    `;
+    opt.addEventListener('click', () => {
+      selectedFilterId = String(f.filter_id);
+      renderFilterGrid();
+      applyPreviewFilter(f.css_filter);
+    });
+    grid.appendChild(opt);
+  });
+}
+
+async function saveFilter() {
+  try {
+    const data = await callApi({ action: 'updateSettings', active_filter_id: selectedFilterId });
+    if (handleAuthError(data)) return;
+    showStatus('filterMsg', data.success, data.success ? 'Filter aktif tersimpan, semua tamu akan pakai filter ini.' : data.message);
+  } catch (err) {
+    showStatus('filterMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+// ----- Filter Custom -----
+function buildCustomFilterCss() {
+  const b = document.getElementById('cfBrightness').value;
+  const c = document.getElementById('cfContrast').value;
+  const s = document.getElementById('cfSaturate').value;
+  const se = document.getElementById('cfSepia').value;
+  const g = document.getElementById('cfGrayscale').value;
+  const h = document.getElementById('cfHue').value;
+  return `brightness(${b}) contrast(${c}) saturate(${s}) sepia(${se}) grayscale(${g}) hue-rotate(${h}deg)`;
+}
+
+['cfBrightness','cfContrast','cfSaturate','cfSepia','cfGrayscale','cfHue'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function () {
+    const suffix = id === 'cfHue' ? '°' : '';
+    const decimals = id === 'cfHue' ? 0 : 2;
+    document.getElementById(id + 'Val').textContent = Number(this.value).toFixed(decimals) + suffix;
+    selectedFilterId = null; // sedang mencoba custom, bukan filter tersimpan
+    document.querySelectorAll('#filterGrid .filter-option').forEach(o => o.classList.remove('active'));
+    applyPreviewFilter(buildCustomFilterCss());
+  });
+});
+
+async function saveCustomFilter() {
+  const name = document.getElementById('customFilterName').value.trim();
+  if (!name) { showStatus('filterMsg', false, 'Beri nama dulu untuk filter custom ini'); return; }
+  const cssFilter = buildCustomFilterCss();
+
+  try {
+    const data = await callApi({ action: 'addCustomFilter', name, css_filter: cssFilter });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showStatus('filterMsg', false, data.message); return; }
+
+    await loadFilters();
+    selectedFilterId = String(data.filter.filter_id);
+    renderFilterGrid();
+    applyPreviewFilter(cssFilter);
+    document.getElementById('customFilterName').value = '';
+    showStatus('filterMsg', true, `Filter "${name}" tersimpan. Klik "Simpan Filter Aktif" kalau mau langsung dipakai tamu.`);
+  } catch (err) {
+    showStatus('filterMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+async function deleteCustomFilterConfirm(filterId) {
+  if (!confirm('Hapus filter custom ini?')) return;
+  try {
+    const data = await callApi({ action: 'deleteCustomFilter', filter_id: filterId });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showStatus('filterMsg', false, data.message); return; }
+    await loadFilters();
+    showStatus('filterMsg', true, 'Filter dihapus.');
+  } catch (err) {
+    showStatus('filterMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+// ----- Tema & Frame -----
+let currentPreviewMode = 'photo';
+let previewAnimTimer = null;
+
+document.querySelectorAll('#frameStyleRow .frame-style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedFrameStyle = btn.dataset.style;
+    document.querySelectorAll('#frameStyleRow .frame-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    drawPreview();
+  });
+});
+document.getElementById('primaryColor').addEventListener('input', drawPreview);
+document.getElementById('secondaryColor').addEventListener('input', drawPreview);
+
+document.querySelectorAll('#voiceShapeRow .frame-style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    frameTemplates.voice = frameTemplates.voice || {};
+    frameTemplates.voice.shape = btn.dataset.shape;
+    document.querySelectorAll('#voiceShapeRow .frame-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    drawPreview();
+  });
+});
+
+document.querySelectorAll('#previewModeRow .frame-style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentPreviewMode = btn.dataset.preview;
+    document.querySelectorAll('#previewModeRow .frame-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const captions = { photo: 'Pratinjau bingkai foto', video: 'Pratinjau bingkai video', voice: 'Pratinjau audiogram voice note' };
+    document.getElementById('previewCaption').textContent = captions[currentPreviewMode];
+    drawPreview();
+  });
+});
+
+['voiceLabel','voiceCenterColor','voiceBarColor'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    frameTemplates.voice = frameTemplates.voice || {};
+    frameTemplates.voice.label = document.getElementById('voiceLabel').value;
+    frameTemplates.voice.centerColor = document.getElementById('voiceCenterColor').value;
+    frameTemplates.voice.barColor = document.getElementById('voiceBarColor').value;
+    drawPreview();
+  });
+});
+
+function loadVoiceCustomFields() {
+  const v = frameTemplates.voice || {};
+  document.getElementById('voiceLabel').value = v.label || '🎤 Voice Note';
+  document.getElementById('voiceCenterColor').value = v.centerColor || '#ffffff';
+  document.getElementById('voiceBarColor').value = v.barColor || document.getElementById('primaryColor').value || '#8B7355';
+  const shape = v.shape || 'radial';
+  document.querySelectorAll('#voiceShapeRow .frame-style-btn').forEach(b => b.classList.toggle('active', b.dataset.shape === shape));
+}
+
+function drawFrame(ctx, w, h, cfg) {
+  const barH = Math.round(h * 0.12);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#ddd';
+  ctx.fillRect(0, 0, w, h - barH); // area foto placeholder
+  ctx.fillStyle = 'rgba(0,0,0,0.08)';
+  for (let i=0;i<6;i++){ ctx.fillRect(0, (h-barH)/6*i, w, 2); }
+
+  ctx.fillStyle = cfg.primary;
+  if (cfg.style === 'minimalist') {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, h - barH, w, barH);
+  } else if (cfg.style === 'modern') {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(4, w * 0.006);
+    ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
+  } else if (cfg.style === 'floral-simple') {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.fillStyle = cfg.secondary;
+    const r = Math.max(4, w*0.006);
+    [[16,16],[w-16,16],[16,h-barH-16],[w-16,h-barH-16]].forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
+  } else {
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.003);
+    const pad = w*0.015;
+    ctx.strokeRect(pad, pad, w-pad*2, h-pad*2-barH*0.15);
+  }
+
+  const centerY = h - barH/2;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.font = `700 ${Math.round(barH*0.3)}px Georgia, serif`;
+  ctx.fillText(`${cfg.groom || 'Rizky'} & ${cfg.bride || 'Amanda'}`, w/2, centerY - barH*0.08);
+  ctx.font = `400 ${Math.round(barH*0.2)}px Segoe UI, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(cfg.date || '8 Agustus 2026', w/2, centerY + barH*0.28);
+}
+
+// Audiogram pratinjau — sama gaya visualnya dengan yang dipakai album.html
+// saat proses unduh sungguhan, tapi datanya simulasi (gelombang sinus)
+// supaya tetap terasa hidup tanpa perlu rekaman audio asli.
+function drawAudiogramPreview(ctx, w, h, cfg, t) {
+  const cx = w / 2, cy = h / 2;
+  const fakeData = new Array(48).fill(0).map((_, i) => 128 + Math.sin(t / 200 + i * 0.5) * 90 + Math.random() * 20);
+  const shape = cfg.voiceShape || 'radial';
+
+  if (shape === 'bars') {
+    const barCount = 32, barW = (w * 0.7) / barCount, startX = w * 0.15, baseY = cy + 130;
+    ctx.fillStyle = cfg.voiceBarColor;
+    for (let i = 0; i < barCount; i++) {
+      const value = fakeData[i % fakeData.length] / 255;
+      const barH = 10 + value * (h * 0.2);
+      ctx.fillRect(startX + i * barW, baseY - barH, barW * 0.7, barH);
+    }
+    ctx.fillStyle = cfg.voiceCenterColor;
+    ctx.beginPath(); ctx.arc(cx, cy, 90, 0, Math.PI * 2); ctx.fill();
+  } else if (shape === 'pulse') {
+    let avg = 0; for (let i = 0; i < fakeData.length; i++) avg += fakeData[i];
+    avg = avg / fakeData.length / 255;
+    const radius = 100 + avg * 40;
+    ctx.fillStyle = cfg.voiceBarColor; ctx.globalAlpha = 0.25;
+    ctx.beginPath(); ctx.arc(cx, cy, radius + 20, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = cfg.voiceCenterColor;
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+  } else {
+    const radius = 140, bars = 48;
+    ctx.strokeStyle = cfg.voiceBarColor; ctx.lineWidth = 5;
+    for (let i = 0; i < bars; i++) {
+      const value = fakeData[i % fakeData.length] / 255;
+      const angle = (i / bars) * Math.PI * 2;
+      const barLen = 20 + value * 90;
+      const x1 = cx + Math.cos(angle)*radius, y1 = cy + Math.sin(angle)*radius;
+      const x2 = cx + Math.cos(angle)*(radius+barLen), y2 = cy + Math.sin(angle)*(radius+barLen);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+    ctx.fillStyle = cfg.voiceCenterColor;
+    ctx.beginPath(); ctx.arc(cx, cy, radius - 10, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.fillStyle = cfg.voiceBarColor; ctx.font = '600 26px Segoe UI, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(cfg.voiceLabel, cx, cy - 6);
+  ctx.font = '400 15px Segoe UI, sans-serif'; ctx.fillText('Nama Tamu', cx, cy + 20);
+}
+
+function drawPreview() {
+  clearInterval(previewAnimTimer);
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const cfg = {
+    style: selectedFrameStyle,
+    primary: document.getElementById('primaryColor').value,
+    secondary: document.getElementById('secondaryColor').value,
+    groom: currentSettings.groom_name,
+    bride: currentSettings.bride_name,
+    date: currentSettings.date ? formatDate(currentSettings.date) : '',
+    voiceLabel: (frameTemplates.voice && frameTemplates.voice.label) || '🎤 Voice Note',
+    voiceCenterColor: (frameTemplates.voice && frameTemplates.voice.centerColor) || '#ffffff',
+    voiceBarColor: (frameTemplates.voice && frameTemplates.voice.barColor) || document.getElementById('primaryColor').value,
+    voiceShape: (frameTemplates.voice && frameTemplates.voice.shape) || 'radial'
+  };
+
+  const frameForMode = frameTemplates[currentPreviewMode] || { type: 'builtin' };
+  const hasCustom = frameForMode.type === 'custom' && frameForMode.url;
+
+  if (currentPreviewMode === 'voice') {
+    let start = Date.now();
+    const loop = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (hasCustom && voicePreviewImg) {
+        ctx.drawImage(voicePreviewImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = cfg.secondary; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = cfg.primary; ctx.globalAlpha = 0.15; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1;
+      }
+      drawAudiogramPreview(ctx, canvas.width, canvas.height, cfg, Date.now() - start);
+      if (!hasCustom) drawFrame(ctx, canvas.width, canvas.height, cfg);
+    };
+    if (hasCustom) preloadVoicePreviewImage(frameForMode.url);
+    previewAnimTimer = setInterval(loop, 60);
+    loop();
+    return;
+  }
+
+  if (hasCustom) {
+    ctx.fillStyle = '#ddd';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const img = new Image();
+    img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+    img.src = frameForMode.url;
+    return;
+  }
+
+  drawFrame(ctx, canvas.width, canvas.height, cfg);
+}
+
+let voicePreviewImg = null;
+let voicePreviewImgUrl = null;
+function preloadVoicePreviewImage(url) {
+  if (voicePreviewImgUrl === url && voicePreviewImg) return;
+  voicePreviewImgUrl = url;
+  const img = new Image();
+  img.onload = () => { voicePreviewImg = img; };
+  img.src = url;
+}
+
+// ----- Template Bingkai Custom (PNG) -----
+function renderFrameTemplateList() {
+  const container = document.getElementById('frameTemplateList');
+  container.innerHTML = '';
+
+  Object.keys(FRAME_TYPE_LABELS).forEach(mediaType => {
+    const tpl = frameTemplates[mediaType] || { type: 'builtin' };
+    const card = document.createElement('div');
+    card.className = 'frame-template-card';
+
+    const previewHtml = tpl.type === 'custom' && tpl.url
+      ? `<img src="${tpl.url}">`
+      : `<span style="font-size:10px;color:#bbb;text-align:center;">Bawaan</span>`;
+
+    card.innerHTML = `
+      <div class="preview-box">${previewHtml}</div>
+      <div class="info">
+        <b>${FRAME_TYPE_LABELS[mediaType]}</b>
+        <span>${tpl.type === 'custom' ? 'Pakai template custom' : 'Pakai gaya bawaan di atas'}</span>
+      </div>
+      <div class="actions">
+        <label class="upload-btn" style="padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;font-size:11px;cursor:pointer;">
+          Unggah PNG
+          <input type="file" accept="image/png" onchange="handleFrameUpload('${mediaType}', this)">
+        </label>
+        ${tpl.type === 'custom' ? `<button class="reset" onclick="resetFrameTemplate('${mediaType}')">Pakai Bawaan</button>` : ''}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+async function handleFrameUpload(mediaType, inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  if (file.type !== 'image/png') { showToast('Template bingkai harus format PNG', 'error'); inputEl.value = ''; return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('Ukuran PNG maksimal 5MB', 'error'); inputEl.value = ''; return; }
+
+  showToast(`Mengunggah template ${FRAME_TYPE_LABELS[mediaType]}...`, 'success');
+  try {
+    const base64 = await fileToBase64(file);
+    const data = await callApi({ action: 'uploadFrameTemplate', media_type: mediaType, data: base64, mime_type: 'image/png' });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showToast(data.message || 'Gagal mengunggah template', 'error'); return; }
+
+    frameTemplates[mediaType] = Object.assign({}, frameTemplates[mediaType], { type: 'custom', file_id: data.file_id, url: data.url });
+    renderFrameTemplateList();
+    drawPreview();
+    showToast(`Template bingkai ${FRAME_TYPE_LABELS[mediaType]} tersimpan. Jangan lupa klik Simpan Tema.`, 'success');
+  } catch (err) {
+    showToast('Gagal mengunggah: ' + err.message, 'error');
+  } finally {
+    inputEl.value = '';
+  }
+}
+
+function resetFrameTemplate(mediaType) {
+  // Kembali ke gaya bawaan hanya menghapus PNG custom-nya — kustomisasi
+  // audiogram (label/warna/bentuk) untuk voice note tetap dipertahankan.
+  frameTemplates[mediaType] = Object.assign({}, frameTemplates[mediaType], { type: 'builtin', file_id: undefined, url: undefined });
+  renderFrameTemplateList();
+  drawPreview();
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+
+async function saveTheme() {
+  const payload = {
+    action: 'updateSettings',
+    primary_color: document.getElementById('primaryColor').value,
+    secondary_color: document.getElementById('secondaryColor').value,
+    frame_style: selectedFrameStyle,
+    ui_config: JSON.stringify(buildUiConfig())
+  };
+  try {
+    const data = await callApi(payload);
+    if (handleAuthError(data)) return;
+    showStatus('themeMsg', data.success, data.message);
+  } catch (err) {
+    showStatus('themeMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+// ----- Pengaturan umum -----
+async function loadSettings() {
+  const data = await callApi({ action: 'getSettings' }, 'GET');
+  if (!data.success) return;
+  currentSettings = data;
+
+  document.getElementById('groomName').value = data.groom_name || '';
+  document.getElementById('brideName').value = data.bride_name || '';
+  document.getElementById('weddingDate').value = data.date ? new Date(data.date).toISOString().slice(0,10) : '';
+  document.getElementById('maxVideoSeconds').value = data.max_video_seconds || 60;
+  document.getElementById('maxVoiceSeconds').value = data.max_voice_seconds || 60;
+  document.getElementById('allowVideo').checked = data.allow_video === true;
+  document.getElementById('allowVoice').checked = data.allow_voice === true;
+  document.getElementById('allowFilter').checked = data.allow_filter === true;
+  document.getElementById('moderation').checked = data.moderation !== false;
+
+  const uiConfig = data.ui_config || {};
+  document.getElementById('allowPreview').checked = uiConfig.allow_preview !== false;
+  document.getElementById('allowDownloadOriginal').checked = uiConfig.allow_download_original !== false;
+  document.getElementById('allowDownloadFramed').checked = uiConfig.allow_download_framed !== false;
+
+  document.getElementById('primaryColor').value = data.primary_color || '#8B7355';
+  document.getElementById('secondaryColor').value = data.secondary_color || '#D4C4A8';
+  selectedFrameStyle = data.frame_style || 'elegant';
+  document.querySelectorAll('.frame-style-btn').forEach(b => b.classList.toggle('active', b.dataset.style === selectedFrameStyle));
+
+  document.getElementById('indexHeadline').value = uiConfig.index_headline || '';
+  document.getElementById('albumHeadline').value = uiConfig.album_headline || '';
+  frameTemplates = Object.assign(
+    { photo:{type:'builtin'}, video:{type:'builtin'}, voice:{type:'builtin', label:'🎤 Voice Note', centerColor:'#ffffff', barColor:'', shape:'radial'} },
+    uiConfig.frames || {}
+  );
+  renderFrameTemplateList();
+  loadVoiceCustomFields();
+
+  const quality = Object.assign({ photo:'high', video:'high', voice:'high' }, uiConfig.quality || {});
+  document.getElementById('qualityPhoto').value = quality.photo;
+  document.getElementById('qualityVideo').value = quality.video;
+  document.getElementById('qualityVoice').value = quality.voice;
+  ['Photo','Video','Voice'].forEach(t => {
+    document.getElementById('customPanel' + t).classList.toggle('active', document.getElementById('quality' + t).value === 'custom');
+  });
+
+  const qc = Object.assign({
+    photo: { width:1920, height:1080, jpegQuality:0.92 },
+    video: { width:1920, height:1080, videoBitsPerSecond:6000000, audioBitsPerSecond:128000 },
+    voice: { audioBitsPerSecond:128000 }
+  }, uiConfig.quality_custom || {});
+  document.getElementById('customPhotoWidth').value = qc.photo.width;
+  document.getElementById('customPhotoHeight').value = qc.photo.height;
+  document.getElementById('customPhotoJpeg').value = qc.photo.jpegQuality;
+  document.getElementById('customVideoWidth').value = qc.video.width;
+  document.getElementById('customVideoHeight').value = qc.video.height;
+  document.getElementById('customVideoBitrate').value = Math.round(qc.video.videoBitsPerSecond / 1000);
+  document.getElementById('customVideoAudioBitrate').value = Math.round(qc.video.audioBitsPerSecond / 1000);
+  document.getElementById('customVoiceBitrate').value = Math.round(qc.voice.audioBitsPerSecond / 1000);
+
+  const base = window.location.href.replace(/admin-dashboard\.html.*$/, '');
+  document.getElementById('uploadLink').value = `${base}index.html?w=${weddingId}`;
+  document.getElementById('albumLink').value = `${base}album.html?w=${weddingId}`;
+
+  drawPreview();
+}
+
+// Menggabungkan semua pengaturan tampilan (headline, frame custom, kualitas
+// media) jadi satu objek ui_config — dipakai baik dari tab Pengaturan Umum
+// maupun tab Tema & Frame, supaya menyimpan di satu tab tidak menghapus
+// pengaturan yang disimpan dari tab lainnya.
+function buildUiConfig() {
+  return {
+    index_headline: document.getElementById('indexHeadline').value.trim(),
+    album_headline: document.getElementById('albumHeadline').value.trim(),
+    frames: frameTemplates,
+    allow_preview: document.getElementById('allowPreview').checked,
+    allow_download_original: document.getElementById('allowDownloadOriginal').checked,
+    allow_download_framed: document.getElementById('allowDownloadFramed').checked,
+    quality: {
+      photo: document.getElementById('qualityPhoto').value,
+      video: document.getElementById('qualityVideo').value,
+      voice: document.getElementById('qualityVoice').value
+    },
+    quality_custom: {
+      photo: {
+        width: Number(document.getElementById('customPhotoWidth').value) || 1920,
+        height: Number(document.getElementById('customPhotoHeight').value) || 1080,
+        jpegQuality: Number(document.getElementById('customPhotoJpeg').value) || 0.92
+      },
+      video: {
+        width: Number(document.getElementById('customVideoWidth').value) || 1920,
+        height: Number(document.getElementById('customVideoHeight').value) || 1080,
+        videoBitsPerSecond: (Number(document.getElementById('customVideoBitrate').value) || 6000) * 1000,
+        audioBitsPerSecond: (Number(document.getElementById('customVideoAudioBitrate').value) || 128) * 1000
+      },
+      voice: {
+        audioBitsPerSecond: (Number(document.getElementById('customVoiceBitrate').value) || 128) * 1000
+      }
+    }
+  };
+}
+
+async function saveSettings() {
+  const payload = {
+    action: 'updateSettings',
+    groom_name: document.getElementById('groomName').value.trim(),
+    bride_name: document.getElementById('brideName').value.trim(),
+    date: document.getElementById('weddingDate').value.trim(),
+    max_video_seconds: document.getElementById('maxVideoSeconds').value,
+    max_voice_seconds: document.getElementById('maxVoiceSeconds').value,
+    allow_video: document.getElementById('allowVideo').checked,
+    allow_voice: document.getElementById('allowVoice').checked,
+    allow_filter: document.getElementById('allowFilter').checked,
+    moderation: document.getElementById('moderation').checked,
+    ui_config: JSON.stringify(buildUiConfig())
+  };
+  try {
+    const data = await callApi(payload);
+    if (handleAuthError(data)) return;
+    showStatus('settingsMsg', data.success, data.message);
+  } catch (err) {
+    showStatus('settingsMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+// ----- Tautan -----
+function copyLink(id) {
+  const input = document.getElementById(id);
+  input.select();
+  navigator.clipboard.writeText(input.value);
+}
+
+// ----- Akun -----
+async function changePassword() {
+  const newPass = document.getElementById('newPassword').value;
+  const confirmPass = document.getElementById('confirmPassword').value;
+  if (newPass.length < 6) { showStatus('accountMsg', false, 'Password minimal 6 karakter'); return; }
+  if (newPass !== confirmPass) { showStatus('accountMsg', false, 'Konfirmasi password tidak cocok'); return; }
+  try {
+    const data = await callApi({ action: 'changePassword', new_password: newPass });
+    if (handleAuthError(data)) return;
+    showStatus('accountMsg', data.success, data.message);
+    if (data.success) { document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
+  } catch (err) {
+    showStatus('accountMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+let modalTimer = null;
+function showModal(message, type) {
+  clearTimeout(modalTimer);
+  const overlay = document.getElementById('modalOverlay');
+  const box = document.getElementById('modalBox');
+  document.getElementById('modalText').textContent = message;
+  box.className = 'modal-box ' + (type || 'info');
+  overlay.classList.add('show');
+  modalTimer = setTimeout(closeModal, 10000);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  clearTimeout(modalTimer);
+}
+
+// showStatus/showToast dipertahankan namanya (dipakai di banyak tempat)
+// tapi sekarang sama-sama menampilkan modal di tengah, bukan lagi teks
+// kecil di bawah tombol atau toast di pojok bawah yang gampang kelewatan.
+function showStatus(elId, success, message) {
+  showModal(message, success ? 'success' : 'error');
+}
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function formatDate(d) { try { return new Date(d).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}); } catch(e){ return d; } }
+
+function showToast(text, type) {
+  showModal(text, type === 'success' ? 'success' : (type === 'error' ? 'error' : 'info'));
+}
+
+// ----- Notifikasi Kesehatan Sistem -----
+async function runHealthCheck() {
+  const banner = document.getElementById('healthBanner');
+  const textEl = document.getElementById('healthBannerText');
+  try {
+    const data = await callApi({ action: 'healthCheck' }, 'GET');
+    if (handleAuthError(data)) return;
+    if (!data.success) {
+      banner.className = 'health-banner error';
+      textEl.innerHTML = '⚠️ Tidak bisa memeriksa status sistem: ' + escapeHtml(data.message || '');
+      banner.style.display = 'block';
+      return;
+    }
+    if (data.issues && data.issues.length > 0) {
+      banner.className = 'health-banner warn';
+      textEl.innerHTML = '⚠️ Ada catatan dari sistem:<ul>' + data.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch (err) {
+    banner.className = 'health-banner error';
+    textEl.textContent = '⚠️ Tidak bisa terhubung ke server untuk memeriksa status sistem.';
+    banner.style.display = 'block';
+  }
+}
+
+// ----- Init -----
+loadPending().catch(() => showToast('Gagal memuat media menunggu persetujuan', 'error'));
+loadFilters().catch(() => showToast('Gagal memuat daftar filter', 'error'));
+loadSettings().catch(() => showToast('Gagal memuat pengaturan', 'error'));
+runHealthCheck();
+</script>
+</body>
+</html>
