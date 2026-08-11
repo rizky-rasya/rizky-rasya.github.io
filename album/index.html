@@ -272,6 +272,10 @@ function getQuality(type) {
   const uiConfig = (weddingSettings && weddingSettings.ui_config) || {};
   const q = uiConfig.quality || {};
   const level = q[type] || 'high';
+  if (level === 'custom') {
+    const custom = (uiConfig.quality_custom && uiConfig.quality_custom[type]) || {};
+    return Object.assign({}, QUALITY_PRESETS[type].high, custom);
+  }
   return QUALITY_PRESETS[type][level] || QUALITY_PRESETS[type].high;
 }
 let activeFilterCss = 'none';
@@ -386,7 +390,7 @@ async function init() {
     const settings = await settingsRes.json();
     if (!settings.success) { showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid.', false); return; }
     weddingSettings = settings;
-    document.getElementById('brandName').textContent = `${settings.groom_name} & ${settings.bride_name}`;
+    document.getElementById('brandName').textContent = (settings.ui_config && settings.ui_config.index_headline) || `${settings.groom_name} & ${settings.bride_name}`;
     if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
 
     if (settings.allow_filter !== false) {
