@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Bagikan Momen — Wedding Album</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  html, body { height:100%; height:100dvh; background:#111; overflow:hidden; overscroll-behavior:none; }
+  body { font-family:'Segoe UI', sans-serif; color:#fff; touch-action:pan-y; }
+
+  #app { position:relative; width:100%; height:100%; display:flex; flex-direction:column; }
+
+  #statusScreen {
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:30px; background:#1a1a1a; z-index:50; gap:14px;
+  }
+  #statusScreen .icon { font-size:44px; }
+  #statusScreen h2 { font-size:18px; }
+  #statusScreen p { font-size:14px; color:#bbb; max-width:320px; line-height:1.5; }
+  #statusScreen button { margin-top:10px; padding:12px 28px; border-radius:30px; border:none; background:#c99b6a; color:#fff; font-weight:700; font-size:14px; }
+
+  header {
+    position:absolute; top:0; left:0; right:0; z-index:20; padding:16px 18px;
+    display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(180deg, rgba(0,0,0,.55), transparent);
+  }
+  header .brand { font-size:15px; font-weight:700; }
+  header .brand small { display:block; font-size:11px; font-weight:400; opacity:.8; }
+  header a.nav-link { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,.15); padding:8px 14px; border-radius:20px; }
+
+  #cameraWrap { position:relative; flex:1; background:#000; overflow:hidden; }
+  #liveVideo, #recordedVideo { width:100%; height:100%; object-fit:cover; display:block; }
+  #liveVideo.mirrored { transform:scaleX(-1); }
+  #photoCanvasPreview { width:100%; height:100%; object-fit:cover; display:none; }
+  #recordedVideo { display:none; }
+
+  .rec-badge {
+    position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:15;
+    background:rgba(224,82,82,.9); padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700;
+    display:none; align-items:center; gap:6px;
+  }
+  .rec-badge .dot { width:8px; height:8px; border-radius:50%; background:#fff; animation:blink 1s infinite; }
+  @keyframes blink { 50% { opacity:.2; } }
+
+  #voiceWrap {
+    display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:20px;
+    background:radial-gradient(circle at center, #2a2320, #111);
+  }
+  .vn-orb {
+    width:150px; height:150px; border-radius:50%;
+    background:linear-gradient(135deg,#c99b6a,#8a6a45);
+    display:flex; align-items:center; justify-content:center; font-size:50px;
+    box-shadow:0 0 0 8px rgba(201,155,106,.15);
+  }
+  .vn-orb.recording { animation:pulse 1.4s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(224,82,82,.4);} 70%{box-shadow:0 0 0 26px rgba(224,82,82,0);} 100%{box-shadow:0 0 0 0 rgba(224,82,82,0);} }
+  #vnTimer { font-size:22px; font-weight:700; letter-spacing:1px; }
+  #vnHint { font-size:13px; color:#bbb; text-align:center; }
+  #vnPlayer { width:85%; display:none; }
+
+  /* Bar kontrol bawah (filmstrip + tombol) MENGAMBANG di atas kamera —
+     bukan mengambil ruang layout sendiri — supaya area kamera benar-benar
+     full-screen seperti aplikasi kamera native, tidak terkotak kecil. */
+  #bottomOverlay {
+    position:absolute; left:0; right:0; bottom:0; z-index:20;
+    display:flex; flex-direction:column;
+  }
+
+  #filmstrip {
+    display:none; gap:8px; padding:10px 14px; overflow-x:auto;
+    background:rgba(0,0,0,.4);
+  }
+  .shot-thumb { position:relative; flex:0 0 auto; width:56px; height:56px; border-radius:10px; overflow:hidden; border:2px solid rgba(255,255,255,.3); }
+  .shot-thumb img { width:100%; height:100%; object-fit:cover; }
+  .shot-thumb .remove-shot {
+    position:absolute; top:-2px; right:-2px; width:18px; height:18px; border-radius:50%; background:#c62828;
+    color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; border:none;
+  }
+  .shot-counter { align-self:center; font-size:12px; color:#ddd; white-space:nowrap; padding:0 6px; }
+
+  #controls {
+    padding:14px 18px max(24px, env(safe-area-inset-bottom)); background:linear-gradient(0deg, rgba(0,0,0,.75) 30%, transparent);
+  }
+  .mode-switch { display:flex; justify-content:center; gap:22px; margin-bottom:16px; }
+  .mode-switch button {
+    background:none; border:none; color:rgba(255,255,255,.55); font-size:13px; font-weight:700; padding:6px 4px; border-bottom:2px solid transparent;
+  }
+  .mode-switch button.active { color:#fff; border-color:#c99b6a; }
+
+  .capture-row { display:flex; align-items:center; justify-content:center; gap:36px; }
+  .side-btn { width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.15); border:none; color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; }
+
+  #shutterBtn { width:74px; height:74px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,.4); }
+  #shutterBtn.video-mode { background:#e05252; }
+  #shutterBtn.recording { border-radius:14px; width:34px; height:34px; }
+  #shutterBtn:disabled { opacity:.4; }
+
+  .finish-row { display:none; gap:14px; justify-content:center; align-items:center; margin-top:14px; }
+  .finish-row button { padding:14px 24px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
+  #finishBtn { background:#c99b6a; color:#fff; }
+
+  .vn-controls { display:none; gap:16px; justify-content:center; align-items:center; }
+  #vnRecordBtn { background:#e05252; color:#fff; width:64px; height:64px; border-radius:50%; font-size:22px; padding:0; border:none; }
+  #vnRedoBtn { background:rgba(255,255,255,.15); color:#fff; padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
+  #vnPlayBtn { background:rgba(255,255,255,.15); color:#fff; padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
+  #vnSendBtn { background:#c99b6a; color:#fff; padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
+
+  .review-row { display:none; gap:14px; justify-content:center; align-items:center; }
+  .review-row button { padding:14px 24px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
+  #retakeBtn { background:rgba(255,255,255,.15); color:#fff; }
+  #sendMediaBtn { background:#c99b6a; color:#fff; }
+
+  .name-field { max-width:400px; margin:0 auto 12px; }
+  .name-field input {
+    width:100%; padding:12px 14px; border-radius:10px; border:1.5px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08); color:#fff; font-size:16px;
+  }
+  .name-field input::placeholder { color:rgba(255,255,255,.5); }
+
+  .toast {
+    position:absolute; bottom:110px; left:50%; transform:translateX(-50%); z-index:60;
+    background:#222; padding:12px 20px; border-radius:10px; font-size:13px; max-width:85%; text-align:center; display:none;
+  }
+  .toast.success { background:#2e7d32; }
+  .toast.error { background:#c62828; }
+
+  .progress-overlay {
+    position:absolute; inset:0; background:rgba(0,0,0,.75); z-index:70; display:none;
+    flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  }
+  .progress-overlay span { font-size:14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="statusScreen">
+    <div class="icon">💍</div>
+    <h2 id="statusTitle">Menyiapkan kamera...</h2>
+    <p id="statusText">Mohon tunggu sebentar</p>
+    <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
+  </div>
+
+  <header>
+    <div class="brand"><span id="brandName">Wedding Album</span><small id="brandDate"></small></div>
+    <a class="nav-link" href="#" id="toAlbumLink">Lihat Album →</a>
+  </header>
+
+  <div class="rec-badge" id="recBadge"><span class="dot"></span> <span id="recTimer">00:00</span></div>
+
+  <div id="cameraWrap">
+    <video id="liveVideo" autoplay playsinline muted></video>
+    <canvas id="photoCanvasPreview"></canvas>
+    <video id="recordedVideo" playsinline controls></video>
+  </div>
+
+  <div id="voiceWrap">
+    <div class="vn-orb" id="vnOrb">🎤</div>
+    <div id="vnTimer">00:00</div>
+    <p id="vnHint">Tekan tombol merah untuk mulai merekam ucapanmu</p>
+    <audio id="vnPlayer" controls></audio>
+    <video id="vnVideoPlayer" playsinline controls style="display:none;width:85%;border-radius:14px;"></video>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="progress-overlay" id="progressOverlay">
+    <div class="icon" style="font-size:32px;">📤</div>
+    <span id="progressText">Mengirim...</span>
+  </div>
+
+  <div id="bottomOverlay">
+    <div id="filmstrip"></div>
+
+    <div id="controls">
+    <div class="name-field">
+      <input type="text" id="guestName" placeholder="Nama kamu" maxlength="40">
+    </div>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button data-mode="photo" class="active">FOTO</button>
+      <button data-mode="video">VIDEO</button>
+      <button data-mode="voice">SUARA</button>
+    </div>
+
+    <div class="capture-row" id="captureRow">
+      <button class="side-btn" id="flipBtn" title="Ganti kamera">🔄</button>
+      <button id="shutterBtn"></button>
+      <div style="width:44px;"></div>
+    </div>
+
+    <div class="finish-row" id="finishRow">
+      <button id="finishBtn">Selesai & Kirim ✓</button>
+    </div>
+
+    <div class="vn-controls" id="vnControlsIdle">
+      <button id="vnRecordBtn">●</button>
+    </div>
+    <div class="vn-controls" id="vnControlsReview">
+      <button id="vnRedoBtn">↺ Ulang</button>
+      <button id="vnPlayBtn">▶ Putar</button>
+      <button id="vnSendBtn">Kirim ✓</button>
+    </div>
+
+    <div class="review-row" id="reviewRow">
+      <button id="retakeBtn">↺ Ambil Ulang</button>
+      <button id="sendMediaBtn">Kirim ✓</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec';
+const MAX_SHOTS = 5;
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive:false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive:false });
+
+const urlParams = new URLSearchParams(window.location.search);
+let weddingId = urlParams.get('w');
+if (weddingId) localStorage.setItem('active_wedding_id', weddingId);
+else weddingId = localStorage.getItem('active_wedding_id');
+
+document.getElementById('toAlbumLink').href = weddingId ? `album.html?w=${encodeURIComponent(weddingId)}` : '#';
+
+if (!weddingId) {
+  showStatus('Tautan Tidak Lengkap', 'Link ini belum berisi kode undangan. Minta mempelai untuk mengirimkan ulang link undangan yang benar.', false);
+  throw new Error('no wedding id');
+}
+
+function pickSupportedMime(candidates) {
+  for (const c of candidates) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c.mime)) return c;
+  }
+  return candidates[candidates.length - 1];
+}
+const VIDEO_MIME = pickSupportedMime([
+  { mime: 'video/mp4;codecs=h264,aac', ext: 'mp4' },
+  { mime: 'video/mp4', ext: 'mp4' },
+  { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+  { mime: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+  { mime: 'video/webm', ext: 'webm' }
+]);
+const AUDIO_MIME = pickSupportedMime([
+  { mime: 'audio/mp4;codecs=mp4a.40.2', ext: 'm4a' },
+  { mime: 'audio/mp4', ext: 'm4a' },
+  { mime: 'audio/webm;codecs=opus', ext: 'webm' },
+  { mime: 'audio/webm', ext: 'webm' }
+]);
+
+let weddingSettings = null;
+
+// ============================================
+// PRESET KUALITAS — diatur admin dari dashboard (ui_config.quality),
+// default 'high' kalau admin belum pernah mengaturnya
+// ============================================
+const QUALITY_PRESETS = {
+  photo: {
+    standard: { width: 1280, height: 720, jpegQuality: 0.85 },
+    high:     { width: 1920, height: 1080, jpegQuality: 0.92 },
+    max:      { width: 3840, height: 2160, jpegQuality: 0.97 }
+  },
+  video: {
+    standard: { width: 1280, height: 720, videoBitsPerSecond: 2500000, audioBitsPerSecond: 96000 },
+    high:     { width: 1920, height: 1080, videoBitsPerSecond: 6000000, audioBitsPerSecond: 128000 },
+    max:      { width: 1920, height: 1080, videoBitsPerSecond: 10000000, audioBitsPerSecond: 192000 }
+  },
+  voice: {
+    standard: { audioBitsPerSecond: 64000 },
+    high:     { audioBitsPerSecond: 128000 }
+  }
+};
+
+function getQuality(type) {
+  const uiConfig = (weddingSettings && weddingSettings.ui_config) || {};
+  const q = uiConfig.quality || {};
+  const level = q[type] || 'high';
+  if (level === 'custom') {
+    const custom = (uiConfig.quality_custom && uiConfig.quality_custom[type]) || {};
+    return Object.assign({}, QUALITY_PRESETS[type].high, custom);
+  }
+  return QUALITY_PRESETS[type][level] || QUALITY_PRESETS[type].high;
+}
+let activeFilterCss = 'none';
+let activeFilterParams = null; // diisi kalau filter aktif adalah Filter Pro (JSON 15 parameter)
+
+// ============================================
+// MESIN FILTER MANUAL — jaminan filter benar-benar terbakar ke hasil
+// foto/video, bukan cuma tampil di preview. Beberapa browser lama (Safari
+// versi tertentu) tidak mendukung ctx.filter di Canvas 2D, jadi kita
+// deteksi dulu dan sediakan fallback pemrosesan piksel manual.
+// ============================================
+let canvasFilterSupported = (function testCanvasFilterSupport() {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 2; c.height = 2;
+    const cx = c.getContext('2d');
+    cx.fillStyle = '#000'; cx.fillRect(0, 0, 2, 2);
+    cx.filter = 'invert(1)';
+    cx.fillRect(0, 0, 2, 2);
+    const px = cx.getImageData(0, 0, 1, 1).data;
+    return px[0] > 200; // kalau invert bekerja, piksel hitam jadi putih
+  } catch (e) { return false; }
+})();
+
+function parseFilterString(filterStr) {
+  const ops = [];
+  if (!filterStr || filterStr === 'none') return ops;
+  const re = /([a-z-]+)\(([^)]+)\)/g;
+  let m;
+  while ((m = re.exec(filterStr)) !== null) {
+    const name = m[1];
+    let val = parseFloat(m[2]);
+    if (name === 'hue-rotate') val = parseFloat(m[2]); // derajat
+    ops.push({ name, val });
+  }
+  return ops;
+}
+
+function applyManualFilter(ctx, w, h, filterStr) {
+  const ops = parseFilterString(filterStr);
+  if (ops.length === 0) return;
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const d = imgData.data;
+
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i], g = d[i+1], b = d[i+2];
+
+    ops.forEach(op => {
+      if (op.name === 'brightness') { r*=op.val; g*=op.val; b*=op.val; }
+      else if (op.name === 'contrast') { r=(r-128)*op.val+128; g=(g-128)*op.val+128; b=(b-128)*op.val+128; }
+      else if (op.name === 'saturate') {
+        const l = 0.2126*r + 0.7152*g + 0.0722*b;
+        r = l + (r-l)*op.val; g = l + (g-l)*op.val; b = l + (b-l)*op.val;
+      } else if (op.name === 'sepia') {
+        const a = op.val;
+        const sr = 0.393*r + 0.769*g + 0.189*b;
+        const sg = 0.349*r + 0.686*g + 0.168*b;
+        const sb = 0.272*r + 0.534*g + 0.131*b;
+        r = r + (sr-r)*a; g = g + (sg-g)*a; b = b + (sb-b)*a;
+      } else if (op.name === 'grayscale') {
+        const l = 0.2126*r + 0.7152*g + 0.0722*b;
+        r = r + (l-r)*op.val; g = g + (l-g)*op.val; b = b + (l-b)*op.val;
+      } else if (op.name === 'hue-rotate') {
+        const rad = op.val * Math.PI / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const nr = r*(0.213+cos*0.787-sin*0.213) + g*(0.715-cos*0.715-sin*0.715) + b*(0.072-cos*0.072+sin*0.928);
+        const ng = r*(0.213-cos*0.213+sin*0.143) + g*(0.715+cos*0.285+sin*0.140) + b*(0.072-cos*0.072-sin*0.283);
+        const nb = r*(0.213-cos*0.213-sin*0.787) + g*(0.715-cos*0.715+sin*0.715) + b*(0.072+cos*0.928+sin*0.072);
+        r = nr; g = ng; b = nb;
+      }
+    });
+
+    d[i] = Math.max(0, Math.min(255, r));
+    d[i+1] = Math.max(0, Math.min(255, g));
+    d[i+2] = Math.max(0, Math.min(255, b));
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// Menggambar frame video/foto dengan filter TERJAMIN terbakar.
+// - FOTO (isRealtime=false): satu frame saja, aman diproses penuh presisi
+//   lewat mesin piksel manual (termasuk sharpness/definition/noise/vignette).
+// - VIDEO (isRealtime=true): HARUS lewat jalur cepat (ctx.filter, dipercepat
+//   GPU) supaya tidak patah-patah. Memproses piksel manual di setiap frame
+//   video (30x per detik) sebelumnya jadi penyebab video patah-patah di HP
+//   yang kurang kuat — sekarang dihindari sepenuhnya untuk video.
+function drawWithGuaranteedFilter(ctx, drawFn, w, h, isRealtime) {
+  const p = activeFilterParams ? (isRealtime ? activeFilterParams.video : activeFilterParams.photo) : null;
+  if (p && Object.keys(p).length > 0) {
+    if (isRealtime) {
+      if (canvasFilterSupported) {
+        ctx.filter = approximateCssFromParams(p);
+        drawFn();
+        ctx.filter = 'none';
+      } else {
+        // Browser tak dukung ctx.filter sama sekali — demi mencegah video
+        // patah-patah, filter dilewati untuk video (foto tetap dapat filter penuh)
+        drawFn();
+      }
+      return;
+    }
+    // Foto — proses presisi penuh, termasuk detail pass (sharpness dst.)
+    drawFn();
+    const imgData = ctx.getImageData(0, 0, w, h);
+    applyToneColorPass(imgData, p);
+    const result = applyDetailPass(imgData, p);
+    ctx.putImageData(result, 0, 0);
+  } else if (canvasFilterSupported) {
+    ctx.filter = activeFilterCss;
+    drawFn();
+    ctx.filter = 'none';
+  } else if (isRealtime) {
+    // realtime + tidak ada dukungan filter native -> lewati demi mencegah patah-patah
+    drawFn();
+  } else {
+    drawFn();
+    applyManualFilter(ctx, w, h, activeFilterCss);
+  }
+}
+
+// ============================================
+// MESIN FILTER PRO (gaya iPhone) — 15 parameter, rentang -100..100.
+// Dipakai kalau admin membuat filter custom lewat dashboard. Terbagi 2
+// tahap: tahap murah (aman untuk video real-time) dan tahap detail (berat,
+// perlu piksel tetangga, HANYA dipakai untuk foto supaya video tidak patah).
+// ============================================
+function clamp255_(v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
+
+function applyToneColorPass(imageData, p) {
+  const d = imageData.data;
+  const w = imageData.width, h = imageData.height;
+  const expFactor = Math.pow(2, (p.exposure || 0) / 100);
+  const conFactor = 1 + (p.contrast || 0) / 100;
+  const brightAdd = (p.brightness || 0) / 100 * 90;
+  const bpAmt = (p.blackPoint || 0) / 100 * 60;
+  const satFactor = 1 + (p.saturation || 0) / 100;
+  const vibAmt = (p.vibrancy || 0) / 100;
+  const warmAmt = (p.warmth || 0) / 100 * 40;
+  const tintAmt = (p.tint || 0) / 100 * 40;
+  const brillAmt = (p.brilliance || 0) / 100;
+  const highAmt = (p.highlights || 0) / 100;
+  const shadAmt = (p.shadows || 0) / 100;
+  const vigAmt = (p.vignette || 0) / 100;
+  const cx = w / 2, cy = h / 2, maxDist = Math.sqrt(cx * cx + cy * cy) || 1;
+
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i], g = d[i + 1], b = d[i + 2];
+    r *= expFactor; g *= expFactor; b *= expFactor;
+
+    let L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    if (brillAmt !== 0) {
+      const shadowLift = Math.max(0, (140 - L) / 140) * brillAmt * 40;
+      const highlightTame = Math.max(0, (L - 180) / 75) * brillAmt * -25;
+      const d2 = shadowLift + highlightTame;
+      r += d2; g += d2; b += d2;
+    }
+    if (highAmt !== 0) {
+      const wgt = Math.max(0, Math.min(1, (L - 140) / 115));
+      const d3 = highAmt * 70 * wgt;
+      r += d3; g += d3; b += d3;
+    }
+    if (shadAmt !== 0) {
+      const wgt = Math.max(0, Math.min(1, (115 - L) / 115));
+      const d4 = shadAmt * 70 * wgt;
+      r += d4; g += d4; b += d4;
+    }
+
+    r = (r - 128) * conFactor + 128;
+    g = (g - 128) * conFactor + 128;
+    b = (b - 128) * conFactor + 128;
+
+    r += brightAdd; g += brightAdd; b += brightAdd;
+
+    if (bpAmt !== 0) {
+      r += bpAmt * (1 - r / 255);
+      g += bpAmt * (1 - g / 255);
+      b += bpAmt * (1 - b / 255);
+    }
+
+    L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    r = L + (r - L) * satFactor;
+    g = L + (g - L) * satFactor;
+    b = L + (b - L) * satFactor;
+
+    if (vibAmt !== 0) {
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      const curSat = (mx - mn) / 255;
+      const amt = vibAmt * (1 - curSat);
+      L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      r = L + (r - L) * (1 + amt);
+      g = L + (g - L) * (1 + amt);
+      b = L + (b - L) * (1 + amt);
+    }
+
+    r += warmAmt; b -= warmAmt;
+    g += tintAmt; r -= tintAmt * 0.5; b -= tintAmt * 0.5;
+
+    if (vigAmt !== 0) {
+      const idx = i / 4;
+      const x = idx % w, y = Math.floor(idx / w);
+      const dist = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
+      const fall = Math.max(0, dist - 0.4) * vigAmt * 1.6;
+      const factor = 1 - fall;
+      r *= factor; g *= factor; b *= factor;
+    }
+
+    d[i] = clamp255_(r); d[i + 1] = clamp255_(g); d[i + 2] = clamp255_(b);
+  }
+}
+
+function applyDetailPass(imageData, p) {
+  let data = imageData;
+  if ((p.noiseReduction || 0) > 0) data = boxBlurPass_(data, Math.round((p.noiseReduction / 100) * 3));
+  if ((p.sharpness || 0) !== 0) data = convolveSharpen_(data, (p.sharpness || 0) / 100);
+  if ((p.definition || 0) !== 0) data = localContrastPass_(data, (p.definition || 0) / 100);
+  return data;
+}
+
+function boxBlurPass_(imageData, radius) {
+  if (radius <= 0) return imageData;
+  const w = imageData.width, h = imageData.height;
+  const src = imageData.data;
+  const out = new Uint8ClampedArray(src.length);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let r=0,g=0,b=0,a=0,count=0;
+      for (let dy=-radius; dy<=radius; dy++) {
+        for (let dx=-radius; dx<=radius; dx++) {
+          const nx=x+dx, ny=y+dy;
+          if (nx<0||ny<0||nx>=w||ny>=h) continue;
+          const idx=(ny*w+nx)*4;
+          r+=src[idx]; g+=src[idx+1]; b+=src[idx+2]; a+=src[idx+3]; count++;
+        }
+      }
+      const oidx=(y*w+x)*4;
+      out[oidx]=r/count; out[oidx+1]=g/count; out[oidx+2]=b/count; out[oidx+3]=a/count;
+    }
+  }
+  return new ImageData(out, w, h);
+}
+
+function convolveSharpen_(imageData, amount) {
+  const w = imageData.width, h = imageData.height;
+  const src = imageData.data;
+  const out = new Uint8ClampedArray(src.length);
+  const center = 1 + 4*amount, side = -amount;
+  const get = (nx, ny, c) => {
+    nx = Math.max(0, Math.min(w-1, nx)); ny = Math.max(0, Math.min(h-1, ny));
+    return src[(ny*w+nx)*4+c];
+  };
+  for (let y=0;y<h;y++){
+    for (let x=0;x<w;x++){
+      const idx=(y*w+x)*4;
+      for (let c=0;c<3;c++){
+        out[idx+c] = get(x,y,c)*center + get(x-1,y,c)*side + get(x+1,y,c)*side + get(x,y-1,c)*side + get(x,y+1,c)*side;
+      }
+      out[idx+3]=src[idx+3];
+    }
+  }
+  return new ImageData(out, w, h);
+}
+
+function localContrastPass_(imageData, amount) {
+  const w = imageData.width, h = imageData.height;
+  const blurred = boxBlurPass_(imageData, 2);
+  const src = imageData.data, blur = blurred.data;
+  const out = new Uint8ClampedArray(src.length);
+  for (let i=0;i<src.length;i+=4){
+    for (let c=0;c<3;c++){
+      const diff = src[i+c]-blur[i+c];
+      out[i+c] = src[i+c] + diff*amount*1.5;
+    }
+    out[i+3]=src[i+3];
+  }
+  return new ImageData(out, w, h);
+}
+
+// Perkiraan kasar CSS filter dari parameter Pro — HANYA dipakai untuk
+// preview kamera live (elemen <video>), karena CSS tidak sanggup
+// merepresentasikan semua 15 parameter secara presis. Hasil jepretan/
+// rekaman final tetap memakai mesin piksel presisi di atas.
+function approximateCssFromParams(p) {
+  const brightness = 1 + ((p.exposure||0) + (p.brightness||0)*0.5) / 150;
+  const contrast = 1 + (p.contrast||0) / 130;
+  const saturate = 1 + ((p.saturation||0) + (p.vibrancy||0)*0.6) / 130;
+  const hue = (p.warmth||0) * -0.6;
+  return `brightness(${brightness}) contrast(${contrast}) saturate(${saturate}) hue-rotate(${hue}deg)`;
+}
+
+// Vignette murah untuk video real-time — gradient radial biasa, BUKAN
+// olah piksel per-titik seperti versi presisi di foto, supaya tetap
+// ringan dijalankan 30x/detik tanpa bikin patah-patah.
+function drawCheapVignette(ctx, w, h, amount) {
+  const amt = Math.max(0, Math.min(100, amount)) / 100;
+  if (amt <= 0) return;
+  const cx = w / 2, cy = h / 2, r = Math.sqrt(cx*cx + cy*cy);
+  const grad = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, r);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, `rgba(0,0,0,${amt * 0.65})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+}
+let currentMode = 'photo';
+let currentFacing = 'environment';
+let liveStream = null;
+let streamHasAudio = false;
+let mediaRecorder = null, recordedChunks = [];
+let capturedBlob = null, capturedMime = null, capturedExt = null;
+let recordTimer = null, recordSeconds = 0;
+let vnRecorder = null, vnChunks = [], vnBlob = null;
+let vnTimer = null, vnSeconds = 0;
+let photoShots = [];
+let videoThumbBlob = null;
+
+const liveVideo = document.getElementById('liveVideo');
+const photoCanvas = document.getElementById('photoCanvasPreview');
+const recordedVideo = document.getElementById('recordedVideo');
+
+init();
+
+async function init() {
+  try {
+    const settingsRes = await fetch(`${APPS_SCRIPT_URL}?action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
+    const settings = await settingsRes.json();
+    if (!settings.success) { showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid.', false); return; }
+    weddingSettings = settings;
+    document.getElementById('brandName').textContent = (settings.ui_config && settings.ui_config.index_headline) || `${settings.groom_name} & ${settings.bride_name}`;
+    if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
+
+    if (settings.allow_filter !== false) {
+      const filterRes = await fetch(`${APPS_SCRIPT_URL}?action=getFilters&wedding_id=${encodeURIComponent(weddingId)}`);
+      const filterData = await filterRes.json();
+      if (filterData.success && filterData.active_filter_id) {
+        const match = filterData.filters.find(f => String(f.filter_id) === String(filterData.active_filter_id));
+        if (match) {
+          activeFilterCss = match.css_filter || 'none';
+          try {
+            const raw = match.params ? JSON.parse(match.params) : null;
+            if (!raw) activeFilterParams = null;
+            else if (raw.photo || raw.video) activeFilterParams = { photo: raw.photo || {}, video: raw.video || {} };
+            else activeFilterParams = { photo: raw, video: raw }; // format lama (flat), dipakai untuk keduanya
+          } catch (e) { activeFilterParams = null; }
+        }
+      }
+    }
+
+    setupModeSwitch(settings);
+    await preloadFrameAssets(settings);
+    await startCamera();
+    hideStatus();
+  } catch (err) {
+    showStatus('Gagal Memuat', 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu lalu coba lagi.', true);
+  }
+}
+
+// ============================================
+// FRAME OTOMATIS INCLUDE — kalau admin aktifkan, bingkai "dibakar"
+// langsung sejak proses rekam/jepret di HP tamu (bukan pas download).
+// ============================================
+let autoIncludeFrame = { photo: false, video: false, voice: false };
+let frameConfigCache = {};
+let customFrameImgCache = {};
+
+function getFrameConfig(type) {
+  const w = weddingSettings || {};
+  const uiConfig = w.ui_config || {};
+  const frames = uiConfig.frames || {};
+  const customFrame = type ? frames[type] : null;
+  const voiceCfg = frames.voice || {};
+  return {
+    style: w.frame_style || 'elegant', primary: w.primary_color || '#8B7355', secondary: w.secondary_color || '#D4C4A8',
+    groom: w.groom_name || '', bride: w.bride_name || '', date: w.date ? formatDate(w.date) : '',
+    customFrame: (customFrame && customFrame.type === 'custom' && customFrame.file_id) ? customFrame : null,
+    voiceLabel: voiceCfg.label || '🎤 Voice Note',
+    voiceCenterColor: voiceCfg.centerColor || '#ffffff',
+    voiceBarColor: voiceCfg.barColor || w.primary_color || '#8B7355',
+    voiceShape: voiceCfg.shape || 'radial',
+    voiceCenterShape: voiceCfg.centerShape || 'circle',
+    voiceCenterRound: voiceCfg.centerRound != null ? voiceCfg.centerRound : 20,
+    voiceFont: voiceCfg.font || 'Segoe UI'
+  };
+}
+
+function getVnResolution() {
+  const w = weddingSettings || {};
+  const vnRes = (w.ui_config && w.ui_config.vn_resolution) || { preset: 'hd' };
+  if (vnRes.preset === 'custom') return { width: vnRes.width || 720, height: vnRes.height || 720 };
+  if (vnRes.preset === 'sd') return { width: 480, height: 480 };
+  if (vnRes.preset === 'fhd') return { width: 1080, height: 1080 };
+  return { width: 720, height: 720 };
+}
+
+async function preloadFrameAssets(settings) {
+  const uiConfig = settings.ui_config || {};
+  autoIncludeFrame = Object.assign({ photo:false, video:false, voice:false }, uiConfig.frame_auto_include || {});
+  if (!autoIncludeFrame.photo && !autoIncludeFrame.video && !autoIncludeFrame.voice) return;
+
+  for (const type of ['photo', 'video', 'voice']) {
+    if (!autoIncludeFrame[type]) continue;
+    frameConfigCache[type] = getFrameConfig(type);
+    const cf = frameConfigCache[type].customFrame;
+    if (cf && cf.file_id) {
+      try { customFrameImgCache[type] = await loadFrameImageBase64(cf.file_id); }
+      catch (e) { customFrameImgCache[type] = null; }
+    }
+  }
+}
+
+function loadFrameImageBase64(fileId) {
+  return (async () => {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal memuat template bingkai');
+    const byteChars = atob(data.base64);
+    const bytes = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([bytes], { type: data.mimeType || 'image/png' });
+    const blobUrl = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = blobUrl;
+    });
+  })();
+}
+
+function fillCenterShape(ctx, cx, cy, radius, cfg) {
+  const shape = cfg.voiceCenterShape || 'circle';
+  ctx.fillStyle = cfg.voiceCenterColor;
+  if (shape === 'square') {
+    const size = radius * 1.7;
+    const round = Math.min(size / 2, ((cfg.voiceCenterRound != null ? cfg.voiceCenterRound : 20) / 100) * (size / 2));
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(cx - size/2, cy - size/2, size, size, round); }
+    else { ctx.rect(cx - size/2, cy - size/2, size, size); }
+    ctx.fill();
+  } else if (shape === 'heart') {
+    const s = radius / 60;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 35*s);
+    ctx.bezierCurveTo(cx - 70*s, cy - 30*s, cx - 25*s, cy - 70*s, cx, cy - 30*s);
+    ctx.bezierCurveTo(cx + 25*s, cy - 70*s, cx + 70*s, cy - 30*s, cx, cy + 35*s);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawAudiogramLive(ctx, w, h, dataArray, cfg, guestName) {
+  const cx = w / 2, cy = h / 2;
+  const shape = cfg.voiceShape || 'radial';
+  const font = cfg.voiceFont || 'Segoe UI';
+  const scale = Math.min(w, h) / 720;
+
+  if (shape === 'bars') {
+    const barCount = 32, barW = (w * 0.7) / barCount, startX = w * 0.15, baseY = cy + 130 * scale;
+    ctx.fillStyle = cfg.voiceBarColor;
+    for (let i = 0; i < barCount; i++) {
+      const value = dataArray[i % dataArray.length] / 255;
+      const barH = (10 + value * (h * 0.2 / scale)) * scale;
+      ctx.fillRect(startX + i * barW, baseY - barH, barW * 0.7, barH);
+    }
+    fillCenterShape(ctx, cx, cy, 90 * scale, cfg);
+  } else if (shape === 'pulse') {
+    let avg = 0; for (let i = 0; i < dataArray.length; i++) avg += dataArray[i];
+    avg = avg / dataArray.length / 255;
+    const radius = (100 + avg * 40) * scale;
+    ctx.fillStyle = cfg.voiceBarColor; ctx.globalAlpha = 0.25;
+    ctx.beginPath(); ctx.arc(cx, cy, radius + 20 * scale, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    fillCenterShape(ctx, cx, cy, radius, cfg);
+  } else {
+    const radius = 140 * scale, bars = 48;
+    ctx.strokeStyle = cfg.voiceBarColor; ctx.lineWidth = 5 * scale;
+    for (let i = 0; i < bars; i++) {
+      const value = dataArray[i % dataArray.length] / 255;
+      const angle = (i / bars) * Math.PI * 2;
+      const barLen = (20 + value * 90) * scale;
+      const x1 = cx + Math.cos(angle)*radius, y1 = cy + Math.sin(angle)*radius;
+      const x2 = cx + Math.cos(angle)*(radius+barLen), y2 = cy + Math.sin(angle)*(radius+barLen);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+    fillCenterShape(ctx, cx, cy, radius - 10 * scale, cfg);
+  }
+
+  ctx.fillStyle = cfg.voiceBarColor; ctx.font = `600 ${Math.round(26*scale)}px ${font}, sans-serif`; ctx.textAlign = 'center';
+  ctx.fillText(cfg.voiceLabel, cx, cy - 6 * scale);
+  ctx.font = `400 ${Math.round(15*scale)}px ${font}, sans-serif`; ctx.fillText(guestName, cx, cy + 20 * scale);
+}
+
+// Menimpakan bingkai (custom PNG atau bar bawaan) ke atas foto/video yang
+// sedang di-capture — dipanggil HANYA kalau admin aktifkan "frame otomatis
+// include" untuk jenis media itu.
+function drawCaptureFrameOverlay(ctx, w, h, type) {
+  const cfg = frameConfigCache[type];
+  if (!cfg) return;
+  const customImg = customFrameImgCache[type];
+  if (customImg) { ctx.drawImage(customImg, 0, 0, w, h); return; }
+  drawFrameBar(ctx, w, h, cfg);
+}
+
+// Bar nama mempelai + tanggal gaya bawaan (Elegant/Modern/Floral/Minimalist)
+// — dipisah jadi fungsi sendiri supaya bisa dipanggil langsung dengan cfg
+// (dipakai overlay foto/video, maupun latar VN yang tidak pakai PNG custom).
+function drawFrameBar(ctx, w, h, cfg) {
+  const barH = Math.round(h * 0.12);
+  if (cfg.style === 'minimalist') {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, h - barH, w, barH);
+  } else if (cfg.style === 'modern') {
+    ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(4, w * 0.006);
+    ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
+  } else if (cfg.style === 'floral-simple') {
+    ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
+    ctx.fillStyle = cfg.secondary;
+    const r = Math.max(4, w*0.006);
+    [[16,16],[w-16,16],[16,h-barH-16],[w-16,h-barH-16]].forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
+  } else {
+    ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.003);
+    const pad = w*0.015;
+    ctx.strokeRect(pad, pad, w-pad*2, h-pad*2-barH*0.15);
+  }
+  const centerY = h - barH/2;
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.font = `700 ${Math.round(barH*0.3)}px Georgia, serif`;
+  ctx.fillText(`${cfg.groom} & ${cfg.bride}`, w/2, centerY - barH*0.08);
+  ctx.font = `400 ${Math.round(barH*0.2)}px Segoe UI, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(cfg.date, w/2, centerY + barH*0.28);
+}
+
+function setupModeSwitch(settings) {
+  document.querySelectorAll('#modeSwitch button').forEach(btn => {
+    const mode = btn.dataset.mode;
+    if (mode === 'video' && settings.allow_video !== true) { btn.style.display = 'none'; return; }
+    if (mode === 'voice' && settings.allow_voice !== true) { btn.style.display = 'none'; return; }
+    btn.addEventListener('click', () => switchMode(mode));
+  });
+}
+
+function switchMode(mode) {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  currentMode = mode;
+  resetCapture();
+  clearFilmstrip();
+  document.querySelectorAll('#modeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+
+  document.getElementById('cameraWrap').style.display = mode === 'voice' ? 'none' : 'block';
+  document.getElementById('voiceWrap').style.display = mode === 'voice' ? 'flex' : 'none';
+  document.getElementById('captureRow').style.display = mode === 'voice' ? 'none' : 'flex';
+  document.getElementById('vnControlsIdle').style.display = mode === 'voice' ? 'flex' : 'none';
+  document.getElementById('finishRow').style.display = 'none';
+
+  const shutter = document.getElementById('shutterBtn');
+  shutter.classList.toggle('video-mode', mode === 'video');
+  shutter.disabled = false;
+
+  if (mode === 'voice') { stopCameraStream(); }
+  else { startCamera(); }
+}
+
+async function startCamera() {
+  try {
+    stopCameraStream();
+    const needsAudio = currentMode === 'video';
+    const q = getQuality(currentMode === 'video' ? 'video' : 'photo');
+    liveStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: currentFacing },
+        width: { ideal: q.width },
+        height: { ideal: q.height }
+      },
+      audio: needsAudio ? { echoCancellation:true, noiseSuppression:true } : false
+    });
+    streamHasAudio = liveStream.getAudioTracks().length > 0;
+    liveVideo.srcObject = liveStream;
+    liveVideo.style.filter = activeFilterParams ? approximateCssFromParams(currentMode === 'video' ? activeFilterParams.video : activeFilterParams.photo) : activeFilterCss;
+    liveVideo.classList.toggle('mirrored', currentFacing === 'user');
+  } catch (err) {
+    showStatus('Izin Kamera Diperlukan', 'Kami butuh akses kamera (dan mikrofon untuk mode video) untuk membantumu mengambil momen. Aktifkan izin di pengaturan browser, lalu muat ulang halaman.', true);
+  }
+}
+
+function stopCameraStream() {
+  if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
+}
+
+document.getElementById('flipBtn').addEventListener('click', () => {
+  currentFacing = currentFacing === 'environment' ? 'user' : 'environment';
+  startCamera();
+});
+
+const shutterBtn = document.getElementById('shutterBtn');
+shutterBtn.addEventListener('click', () => {
+  if (currentMode === 'photo') takePhoto();
+  else if (currentMode === 'video') {
+    if (mediaRecorder && mediaRecorder.state === 'recording') stopVideoRecording();
+    else startVideoRecording();
+  }
+});
+
+function takePhoto() {
+  if (photoShots.length >= MAX_SHOTS) return;
+  const vw = liveVideo.videoWidth, vh = liveVideo.videoHeight;
+  photoCanvas.width = vw; photoCanvas.height = vh;
+  const ctx = photoCanvas.getContext('2d');
+  drawWithGuaranteedFilter(ctx, () => {
+    if (currentFacing === 'user') { ctx.save(); ctx.translate(vw, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(liveVideo, 0, 0, vw, vh);
+    if (currentFacing === 'user') ctx.restore();
+  }, vw, vh, false);
+
+  if (autoIncludeFrame.photo) drawCaptureFrameOverlay(ctx, vw, vh, 'photo');
+
+  photoCanvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+
+    // thumbnail ringan (dibuat dari kanvas yang sama, sebelum jepretan
+    // berikutnya menimpanya) — supaya galeri album tetap cepat dimuat
+    // meskipun foto aslinya disimpan tanpa kompresi kuat
+    const thumbCanvas = document.createElement('canvas');
+    const scale = Math.min(1, 480 / vw);
+    thumbCanvas.width = Math.round(vw * scale);
+    thumbCanvas.height = Math.round(vh * scale);
+    thumbCanvas.getContext('2d').drawImage(photoCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+    thumbCanvas.toBlob(thumbBlob => {
+      photoShots.push({ blob, url, thumbBlob });
+      renderFilmstrip();
+
+      if (photoShots.length >= MAX_SHOTS) {
+        shutterBtn.disabled = true;
+        showToast(`Maksimal ${MAX_SHOTS} foto tercapai. Tekan Selesai & Kirim untuk mengirim.`, 'success');
+      }
+      document.getElementById('finishRow').style.display = 'flex';
+    }, 'image/jpeg', 0.8);
+  }, 'image/jpeg', getQuality('photo').jpegQuality);
+}
+
+function renderFilmstrip() {
+  const strip = document.getElementById('filmstrip');
+  strip.innerHTML = '';
+  if (photoShots.length === 0) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+
+  photoShots.forEach((shot, idx) => {
+    const div = document.createElement('div');
+    div.className = 'shot-thumb';
+    div.innerHTML = `<img src="${shot.url}"><button class="remove-shot" onclick="removeShot(${idx})">✕</button>`;
+    strip.appendChild(div);
+  });
+
+  const counter = document.createElement('div');
+  counter.className = 'shot-counter';
+  counter.textContent = `${photoShots.length}/${MAX_SHOTS}`;
+  strip.appendChild(counter);
+}
+
+function removeShot(idx) {
+  URL.revokeObjectURL(photoShots[idx].url);
+  photoShots.splice(idx, 1);
+  renderFilmstrip();
+  shutterBtn.disabled = false;
+  if (photoShots.length === 0) document.getElementById('finishRow').style.display = 'none';
+}
+
+function clearFilmstrip() {
+  photoShots.forEach(s => URL.revokeObjectURL(s.url));
+  photoShots = [];
+  renderFilmstrip();
+  shutterBtn.disabled = false;
+}
+
+document.getElementById('finishBtn').addEventListener('click', sendAllPhotos);
+
+async function sendAllPhotos() {
+  const guestName = document.getElementById('guestName').value.trim();
+  if (!guestName) { showToast('Isi nama kamu dulu ya', 'error'); return; }
+  if (photoShots.length === 0) { showToast('Ambil minimal 1 foto dulu', 'error'); return; }
+
+  showProgress(`Mengirim foto 1/${photoShots.length}...`);
+  let successCount = 0;
+
+  for (let i = 0; i < photoShots.length; i++) {
+    showProgress(`Mengirim foto ${i + 1}/${photoShots.length}...`);
+    try {
+      const base64 = await blobToBase64(photoShots[i].blob);
+      const thumbBase64 = photoShots[i].thumbBlob ? await blobToBase64(photoShots[i].thumbBlob) : null;
+      const payload = {
+        action: 'uploadMedia', wedding_id: weddingId, guest_name: guestName, media_type: 'photo',
+        filename: `photo_${i}.jpg`, mime_type: 'image/jpeg', data: base64,
+        thumb_data: thumbBase64, thumb_mime: 'image/jpeg'
+      };
+      const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
+      const result = await res.json();
+      if (result.success) successCount++;
+    } catch (err) { /* lanjut ke foto berikutnya */ }
+  }
+
+  hideProgress();
+  if (successCount === photoShots.length) showToast(`${successCount} foto berhasil dikirim! 🎉`, 'success');
+  else if (successCount > 0) showToast(`${successCount} dari ${photoShots.length} foto berhasil dikirim.`, 'success');
+  else showToast('Gagal mengirim foto. Periksa koneksi internet kamu.', 'error');
+
+  clearFilmstrip();
+  document.getElementById('finishRow').style.display = 'none';
+}
+
+function captureVideoThumbnail() {
+  return new Promise(resolve => {
+    const vw = liveVideo.videoWidth || 640, vh = liveVideo.videoHeight || 480;
+    const scale = Math.min(1, 480 / vw);
+    const tCanvas = document.createElement('canvas');
+    tCanvas.width = Math.round(vw * scale); tCanvas.height = Math.round(vh * scale);
+    const tctx = tCanvas.getContext('2d');
+    drawWithGuaranteedFilter(tctx, () => {
+      if (currentFacing === 'user') {
+        tctx.save(); tctx.translate(tCanvas.width, 0); tctx.scale(-1, 1);
+        tctx.drawImage(liveVideo, 0, 0, tCanvas.width, tCanvas.height);
+        tctx.restore();
+      } else {
+        tctx.drawImage(liveVideo, 0, 0, tCanvas.width, tCanvas.height);
+      }
+    }, tCanvas.width, tCanvas.height, false);
+    tCanvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.8);
+  });
+}
+
+async function startVideoRecording() {
+  if (!streamHasAudio) {
+    showToast('Mikrofon tidak terdeteksi, video akan direkam tanpa suara.', 'error');
+  }
+  if (activeFilterParams) {
+    // (Sudah dioptimalkan) — perekaman video dengan Filter Pro sekarang
+    // memakai jalur cepat, tidak lagi memproses piksel manual per-frame.
+  } else if (!canvasFilterSupported && activeFilterCss !== 'none') {
+    showToast('Filter tidak didukung penuh di browser ini, video akan direkam tanpa filter.', 'success');
+  }
+  videoThumbBlob = await captureVideoThumbnail();
+  recordedChunks = [];
+  const maxSeconds = Number(weddingSettings.max_video_seconds) || 60;
+  const recordFps = (activeFilterParams && activeFilterParams.video && activeFilterParams.video.fps) || 30;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = liveVideo.videoWidth || 1280;
+  canvas.height = liveVideo.videoHeight || 720;
+  const ctx = canvas.getContext('2d');
+  let drawing = true;
+
+  function drawFrame() {
+    if (!drawing) return;
+    drawWithGuaranteedFilter(ctx, () => {
+      if (currentFacing === 'user') {
+        ctx.save(); ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+        ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+      } else {
+        ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+      }
+    }, canvas.width, canvas.height, true);
+
+    // Vignette ringan untuk video (bukan olah piksel per-titik seperti di
+    // foto — cuma satu gradient sederhana, jadi tetap murah untuk 30fps)
+    if (activeFilterParams && activeFilterParams.video && activeFilterParams.video.vignette) {
+      drawCheapVignette(ctx, canvas.width, canvas.height, activeFilterParams.video.vignette);
+    }
+
+    // Bingkai otomatis (kalau admin aktifkan) — cuma gambar rect+teks atau
+    // satu drawImage PNG, jadi tetap murah untuk dijalankan tiap frame
+    if (autoIncludeFrame.video) drawCaptureFrameOverlay(ctx, canvas.width, canvas.height, 'video');
+
+    requestAnimationFrame(drawFrame);
+  }
+  drawFrame();
+
+  const canvasStream = canvas.captureStream(recordFps);
+  const audioTracks = liveStream.getAudioTracks();
+  const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+
+  mediaRecorder = new MediaRecorder(combined, {
+    mimeType: VIDEO_MIME.mime,
+    videoBitsPerSecond: getQuality('video').videoBitsPerSecond,
+    audioBitsPerSecond: getQuality('video').audioBitsPerSecond
+  });
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    drawing = false;
+    capturedBlob = new Blob(recordedChunks, { type: VIDEO_MIME.mime });
+    capturedMime = VIDEO_MIME.mime; capturedExt = VIDEO_MIME.ext;
+    recordedVideo.src = URL.createObjectURL(capturedBlob);
+    liveVideo.style.display = 'none';
+    recordedVideo.style.display = 'block';
+    showReview();
+  };
+  mediaRecorder.start();
+
+  recordSeconds = 0;
+  document.getElementById('recBadge').style.display = 'flex';
+  shutterBtn.classList.add('recording');
+  updateRecTimer();
+  recordTimer = setInterval(() => {
+    recordSeconds++;
+    updateRecTimer();
+    if (recordSeconds >= maxSeconds) stopVideoRecording();
+  }, 1000);
+}
+
+function stopVideoRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  clearInterval(recordTimer);
+  document.getElementById('recBadge').style.display = 'none';
+  shutterBtn.classList.remove('recording');
+}
+
+function updateRecTimer() { document.getElementById('recTimer').textContent = formatSeconds(recordSeconds); }
+
+function showReview() {
+  document.getElementById('captureRow').style.display = 'none';
+  document.getElementById('reviewRow').style.display = 'flex';
+}
+
+document.getElementById('retakeBtn').addEventListener('click', () => {
+  resetCapture();
+  document.getElementById('captureRow').style.display = 'flex';
+  document.getElementById('reviewRow').style.display = 'none';
+  liveVideo.style.display = 'block';
+  photoCanvas.style.display = 'none';
+  recordedVideo.style.display = 'none';
+  if (!liveStream) startCamera();
+});
+
+document.getElementById('sendMediaBtn').addEventListener('click', () => sendSingleMedia(currentMode));
+
+function resetCapture() { capturedBlob = null; capturedMime = null; capturedExt = null; recordedChunks = []; videoThumbBlob = null; }
+
+const vnOrb = document.getElementById('vnOrb');
+const vnRecordBtn = document.getElementById('vnRecordBtn');
+document.getElementById('vnRedoBtn').addEventListener('click', resetVoice);
+document.getElementById('vnPlayBtn').addEventListener('click', () => {
+  const vp = document.getElementById('vnPlayer');
+  const vvp = document.getElementById('vnVideoPlayer');
+  if (vvp.style.display === 'block') vvp.play(); else vp.play();
+});
+document.getElementById('vnSendBtn').addEventListener('click', () => sendSingleMedia('voice'));
+
+async function startVoiceRecording() {
+  if (autoIncludeFrame.voice) return startVoiceRecordingWithFrame();
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true } });
+    vnChunks = [];
+    vnRecorder = new MediaRecorder(stream, { mimeType: AUDIO_MIME.mime, audioBitsPerSecond: getQuality('voice').audioBitsPerSecond });
+    vnRecorder.ondataavailable = e => vnChunks.push(e.data);
+    vnRecorder.onstop = () => {
+      vnBlob = new Blob(vnChunks, { type: AUDIO_MIME.mime });
+      capturedBlob = vnBlob; capturedMime = AUDIO_MIME.mime; capturedExt = AUDIO_MIME.ext;
+      const vnPlayer = document.getElementById('vnPlayer');
+      vnPlayer.src = URL.createObjectURL(vnBlob);
+      vnPlayer.style.display = 'block';
+      vnOrb.classList.remove('recording');
+      document.getElementById('vnControlsIdle').style.display = 'none';
+      document.getElementById('vnControlsReview').style.display = 'flex';
+      document.getElementById('vnHint').textContent = 'Dengarkan dulu sebelum mengirim';
+      stream.getTracks().forEach(t => t.stop());
+    };
+    vnRecorder.start();
+    vnOrb.classList.add('recording');
+    document.getElementById('vnHint').textContent = 'Sedang merekam...';
+
+    const maxSeconds = Number(weddingSettings.max_voice_seconds) || 60;
+    vnSeconds = 0;
+    updateVnTimer();
+    vnTimer = setInterval(() => {
+      vnSeconds++;
+      updateVnTimer();
+      if (vnSeconds >= maxSeconds) stopVoiceRecording();
+    }, 1000);
+
+    vnRecordBtn.textContent = '■';
+    vnRecordBtn.onclick = stopVoiceRecording;
+  } catch (err) {
+    showToast('Tidak bisa mengakses mikrofon. Periksa izin mikrofon di browser kamu.', 'error');
+  }
+}
+vnRecordBtn.onclick = startVoiceRecording;
+
+// ============================================
+// VN dengan "frame otomatis include" — rekam mikrofon SAMBIL menggambar
+// audiogram+bingkai live ke kanvas, direkam bareng jadi satu file video
+// (bukan audio polos). Preview hasil rekam pun langsung berbentuk video
+// dengan bingkai yang sudah include, sama seperti yang dilihat saat rekam.
+// ============================================
+let vnFrameAudioCtx = null;
+
+async function startVoiceRecordingWithFrame() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true } });
+    const cfg = frameConfigCache.voice || getFrameConfig('voice');
+    const vnRes = getVnResolution();
+    const guestNamePreview = (document.getElementById('guestName').value || 'Tamu').trim();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = vnRes.width; canvas.height = vnRes.height;
+    const ctx = canvas.getContext('2d');
+
+    vnFrameAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = vnFrameAudioCtx.createMediaStreamSource(stream);
+    const analyser = vnFrameAudioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    src.connect(analyser);
+
+    const customImg = customFrameImgCache.voice;
+    let drawing = true;
+    function drawLoop() {
+      if (!drawing) return;
+      analyser.getByteFrequencyData(dataArray);
+      if (customImg) {
+        ctx.drawImage(customImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = cfg.secondary; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = cfg.primary; ctx.globalAlpha = 0.15; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1;
+      }
+      drawAudiogramLive(ctx, canvas.width, canvas.height, dataArray, cfg, guestNamePreview);
+      if (!customImg) drawFrameBar(ctx, canvas.width, canvas.height, cfg);
+      requestAnimationFrame(drawLoop);
+    }
+    drawLoop();
+
+    const canvasStream = canvas.captureStream(30);
+    const combined = new MediaStream([...canvasStream.getVideoTracks(), ...stream.getAudioTracks()]);
+
+    vnChunks = [];
+    vnRecorder = new MediaRecorder(combined, {
+      mimeType: VIDEO_MIME.mime,
+      videoBitsPerSecond: 2500000,
+      audioBitsPerSecond: getQuality('voice').audioBitsPerSecond
+    });
+    vnRecorder.ondataavailable = e => { if (e.data.size > 0) vnChunks.push(e.data); };
+    vnRecorder.onstop = () => {
+      drawing = false;
+      vnBlob = new Blob(vnChunks, { type: VIDEO_MIME.mime });
+      capturedBlob = vnBlob; capturedMime = VIDEO_MIME.mime; capturedExt = VIDEO_MIME.ext;
+      const vnVideoPlayer = document.getElementById('vnVideoPlayer');
+      vnVideoPlayer.src = URL.createObjectURL(vnBlob);
+      vnVideoPlayer.style.display = 'block';
+      vnOrb.classList.remove('recording');
+      document.getElementById('vnControlsIdle').style.display = 'none';
+      document.getElementById('vnControlsReview').style.display = 'flex';
+      document.getElementById('vnHint').textContent = 'Tonton dulu sebelum mengirim';
+      stream.getTracks().forEach(t => t.stop());
+      if (vnFrameAudioCtx) { vnFrameAudioCtx.close().catch(()=>{}); vnFrameAudioCtx = null; }
+    };
+    vnRecorder.start();
+    vnOrb.classList.add('recording');
+    document.getElementById('vnHint').textContent = 'Sedang merekam (dengan bingkai)...';
+
+    const maxSeconds = Number(weddingSettings.max_voice_seconds) || 60;
+    vnSeconds = 0;
+    updateVnTimer();
+    vnTimer = setInterval(() => {
+      vnSeconds++;
+      updateVnTimer();
+      if (vnSeconds >= maxSeconds) stopVoiceRecording();
+    }, 1000);
+
+    vnRecordBtn.textContent = '■';
+    vnRecordBtn.onclick = stopVoiceRecording;
+  } catch (err) {
+    showToast('Tidak bisa mengakses mikrofon. Periksa izin mikrofon di browser kamu.', 'error');
+  }
+}
+
+function stopVoiceRecording() {
+  if (vnRecorder && vnRecorder.state === 'recording') vnRecorder.stop();
+  clearInterval(vnTimer);
+}
+
+function updateVnTimer() { document.getElementById('vnTimer').textContent = formatSeconds(vnSeconds); }
+
+function resetVoice() {
+  capturedBlob = null;
+  const vnPlayer = document.getElementById('vnPlayer');
+  vnPlayer.style.display = 'none';
+  vnPlayer.src = '';
+  const vnVideoPlayer = document.getElementById('vnVideoPlayer');
+  vnVideoPlayer.style.display = 'none';
+  vnVideoPlayer.src = '';
+  document.getElementById('vnControlsReview').style.display = 'none';
+  document.getElementById('vnControlsIdle').style.display = 'flex';
+  document.getElementById('vnHint').textContent = autoIncludeFrame.voice ? 'Tekan tombol merah untuk mulai merekam dengan bingkai' : 'Tekan tombol merah untuk mulai merekam ucapanmu';
+  vnRecordBtn.textContent = '●';
+  vnRecordBtn.onclick = startVoiceRecording;
+  vnSeconds = 0;
+  updateVnTimer();
+}
+
+async function sendSingleMedia(type) {
+  const guestName = document.getElementById('guestName').value.trim();
+  if (!guestName) { showToast('Isi nama kamu dulu ya', 'error'); return; }
+  if (!capturedBlob) { showToast('Ambil video/suara dulu', 'error'); return; }
+
+  const sendBtn = type === 'voice' ? document.getElementById('vnSendBtn') : document.getElementById('sendMediaBtn');
+  sendBtn.disabled = true;
+  const originalText = sendBtn.textContent;
+  sendBtn.textContent = 'Mengirim...';
+  showProgress(type === 'voice' ? 'Mengirim voice note...' : 'Mengirim video...');
+
+  try {
+    const base64 = await blobToBase64(capturedBlob);
+    const thumbBase64 = (type === 'video' && videoThumbBlob) ? await blobToBase64(videoThumbBlob) : null;
+    const payload = {
+      action: 'uploadMedia', wedding_id: weddingId, guest_name: guestName, media_type: type,
+      filename: `capture.${capturedExt}`, mime_type: capturedMime, data: base64,
+      thumb_data: thumbBase64, thumb_mime: 'image/jpeg'
+    };
+    const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
+    const result = await res.json();
+
+    if (result.success) {
+      showToast(result.message || 'Berhasil dikirim! 🎉', 'success');
+      if (type === 'voice') { resetVoice(); }
+      else {
+        resetCapture();
+        document.getElementById('captureRow').style.display = 'flex';
+        document.getElementById('reviewRow').style.display = 'none';
+        liveVideo.style.display = 'block';
+        photoCanvas.style.display = 'none';
+        recordedVideo.style.display = 'none';
+        if (!liveStream) startCamera();
+      }
+    } else {
+      showToast(result.message || 'Gagal mengirim', 'error');
+    }
+  } catch (err) {
+    showToast('Gagal terhubung ke server: ' + err.message, 'error');
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = originalText;
+    hideProgress();
+  }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function showStatus(title, text, showRetry) {
+  document.getElementById('statusScreen').style.display = 'flex';
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusBtn').style.display = showRetry ? 'inline-block' : 'none';
+}
+function hideStatus() { document.getElementById('statusScreen').style.display = 'none'; }
+
+function showToast(text, type) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+function showProgress(text) {
+  document.getElementById('progressText').textContent = text;
+  document.getElementById('progressOverlay').style.display = 'flex';
+}
+function hideProgress() { document.getElementById('progressOverlay').style.display = 'none'; }
+
+function formatSeconds(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0');
+  const sec = String(s % 60).padStart(2, '0');
+  return `${m}:${sec}`;
+}
+function formatDate(d) {
+  try { return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }); }
+  catch (e) { return d; }
+}
+</script>
+</body>
+</html>
