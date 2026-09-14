@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Undangan Pernikahan</title>
-<meta name="description" content="Undangan Pernikahan Digital">
+<title>Uleman Palakrama</title>
+<meta name="description" content="Uleman Palakrama Digital">
 <meta name="theme-color" content="#0e1a13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -285,17 +285,17 @@
   <!-- LOADING -->
   <div id="loading">
     <div class="ring"></div>
-    <p>Menyiapkan undangan…</p>
+    <p>Menyiapkan uleman</p>
   </div>
 
   <!-- WELCOME COVER -->
   <div id="welcome">
-    <span class="eyebrow" id="cv-eyebrow">Undangan Pernikahan</span>
+    <span class="eyebrow" id="cv-eyebrow">Uleman Palakrama</span>
     <div class="cover-frame"><img id="cv-photo" src="" alt=""></div>
     <h1 class="names serif" id="cv-names">— &amp; —</h1>
     <p class="to-label">Kepada Yth. Bapak/Ibu/Saudara/i</p>
     <p class="to-name serif" id="cv-guest">Tamu Undangan</p>
-    <button class="btn solid" id="open-btn" style="margin-top:2rem;">Buka Undangan</button>
+    <button class="btn solid" id="open-btn" style="margin-top:2rem;">Buka Uleman</button>
   </div>
 
   <main id="content" style="visibility:hidden;">
@@ -304,7 +304,7 @@
     <section id="home">
       <img class="bgimg" id="home-bg" src="" alt="">
       <div class="content">
-        <span class="eyebrow" id="hero-eyebrow">Undangan Pernikahan</span>
+        <span class="eyebrow" id="hero-eyebrow">Uleman Palakrama</span>
         <h1 class="names serif" id="hero-names">— &amp; —</h1>
         <p class="date" id="hero-date">—</p>
         <div class="scroll-cue"><div class="line"></div><span class="eyebrow" style="letter-spacing:.2em;">scroll</span></div>
@@ -318,20 +318,24 @@
       <p style="font-size:.88rem; color:var(--muted); margin-top:1rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami.</p>
 
       <div class="couple-card">
+        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
+        <h2 class="serif" id="wanita-nama">—</h2>
+        <p class="role" id="wanita-status">—</p>
+        <p class="parents" id="wanita-ortu">—</p>
+      </div>
+
+      <p class="amp">&amp;</p>
+
+      <div class="couple-card">
         <div class="arch"><img id="pria-foto" src="" alt=""></div>
         <h2 class="serif" id="pria-nama">—</h2>
         <p class="role" id="pria-status">—</p>
         <p class="parents" id="pria-ortu">—</p>
       </div>
 
-      <p class="amp">&amp;</p>
+      
 
-      <div class="couple-card">
-        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
-        <h2 class="serif" id="wanita-nama">—</h2>
-        <p class="role" id="wanita-status">—</p>
-        <p class="parents" id="wanita-ortu">—</p>
-      </div>
+      
     </section>
 
     <!-- QUOTES -->
@@ -496,25 +500,25 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-p
 /* Data cadangan (dipakai jika APPS_SCRIPT_URL belum diisi / API gagal
    diakses), supaya halaman tetap tampil saat development. */
 const FALLBACK_DATA = {
-  judul_hero: "Undangan Pernikahan",
-  nama_panggilan_pria: "Wahyu",
-  nama_panggilan_wanita: "Riski",
-  nama_lengkap_pria: "Wahyu Siapa",
-  nama_lengkap_wanita: "Riski Siapa",
-  status_anak_pria: "Putra ke-1",
-  ayah_pria: "Bapak Lorem Ipsum",
-  ibu_pria: "Ibu Lorem Ipsum",
-  status_anak_wanita: "Putri ke-2",
-  ayah_wanita: "Bapak Lorem Ipsum",
-  ibu_wanita: "Ibu Lorem Ipsum",
-  tanggal_acara_iso: "2026-12-15 10:00:00",
-  tanggal_tampil: "Selasa, 15 Desember 2026",
-  waktu_akad: "08.00 - 10.00 WIB",
-  waktu_resepsi: "11.00 - 14.00 WIB",
-  nama_lokasi: "Gedung Serbaguna Pajerukan",
-  alamat_lokasi: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191",
+  judul_hero: "Uleman Palakrama",
+  nama_panggilan_pria: "Rizky",
+  nama_panggilan_wanita: "Rasya",
+  nama_lengkap_pria: "Rizky Hanifudin, S.Kom., M.Kom.",
+  nama_lengkap_wanita: "Rasya Agistiningtyas",
+  status_anak_pria: "Putra Tunggal",
+  ayah_pria: "Bapak Muchammat Manan",
+  ibu_pria: "Ibu Saminah",
+  status_anak_wanita: "Putri Tunggal",
+  ayah_wanita: "Bapak Slamet Widodo",
+  ibu_wanita: "Ibu Teguh Rahayu",
+  tanggal_acara_iso: "2026-11-16 07:00:00",
+  tanggal_tampil: "Senin, 16 November 2026",
+  waktu_akad: "07.00 - 09.00 WIB",
+  waktu_resepsi: "10.00 - Selesai WIB",
+  nama_lokasi: "Rumah Mempelai Wanita",
+  alamat_lokasi: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
   link_maps: "https://goo.gl/maps/ALZR6FJZU3kxVwN86",
-  dress_code: "Batik dan bersepatu tertutup",
+  dress_code: "Bebas sopan",
   quote_1_teks: "Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah).",
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
   quote_2_teks: "dan sesungguhnya Dialah yang menciptakan pasangan laki-laki dan perempuan,",
@@ -526,9 +530,9 @@ const FALLBACK_DATA = {
   foto_pria_url: "https://picsum.photos/seed/pria/500/500",
   foto_wanita_url: "https://picsum.photos/seed/wanita/500/500",
   galeri_url: "https://picsum.photos/seed/g1/800/600,https://picsum.photos/seed/g2/800/600,https://picsum.photos/seed/g3/800/600,https://picsum.photos/seed/g4/800/600",
-  bank_nama: "Bank Central Asia", bank_rekening: "1234567891234", bank_atas_nama: "Riski Siapa",
-  gift_nama: "Wahyu Siapa", gift_hp: "0812345678",
-  gift_alamat: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191"
+  bank_nama: "Bank Central Asia", bank_rekening: "1234567891234", bank_atas_nama: "Rizky Hanifudin",
+  gift_nama: "Rasya Agistiningtyas", gift_hp: "0812345678",
+  gift_alamat: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256"
 };
 
 let CFG = FALLBACK_DATA;
