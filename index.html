@@ -526,6 +526,7 @@ const FALLBACK_DATA = {
   cerita_1_judul: "Awal Pertemuan", cerita_1_isi: "Tuliskan cerita pertemuan kalian di sini.",
   cerita_2_judul: "Menuju Keseriusan", cerita_2_isi: "Tuliskan cerita proses taaruf/pendekatan kalian di sini.",
   cerita_3_judul: "Menuju Ridha Allah", cerita_3_isi: "Tuliskan cerita lamaran/persiapan pernikahan kalian di sini.",
+  cerita_4_judul: "Menuju Ridha Allah", cerita_4_isi: "Tuliskan cerita lamaran/persiapan pernikahan kalian di sini.",
   foto_cover_url: "https://picsum.photos/seed/cover/600/750",
   foto_pria_url: "https://picsum.photos/seed/pria/500/500",
   foto_wanita_url: "https://picsum.photos/seed/wanita/500/500",
@@ -620,7 +621,8 @@ function renderConfig(cfg){
   const stories = [
     [cfg.cerita_1_judul, cfg.cerita_1_isi],
     [cfg.cerita_2_judul, cfg.cerita_2_isi],
-    [cfg.cerita_3_judul, cfg.cerita_3_isi]
+    [cfg.cerita_3_judul, cfg.cerita_3_isi],
+    [cfg.cerita_4_judul, cfg.cerita_4_isi]
   ].filter(([j,i]) => j || i);
   $('story-list').innerHTML = stories.map(([judul, isi], idx) => `
     <div class="story-item">
