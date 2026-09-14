@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Uleman Palakrama</title>
-<meta name="description" content="Uleman Palakrama Digital">
+<title>Undangan Pernikahan</title>
+<meta name="description" content="Undangan Pernikahan Digital">
 <meta name="theme-color" content="#0e1a13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,8 +37,10 @@
     --line: rgba(201,162,75,0.28);
     --shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
+  /* ---- Preset gaya font (dipilih lewat dashboard > Tampilan Undangan) ---- */
   html[data-font="modern"]{ --font-display:'Poppins',sans-serif; --font-body:'Inter',sans-serif; }
   html[data-font="classic"]{ --font-display:'Playfair Display',serif; --font-body:'Lato',sans-serif; }
+  /* ---- Preset radius/bentuk kartu ---- */
   html[data-radius="tajam"]{ --radius:10px; }
   html[data-radius="lembut"]{ --radius:22px; }
   html[data-radius="bulat"]{ --radius:32px; }
@@ -62,7 +64,7 @@
   h1,h2,h3,.serif{ font-family:var(--font-display); font-weight:500; margin:0; }
   .eyebrow{
     font-family:var(--font-body); font-size:0.7rem; letter-spacing:0.35em;
-    text-transform:uppercase; color:var(--gold); font-weight:500; margin: 5%;
+    text-transform:uppercase; color:var(--gold); font-weight:500;
   }
   .arabic{ font-family:'Amiri',serif; direction:rtl; }
   a{ color:inherit; }
@@ -216,7 +218,6 @@
   .gift-card details{ margin-top:.8rem; }
   .gift-card summary{ font-size:.8rem; color:var(--gold); cursor:pointer; list-style:none; }
   .gift-card summary::-webkit-details-marker{ display:none; }
-  .qris-img{ width:100%; max-width:260px; margin:.8rem auto 0; border-radius:12px; border:1px solid var(--line); }
 
   /* ============ FORM ============ */
   .field{ text-align:left; margin-top:1.1rem; }
@@ -289,7 +290,7 @@
 
   <!-- WELCOME COVER -->
   <div id="welcome">
-    <span class="eyebrow" id="cv-eyebrow">Uleman Palakrama</span>
+    <span class="eyebrow" id="cv-eyebrow">Undangan Pernikahan</span>
     <div class="cover-frame"><img id="cv-photo" src="" alt=""></div>
     <h1 class="names serif" id="cv-names">— &amp; —</h1>
     <p class="to-label">Kepada Yth. Bapak/Ibu/Saudara/i</p>
@@ -303,27 +304,18 @@
     <section id="home">
       <img class="bgimg" id="home-bg" src="" alt="">
       <div class="content">
-        <span class="eyebrow" id="hero-eyebrow">Uleman Palakrama</span>
+        <span class="eyebrow" id="hero-eyebrow">Undangan Pernikahan</span>
         <h1 class="names serif" id="hero-names">— &amp; —</h1>
         <p class="date" id="hero-date">—</p>
         <div class="scroll-cue"><div class="line"></div><span class="eyebrow" style="letter-spacing:.2em;">scroll</span></div>
       </div>
     </section>
 
-    <!-- MEMPELAI — SUSUNAN FILE 1: WANITA DULU, LALU PRIA -->
+    <!-- MEMPELAI -->
     <section id="bride" class="center fade-up">
       <p class="arabic" style="font-size:1.6rem;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
       <h2 class="serif" style="font-size:1.6rem; margin-top:1rem;">Assalamu'alaikum Warahmatullahi Wabarakatuh</h2>
       <p style="font-size:.88rem; color:var(--muted); margin-top:1rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami.</p>
-
-      <div class="couple-card">
-        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
-        <h2 class="serif" id="wanita-nama">—</h2>
-        <p class="role" id="wanita-status">—</p>
-        <p class="parents" id="wanita-ortu">—</p>
-      </div>
-
-      <p class="amp">&amp;</p>
 
       <div class="couple-card">
         <div class="arch"><img id="pria-foto" src="" alt=""></div>
@@ -332,6 +324,14 @@
         <p class="parents" id="pria-ortu">—</p>
       </div>
 
+      <p class="amp">&amp;</p>
+
+      <div class="couple-card">
+        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
+        <h2 class="serif" id="wanita-nama">—</h2>
+        <p class="role" id="wanita-status">—</p>
+        <p class="parents" id="wanita-ortu">—</p>
+      </div>
     </section>
 
     <!-- QUOTES -->
@@ -406,11 +406,6 @@
           <span class="val" id="bank-rekening-2">—</span>
           <button class="copy" data-copy-target="bank-rekening-2">Salin</button>
         </div>
-      </div>
-
-      <div class="gift-card" id="gift-card-qris" style="display:none;">
-        <div class="row"><span>QRIS</span><span class="lbl">Scan</span></div>
-        <img class="qris-img" id="qris-img" src="" alt="QRIS">
       </div>
 
       <div class="gift-card">
@@ -498,54 +493,48 @@
    ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 
-/* Data cadangan — DISESUAIKAN DENGAN fieldvalue.txt */
+/* Data cadangan (dipakai jika APPS_SCRIPT_URL belum diisi / API gagal
+   diakses), supaya halaman tetap tampil saat development. */
 const FALLBACK_DATA = {
-  judul_hero: "Uleman Palakrama",
-  nama_panggilan_pria: "Rizky",
-  nama_panggilan_wanita: "Rasya",
-  nama_lengkap_pria: "Rizky Hanifudin, S.Kom., M.Kom.",
-  nama_lengkap_wanita: "Rasya Agistiningtyas",
-  status_anak_pria: "Putra Tunggal",
-  ayah_pria: "Bapak Muchammat Manan",
-  ibu_pria: "Ibu Saminah",
-  status_anak_wanita: "Putri Tunggal",
-  ayah_wanita: "Bapak Slamet Widodo",
-  ibu_wanita: "Ibu Teguh Rahayu",
-  tanggal_acara_iso: "2026-11-16 7:00:00",
-  tanggal_tampil: "Senin, 16 November 2026",
-  waktu_akad: "07.00 - 09.00 WIB",
-  waktu_resepsi: "09.30 - 22.00 WIB",
-  nama_lokasi: "Rumah Mempelai Wanita",
-  alamat_lokasi: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
-  link_maps: "https://maps.app.goo.gl/ey1uNg347TG7fnYVA",
+  judul_hero: "Undangan Pernikahan",
+  nama_panggilan_pria: "Wahyu",
+  nama_panggilan_wanita: "Riski",
+  nama_lengkap_pria: "Wahyu Siapa",
+  nama_lengkap_wanita: "Riski Siapa",
+  status_anak_pria: "Putra ke-1",
+  ayah_pria: "Bapak Lorem Ipsum",
+  ibu_pria: "Ibu Lorem Ipsum",
+  status_anak_wanita: "Putri ke-2",
+  ayah_wanita: "Bapak Lorem Ipsum",
+  ibu_wanita: "Ibu Lorem Ipsum",
+  tanggal_acara_iso: "2026-12-15 10:00:00",
+  tanggal_tampil: "Selasa, 15 Desember 2026",
+  waktu_akad: "08.00 - 10.00 WIB",
+  waktu_resepsi: "11.00 - 14.00 WIB",
+  nama_lokasi: "Gedung Serbaguna Pajerukan",
+  alamat_lokasi: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191",
+  link_maps: "https://goo.gl/maps/ALZR6FJZU3kxVwN86",
   dress_code: "Batik dan bersepatu tertutup",
   quote_1_teks: "Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah).",
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
-  quote_2_teks: "dan sesungguhnya Dialah yang menciptakan pasangan laki-laki dan perempuan",
+  quote_2_teks: "dan sesungguhnya Dialah yang menciptakan pasangan laki-laki dan perempuan,",
   quote_2_sumber: "QS. An-Najm: 45",
   cerita_1_judul: "Awal Pertemuan", cerita_1_isi: "Tuliskan cerita pertemuan kalian di sini.",
   cerita_2_judul: "Menuju Keseriusan", cerita_2_isi: "Tuliskan cerita proses taaruf/pendekatan kalian di sini.",
   cerita_3_judul: "Menuju Ridha Allah", cerita_3_isi: "Tuliskan cerita lamaran/persiapan pernikahan kalian di sini.",
-  foto_cover_url: "https://blogger.googleusercontent.com/img/a/AVvXsEiAul1qBLweN9RRMQtZhRFcq2OlE10If5zKgCn0iVkqvkXtm1sjqkl6XcMKaTaQ6m_k5qRQKzcxqmdggB8CBe05mrHlGJgFhnq-xkhf2CuvndeM246oIoCUWEIpTLjcXmYYpLAcw7fqdfbCGLlFsJSREctDStr6atGIaqVdVCw4Xm2ZaqkR9sn1MQdtfCYc",
-  foto_pria_url: "https://blogger.googleusercontent.com/img/a/AVvXsEjVtHNNNLeH4tyotlzBtVrXwIcE_Du7AqX9WD1jC15r_Ak8Okveyq-QplH_n4i0LB-w1G_QMW2fpZXQFh9HQ5nDmFNrU4RGuEew2tFELt28COyuKGgv70A2j51_sl6KWTTpmCk91VR0MGtIoHe9qFa4LTTDJjfDnPrjSPFZm6dQzmjJ2Zl8JQJgrIdPwtj3",
-  foto_wanita_url: "https://blogger.googleusercontent.com/img/a/AVvXsEii5_eI39rYxojSEVpNsmY2ruKJdCR0AslVtas9UAKW4Gapb5ekvSc9VYxyMW7s-qQPijLT_X6mqvuRu62U_eR63YmDJvhvzOCpE_FJzI5XzGEIj1HZ9cxqyNckuiCWXCt_UiBDAoJnIjcbQqi7SaDVAAunhR7u9B_iwSVvSTQUVSkzbJTf1lZ5jQtfEU3V",
-  galeri_url: "https://picsum.photos/800/600?random=11,https://picsum.photos/800/600?random=12,https://picsum.photos/800/600?random=13,https://picsum.photos/800/600?random=14",
-  musik_url: "https://raw.githubusercontent.com/rizky-rasya/rizky-rasya.github.io/d95d29873d10cf058330b4556d4e009d9afdf2c1/amplop/KUSUMA%20WIJAYA%20-%20PAWESTRI%20(OFFICIAL%20MUSIC%20VIDEO).mp3",
-  bank_nama: "Bank Central Asia",
-  bank_rekening: "11212515151",
-  bank_atas_nama: "Rasya Agistiningtyas",
-  bank_nama_2: "Bank Central Asia",
-  bank_rekening_2: "11212515151",
-  bank_atas_nama_2: "Rizky Hanifudin",
-  qris_image_url: "https://interactive.co.id/product/images/assets/promo/6a69d185b4c8d-Wednesday,%2029-Jul-2026.jpeg",
-  gift_nama: "Rasya Agistiningtyas",
-  gift_hp: "62812345678",
-  gift_alamat: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
-  base_url: "https://rasya-rizky.online/amplop/"
+  foto_cover_url: "https://picsum.photos/seed/cover/600/750",
+  foto_pria_url: "https://picsum.photos/seed/pria/500/500",
+  foto_wanita_url: "https://picsum.photos/seed/wanita/500/500",
+  galeri_url: "https://picsum.photos/seed/g1/800/600,https://picsum.photos/seed/g2/800/600,https://picsum.photos/seed/g3/800/600,https://picsum.photos/seed/g4/800/600",
+  bank_nama: "Bank Central Asia", bank_rekening: "1234567891234", bank_atas_nama: "Riski Siapa",
+  gift_nama: "Wahyu Siapa", gift_hp: "0812345678",
+  gift_alamat: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191"
 };
 
 let CFG = FALLBACK_DATA;
 
+/* Tema/tampilan bawaan — dipakai kalau API belum diisi / gagal diakses. Sinkron
+   dengan DEFAULT_TEMA di Code.gs supaya pratinjau di dashboard konsisten. */
 const FALLBACK_TEMA = {
   preset_aktif: 'emerald_gold',
   warna_bg_light: '#FAF6EC', warna_surface_light: '#FFFFFF', warna_surface2_light: '#F1EAD9',
@@ -565,6 +554,8 @@ let TEMA = FALLBACK_TEMA;
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const guestName = decodeURIComponent(qs.get('to') || 'Tamu Undangan').replace(/\+/g, ' ');
+// Parameter disamarkan jadi "k" (bukan "id") + isinya token acak (lihat SETUP.md /
+// randomGuestToken_ di Code.gs) — dukung juga "id" lama untuk kompatibilitas mundur.
 const guestId = (qs.get('k') || qs.get('id') || '').trim();
 
 function setText(id, val){ const el = $(id); if(el) el.textContent = (val === undefined || val === null || val === '') ? '-' : val; }
@@ -584,7 +575,7 @@ async function apiGet(action, params){
 async function apiPost(payload){
   const res = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari CORS preflight
     body: JSON.stringify(payload)
   });
   return res.json();
@@ -607,16 +598,15 @@ function renderConfig(cfg){
   setText('hero-names', namaPanggilan);
   setText('hero-date', cfg.tanggal_tampil);
 
-  /* SUSUNAN FILE 1: wanita dulu, lalu pria */
-  setSrc('wanita-foto', cfg.foto_wanita_url);
-  setText('wanita-nama', cfg.nama_lengkap_wanita);
-  setText('wanita-status', cfg.status_anak_wanita);
-  setText('wanita-ortu', `${cfg.ayah_wanita} & ${cfg.ibu_wanita}`);
-
   setSrc('pria-foto', cfg.foto_pria_url);
   setText('pria-nama', cfg.nama_lengkap_pria);
   setText('pria-status', cfg.status_anak_pria);
   setText('pria-ortu', `${cfg.ayah_pria} & ${cfg.ibu_pria}`);
+
+  setSrc('wanita-foto', cfg.foto_wanita_url);
+  setText('wanita-nama', cfg.nama_lengkap_wanita);
+  setText('wanita-status', cfg.status_anak_wanita);
+  setText('wanita-ortu', `${cfg.ayah_wanita} & ${cfg.ibu_wanita}`);
 
   setText('q1-teks', cfg.quote_1_teks);
   setText('q1-sumber', cfg.quote_1_sumber);
@@ -657,17 +647,13 @@ function renderConfig(cfg){
     setText('bank-rekening-2', cfg.bank_rekening_2);
   }
 
-  if(cfg.qris_image_url){
-    $('gift-card-qris').style.display = '';
-    setSrc('qris-img', cfg.qris_image_url);
-  }
-
   setText('gift-nama', cfg.gift_nama);
   setText('gift-hp', cfg.gift_hp);
   setText('gift-alamat', cfg.gift_alamat);
 
   setupMusic(cfg.musik_url);
 
+  // Isi nama di form Ucapan & Doa dari nama_tamu (?to=) di awal, tapi tetap bisa diedit bebas.
   if(guestName && guestName !== 'Tamu Undangan'){
     $('f-nama').value = guestName;
   }
@@ -677,6 +663,10 @@ function renderConfig(cfg){
 
 /* ======================================================================
    MUSIK LATAR
+   Browser memblokir autoplay audio BERSUARA sebelum ada interaksi
+   pengguna. Triknya: coba autoplay dalam kondisi muted (ini diizinkan),
+   lalu begitu tamu menekan "Buka Undangan" (gestur pengguna yang pasti
+   ada), musik langsung di-unmute & diputar dari awal.
    ====================================================================== */
 function setupMusic(url){
   const audio = $('bg-music');
@@ -685,7 +675,7 @@ function setupMusic(url){
 
   audio.src = url;
   audio.muted = true;
-  audio.play().catch(() => {});
+  audio.play().catch(() => {}); // autoplay muted, boleh gagal diam-diam
   btn.style.display = 'flex';
   updateMusicIcon(true);
 
@@ -722,12 +712,12 @@ function startCountdown(isoLike){
 }
 
 /* ======================================================================
-   COMMENTS (UCAPAN & DOA) — FITUR FILE 2
+   COMMENTS (UCAPAN & DOA) — termasuk Ubah/Hapus milik sendiri
    ====================================================================== */
 let commentOffset = 0;
 const COMMENT_PAGE_SIZE = 10;
-let editingComment = null;
-let knownComments = {};
+let editingComment = null; // { comment_id, edit_token } saat form sedang mode ubah
+let knownComments = {};    // cache data komentar (untuk isi ulang form saat "Ubah")
 
 function getMyComments(){
   try{ return JSON.parse(localStorage.getItem('undangan_my_comments') || '{}'); }
@@ -813,7 +803,9 @@ async function loadComments(reset){
 }
 
 /* ======================================================================
-   TEMA / TAMPILAN
+   TEMA / TAMPILAN — dibaca dari sheet PengaturanTema lewat action=config,
+   diatur dari dashboard admin (tab "Tampilan Undangan"), berlaku instan
+   tanpa perlu ubah kode index.html.
    ====================================================================== */
 function applyTema(tema){
   TEMA = { ...FALLBACK_TEMA, ...tema };
@@ -843,6 +835,7 @@ function applyTema(tema){
    INIT
    ====================================================================== */
 async function init(){
+  // Tema: ikuti pilihan tersimpan, kalau belum ada ikuti preferensi sistem
   const savedTheme = localStorage.getItem('undangan-theme');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.setAttribute('data-theme', savedTheme || (systemDark ? 'night' : 'day'));
@@ -871,6 +864,7 @@ $('open-btn').addEventListener('click', () => {
   $('content').style.visibility = 'visible';
   revealOnScroll();
 
+  // Gestur pengguna ini yang dipakai untuk "membuka gerbang" autoplay musik.
   const audio = $('bg-music');
   if(audio.src){
     audio.muted = false;
@@ -914,10 +908,10 @@ $('imgModal').addEventListener('click', (e) => { if(e.target.id === 'imgModal') 
 /* Load more ucapan */
 $('load-more').addEventListener('click', () => loadComments(false));
 
-/* Tampilkan/sembunyikan field Jumlah yang Hadir */
+/* Tampilkan/sembunyikan field Jumlah yang Hadir sesuai pilihan Konfirmasi Kehadiran */
 $('f-presensi').addEventListener('change', toggleJumlahField);
 
-/* Klik "Ubah" / "Hapus" pada ucapan milik sendiri */
+/* Klik "Ubah" / "Hapus" pada ucapan milik sendiri (dideteksi lewat token di localStorage) */
 document.addEventListener('click', async (e) => {
   const editBtn = e.target.closest('.edit-comment-btn');
   if(editBtn){
