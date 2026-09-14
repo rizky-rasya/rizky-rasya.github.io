@@ -37,10 +37,8 @@
     --line: rgba(201,162,75,0.28);
     --shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
-  /* ---- Preset gaya font (dipilih lewat dashboard > Tampilan Undangan) ---- */
   html[data-font="modern"]{ --font-display:'Poppins',sans-serif; --font-body:'Inter',sans-serif; }
   html[data-font="classic"]{ --font-display:'Playfair Display',serif; --font-body:'Lato',sans-serif; }
-  /* ---- Preset radius/bentuk kartu ---- */
   html[data-radius="tajam"]{ --radius:10px; }
   html[data-radius="lembut"]{ --radius:22px; }
   html[data-radius="bulat"]{ --radius:32px; }
@@ -218,6 +216,7 @@
   .gift-card details{ margin-top:.8rem; }
   .gift-card summary{ font-size:.8rem; color:var(--gold); cursor:pointer; list-style:none; }
   .gift-card summary::-webkit-details-marker{ display:none; }
+  .qris-img{ width:100%; max-width:260px; margin:.8rem auto 0; border-radius:12px; border:1px solid var(--line); }
 
   /* ============ FORM ============ */
   .field{ text-align:left; margin-top:1.1rem; }
@@ -233,6 +232,10 @@
   .form-msg{ font-size:.8rem; margin-top:.7rem; min-height:1.2em; }
   .form-msg.ok{ color:#5f9e6b; }
   .form-msg.err{ color:#c4604f; }
+  .edit-banner{
+    background:var(--surface-2); border:1px solid var(--gold); color:var(--gold-soft);
+    font-size:.8rem; padding:.6rem .9rem; border-radius:12px; margin:0 0 1rem;
+  }
 
   .comment{ text-align:left; border-bottom:1px solid var(--line); padding:1rem 0; }
   .comment .head{ display:flex; justify-content:space-between; align-items:baseline; }
@@ -249,6 +252,12 @@
   html[data-theme="night"] .comment .presence.tidak{ background:rgba(224,90,90,.18); color:#ef9a9a; }
   html[data-theme="night"] .comment .presence.ragu{ background:rgba(212,163,35,.2); color:#f0d17a; }
   .comment .text{ font-size:.86rem; color:var(--muted); margin-top:.4rem; line-height:1.6; }
+  .comment .jumlah{ font-size:.75rem; color:var(--muted); margin-top:.2rem; }
+  .comment .my-actions{ margin-top:.5rem; display:flex; gap:.6rem; }
+  .comment .my-actions button{
+    font-size:.72rem; background:none; border:none; color:var(--gold); cursor:pointer; padding:0; text-decoration:underline;
+  }
+  .comment .my-actions button.danger{ color:#c4604f; }
   #load-more{ margin-top:1.3rem; }
   .empty-state{ font-size:.85rem; color:var(--muted); padding:1.4rem 0; }
 
@@ -280,7 +289,7 @@
 
   <!-- WELCOME COVER -->
   <div id="welcome">
-    <span class="eyebrow" id="cv-eyebrow">Undangan Pernikahan</span>
+    <span class="eyebrow" id="cv-eyebrow">Uleman Palakrama</span>
     <div class="cover-frame"><img id="cv-photo" src="" alt=""></div>
     <h1 class="names serif" id="cv-names">— &amp; —</h1>
     <p class="to-label">Kepada Yth. Bapak/Ibu/Saudara/i</p>
@@ -294,14 +303,14 @@
     <section id="home">
       <img class="bgimg" id="home-bg" src="" alt="">
       <div class="content">
-        <span class="eyebrow" id="hero-eyebrow">Undangan Pernikahan</span>
+        <span class="eyebrow" id="hero-eyebrow">Uleman Palakrama</span>
         <h1 class="names serif" id="hero-names">— &amp; —</h1>
         <p class="date" id="hero-date">—</p>
         <div class="scroll-cue"><div class="line"></div><span class="eyebrow" style="letter-spacing:.2em;">scroll</span></div>
       </div>
     </section>
 
-    <!-- MEMPELAI -->
+    <!-- MEMPELAI — SUSUNAN FILE 1: WANITA DULU, LALU PRIA -->
     <section id="bride" class="center fade-up">
       <p class="arabic" style="font-size:1.6rem;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
       <h2 class="serif" style="font-size:1.6rem; margin-top:1rem;">Assalamu'alaikum Warahmatullahi Wabarakatuh</h2>
@@ -399,6 +408,11 @@
         </div>
       </div>
 
+      <div class="gift-card" id="gift-card-qris" style="display:none;">
+        <div class="row"><span>QRIS</span><span class="lbl">Scan</span></div>
+        <img class="qris-img" id="qris-img" src="" alt="QRIS">
+      </div>
+
       <div class="gift-card">
         <div class="row"><span>Kirim Hadiah Fisik</span><span class="lbl">Gift</span></div>
         <div class="row" style="margin-top:.6rem;"><span class="val" id="gift-nama">—</span></div>
@@ -422,6 +436,7 @@
       <h2 class="serif" style="font-size:1.9rem; margin:.5rem 0 1.5rem;">Ucapan &amp; Doa</h2>
 
       <form id="rsvp-form" style="text-align:left;">
+        <p class="edit-banner" id="edit-banner" style="display:none;">✏️ Sedang mengubah ucapan Anda sebelumnya.</p>
         <div class="field">
           <label for="f-nama">Nama</label>
           <input id="f-nama" type="text" maxlength="60" placeholder="Nama Anda" required>
@@ -434,12 +449,17 @@
             <option value="Masih Ragu">Masih Ragu</option>
           </select>
         </div>
+        <div class="field" id="field-jumlah" style="display:none;">
+          <label for="f-jumlah">Jumlah yang Hadir</label>
+          <input id="f-jumlah" type="number" min="1" step="1" placeholder="Termasuk Anda, mis. 2" inputmode="numeric">
+        </div>
         <div class="field">
           <label for="f-ucapan">Ucapan &amp; Doa</label>
           <textarea id="f-ucapan" rows="4" maxlength="1000" placeholder="Tulis ucapan dan doa untuk kedua mempelai" required></textarea>
         </div>
         <div class="submit-row">
           <button type="submit" class="btn solid" id="submit-btn">Kirim</button>
+          <button type="button" class="btn" id="cancel-edit-btn" style="display:none;">Batal</button>
           <p class="form-msg" id="form-msg"></p>
         </div>
       </form>
@@ -478,13 +498,12 @@
    ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 
-/* Data cadangan (dipakai jika APPS_SCRIPT_URL belum diisi / API gagal
-   diakses), supaya halaman tetap tampil saat development. */
+/* Data cadangan — DISESUAIKAN DENGAN fieldvalue.txt */
 const FALLBACK_DATA = {
-  judul_hero: "Undangan Pernikahan",
+  judul_hero: "Uleman Palakrama",
   nama_panggilan_pria: "Rizky",
   nama_panggilan_wanita: "Rasya",
-  nama_lengkap_pria: "Rizky Hanifudin",
+  nama_lengkap_pria: "Rizky Hanifudin, S.Kom., M.Kom.",
   nama_lengkap_wanita: "Rasya Agistiningtyas",
   status_anak_pria: "Putra Tunggal",
   ayah_pria: "Bapak Muchammat Manan",
@@ -492,34 +511,41 @@ const FALLBACK_DATA = {
   status_anak_wanita: "Putri Tunggal",
   ayah_wanita: "Bapak Slamet Widodo",
   ibu_wanita: "Ibu Teguh Rahayu",
-  tanggal_acara_iso: "2026-11-16 07:00:00",
+  tanggal_acara_iso: "2026-11-16 7:00:00",
   tanggal_tampil: "Senin, 16 November 2026",
   waktu_akad: "07.00 - 09.00 WIB",
-  waktu_resepsi: "10.00 - 14.00 WIB",
-  nama_lokasi: "Gedung Serbaguna Pajerukan",
-  alamat_lokasi: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191",
-  link_maps: "https://goo.gl/maps/ALZR6FJZU3kxVwN86",
+  waktu_resepsi: "09.30 - 22.00 WIB",
+  nama_lokasi: "Rumah Mempelai Wanita",
+  alamat_lokasi: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
+  link_maps: "https://maps.app.goo.gl/ey1uNg347TG7fnYVA",
   dress_code: "Batik dan bersepatu tertutup",
   quote_1_teks: "Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah).",
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
-  quote_2_teks: "dan sesungguhnya Dialah yang menciptakan pasangan laki-laki dan perempuan,",
+  quote_2_teks: "dan sesungguhnya Dialah yang menciptakan pasangan laki-laki dan perempuan",
   quote_2_sumber: "QS. An-Najm: 45",
   cerita_1_judul: "Awal Pertemuan", cerita_1_isi: "Tuliskan cerita pertemuan kalian di sini.",
   cerita_2_judul: "Menuju Keseriusan", cerita_2_isi: "Tuliskan cerita proses taaruf/pendekatan kalian di sini.",
   cerita_3_judul: "Menuju Ridha Allah", cerita_3_isi: "Tuliskan cerita lamaran/persiapan pernikahan kalian di sini.",
-  foto_cover_url: "https://picsum.photos/seed/cover/600/750",
-  foto_pria_url: "https://picsum.photos/seed/pria/500/500",
-  foto_wanita_url: "https://picsum.photos/seed/wanita/500/500",
-  galeri_url: "https://picsum.photos/seed/g1/800/600,https://picsum.photos/seed/g2/800/600,https://picsum.photos/seed/g3/800/600,https://picsum.photos/seed/g4/800/600",
-  bank_nama: "Bank Central Asia", bank_rekening: "1234567891234", bank_atas_nama: "Riski Siapa",
-  gift_nama: "Wahyu Siapa", gift_hp: "0812345678",
-  gift_alamat: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191"
+  foto_cover_url: "https://blogger.googleusercontent.com/img/a/AVvXsEiAul1qBLweN9RRMQtZhRFcq2OlE10If5zKgCn0iVkqvkXtm1sjqkl6XcMKaTaQ6m_k5qRQKzcxqmdggB8CBe05mrHlGJgFhnq-xkhf2CuvndeM246oIoCUWEIpTLjcXmYYpLAcw7fqdfbCGLlFsJSREctDStr6atGIaqVdVCw4Xm2ZaqkR9sn1MQdtfCYc",
+  foto_pria_url: "https://blogger.googleusercontent.com/img/a/AVvXsEjVtHNNNLeH4tyotlzBtVrXwIcE_Du7AqX9WD1jC15r_Ak8Okveyq-QplH_n4i0LB-w1G_QMW2fpZXQFh9HQ5nDmFNrU4RGuEew2tFELt28COyuKGgv70A2j51_sl6KWTTpmCk91VR0MGtIoHe9qFa4LTTDJjfDnPrjSPFZm6dQzmjJ2Zl8JQJgrIdPwtj3",
+  foto_wanita_url: "https://blogger.googleusercontent.com/img/a/AVvXsEii5_eI39rYxojSEVpNsmY2ruKJdCR0AslVtas9UAKW4Gapb5ekvSc9VYxyMW7s-qQPijLT_X6mqvuRu62U_eR63YmDJvhvzOCpE_FJzI5XzGEIj1HZ9cxqyNckuiCWXCt_UiBDAoJnIjcbQqi7SaDVAAunhR7u9B_iwSVvSTQUVSkzbJTf1lZ5jQtfEU3V",
+  galeri_url: "https://picsum.photos/800/600?random=11,https://picsum.photos/800/600?random=12,https://picsum.photos/800/600?random=13,https://picsum.photos/800/600?random=14",
+  musik_url: "https://raw.githubusercontent.com/rizky-rasya/rizky-rasya.github.io/d95d29873d10cf058330b4556d4e009d9afdf2c1/amplop/KUSUMA%20WIJAYA%20-%20PAWESTRI%20(OFFICIAL%20MUSIC%20VIDEO).mp3",
+  bank_nama: "Bank Central Asia",
+  bank_rekening: "11212515151",
+  bank_atas_nama: "Rasya Agistiningtyas",
+  bank_nama_2: "Bank Central Asia",
+  bank_rekening_2: "11212515151",
+  bank_atas_nama_2: "Rizky Hanifudin",
+  qris_image_url: "https://interactive.co.id/product/images/assets/promo/6a69d185b4c8d-Wednesday,%2029-Jul-2026.jpeg",
+  gift_nama: "Rasya Agistiningtyas",
+  gift_hp: "62812345678",
+  gift_alamat: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
+  base_url: "https://rasya-rizky.online/amplop/"
 };
 
 let CFG = FALLBACK_DATA;
 
-/* Tema/tampilan bawaan — dipakai kalau API belum diisi / gagal diakses. Sinkron
-   dengan DEFAULT_TEMA di Code.gs supaya pratinjau di dashboard konsisten. */
 const FALLBACK_TEMA = {
   preset_aktif: 'emerald_gold',
   warna_bg_light: '#FAF6EC', warna_surface_light: '#FFFFFF', warna_surface2_light: '#F1EAD9',
@@ -539,8 +565,6 @@ let TEMA = FALLBACK_TEMA;
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const guestName = decodeURIComponent(qs.get('to') || 'Tamu Undangan').replace(/\+/g, ' ');
-// Parameter disamarkan jadi "k" (bukan "id") + isinya token acak (lihat SETUP.md /
-// randomGuestToken_ di Code.gs) — dukung juga "id" lama untuk kompatibilitas mundur.
 const guestId = (qs.get('k') || qs.get('id') || '').trim();
 
 function setText(id, val){ const el = $(id); if(el) el.textContent = (val === undefined || val === null || val === '') ? '-' : val; }
@@ -560,7 +584,7 @@ async function apiGet(action, params){
 async function apiPost(payload){
   const res = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari CORS preflight
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
   });
   return res.json();
@@ -583,15 +607,16 @@ function renderConfig(cfg){
   setText('hero-names', namaPanggilan);
   setText('hero-date', cfg.tanggal_tampil);
 
-  setSrc('pria-foto', cfg.foto_pria_url);
-  setText('pria-nama', cfg.nama_lengkap_pria);
-  setText('pria-status', cfg.status_anak_pria);
-  setText('pria-ortu', `${cfg.ayah_pria} & ${cfg.ibu_pria}`);
-
+  /* SUSUNAN FILE 1: wanita dulu, lalu pria */
   setSrc('wanita-foto', cfg.foto_wanita_url);
   setText('wanita-nama', cfg.nama_lengkap_wanita);
   setText('wanita-status', cfg.status_anak_wanita);
   setText('wanita-ortu', `${cfg.ayah_wanita} & ${cfg.ibu_wanita}`);
+
+  setSrc('pria-foto', cfg.foto_pria_url);
+  setText('pria-nama', cfg.nama_lengkap_pria);
+  setText('pria-status', cfg.status_anak_pria);
+  setText('pria-ortu', `${cfg.ayah_pria} & ${cfg.ibu_pria}`);
 
   setText('q1-teks', cfg.quote_1_teks);
   setText('q1-sumber', cfg.quote_1_sumber);
@@ -632,13 +657,17 @@ function renderConfig(cfg){
     setText('bank-rekening-2', cfg.bank_rekening_2);
   }
 
+  if(cfg.qris_image_url){
+    $('gift-card-qris').style.display = '';
+    setSrc('qris-img', cfg.qris_image_url);
+  }
+
   setText('gift-nama', cfg.gift_nama);
   setText('gift-hp', cfg.gift_hp);
   setText('gift-alamat', cfg.gift_alamat);
 
   setupMusic(cfg.musik_url);
 
-  // Isi nama di form Ucapan & Doa dari nama_tamu (?to=) di awal, tapi tetap bisa diedit bebas.
   if(guestName && guestName !== 'Tamu Undangan'){
     $('f-nama').value = guestName;
   }
@@ -648,10 +677,6 @@ function renderConfig(cfg){
 
 /* ======================================================================
    MUSIK LATAR
-   Browser memblokir autoplay audio BERSUARA sebelum ada interaksi
-   pengguna. Triknya: coba autoplay dalam kondisi muted (ini diizinkan),
-   lalu begitu tamu menekan "Buka Undangan" (gestur pengguna yang pasti
-   ada), musik langsung di-unmute & diputar dari awal.
    ====================================================================== */
 function setupMusic(url){
   const audio = $('bg-music');
@@ -660,7 +685,7 @@ function setupMusic(url){
 
   audio.src = url;
   audio.muted = true;
-  audio.play().catch(() => {}); // autoplay muted, boleh gagal diam-diam
+  audio.play().catch(() => {});
   btn.style.display = 'flex';
   updateMusicIcon(true);
 
@@ -697,10 +722,27 @@ function startCountdown(isoLike){
 }
 
 /* ======================================================================
-   COMMENTS (UCAPAN & DOA)
+   COMMENTS (UCAPAN & DOA) — FITUR FILE 2
    ====================================================================== */
 let commentOffset = 0;
 const COMMENT_PAGE_SIZE = 10;
+let editingComment = null;
+let knownComments = {};
+
+function getMyComments(){
+  try{ return JSON.parse(localStorage.getItem('undangan_my_comments') || '{}'); }
+  catch(e){ return {}; }
+}
+function saveMyComment(commentId, editToken){
+  const bank = getMyComments();
+  bank[commentId] = editToken;
+  localStorage.setItem('undangan_my_comments', JSON.stringify(bank));
+}
+function removeMyComment(commentId){
+  const bank = getMyComments();
+  delete bank[commentId];
+  localStorage.setItem('undangan_my_comments', JSON.stringify(bank));
+}
 
 function renderComments(items, append){
   const list = $('comments-list');
@@ -709,17 +751,45 @@ function renderComments(items, append){
     list.innerHTML = '<p class="empty-state">Jadilah yang pertama memberi ucapan &amp; doa.</p>';
     return;
   }
+  const myBank = getMyComments();
   const html = items.map(c => {
     const when = c.timestamp ? new Date(c.timestamp).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }) : '';
     const presenceClass = c.presensi === 'Hadir' ? 'hadir' : c.presensi === 'Tidak Hadir' ? 'tidak' : c.presensi === 'Masih Ragu' ? 'ragu' : '';
+    const isMine = c.comment_id && myBank[c.comment_id];
+    const jumlahLine = (c.presensi === 'Hadir' && c.jumlah_hadir) ? `<p class="jumlah">👥 ${c.jumlah_hadir} orang akan hadir</p>` : '';
+    const actions = isMine ? `
+      <div class="my-actions">
+        <button type="button" class="edit-comment-btn" data-id="${c.comment_id}">Ubah</button>
+        <button type="button" class="danger delete-comment-btn" data-id="${c.comment_id}">Hapus</button>
+      </div>` : '';
     return `
     <div class="comment">
       <div class="head"><span class="name serif">${escapeHtml(c.nama)}</span><span class="when">${when}</span></div>
       ${c.presensi ? `<span class="presence ${presenceClass}">${escapeHtml(c.presensi)}</span>` : ''}
+      ${jumlahLine}
       <p class="text">${escapeHtml(c.ucapan_doa)}</p>
+      ${actions}
     </div>`;
   }).join('');
   list.insertAdjacentHTML('beforeend', html);
+  items.forEach(c => { if(c.comment_id) knownComments[c.comment_id] = c; });
+}
+
+function toggleJumlahField(){
+  const show = $('f-presensi').value === 'Hadir';
+  $('field-jumlah').style.display = show ? '' : 'none';
+  $('f-jumlah').required = show;
+  if(!show) $('f-jumlah').value = '';
+}
+
+function resetFormToCreateMode(){
+  editingComment = null;
+  $('rsvp-form').reset();
+  toggleJumlahField();
+  $('edit-banner').style.display = 'none';
+  $('cancel-edit-btn').style.display = 'none';
+  $('submit-btn').textContent = 'Kirim';
+  $('form-msg').textContent = '';
 }
 
 function escapeHtml(str){
@@ -743,9 +813,7 @@ async function loadComments(reset){
 }
 
 /* ======================================================================
-   TEMA / TAMPILAN — dibaca dari sheet PengaturanTema lewat action=config,
-   diatur dari dashboard admin (tab "Tampilan Undangan"), berlaku instan
-   tanpa perlu ubah kode index.html.
+   TEMA / TAMPILAN
    ====================================================================== */
 function applyTema(tema){
   TEMA = { ...FALLBACK_TEMA, ...tema };
@@ -775,7 +843,6 @@ function applyTema(tema){
    INIT
    ====================================================================== */
 async function init(){
-  // Tema: ikuti pilihan tersimpan, kalau belum ada ikuti preferensi sistem
   const savedTheme = localStorage.getItem('undangan-theme');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.setAttribute('data-theme', savedTheme || (systemDark ? 'night' : 'day'));
@@ -791,6 +858,7 @@ async function init(){
     // pakai FALLBACK_DATA / FALLBACK_TEMA
   }
   renderConfig(CFG);
+  toggleJumlahField();
   loadComments(true);
 
   $('loading').style.opacity = '0';
@@ -803,7 +871,6 @@ $('open-btn').addEventListener('click', () => {
   $('content').style.visibility = 'visible';
   revealOnScroll();
 
-  // Gestur pengguna ini yang dipakai untuk "membuka gerbang" autoplay musik.
   const audio = $('bg-music');
   if(audio.src){
     audio.muted = false;
@@ -847,11 +914,61 @@ $('imgModal').addEventListener('click', (e) => { if(e.target.id === 'imgModal') 
 /* Load more ucapan */
 $('load-more').addEventListener('click', () => loadComments(false));
 
-/* Kirim ucapan & doa */
+/* Tampilkan/sembunyikan field Jumlah yang Hadir */
+$('f-presensi').addEventListener('change', toggleJumlahField);
+
+/* Klik "Ubah" / "Hapus" pada ucapan milik sendiri */
+document.addEventListener('click', async (e) => {
+  const editBtn = e.target.closest('.edit-comment-btn');
+  if(editBtn){
+    const id = editBtn.dataset.id;
+    const c = knownComments[id];
+    const bank = getMyComments();
+    if(!c || !bank[id]) return;
+    editingComment = { comment_id: id, edit_token: bank[id] };
+    $('f-nama').value = c.nama;
+    $('f-presensi').value = c.presensi || 'Hadir';
+    toggleJumlahField();
+    $('f-jumlah').value = c.jumlah_hadir || '';
+    $('f-ucapan').value = c.ucapan_doa;
+    $('edit-banner').style.display = '';
+    $('cancel-edit-btn').style.display = 'inline-block';
+    $('submit-btn').textContent = 'Simpan Perubahan';
+    $('form-msg').textContent = '';
+    $('rsvp-form').scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+
+  const delBtn = e.target.closest('.delete-comment-btn');
+  if(delBtn){
+    const id = delBtn.dataset.id;
+    const bank = getMyComments();
+    const editToken = bank[id];
+    if(!editToken) return;
+    if(!confirm('Hapus ucapan & doa ini? Tindakan ini tidak bisa dibatalkan.')) return;
+    try{
+      const res = await apiPost({ action: 'delete_comment', comment_id: id, edit_token: editToken });
+      if(res.ok){
+        removeMyComment(id);
+        if(editingComment && editingComment.comment_id === id) resetFormToCreateMode();
+        loadComments(true);
+      } else {
+        alert(res.error || 'Gagal menghapus ucapan.');
+      }
+    } catch(err){
+      alert('Tidak dapat terhubung ke server.');
+    }
+  }
+});
+
+$('cancel-edit-btn').addEventListener('click', resetFormToCreateMode);
+
+/* Kirim / ubah ucapan & doa */
 $('rsvp-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const nama = $('f-nama').value.trim();
   const presensi = $('f-presensi').value;
+  const jumlahHadir = presensi === 'Hadir' ? (parseInt($('f-jumlah').value, 10) || null) : null;
   const ucapan = $('f-ucapan').value.trim();
   const msg = $('form-msg');
   const btn = $('submit-btn');
@@ -864,16 +981,30 @@ $('rsvp-form').addEventListener('submit', async (e) => {
 
   btn.disabled = true;
   const oldLabel = btn.textContent;
-  btn.textContent = 'Mengirim…';
+  btn.textContent = editingComment ? 'Menyimpan…' : 'Mengirim…';
   msg.textContent = '';
+  let succeeded = false;
 
   try{
-    const res = await apiPost({ action: 'comment', nama, presensi, ucapan_doa: ucapan, id_tamu: guestId });
+    let res;
+    if(editingComment){
+      res = await apiPost({
+        action: 'edit_comment', comment_id: editingComment.comment_id, edit_token: editingComment.edit_token,
+        nama, presensi, jumlah_hadir: jumlahHadir, ucapan_doa: ucapan
+      });
+    } else {
+      res = await apiPost({ action: 'comment', nama, presensi, jumlah_hadir: jumlahHadir, ucapan_doa: ucapan, id_tamu: guestId });
+    }
+
     if(res.ok){
-      msg.textContent = 'Terima kasih atas doa & ucapannya.';
+      if(!editingComment && res.comment_id && res.edit_token){
+        saveMyComment(res.comment_id, res.edit_token);
+      }
+      msg.textContent = editingComment ? 'Ucapan & doa berhasil diperbarui.' : 'Terima kasih atas doa & ucapannya.';
       msg.className = 'form-msg ok';
-      $('rsvp-form').reset();
+      resetFormToCreateMode();
       loadComments(true);
+      succeeded = true;
     } else {
       msg.textContent = res.error || 'Gagal mengirim, silakan coba lagi.';
       msg.className = 'form-msg err';
@@ -883,7 +1014,7 @@ $('rsvp-form').addEventListener('submit', async (e) => {
     msg.className = 'form-msg err';
   } finally {
     btn.disabled = false;
-    btn.textContent = oldLabel;
+    if(!succeeded) btn.textContent = oldLabel;
   }
 });
 

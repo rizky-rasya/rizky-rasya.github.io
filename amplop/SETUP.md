@@ -73,29 +73,35 @@ Import **`sheet-template/NamaTamuUndangan.csv`**.
 
 - **Kolom `jenis_tamu`**: buat data validation dengan pilihan mis. `Keluarga, Teman Kantor, Teman Kuliah, Tetangga, VIP`. Dipakai untuk filter jenis tamu di dashboard.
 - **Kolom `nomor_hp`**: isi manual, boleh format `08xxx` atau `+62xxx` — dashboard otomatis menormalkannya jadi `62xxx` saat kirim WA.
-- **Kolom `id_tamu`**: ID unik per tamu yang ikut tertanam di `link_undangan` (`&id=...`). Inilah yang membuat sistem tetap tahu link itu punya siapa, **walaupun tamu mengetik nama lain** saat mengisi Ucapan & Doa — jadi absensinya tetap tercatat ke baris tamu yang benar.
-- **Kolom `link_undangan`**: dibuat otomatis oleh rumus di bawah, sudah menyertakan `id_tamu`.
+- **Kolom `id_tamu`**: token **acak** (bukan angka urut!) yang ikut tertanam di `link_undangan` sebagai `&k=...`. Inilah yang membuat sistem tetap tahu link itu punya siapa, **walaupun tamu mengetik nama lain** saat mengisi Ucapan & Doa. Diisi **otomatis oleh Apps Script**, bukan rumus sheet (lihat langkah di bawah) — supaya nilainya benar-benar acak dan tidak bisa ditebak/diurutkan seperti `T1`, `T2`, dst.
+- **Kolom `link_undangan`**: dibuat otomatis oleh rumus di bawah, menyertakan `id_tamu` lewat parameter `k` (sengaja bukan `id` supaya tidak terlihat seperti "pengenal tamu" bagi orang iseng yang membaca URL).
 - **Kolom `status_kirim`**: isi `FALSE` untuk baris baru, lalu jadikan checkbox (select kolom > Data > Data validation > Criteria "Checkbox"). Kolom ini **disimpan di sheet**, jadi statusnya sama persis di perangkat/browser mana pun Anda buka dashboard.
 - **Kolom `tanggal_kirim`**: dikosongkan, terisi otomatis.
-- **Kolom `status_absen`**: dikosongkan, terisi otomatis (`Hadir` / `Tidak Hadir` / `Masih Ragu`) begitu tamu dengan `id_tamu` itu mengisi form Ucapan & Doa di situs publik — terlepas dari nama apa yang mereka ketik di form.
+- **Kolom `status_absen`**: dikosongkan, terisi otomatis (`Hadir` / `Tidak Hadir` / `Masih Ragu`) begitu tamu dengan `id_tamu` itu mengisi form Ucapan & Doa di situs publik — terlepas dari nama apa yang mereka ketik di form. Dibatasi cooldown 30 detik per token supaya tidak bisa dibanjiri update beruntun.
 - **Kolom `tanggal_absen`**: dikosongkan, terisi otomatis bersamaan dengan `status_absen`.
 - Header ini dibaca **dinamis** oleh backend (huruf besar/kecil & spasi tidak masalah, otomatis dinormalkan), jadi kalau susunan kolom di sheet Anda sedikit berbeda, backend tetap menyesuaikan selama nama kolomnya sama secara makna.
 
-**Rumus (contoh kalau urutan kolom: A=no, B=nama_tamu, C=jenis_tamu, D=nomor_hp, E=id_tamu, F=link_undangan):**
-1. Buat **Named Range** `base_url` dari sheet `DataMempelai`.
-2. Di sel **E2** (`id_tamu`) — ID stabil berbasis nomor baris, tidak berubah walau nama/HP diedit:
+**Langkah pengisian:**
+1. Isi kolom `no`, `nama_tamu`, `jenis_tamu`, `nomor_hp` seperti biasa. **Biarkan `id_tamu` kosong dulu.**
+2. Buat **Named Range** `base_url` dari sheet `DataMempelai`.
+3. Di sel **F2** (`link_undangan`, sesuaikan kalau urutan kolom Anda beda), sertakan `id_tamu` lewat parameter `k`:
    ```
-   ="T"&ROW()
+   =base_url&"?to="&ENCODEURL(B2)&"&k="&E2
    ```
-3. Di sel **F2** (`link_undangan`), sertakan `id_tamu` sebagai parameter `id`:
-   ```
-   =base_url&"?to="&ENCODEURL(B2)&"&id="&E2
-   ```
-4. Tarik `E2:F2` ke bawah untuk semua baris tamu. **Penting:** kalau sheet Anda sudah pernah mengirim undangan dengan link_undangan versi lama (tanpa `&id=...`), link lama itu tetap berfungsi untuk menampilkan undangan — hanya saja absensi dari link lama itu tidak akan otomatis terhubung ke baris tamunya (tetap tercatat normal di `KonfirmasiTamuUndangan`, cuma `status_absen` di baris itu tidak ikut ter-update).
+   Tarik ke bawah untuk semua baris.
+4. Buka **Extensions > Apps Script** di spreadsheet Anda, pilih fungsi **`generateMissingGuestIds`** dari dropdown toolbar, klik **Run**. Ini mengisi `id_tamu` untuk semua baris yang masih kosong dengan token acak (format seperti `xJ3kQ9zP-a1B`, bukan `T1`/`T2`) — sekali jalan, dan aman dijalankan ulang kapan pun setelah menambah tamu baru (baris yang sudah punya id tidak akan ditimpa).
+5. Setelah itu, kolom `link_undangan` otomatis lengkap dengan token acaknya.
+
+> Kalau sheet Anda **sudah terlanjur** memakai id lama yang berurutan (`T1`, `T2`, ...) dan **belum ada undangan yang benar-benar terkirim** ke tamu asli, jalankan **`regenerateAllGuestIds`** sekali (juga dari dropdown fungsi Apps Script) untuk mengganti SEMUA id jadi token acak baru sekaligus. Kalau sudah ada tamu yang menerima link lamanya, regenerate akan memutus deteksi-absen-otomatis untuk link yang sudah terkirim itu (linknya tetap bisa dibuka, cuma bagian absen-otomatisnya yang perlu link baru dikirim ulang).
 
 ### c. `KonfirmasiTamuUndangan`
-Kolom: `timestamp | nama | presensi | ucapan_doa`
+Kolom: `timestamp | comment_id | nama | presensi | jumlah_hadir | ucapan_doa | edit_token | id_tamu`
 Import **`sheet-template/KonfirmasiTamuUndangan.csv`** (cukup header — baris di bawahnya terisi otomatis dari form "Ucapan & Doa" di situs publik).
+
+- **`comment_id`**: token acak, ditampilkan ke publik lewat daftar ucapan (dipakai untuk menunjuk "ucapan yang mana").
+- **`jumlah_hadir`**: hanya terisi kalau tamu memilih presensi **Hadir**; kosong untuk Tidak Hadir/Masih Ragu.
+- **`edit_token`**: token rahasia terpisah, **tidak pernah** ditampilkan ke publik — hanya dikirim sekali ke pengirimnya sendiri (disimpan di localStorage browser mereka) supaya nanti mereka bisa **Ubah**/**Hapus** ucapannya sendiri lewat situs publik. Tanpa token yang cocok, permintaan ubah/hapus ditolak server — jadi orang lain tidak bisa mengubah/menghapus ucapan siapa pun selain miliknya.
+- **`id_tamu`**: disalin dari link undangan yang dipakai tamu saat mengisi (kalau ada), dipakai untuk tetap memperbarui `status_absen` di `NamaTamuUndangan` kalau ucapan itu diedit presensinya nanti.
 
 ### d. `AkunAdmin` — kredensial login dashboard
 Kolom: `username | password`
@@ -137,6 +143,12 @@ Import **`sheet-template/AkunAdmin.csv`**, lalu **ganti password contohnya** den
    ```
    Nama di `?to=` inilah yang otomatis muncul di "Kepada Yth. Bapak/Ibu/Saudara/i" pada halaman sampul undangan.
 
+### Ucapan & Doa — jumlah hadir, ubah, dan hapus
+
+Saat tamu memilih **Hadir** di form Ucapan & Doa, muncul field tambahan **"Jumlah yang Hadir"** (minimal 1, tanpa batas atas) — hilang otomatis kalau mereka pilih Tidak Hadir/Masih Ragu, karena memang tidak relevan.
+
+Setelah mengirim, tamu bisa **Ubah** atau **Hapus** ucapannya sendiri kapan saja — tombolnya otomatis muncul di kartu ucapan miliknya sendiri (dideteksi lewat token tersimpan di browser mereka, bukan lewat login). Kalau mereka membuka situs dari **browser/perangkat lain**, tombol itu tidak akan muncul (token hanya ada di perangkat tempat mereka pertama mengirim) — itu wajar dan sesuai desain keamanannya.
+
 ---
 
 ## 4. Pakai `dashboard.html`
@@ -147,16 +159,23 @@ Import **`sheet-template/AkunAdmin.csv`**, lalu **ganti password contohnya** den
 
 Buka file, login dengan username/password dari sheet `AkunAdmin`. Sesi berlaku **6 jam**, setelah itu Anda perlu login ulang (server menolak token lama secara otomatis).
 
-Ada 4 halaman lewat sidebar:
+Ada 5 halaman lewat sidebar:
 
-**Dashboard** — kartu statistik Total Tamu, Hadir, Tidak Hadir, Masih Ragu (dengan persentase dari total yang merespons), Sudah Kirim WA, Belum Kirim WA, plus 5 ucapan/doa terbaru.
+**Dashboard** — kartu statistik Total Tamu, Hadir, Tidak Hadir, Masih Ragu (dengan persentase dari total yang merespons), Sudah Kirim WA, Belum Kirim WA, plus panel **Konfirmasi Terbaru** (10 ucapan terbaru secara default, dengan kontrol paginasi — lihat di bawah).
 
-**Daftar Tamu** — tabel tamu dari `NamaTamuUndangan`, bisa difilter per jenis tamu & dicari namanya. Status WA (Sudah/Belum) diambil langsung dari sheet.
+**Daftar Tamu** — tabel tamu dari `NamaTamuUndangan`, dengan:
+- Dropdown **filter Jenis Tamu**, otomatis berisi semua jenis yang pernah diketik di sheet (bertambah sendiri tiap ada jenis baru).
+- Tombol **➕ Tambah Tamu** — buka form Nama, Jenis Tamu, No HP. `id_tamu` dan `link_undangan` dibuat otomatis.
+- Kolom Aksi **✏️ Ubah** / **🗑️ Hapus** per baris.
+- Field **Jenis Tamu** di form Tambah/Ubah berupa kombobox: kalau belum ada riwayat jenis tamu, ketik manual bebas; begitu ada riwayat, mengetik akan memunculkan saran dari jenis-jenis yang sudah pernah dipakai (boleh pilih salah satu, atau tetap ketik yang baru sama sekali).
+- **10 tamu terbaru** ditampilkan lebih dulu (default), dengan kontrol paginasi (lihat di bawah).
 
-**Kirim WA** — sama seperti Daftar Tamu, tambah kolom Aksi:
+**Kirim WA** — sama seperti Daftar Tamu (filter dropdown dari sheet, 10 terbaru + paginasi), tambah kolom Aksi:
 - Tombol **Kirim** per tamu — membuka WhatsApp dengan pesan terisi dari Template, lalu status otomatis tersimpan ke sheet.
 - **Kirim Semua** — mengirim ke semua tamu belum terkirim sesuai filter/pencarian aktif. **Catatan penting:** WhatsApp tidak punya API kirim massal gratis, dan browser bisa memblokir banyak `window.open` berturut-turut dalam satu aksi — kalau Anda perhatikan ada tab WA yang tidak terbuka padahal statusnya sudah "sudah dikirim", buka ulang manual dari tombol Kirim per baris untuk tamu itu. Untuk jumlah tamu banyak, kirim per beberapa puluh sekaligus lebih aman daripada sekali klik untuk ratusan.
 - **Reset Status** — mengembalikan status_kirim semua tamu ke "Belum" di sheet (ada konfirmasi, tidak bisa dibatalkan).
+
+**Paginasi** (Dashboard > Konfirmasi Terbaru, Daftar Tamu, Kirim WA): tiap panel punya kontrol jumlah baris per halaman — **10 / 50 / 100 / All** — plus tombol **‹ Sebelumnya** dan **Berikutnya ›**. Defaultnya 10 baris terbaru.
 
 **Template Pesan** — edit format pesan WA, tersimpan ke sheet `DataMempelai` (field `template_pesan_wa`), jadi konsisten dipakai baik dibuka dari perangkat mana pun. Variabel yang tersedia:
 
@@ -173,6 +192,24 @@ Ada 4 halaman lewat sidebar:
 | `$dress_code` | |
 
 Klik tombol variabel untuk menyisipkan ke posisi kursor, **Pratinjau** untuk melihat hasil dengan contoh data, **Simpan Template** untuk menyimpan ke sheet.
+
+---
+
+## Tab "Tampilan Undangan" — atur warna, bentuk & font dari dashboard
+
+Semua pengaturan di tab ini disimpan di sheet **`PengaturanTema`** (dibuat otomatis saat pertama kali klik "Simpan Tampilan" — tidak perlu dibuat manual), dan langsung dipakai oleh `index.html` setiap kali situs undangan dimuat/di-refresh. Tidak perlu upload ulang file apa pun setelah menyimpan.
+
+**Preset Tema** — 4 pilihan siap pakai (Emerald Gold, Rose Blush, Ocean Teal, Midnight Mono), masing-masing dengan palet warna terpisah untuk mode terang & gelap. Klik salah satu untuk langsung menerapkannya; kartu "Kustom" otomatis aktif begitu Anda mengubah warna apa pun secara manual.
+
+**Pratinjau** — kotak mockup kecil (judul, kartu kutipan, angka hitung mundur, tombol) yang mengikuti warna/bentuk/font yang sedang dipilih secara langsung, dengan toggle Mode Terang/Gelap untuk mengecek keduanya sebelum disimpan.
+
+**Warna Kustom** — 7 warna untuk mode terang dan 7 untuk mode gelap (Latar Belakang, Kartu/Permukaan, Permukaan Sekunder, Teks Utama, Teks Redup, Aksen/Emas, Aksen Lembut), masing-masing bisa diisi lewat color-picker atau ketik kode hex langsung. Warna garis/border tipis di seluruh situs dihitung otomatis dari warna Aksen (tidak perlu diatur terpisah).
+
+**Bentuk & Tipografi**:
+- *Bentuk sudut* — Tajam / Lembut / Bulat, berlaku ke kartu kutipan, kartu acara, kartu lokasi, kartu hadiah, dan sedikit ke sudut bawah bingkai foto (bagian atas bingkai foto yang melengkung seperti kubah sengaja dipertahankan di semua preset sebagai ciri khas desain).
+- *Gaya font* — Elegant (Cormorant Garamond + Jost, bawaan), Modern (Poppins + Inter), Klasik (Playfair Display + Lato). Teks Arab (ayat Al-Qur'an) tetap memakai font Amiri di semua pilihan.
+
+Klik **Simpan Tampilan** untuk menyimpannya ke sheet, atau **Reset ke Preset Bawaan** untuk kembali ke Emerald Gold tanpa menyimpan.
 
 ---
 

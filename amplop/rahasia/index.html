@@ -817,6 +817,41 @@
         .color-item .row{ display:flex; align-items:center; gap:0.4rem; }
         .color-item input[type=color]{ width:34px; height:34px; border:1px solid var(--border); border-radius:8px; padding:0; cursor:pointer; background:none; flex:none; }
         .color-item input[type=text]{ flex:1; min-width:0; font-size:0.72rem; padding:0.4rem 0.5rem; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-family:monospace; }
+
+        /* ===== PAGINASI ===== */
+        .pagination-bar{
+            display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;
+            margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border);
+        }
+        .page-size-group{ display:flex; gap:0.3rem; }
+        .page-size-group .btn-sm{ padding:0.3rem 0.6rem; font-size:0.72rem; }
+        .page-size-group .btn-sm.active{ background:var(--gold); color:#fff; border-color:var(--gold); }
+        .page-nav-group{ display:flex; align-items:center; gap:0.6rem; }
+        .page-nav-group .btn-sm{ font-size:0.72rem; padding:0.3rem 0.6rem; }
+        .page-nav-group .btn-sm:disabled{ opacity:0.4; cursor:not-allowed; }
+        .page-info{ font-size:0.75rem; color:var(--muted); white-space:nowrap; }
+
+        /* ===== MODAL TAMBAH/UBAH TAMU ===== */
+        .modal-overlay{
+            display:none; position:fixed; inset:0; background:rgba(20,16,10,0.55); z-index:200;
+            align-items:center; justify-content:center; padding:1rem;
+        }
+        .modal-overlay.open{ display:flex; }
+        .modal-box{ background:var(--surface); border-radius:16px; padding:1.4rem; max-width:380px; width:100%; }
+        .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; font-weight:600; }
+        .modal-close{ background:none; border:none; font-size:1.3rem; line-height:1; cursor:pointer; color:var(--muted); }
+        .form-field{ margin-bottom:0.9rem; text-align:left; }
+        .form-field label{ display:block; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:0.3rem; }
+        .form-field input{
+            width:100%; padding:0.6rem 0.8rem; font-size:0.88rem; border:1px solid var(--border);
+            border-radius:8px; background:var(--bg); color:var(--text); box-sizing:border-box;
+        }
+        .modal-actions{ display:flex; gap:0.6rem; margin-top:1rem; }
+        .modal-actions .btn-sm{ flex:1; padding:0.6rem; }
+        .jenis-filter-select{
+            padding:0.5rem 0.7rem; font-size:0.82rem; border:1px solid var(--border); border-radius:8px;
+            background:var(--surface); color:var(--text);
+        }
     </style>
 </head>
 <body>
@@ -918,6 +953,7 @@
                 <div id="recentComments" style="font-size:0.85rem;color:var(--muted);min-height:60px;">
                     <span class="loading-dots">Memuat</span>
                 </div>
+                <div class="pagination-bar" id="confirmPagination"></div>
             </div>
         </div>
 
@@ -928,6 +964,7 @@
                     <span>📋 Daftar Tamu</span>
                     <div class="action-buttons">
                         <span class="badge" id="guestCount">0 tamu</span>
+                        <button class="btn-sm primary" id="addGuestBtn">➕ Tambah Tamu</button>
                         <button class="btn-sm gold-outline refresh-btn" data-target="guests">🔄 Refresh</button>
                     </div>
                 </div>
@@ -935,9 +972,7 @@
                     ⚠️ Menggunakan data contoh (mock). Data tidak diambil dari sheet. Periksa endpoint API.
                 </div>
                 <div class="toolbar">
-                    <div class="filter-group" id="jenisFilter">
-                        <button class="active" data-jenis="all">Semua</button>
-                    </div>
+                    <select class="jenis-filter-select" id="jenisFilter"><option value="all">Semua Jenis Tamu</option></select>
                     <div class="search-box">
                         <input type="text" id="guestSearch" placeholder="Cari nama..." />
                     </div>
@@ -952,13 +987,15 @@
                                 <th>No HP</th>
                                 <th style="width:80px;">Status WA</th>
                                 <th style="width:100px;">Status Absen</th>
+                                <th style="width:90px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="guestTableBody">
-                            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Memuat data...</td></tr>
+                            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">Memuat data...</td></tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination-bar" id="guestPagination"></div>
             </div>
         </div>
 
@@ -976,9 +1013,7 @@
                     ⚠️ Menggunakan data contoh (mock). Data tidak diambil dari sheet. Periksa endpoint API.
                 </div>
                 <div class="toolbar">
-                    <div class="filter-group" id="sendJenisFilter">
-                        <button class="active" data-jenis="all">Semua</button>
-                    </div>
+                    <select class="jenis-filter-select" id="sendJenisFilter"><option value="all">Semua Jenis Tamu</option></select>
                     <div class="search-box">
                         <input type="text" id="sendSearch" placeholder="Cari nama..." />
                     </div>
@@ -1002,6 +1037,38 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination-bar" id="sendPagination"></div>
+            </div>
+        </div>
+
+        <!-- ===== MODAL: TAMBAH / UBAH TAMU ===== -->
+        <div class="modal-overlay" id="guestModalOverlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span id="guestModalTitle">Tambah Tamu</span>
+                    <button type="button" class="modal-close" id="guestModalClose">&times;</button>
+                </div>
+                <form id="guestForm">
+                    <input type="hidden" id="guestFormRow" value="">
+                    <div class="form-field">
+                        <label for="guestFormNama">Nama Tamu</label>
+                        <input type="text" id="guestFormNama" maxlength="60" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="guestFormJenis">Jenis Tamu</label>
+                        <input type="text" id="guestFormJenis" list="jenisTamuOptions" placeholder="Ketik baru atau pilih dari daftar" autocomplete="off">
+                        <datalist id="jenisTamuOptions"></datalist>
+                    </div>
+                    <div class="form-field">
+                        <label for="guestFormHp">No HP</label>
+                        <input type="text" id="guestFormHp" placeholder="08xxxxxxxxxx" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-sm primary" id="guestFormSubmit">Simpan</button>
+                        <button type="button" class="btn-sm" id="guestFormCancel">Batal</button>
+                    </div>
+                    <p class="msg" id="guestFormMsg" style="font-size:0.8rem;margin-top:0.5rem;"></p>
+                </form>
             </div>
         </div>
 
@@ -1280,6 +1347,48 @@
         let allGuests = [];
         let confirmations = [];
         let usingMockData = false;
+
+        // ========================================================================
+        //  PAGINASI GENERIK — dipakai Daftar Tamu, Kirim WA, & Konfirmasi Terbaru.
+        //  pageSize: 10 | 50 | 100 | 'all'.
+        // ========================================================================
+        const guestPager = { page: 1, pageSize: 10 };
+        const sendPager = { page: 1, pageSize: 10 };
+        const confirmPager = { page: 1, pageSize: 10 };
+
+        function paginateItems(items, pager) {
+            if (pager.pageSize === 'all') return { pageItems: items, totalPages: 1 };
+            const totalPages = Math.max(1, Math.ceil(items.length / pager.pageSize));
+            if (pager.page > totalPages) pager.page = totalPages;
+            if (pager.page < 1) pager.page = 1;
+            const start = (pager.page - 1) * pager.pageSize;
+            return { pageItems: items.slice(start, start + pager.pageSize), totalPages };
+        }
+
+        function renderPaginationBar(barId, pager, totalPages, onChange) {
+            const bar = $(barId);
+            if (!bar) return;
+            const sizes = [10, 50, 100, 'all'];
+            bar.innerHTML = `
+                <div class="page-size-group">
+                    ${sizes.map(sz => `<button type="button" class="btn-sm page-size-btn ${pager.pageSize === sz ? 'active' : ''}" data-size="${sz}">${sz === 'all' ? 'All' : sz}</button>`).join('')}
+                </div>
+                <div class="page-nav-group">
+                    <button type="button" class="btn-sm" id="${barId}-prev" ${pager.page <= 1 ? 'disabled' : ''}>‹ Sebelumnya</button>
+                    <span class="page-info">Hal. ${pager.page} / ${totalPages}</span>
+                    <button type="button" class="btn-sm" id="${barId}-next" ${pager.page >= totalPages ? 'disabled' : ''}>Berikutnya ›</button>
+                </div>
+            `;
+            qsa('.page-size-btn', bar).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    pager.pageSize = btn.dataset.size === 'all' ? 'all' : parseInt(btn.dataset.size, 10);
+                    pager.page = 1;
+                    onChange();
+                });
+            });
+            $(`${barId}-prev`).addEventListener('click', () => { if (pager.page > 1) { pager.page--; onChange(); } });
+            $(`${barId}-next`).addEventListener('click', () => { if (pager.page < totalPages) { pager.page++; onChange(); } });
+        }
 
         // ========================================================================
         //  DOM UTILITY
@@ -1666,7 +1775,7 @@
 
         async function fetchConfirmations() {
             try {
-                const res = await apiGet('comments', { limit: 100, offset: 0 });
+                const res = await apiGet('comments', { limit: 5000, offset: 0 });
                 if (res.ok && Array.isArray(res.items)) {
                     confirmations = res.items;
                     return;
@@ -1816,76 +1925,98 @@
             $('statTidakPct').textContent = pct(tidak);
             $('statRaguPct').textContent = pct(ragu);
 
-            const recent = confirmations.slice(0, 5);
-            if (recent.length === 0) {
-                $('recentComments').innerHTML = '<span class="text-muted">Belum ada konfirmasi.</span>';
-                $('recentBadge').textContent = '0';
-            } else {
-                $('recentComments').innerHTML = recent.map(c =>
-                    `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-                <span><strong>${escapeHtml(c.nama)}</strong> · <span class="status-badge ${presensiBadgeClass(c.presensi)}">${escapeHtml(c.presensi)}</span></span>
-                <span style="font-size:0.75rem;color:var(--muted);">${c.ucapan_doa ? escapeHtml(c.ucapan_doa.slice(0,40))+(c.ucapan_doa.length>40?'…':'') : ''}</span>
-              </div>`
-                ).join('');
-                $('recentBadge').textContent = confirmations.length;
-            }
+            $('recentBadge').textContent = confirmations.length;
+            renderConfirmationsList();
 
             const now = new Date();
             $('lastUpdate').textContent = 'Terakhir: ' + now.toLocaleString('id-ID');
         }
 
-        function renderGuestList(filter = 'all', search = '') {
-            const tbody = $('guestTableBody');
-            let list = [...allGuests];
+        /** Daftar 10 (atau sesuai pageSize) konfirmasi terbaru + paginasi. confirmations sudah urut terbaru dulu. */
+        function renderConfirmationsList() {
+            if (confirmations.length === 0) {
+                $('recentComments').innerHTML = '<span class="text-muted">Belum ada konfirmasi.</span>';
+                $('confirmPagination').innerHTML = '';
+                return;
+            }
+            const { pageItems, totalPages } = paginateItems(confirmations, confirmPager);
+            $('recentComments').innerHTML = pageItems.map(c =>
+                `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+                <span><strong>${escapeHtml(c.nama)}</strong> · <span class="status-badge ${presensiBadgeClass(c.presensi)}">${escapeHtml(c.presensi)}</span></span>
+                <span style="font-size:0.75rem;color:var(--muted);">${c.ucapan_doa ? escapeHtml(c.ucapan_doa.slice(0,40))+(c.ucapan_doa.length>40?'…':'') : ''}</span>
+              </div>`
+            ).join('');
+            renderPaginationBar('confirmPagination', confirmPager, totalPages, renderConfirmationsList);
+        }
+
+        function filterGuestData(source, filter, search) {
+            let list = [...source];
             if (filter !== 'all') list = list.filter(g => g.jenis_tamu === filter);
             if (search.trim()) {
                 const q = search.trim().toLowerCase();
                 list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
             }
+            return list.slice().reverse(); // tamu yang ditambah terakhir muncul duluan ("terbaru")
+        }
+
+        function renderGuestList(filter = 'all', search = '') {
+            const tbody = $('guestTableBody');
+            const list = filterGuestData(allGuests, filter, search);
             $('guestCount').textContent = list.length + ' tamu' + (usingMockData ? ' (MOCK)' : '');
 
             if (list.length === 0) {
                 tbody.innerHTML =
-                    `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Tidak ada tamu.</td></tr>`;
+                    `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">Tidak ada tamu.</td></tr>`;
+                $('guestPagination').innerHTML = '';
                 return;
             }
 
-            tbody.innerHTML = list.map((g, idx) => {
+            const { pageItems, totalPages } = paginateItems(list, guestPager);
+            tbody.innerHTML = pageItems.map((g, idx) => {
                 const status = isSent(g.nomor_hp) ? 'sudah' : 'belum';
                 const statusLabel = isSent(g.nomor_hp) ? '✅ Sudah' : '⬜ Belum';
                 const absen = g.status_absen || '';
                 return `<tr>
-                <td>${idx+1}</td>
+                <td>${(guestPager.pageSize === 'all' ? 0 : (guestPager.page - 1) * guestPager.pageSize) + idx + 1}</td>
                 <td><strong>${escapeHtml(g.nama_tamu)}</strong></td>
                 <td>${escapeHtml(g.jenis_tamu || '-')}</td>
                 <td>${escapeHtml(g.nomor_hp)}</td>
                 <td><span class="status-badge ${status}">${statusLabel}</span></td>
                 <td><span class="status-badge ${presensiBadgeClass(absen)}">${presensiLabel(absen)}</span></td>
+                <td>
+                  <button type="button" class="btn-sm edit-guest-btn" data-row="${g._row}" title="Ubah">✏️</button>
+                  <button type="button" class="btn-sm danger delete-guest-btn" data-row="${g._row}" data-nama="${escapeHtml(g.nama_tamu)}" title="Hapus">🗑️</button>
+                </td>
               </tr>`;
             }).join('');
+            renderPaginationBar('guestPagination', guestPager, totalPages, () => renderGuestList(filter, search));
+
+            qsa('.edit-guest-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => openGuestModal(parseInt(btn.dataset.row, 10)));
+            });
+            qsa('.delete-guest-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => deleteGuest(parseInt(btn.dataset.row, 10), btn.dataset.nama));
+            });
         }
 
         function renderSendList(filter = 'all', search = '') {
             const tbody = $('sendTableBody');
-            let list = [...allGuests];
-            if (filter !== 'all') list = list.filter(g => g.jenis_tamu === filter);
-            if (search.trim()) {
-                const q = search.trim().toLowerCase();
-                list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
-            }
+            const list = filterGuestData(allGuests, filter, search);
             $('sendCount').textContent = list.length + ' tamu' + (usingMockData ? ' (MOCK)' : '');
 
             if (list.length === 0) {
                 tbody.innerHTML =
                     `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Tidak ada tamu.</td></tr>`;
+                $('sendPagination').innerHTML = '';
                 return;
             }
 
-            tbody.innerHTML = list.map((g, idx) => {
+            const { pageItems, totalPages } = paginateItems(list, sendPager);
+            tbody.innerHTML = pageItems.map((g, idx) => {
                 const sent = isSent(g.nomor_hp);
                 const statusLabel = sent ? '✅ Sudah' : '⬜ Belum';
                 return `<tr>
-                <td>${idx+1}</td>
+                <td>${(sendPager.pageSize === 'all' ? 0 : (sendPager.page - 1) * sendPager.pageSize) + idx + 1}</td>
                 <td><strong>${escapeHtml(g.nama_tamu)}</strong></td>
                 <td>${escapeHtml(g.jenis_tamu || '-')}</td>
                 <td>${escapeHtml(g.nomor_hp)}</td>
@@ -1897,6 +2028,7 @@
                 </td>
               </tr>`;
             }).join('');
+            renderPaginationBar('sendPagination', sendPager, totalPages, () => renderSendList(filter, search));
 
             qsa('.send-wa-btn', tbody).forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1940,9 +2072,8 @@
         }
 
         function getActiveFilter(tab) {
-            const container = tab === 'guest' ? $('jenisFilter') : $('sendJenisFilter');
-            const active = qs('.active', container);
-            return active ? active.dataset.jenis : 'all';
+            const select = tab === 'guest' ? $('jenisFilter') : $('sendJenisFilter');
+            return select ? select.value : 'all';
         }
 
         function renderTemplateEditor() {
@@ -2026,37 +2157,129 @@
         }
 
         // ========================================================================
+        //  CRUD TAMU (modal Tambah/Ubah, Hapus)
+        // ========================================================================
+        function openGuestModal(rowNumber) {
+            const isEdit = !!rowNumber;
+            const guest = isEdit ? allGuests.find(g => g._row === rowNumber) : null;
+            $('guestModalTitle').textContent = isEdit ? 'Ubah Tamu' : 'Tambah Tamu';
+            $('guestFormRow').value = isEdit ? rowNumber : '';
+            $('guestFormNama').value = guest ? guest.nama_tamu : '';
+            $('guestFormJenis').value = guest ? (guest.jenis_tamu || '') : '';
+            $('guestFormHp').value = guest ? guest.nomor_hp : '';
+            $('guestFormMsg').textContent = '';
+            $('guestModalOverlay').classList.add('open');
+            $('guestFormNama').focus();
+        }
+
+        function closeGuestModal() {
+            $('guestModalOverlay').classList.remove('open');
+            $('guestForm').reset();
+        }
+
+        async function deleteGuest(rowNumber, nama) {
+            if (!confirm(`Hapus tamu "${nama}" dari daftar? Tindakan ini tidak bisa dibatalkan.`)) return;
+            try {
+                const res = await apiPost({ action: 'delete_guest', token: getToken(), row: rowNumber });
+                if (handleSessionError(res.error)) return;
+                if (!res.ok) throw new Error(res.error || 'Gagal menghapus tamu.');
+                allGuests = allGuests.filter(g => g._row !== rowNumber);
+                setupFilters();
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                renderStats();
+                showToast(`Tamu "${nama}" dihapus.`, 'success');
+            } catch (err) {
+                showToast('Gagal menghapus: ' + err.message, 'error');
+            }
+        }
+
+        function wireGuestCrud() {
+            $('addGuestBtn').addEventListener('click', () => openGuestModal(null));
+            $('guestModalClose').addEventListener('click', closeGuestModal);
+            $('guestFormCancel').addEventListener('click', closeGuestModal);
+            $('guestModalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'guestModalOverlay') closeGuestModal();
+            });
+
+            $('guestForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const rowValue = $('guestFormRow').value;
+                const isEdit = !!rowValue;
+                const fields = {
+                    nama_tamu: $('guestFormNama').value.trim(),
+                    jenis_tamu: $('guestFormJenis').value.trim(),
+                    nomor_hp: $('guestFormHp').value.trim()
+                };
+                const msg = $('guestFormMsg');
+                const submitBtn = $('guestFormSubmit');
+                if (!fields.nama_tamu) { msg.textContent = 'Nama tamu wajib diisi.'; msg.style.color = 'var(--danger,#c65b5b)'; return; }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Menyimpan…';
+                try {
+                    let res;
+                    if (isEdit) {
+                        res = await apiPost({ action: 'update_guest', token: getToken(), row: parseInt(rowValue, 10), fields });
+                    } else {
+                        res = await apiPost({ action: 'add_guest', token: getToken(), fields });
+                    }
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan tamu.');
+
+                    closeGuestModal();
+                    await fetchGuests();
+                    setupFilters();
+                    renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                    renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                    renderStats();
+                    showToast(isEdit ? 'Data tamu diperbarui.' : 'Tamu baru ditambahkan.', 'success');
+                } catch (err) {
+                    msg.textContent = err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Simpan';
+                }
+            });
+        }
+
+        // ========================================================================
         //  FILTERS
         // ========================================================================
         function setupFilters() {
-            ['jenisFilter', 'sendJenisFilter'].forEach(id => {
-                const container = $(id);
-                if (!container) return;
-                const jenisSet = new Set(allGuests.map(g => g.jenis_tamu).filter(Boolean));
-                const jenisList = ['all', ...jenisSet];
-                container.innerHTML = jenisList.map(j =>
-                    `<button data-jenis="${j}" class="${j === 'all' ? 'active' : ''}">${j === 'all' ? 'Semua' : j}</button>`
-                ).join('');
+            const jenisSet = new Set(allGuests.map(g => g.jenis_tamu).filter(Boolean));
+            const jenisList = [...jenisSet].sort();
 
-                container.addEventListener('click', (e) => {
-                    const btn = e.target.closest('[data-jenis]');
-                    if (!btn) return;
-                    qsa('[data-jenis]', container).forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const tab = id === 'jenisFilter' ? 'guest' : 'send';
-                    const search = tab === 'guest' ? $('guestSearch').value : $('sendSearch').value;
-                    if (tab === 'guest') renderGuestList(btn.dataset.jenis, search);
-                    else renderSendList(btn.dataset.jenis, search);
-                });
+            // Dropdown filter (Daftar Tamu & Kirim WA) — selalu ikut riwayat jenis_tamu terbaru dari sheet.
+            ['jenisFilter', 'sendJenisFilter'].forEach(id => {
+                const select = $(id);
+                if (!select) return;
+                const current = select.value || 'all';
+                select.innerHTML = '<option value="all">Semua Jenis Tamu</option>' +
+                    jenisList.map(j => `<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join('');
+                select.value = jenisList.includes(current) ? current : 'all';
             });
+
+            // Datalist saran Jenis Tamu di form Tambah/Ubah Tamu — kombobox: boleh pilih yang sudah ada, boleh ketik baru.
+            $('jenisTamuOptions').innerHTML = jenisList.map(j => `<option value="${escapeHtml(j)}"></option>`).join('');
+
+            $('jenisFilter').onchange = () => {
+                guestPager.page = 1;
+                renderGuestList($('jenisFilter').value, $('guestSearch').value);
+            };
+            $('sendJenisFilter').onchange = () => {
+                sendPager.page = 1;
+                renderSendList($('sendJenisFilter').value, $('sendSearch').value);
+            };
 
             $('guestSearch').addEventListener('input', () => {
-                const filter = getActiveFilter('guest');
-                renderGuestList(filter, $('guestSearch').value);
+                guestPager.page = 1;
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
             });
             $('sendSearch').addEventListener('input', () => {
-                const filter = getActiveFilter('send');
-                renderSendList(filter, $('sendSearch').value);
+                sendPager.page = 1;
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
             });
         }
 
@@ -2191,6 +2414,7 @@
             renderTemplateEditor();
             wireTemaEvents();
             renderTemaTab();
+            wireGuestCrud();
             navigateTo('dashboard');
             $('lastUpdate').textContent = 'Dimuat: ' + new Date().toLocaleString('id-ID');
 
