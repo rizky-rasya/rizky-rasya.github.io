@@ -382,20 +382,21 @@
       <p style="font-size:.92rem; color:var(--muted); margin-top:1rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami.</p>
 
       <div class="couple-card">
+        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
+        <h3 class="serif" id="wanita-nama">—</h3>
+        <p class="role" id="wanita-status">—</p>
+        <p class="parents" id="wanita-ortu">—</p>
+      </div>
+
+       <p class="amp" aria-hidden="true">&amp;</p>
+      
+      <div class="couple-card">
         <div class="arch"><img id="pria-foto" src="" alt=""></div>
         <h3 class="serif" id="pria-nama">—</h3>
         <p class="role" id="pria-status">—</p>
         <p class="parents" id="pria-ortu">—</p>
       </div>
 
-      <p class="amp" aria-hidden="true">&amp;</p>
-
-      <div class="couple-card">
-        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
-        <h3 class="serif" id="wanita-nama">—</h3>
-        <p class="role" id="wanita-status">—</p>
-        <p class="parents" id="wanita-ortu">—</p>
-      </div>
     </section>
 
     <!-- QUOTES -->
@@ -716,7 +717,8 @@ function renderConfig(cfg){
   const stories = [
     [cfg.cerita_1_judul, cfg.cerita_1_isi],
     [cfg.cerita_2_judul, cfg.cerita_2_isi],
-    [cfg.cerita_3_judul, cfg.cerita_3_isi]
+    [cfg.cerita_3_judul, cfg.cerita_3_isi],
+    [cfg.cerita_4_judul, cfg.cerita_4_isi]
   ].filter(([j,i]) => j || i);
   $('story-list').innerHTML = stories.map(([judul, isi], idx) => `
     <div class="story-item">
