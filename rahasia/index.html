@@ -811,6 +811,19 @@
             font-family:var(--tp-font-body,'Jost',sans-serif); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
             border:1px solid var(--tp-gold,#B8892B); color:#fff; background:var(--tp-gold,#B8892B); padding:0.65rem 1.5rem; border-radius:999px; cursor:default; display:inline-block;
         }
+        .tema-preview-box .tp-sections{ display:flex; flex-wrap:wrap; gap:0.35rem; justify-content:center; margin-top:1.1rem; }
+        .tema-preview-box .tp-sections .chip{
+            font-size:0.85rem; padding:0.25rem 0.5rem; border-radius:999px; border:1px solid var(--tp-line,rgba(184,137,43,.28));
+            background:var(--tp-surface,#fff); transition:opacity .15s;
+        }
+        .tema-preview-box .tp-sections .chip.off{ opacity:0.3; filter:grayscale(1); }
+
+        .section-toggle-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:0.6rem; }
+        .section-toggle-item{
+            display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; padding:0.65rem 0.85rem;
+            background:var(--surface); border:1px solid var(--border); border-radius:10px; cursor:pointer;
+        }
+        .section-toggle-item input{ width:17px; height:17px; accent-color:var(--gold); cursor:pointer; flex:none; }
 
         .color-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:0.8rem; }
         .color-item label{ font-size:0.72rem; color:var(--muted); display:block; margin-bottom:0.3rem; }
@@ -852,6 +865,22 @@
             padding:0.5rem 0.7rem; font-size:0.82rem; border:1px solid var(--border); border-radius:8px;
             background:var(--surface); color:var(--text);
         }
+
+        /* ===== DATA MEMPELAI ===== */
+        .mempelai-group{ border:1px solid var(--border); border-radius:12px; margin-bottom:0.7rem; overflow:hidden; }
+        .mempelai-group summary{
+            padding:0.8rem 1rem; cursor:pointer; font-weight:600; font-size:0.88rem; background:var(--surface-2);
+            list-style:none; display:flex; align-items:center; gap:0.4rem;
+        }
+        .mempelai-group summary::-webkit-details-marker{ display:none; }
+        .mempelai-fields{ padding:1rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:0.8rem; }
+        .form-field textarea{
+            width:100%; padding:0.6rem 0.8rem; font-size:0.85rem; border:1px solid var(--border);
+            border-radius:8px; background:var(--bg); color:var(--text); box-sizing:border-box; resize:vertical; font-family:inherit;
+        }
+
+        /* ===== AKUN ===== */
+        #changePasswordForm .form-field, #accountForm .form-field, #resetPassForm .form-field{ max-width:340px; }
     </style>
 </head>
 <body>
@@ -890,6 +919,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
+            <a href="#" data-section="mempelai">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg>
+                Data Mempelai
+            </a>
             <a href="#" data-section="guests">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 Daftar Tamu
@@ -905,6 +938,10 @@
             <a href="#" data-section="tema">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h10a2 2 0 002-2v-4a2 2 0 00-2-2h-2.5M7 21v-4"/><circle cx="7" cy="7" r="1"/></svg>
                 Tampilan Undangan
+            </a>
+            <a href="#" data-section="akun">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/><path d="M18 8.5c1 .3 2 1.2 2 2.5 0 1.5-1.2 2.5-2.5 2.5M16 21v-1a5.5 5.5 0 00-1.5-3.8"/></svg>
+                Akun
             </a>
         </nav>
         <button class="theme-toggle" id="themeToggle">
@@ -954,6 +991,26 @@
                     <span class="loading-dots">Memuat</span>
                 </div>
                 <div class="pagination-bar" id="confirmPagination"></div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: DATA MEMPELAI ===== -->
+        <div id="section-mempelai" class="section-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>💍 Data Mempelai</span>
+                    <div class="action-buttons">
+                        <button class="btn-sm gold-outline refresh-btn" data-target="mempelai">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">
+                    Semua field di sini disimpan ke sheet <code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">DataMempelai</code> dan langsung dipakai situs undangan publik begitu disimpan. Klik nama kelompok untuk buka/tutup.
+                </p>
+                <div id="mempelaiGroups"><!-- diisi JS --></div>
+                <div class="actions" style="margin-top:1rem;">
+                    <button class="btn-sm primary" id="saveMempelaiBtn">💾 Simpan Semua Perubahan</button>
+                    <span class="msg" id="mempelaiMsg" style="font-size:0.8rem;"></span>
+                </div>
             </div>
         </div>
 
@@ -1157,7 +1214,16 @@
                         <span>45<small>Menit</small></span>
                     </div>
                     <span class="tp-btn">Buka Undangan</span>
+                    <div class="tp-sections" id="tpSections"><!-- diisi JS --></div>
                 </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>👁️ Bagian yang Ditampilkan</span></div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.8rem;">
+                    Matikan bagian yang tidak perlu ditampilkan ke tamu — perubahan langsung terlihat di pratinjau di atas. Halaman sampul (pembuka) dan footer penutup selalu tampil, tidak bisa dimatikan.
+                </p>
+                <div class="section-toggle-list" id="sectionToggleList"><!-- diisi JS --></div>
             </div>
 
             <div class="panel" style="margin-top:0.5rem;">
@@ -1199,6 +1265,94 @@
 
         </div>
 
+        <!-- ===== SECTION: AKUN ===== -->
+        <div id="section-akun" class="section-content" style="display:none;">
+
+            <div class="panel">
+                <div class="panel-title"><span>🔑 Ganti Password Saya</span></div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">Masuk sebagai <strong id="akunMeLabel">—</strong>. Masukkan password lama untuk verifikasi sebelum mengganti.</p>
+                <form id="changePasswordForm">
+                    <div class="form-field">
+                        <label for="cpOld">Password Lama</label>
+                        <input type="password" id="cpOld" required autocomplete="current-password">
+                    </div>
+                    <div class="form-field">
+                        <label for="cpNew">Password Baru</label>
+                        <input type="password" id="cpNew" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="form-field">
+                        <label for="cpConfirm">Ulangi Password Baru</label>
+                        <input type="password" id="cpConfirm" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn-sm primary">Ganti Password</button>
+                    <span class="msg" id="cpMsg" style="font-size:0.8rem;margin-left:0.6rem;"></span>
+                </form>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title">
+                    <span>👥 Akun Dashboard</span>
+                    <div class="action-buttons">
+                        <button class="btn-sm primary" id="addAccountBtn">➕ Tambah Akun</button>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="akun">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">Semua akun ini bisa membuka dashboard ini. Password akun lain tidak ditampilkan — Anda hanya bisa mengatur ulang (reset) dengan password baru.</p>
+                <table>
+                    <thead><tr><th>Username</th><th style="width:170px;">Aksi</th></tr></thead>
+                    <tbody id="accountsTableBody"><tr><td colspan="2" style="text-align:center;color:var(--muted);padding:1.2rem;">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- ===== MODAL: TAMBAH AKUN ===== -->
+        <div class="modal-overlay" id="accountModalOverlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span>Tambah Akun Dashboard</span>
+                    <button type="button" class="modal-close" id="accountModalClose">&times;</button>
+                </div>
+                <form id="accountForm">
+                    <div class="form-field">
+                        <label for="accFormUser">Username</label>
+                        <input type="text" id="accFormUser" required autocomplete="off">
+                    </div>
+                    <div class="form-field">
+                        <label for="accFormPass">Password (minimal 4 karakter)</label>
+                        <input type="password" id="accFormPass" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-sm primary">Tambah</button>
+                        <button type="button" class="btn-sm" id="accountFormCancel">Batal</button>
+                    </div>
+                    <p class="msg" id="accountFormMsg" style="font-size:0.8rem;margin-top:0.5rem;"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== MODAL: RESET PASSWORD AKUN LAIN ===== -->
+        <div class="modal-overlay" id="resetPassModalOverlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span>Reset Password — <span id="resetPassUserLabel">—</span></span>
+                    <button type="button" class="modal-close" id="resetPassModalClose">&times;</button>
+                </div>
+                <form id="resetPassForm">
+                    <input type="hidden" id="resetPassUsername">
+                    <div class="form-field">
+                        <label for="resetPassNew">Password Baru (minimal 4 karakter)</label>
+                        <input type="password" id="resetPassNew" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-sm primary">Simpan</button>
+                        <button type="button" class="btn-sm" id="resetPassCancel">Batal</button>
+                    </div>
+                    <p class="msg" id="resetPassMsg" style="font-size:0.8rem;margin-top:0.5rem;"></p>
+                </form>
+            </div>
+        </div>
+
         <!-- ===== FOOTER ===== -->
         <div style="text-align:center;padding:2rem 0 0.5rem;font-size:0.7rem;color:var(--muted);border-top:1px solid var(--border);margin-top:1rem;">
             Dashboard Undangan · Data dari Google Sheets
@@ -1220,9 +1374,10 @@
         //  token ini dan divalidasi ulang di server setiap kali dipanggil.
         // ========================================================================
         const TOKEN_KEY = 'undangan_admin_token';
+        const USERNAME_KEY = 'undangan_admin_username';
         const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
         const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
-        const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+        const clearToken = () => { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USERNAME_KEY); };
 
         /** Kalau respons API menandakan sesi tidak valid/kedaluwarsa, paksa logout. */
         function handleSessionError(message) {
@@ -1276,6 +1431,8 @@
                 const res = await apiPost({ action: 'login', username: user, password: pass });
                 if (res.ok) {
                     setToken(res.token);
+                    myUsername = res.username || user;
+                    localStorage.setItem(USERNAME_KEY, myUsername);
                     checkLogin();
                     if (typeof refreshAll === 'function') refreshAll();
                 } else {
@@ -1301,7 +1458,7 @@
         // ========================================================================
         //  DOM REFS & GLOBAL STATE
         // ========================================================================
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5JuYoFu250nEQ0oJdwN_4Pc5AEyyxc17KE99PIIGidNmU3bjnQ26WW6bGEOz0jjboTg/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 
         const FALLBACK_CONFIG = {
             nama_panggilan_pria: "Rizky",
@@ -1467,11 +1624,23 @@
             warna_text_night: '#F2ECDD', warna_muted_night: '#A9B6A6',
             warna_aksen_night: '#C9A24B', warna_aksen_soft_night: '#E4C97A',
             radius_bentuk: 'lembut',
-            gaya_font: 'elegant'
+            gaya_font: 'elegant',
+            section_bride: 'on', section_quotes: 'on', section_story: 'on', section_wedding_date: 'on',
+            section_gallery: 'on', section_gift: 'on', section_comment: 'on'
         };
         let temaState = { ...FALLBACK_TEMA };
         let temaPreviewMode = 'light';
         let temaColorTab = 'light';
+
+        const SECTION_TOGGLES = [
+            ['section_bride', "👰🤵 Mempelai"],
+            ['section_quotes', "📖 Ayat Al-Qur'an"],
+            ['section_story', '💌 Kisah Cinta'],
+            ['section_wedding_date', '📅 Acara, Lokasi & Hitung Mundur'],
+            ['section_gallery', '🖼️ Galeri Foto'],
+            ['section_gift', '🎁 Hadiah / Amplop Digital'],
+            ['section_comment', '💬 Ucapan & Doa']
+        ];
 
         const TEMA_PRESETS = {
             emerald_gold: {
@@ -1603,11 +1772,34 @@
             const fonts = FONT_PREVIEW[temaState.gaya_font] || FONT_PREVIEW.elegant;
             box.style.setProperty('--tp-font-display', fonts.display);
             box.style.setProperty('--tp-font-body', fonts.body);
+
+            $('tpSections').innerHTML = SECTION_TOGGLES.map(([key, label]) => {
+                const on = temaState[key] !== 'off';
+                const icon = label.split(' ')[0];
+                return `<span class="chip ${on ? '' : 'off'}" title="${label}${on ? '' : ' (disembunyikan)'}">${icon}</span>`;
+            }).join('');
+        }
+
+        function renderSectionToggles() {
+            $('sectionToggleList').innerHTML = SECTION_TOGGLES.map(([key, label]) => {
+                const on = temaState[key] !== 'off';
+                return `<label class="section-toggle-item">
+                    <input type="checkbox" data-section-key="${key}" ${on ? 'checked' : ''}>
+                    <span>${label}</span>
+                </label>`;
+            }).join('');
+            qsa('#sectionToggleList input[type=checkbox]').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    temaState[cb.dataset.sectionKey] = cb.checked ? 'on' : 'off';
+                    updateTemaPreview();
+                });
+            });
         }
 
         function renderTemaTab() {
             renderPresetGrid();
             renderColorGrids();
+            renderSectionToggles();
             document.querySelectorAll('#radiusButtons [data-radius]').forEach(b =>
                 b.classList.toggle('active', b.dataset.radius === temaState.radius_bentuk));
             document.querySelectorAll('#fontButtons [data-font]').forEach(b =>
@@ -2245,6 +2437,256 @@
         }
 
         // ========================================================================
+        //  DATA MEMPELAI (tab Data Mempelai)
+        // ========================================================================
+        const MEMPELAI_GROUPS = [
+            { title: '👰🤵 Mempelai', fields: [
+                ['judul_hero', 'Judul Hero', 'text'],
+                ['nama_panggilan_pria', 'Nama Panggilan Pria', 'text'],
+                ['nama_panggilan_wanita', 'Nama Panggilan Wanita', 'text'],
+                ['nama_lengkap_pria', 'Nama Lengkap Pria', 'text'],
+                ['nama_lengkap_wanita', 'Nama Lengkap Wanita', 'text'],
+                ['status_anak_pria', 'Status Anak Pria', 'text'],
+                ['ayah_pria', 'Nama Ayah Pria', 'text'],
+                ['ibu_pria', 'Nama Ibu Pria', 'text'],
+                ['status_anak_wanita', 'Status Anak Wanita', 'text'],
+                ['ayah_wanita', 'Nama Ayah Wanita', 'text'],
+                ['ibu_wanita', 'Nama Ibu Wanita', 'text']
+            ]},
+            { title: '📅 Acara & Lokasi', fields: [
+                ['tanggal_acara_iso', 'Tanggal Acara (format YYYY-MM-DD HH:mm:ss)', 'text'],
+                ['tanggal_tampil', 'Tanggal Tampil (teks)', 'text'],
+                ['waktu_akad', 'Waktu Akad', 'text'],
+                ['waktu_resepsi', 'Waktu Resepsi', 'text'],
+                ['nama_lokasi', 'Nama Lokasi', 'text'],
+                ['alamat_lokasi', 'Alamat Lengkap', 'textarea'],
+                ['link_maps', 'Link Google Maps', 'text'],
+                ['dress_code', 'Dress Code', 'text']
+            ]},
+            { title: '📖 Ayat & Kisah Cinta', fields: [
+                ['quote_1_teks', 'Ayat 1 — Teks', 'textarea'],
+                ['quote_1_sumber', 'Ayat 1 — Sumber', 'text'],
+                ['quote_2_teks', 'Ayat 2 — Teks', 'textarea'],
+                ['quote_2_sumber', 'Ayat 2 — Sumber', 'text'],
+                ['cerita_1_judul', 'Kisah Tahap 1 — Judul', 'text'],
+                ['cerita_1_isi', 'Kisah Tahap 1 — Isi', 'textarea'],
+                ['cerita_2_judul', 'Kisah Tahap 2 — Judul', 'text'],
+                ['cerita_2_isi', 'Kisah Tahap 2 — Isi', 'textarea'],
+                ['cerita_3_judul', 'Kisah Tahap 3 — Judul', 'text'],
+                ['cerita_3_isi', 'Kisah Tahap 3 — Isi', 'textarea']
+            ]},
+            { title: '🖼️ Media', fields: [
+                ['foto_cover_url', 'URL Foto Cover', 'text'],
+                ['foto_pria_url', 'URL Foto Pria', 'text'],
+                ['foto_wanita_url', 'URL Foto Wanita', 'text'],
+                ['galeri_url', 'URL Galeri (pisahkan koma)', 'textarea'],
+                ['musik_url', 'URL Musik (mp3 langsung, bukan link halaman)', 'text']
+            ]},
+            { title: '🎁 Hadiah', fields: [
+                ['bank_nama', 'Bank 1 — Nama Bank', 'text'],
+                ['bank_rekening', 'Bank 1 — No. Rekening', 'text'],
+                ['bank_atas_nama', 'Bank 1 — Atas Nama', 'text'],
+                ['bank_nama_2', 'Bank 2 — Nama Bank (opsional)', 'text'],
+                ['bank_rekening_2', 'Bank 2 — No. Rekening (opsional)', 'text'],
+                ['bank_atas_nama_2', 'Bank 2 — Atas Nama (opsional)', 'text'],
+                ['qris_image_url', 'URL Gambar QRIS', 'text'],
+                ['gift_nama', 'Nama Penerima Hadiah', 'text'],
+                ['gift_hp', 'No. HP Penerima Hadiah', 'text'],
+                ['gift_alamat', 'Alamat Kirim Hadiah', 'textarea']
+            ]},
+            { title: '⚙️ Teknis', fields: [
+                ['base_url', 'Base URL Situs Undangan (WAJIB benar, dipakai membuat semua link tamu)', 'text']
+            ]}
+        ];
+
+        function renderMempelaiForm() {
+            const container = $('mempelaiGroups');
+            if (!container) return;
+            container.innerHTML = MEMPELAI_GROUPS.map((g, gi) => `
+                <details class="mempelai-group" ${gi === 0 ? 'open' : ''}>
+                    <summary>${g.title}</summary>
+                    <div class="mempelai-fields">
+                        ${g.fields.map(([key, label, type]) => `
+                            <div class="form-field">
+                                <label for="mf-${key}">${label}</label>
+                                ${type === 'textarea'
+                                    ? `<textarea id="mf-${key}" data-key="${key}" rows="3">${escapeHtml(configData[key] || '')}</textarea>`
+                                    : `<input type="text" id="mf-${key}" data-key="${key}" value="${escapeHtml(configData[key] || '')}">`
+                                }
+                            </div>`).join('')}
+                    </div>
+                </details>`).join('');
+        }
+
+        function wireMempelaiForm() {
+            $('saveMempelaiBtn').addEventListener('click', async () => {
+                const fields = {};
+                qsa('#mempelaiGroups [data-key]').forEach(el => { fields[el.dataset.key] = el.value; });
+                const msg = $('mempelaiMsg');
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'save_mempelai', token: getToken(), fields });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan.');
+                    configData = { ...FALLBACK_CONFIG, ...res.data };
+                    msg.textContent = '✅ Tersimpan. Situs undangan tamu langsung memakai data terbaru.';
+                    msg.style.color = '#3f9a58';
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+        }
+
+        // ========================================================================
+        //  AKUN (tab Akun) — ganti password sendiri + CRUD akun lain
+        // ========================================================================
+        let myUsername = '';
+        let accountsCache = [];
+
+        async function fetchAccounts() {
+            try {
+                const res = await apiGet('accounts', { token: getToken() });
+                if (handleSessionError(res.error)) return;
+                if (res.ok) accountsCache = res.data;
+            } catch (_) { /* diamkan, tabel akan tampil kosong */ }
+        }
+
+        function renderAccountsList() {
+            const tbody = $('accountsTableBody');
+            if (!tbody) return;
+            $('akunMeLabel').textContent = myUsername || '—';
+            if (accountsCache.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:1.2rem;">Belum ada akun.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = accountsCache.map(a => `
+                <tr>
+                    <td>${escapeHtml(a.username)}${a.username === myUsername ? ' <span class="badge">Anda</span>' : ''}</td>
+                    <td>
+                        <button type="button" class="btn-sm reset-pass-btn" data-user="${escapeHtml(a.username)}">🔑 Reset</button>
+                        <button type="button" class="btn-sm danger delete-account-btn" data-user="${escapeHtml(a.username)}">🗑️</button>
+                    </td>
+                </tr>`).join('');
+
+            qsa('.reset-pass-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    $('resetPassUsername').value = btn.dataset.user;
+                    $('resetPassUserLabel').textContent = btn.dataset.user;
+                    $('resetPassNew').value = '';
+                    $('resetPassMsg').textContent = '';
+                    $('resetPassModalOverlay').classList.add('open');
+                });
+            });
+            qsa('.delete-account-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const username = btn.dataset.user;
+                    if (username === myUsername) {
+                        if (!confirm(`"${username}" adalah akun yang sedang Anda pakai login. Yakin ingin menghapusnya? Anda akan otomatis logout.`)) return;
+                    } else if (!confirm(`Hapus akun "${username}"?`)) {
+                        return;
+                    }
+                    try {
+                        const res = await apiPost({ action: 'delete_account', token: getToken(), username });
+                        if (handleSessionError(res.error)) return;
+                        if (!res.ok) throw new Error(res.error || 'Gagal menghapus akun.');
+                        showToast(`Akun "${username}" dihapus.`, 'success');
+                        if (username === myUsername) { clearToken(); checkLogin(); return; }
+                        await fetchAccounts();
+                        renderAccountsList();
+                    } catch (err) {
+                        showToast('Gagal: ' + err.message, 'error');
+                    }
+                });
+            });
+        }
+
+        function wireAkunTab() {
+            $('changePasswordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const oldPass = $('cpOld').value;
+                const newPass = $('cpNew').value;
+                const confirmPass = $('cpConfirm').value;
+                const msg = $('cpMsg');
+                if (newPass !== confirmPass) {
+                    msg.textContent = 'Konfirmasi password baru tidak cocok.';
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                    return;
+                }
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'change_my_password', token: getToken(), old_password: oldPass, new_password: newPass });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal mengganti password.');
+                    msg.textContent = '✅ Password berhasil diganti.';
+                    msg.style.color = '#3f9a58';
+                    $('changePasswordForm').reset();
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+
+            $('addAccountBtn').addEventListener('click', () => {
+                $('accFormUser').value = '';
+                $('accFormPass').value = '';
+                $('accountFormMsg').textContent = '';
+                $('accountModalOverlay').classList.add('open');
+            });
+            $('accountModalClose').addEventListener('click', () => $('accountModalOverlay').classList.remove('open'));
+            $('accountFormCancel').addEventListener('click', () => $('accountModalOverlay').classList.remove('open'));
+            $('accountModalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'accountModalOverlay') $('accountModalOverlay').classList.remove('open');
+            });
+            $('accountForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = $('accFormUser').value.trim();
+                const password = $('accFormPass').value;
+                const msg = $('accountFormMsg');
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'add_account', token: getToken(), username, password });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menambah akun.');
+                    $('accountModalOverlay').classList.remove('open');
+                    await fetchAccounts();
+                    renderAccountsList();
+                    showToast(`Akun "${username}" ditambahkan.`, 'success');
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+
+            $('resetPassModalClose').addEventListener('click', () => $('resetPassModalOverlay').classList.remove('open'));
+            $('resetPassCancel').addEventListener('click', () => $('resetPassModalOverlay').classList.remove('open'));
+            $('resetPassModalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'resetPassModalOverlay') $('resetPassModalOverlay').classList.remove('open');
+            });
+            $('resetPassForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = $('resetPassUsername').value;
+                const newPassword = $('resetPassNew').value;
+                const msg = $('resetPassMsg');
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'reset_account_password', token: getToken(), username, new_password: newPassword });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal reset password.');
+                    $('resetPassModalOverlay').classList.remove('open');
+                    showToast(`Password "${username}" berhasil direset.`, 'success');
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+        }
+
+        // ========================================================================
         //  FILTERS
         // ========================================================================
         function setupFilters() {
@@ -2303,6 +2745,8 @@
                 const preview = replaceVariables($('templateText').value, sampleGuest, configData);
                 $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
                 renderTemaTab();
+                renderMempelaiForm();
+                renderAccountsList();
                 if (usingMockData) {
                     showToast('⚠️ Data menggunakan MOCK karena API tidak tersedia.', 'error');
                 } else {
@@ -2342,16 +2786,18 @@
             });
             const titles = {
                 dashboard: 'Dashboard',
+                mempelai: 'Data Mempelai',
                 guests: 'Daftar Tamu',
                 send: 'Kirim WA',
                 template: 'Template Pesan',
-                tema: 'Tampilan Undangan'
+                tema: 'Tampilan Undangan',
+                akun: 'Akun'
             };
             $('pageTitle').textContent = titles[section] || 'Dashboard';
             closeSidebar();
         }
 
-        const sections = ['dashboard', 'guests', 'send', 'template', 'tema'];
+        const sections = ['dashboard', 'mempelai', 'guests', 'send', 'template', 'tema', 'akun'];
         const sectionEls = {};
         sections.forEach(s => sectionEls[s] = $(`section-${s}`));
 
@@ -2404,9 +2850,11 @@
         //  INIT DASHBOARD
         // ========================================================================
         async function initDashboard() {
+            myUsername = localStorage.getItem(USERNAME_KEY) || '';
             await fetchConfig();
             await fetchGuests();
             await fetchConfirmations();
+            await fetchAccounts();
             setupFilters();
             renderStats();
             renderGuestList('all', '');
@@ -2415,6 +2863,10 @@
             wireTemaEvents();
             renderTemaTab();
             wireGuestCrud();
+            renderMempelaiForm();
+            wireMempelaiForm();
+            renderAccountsList();
+            wireAkunTab();
             navigateTo('dashboard');
             $('lastUpdate').textContent = 'Dimuat: ' + new Date().toLocaleString('id-ID');
 
