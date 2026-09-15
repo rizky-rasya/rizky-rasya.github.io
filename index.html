@@ -21,9 +21,9 @@
      Jika warna diubah dari dashboard, pastikan tetap memenuhi rasio di atas.
   */
   :root{
-    --gold:#A87A1F;          /* dekoratif - 3.47:1 di atas --bg */
-    --gold-ink:#7D5A0F;      /* teks/tombol - 5.65:1 di atas --bg */
-    --gold-soft:#8A5C22;     /* judul - 5.18:1 di atas --bg */
+    --gold:#A87A1F;
+    --gold-ink:#7D5A0F;
+    --gold-soft:#8A5C22;
     --bg:#FAF6EC;
     --surface:#FFFFFF;
     --surface-2:#F1EAD9;
@@ -52,10 +52,8 @@
     --focus:#E4C97A;
     --shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
-  /* ---- Preset gaya font (dipilih lewat dashboard > Tampilan Uleman) ---- */
   html[data-font="modern"]{ --font-display:'Poppins',sans-serif; --font-body:'Inter',sans-serif; }
   html[data-font="classic"]{ --font-display:'Playfair Display',serif; --font-body:'Lato',sans-serif; }
-  /* ---- Preset radius/bentuk kartu ---- */
   html[data-radius="tajam"]{ --radius:10px; }
   html[data-radius="lembut"]{ --radius:22px; }
   html[data-radius="bulat"]{ --radius:32px; }
@@ -85,7 +83,6 @@
     transition:transform .2s ease;
   }
   .skip-link:focus{ transform:translateY(0); }
-  /* Indikator fokus yang jelas & konsisten (WCAG 2.4.7 / 2.4.11) */
   :focus-visible{
     outline:3px solid var(--focus);
     outline-offset:2px;
@@ -152,10 +149,15 @@
   #welcome .names{ font-size:2.1rem; margin:.6rem 0 .3rem; }
   #welcome .to-label{ font-size:.9rem; color:var(--muted); margin-top:1.6rem; }
   #welcome .to-name{ font-family:var(--font-display); font-size:1.4rem; margin-top:.2rem; }
+
+  /* ---- BUTTONS (tanpa underline untuk <a class="btn">) ---- */
   .btn{
+    display:inline-block;
     font-family:var(--font-body); font-size:.85rem; letter-spacing:.1em; text-transform:uppercase;
     border:2px solid var(--gold-ink); color:var(--gold-ink); background:transparent;
     padding:.85rem 1.8rem; border-radius:999px; cursor:pointer;
+    text-decoration:none; /* hilangkan underline pada <a class="btn"> */
+    text-align:center;
     transition: background .3s ease, color .3s ease, transform .2s ease;
   }
   .btn:active{ transform:scale(.97); }
@@ -232,9 +234,18 @@
   .dresscode{ margin-top:1.6rem; background:var(--surface-2); border-radius:var(--radius); padding:1.2rem; }
   .dresscode p{ font-size:.9rem; margin:0; }
 
+  /* ============ LOCATION CARD + PETA ============ */
   .location-card{ margin-top:1.6rem; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:1.4rem; }
   .location-card h3{ font-size:1.2rem; }
   .location-card p{ font-size:.9rem; color:var(--muted); margin:.5rem 0 1rem; line-height:1.6; }
+  .location-card .map-embed{
+    width:100%; aspect-ratio:16/10; border:1px solid var(--line);
+    border-radius:calc(var(--radius) * 0.6); overflow:hidden;
+    margin:.2rem 0 1.1rem; background:var(--surface-2);
+  }
+  .location-card .map-embed iframe{
+    width:100%; height:100%; border:0; display:block;
+  }
 
   /* ============ GALLERY ============ */
   .gallery-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; margin-top:1.6rem; }
@@ -388,15 +399,14 @@
         <p class="parents" id="wanita-ortu">—</p>
       </div>
 
-       <p class="amp" aria-hidden="true">&amp;</p>
-      
+      <p class="amp" aria-hidden="true">&amp;</p>
+
       <div class="couple-card">
         <div class="arch"><img id="pria-foto" src="" alt=""></div>
         <h3 class="serif" id="pria-nama">—</h3>
         <p class="role" id="pria-status">—</p>
         <p class="parents" id="pria-ortu">—</p>
       </div>
-
     </section>
 
     <!-- QUOTES -->
@@ -425,8 +435,6 @@
       <h2 class="sr-only" id="wedding-date-title">Waktu dan Tempat Acara</h2>
       <span class="eyebrow" aria-hidden="true">Menghitung Hari</span>
 
-      <!-- Widget hitung mundur disembunyikan dari screen reader karena berubah tiap detik.
-           Informasi tanggal sudah tersedia lengkap pada teks di bawahnya. -->
       <div class="countdown" aria-hidden="true">
         <div class="cell"><div class="num" id="cd-d">0</div><div class="label">Hari</div></div>
         <div class="cell"><div class="num" id="cd-h">0</div><div class="label">Jam</div></div>
@@ -450,6 +458,20 @@
       <div class="location-card">
         <h3 class="serif" id="lokasi-nama">—</h3>
         <p id="lokasi-alamat">—</p>
+
+        <!-- Preview Google Maps -->
+        <div class="map-embed" id="lokasi-map-wrap" style="display:none;">
+          <iframe
+            id="lokasi-map"
+            src=""
+            title="Pratinjau lokasi acara di Google Maps"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+            aria-label="Pratinjau peta lokasi acara"
+          ></iframe>
+        </div>
+
         <a class="btn" id="lokasi-link" href="#" target="_blank" rel="noopener">Lihat Google Maps</a>
       </div>
     </section>
@@ -579,8 +601,6 @@
    ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 
-/* Data cadangan (dipakai jika APPS_SCRIPT_URL belum diisi / API gagal
-   diakses), supaya halaman tetap tampil saat development. */
 const FALLBACK_DATA = {
   judul_hero: "Uleman Palakrama",
   nama_panggilan_pria: "Rizky",
@@ -596,6 +616,7 @@ const FALLBACK_DATA = {
   nama_lokasi: "Rumah Mempelai Wanita",
   alamat_lokasi: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
   link_maps: "https://maps.app.goo.gl/ey1uNg347TG7fnYVA",
+  link_maps_embed: "", /* opsional: tempel URL dari Google Maps > Bagikan > Sematkan peta */
   dress_code: "Bebas sopan",
   quote_1_teks: "Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah).",
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
@@ -623,8 +644,6 @@ const FALLBACK_DATA = {
 
 let CFG = FALLBACK_DATA;
 
-/* Tema/tampilan bawaan — dipakai kalau API belum diisi / gagal diakses. Sinkron
-   dengan DEFAULT_TEMA di Code.gs supaya pratinjau di dashboard konsisten. */
 const FALLBACK_TEMA = {
   preset_aktif: 'emerald_gold',
   warna_bg_light: '#FAF6EC', warna_surface_light: '#FFFFFF', warna_surface2_light: '#F1EAD9',
@@ -646,8 +665,6 @@ let TEMA = FALLBACK_TEMA;
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const guestName = decodeURIComponent(qs.get('to') || 'Tamu Uleman').replace(/\+/g, ' ');
-// Parameter disamarkan jadi "k" (bukan "id") + isinya token acak (lihat SETUP.md /
-// randomGuestToken_ di Code.gs) — dukung juga "id" lama untuk kompatibilitas mundur.
 const guestId = (qs.get('k') || qs.get('id') || '').trim();
 
 function setText(id, val){ const el = $(id); if(el) el.textContent = (val === undefined || val === null || val === '') ? '-' : val; }
@@ -675,7 +692,7 @@ async function apiGet(action, params){
 async function apiPost(payload){
   const res = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari CORS preflight
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
   });
   return res.json();
@@ -735,10 +752,38 @@ function renderConfig(cfg){
   setText('dresscode-text', cfg.dress_code);
   setText('lokasi-nama', cfg.nama_lokasi);
   setText('lokasi-alamat', cfg.alamat_lokasi);
+
   if(cfg.link_maps){
     const link = $('lokasi-link');
     link.href = cfg.link_maps;
     link.setAttribute('aria-label', `Buka lokasi ${cfg.nama_lokasi} di Google Maps (tab baru)`);
+  }
+
+  /* ---- Preview peta: pakai link_maps_embed kalau ada; kalau tidak,
+          hasilkan otomatis dari alamat lokasi. ---- */
+  const mapWrap = $('lokasi-map-wrap');
+  const mapFrame = $('lokasi-map');
+  if(mapWrap && mapFrame){
+    let embedSrc = (cfg.link_maps_embed || '').trim();
+
+    // Kalau user menempel kode <iframe src="...">, ambil URL-nya saja.
+    const m = embedSrc.match(/src=["']([^"']+)["']/i);
+    if(m) embedSrc = m[1];
+
+    // Kalau tetap kosong, buat dari alamat.
+    if(!embedSrc && cfg.alamat_lokasi){
+      embedSrc = 'https://maps.google.com/maps?q=' +
+        encodeURIComponent(cfg.alamat_lokasi + ', ' + (cfg.nama_lokasi || '')) +
+        '&z=16&output=embed';
+    }
+
+    if(embedSrc){
+      mapFrame.src = embedSrc;
+      mapFrame.title = `Pratinjau peta lokasi ${cfg.nama_lokasi || 'acara'}`;
+      mapWrap.style.display = '';
+    } else {
+      mapWrap.style.display = 'none';
+    }
   }
 
   const urls = String(cfg.galeri_url || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -772,7 +817,6 @@ function renderConfig(cfg){
 
   setupMusic(cfg.musik_url);
 
-  // Isi nama di form Ucapan & Doa dari nama_tamu (?to=) di awal, tapi tetap bisa diedit bebas.
   if(guestName && guestName !== 'Tamu Uleman'){
     $('f-nama').value = guestName;
   }
@@ -782,10 +826,6 @@ function renderConfig(cfg){
 
 /* ======================================================================
    MUSIK LATAR
-   Browser memblokir autoplay audio BERSUARA sebelum ada interaksi
-   pengguna. Triknya: coba autoplay dalam kondisi muted (ini diizinkan),
-   lalu begitu tamu menekan "Buka Uleman" (gestur pengguna yang pasti
-   ada), musik langsung di-unmute & diputar dari awal.
    ====================================================================== */
 function setupMusic(url){
   const audio = $('bg-music');
@@ -794,7 +834,7 @@ function setupMusic(url){
 
   audio.src = url;
   audio.muted = true;
-  audio.play().catch(() => {}); // autoplay muted, boleh gagal diam-diam
+  audio.play().catch(() => {});
   btn.style.display = 'flex';
   updateMusicIcon(true);
 
@@ -836,12 +876,12 @@ function startCountdown(isoLike){
 }
 
 /* ======================================================================
-   COMMENTS (UCAPAN & DOA) — termasuk Ubah/Hapus milik sendiri
+   COMMENTS
    ====================================================================== */
 let commentOffset = 0;
 const COMMENT_PAGE_SIZE = 10;
-let editingComment = null; // { comment_id, edit_token } saat form sedang mode ubah
-let knownComments = {};    // cache data komentar (untuk isi ulang form saat "Ubah")
+let editingComment = null;
+let knownComments = {};
 
 function getMyComments(){
   try{ return JSON.parse(localStorage.getItem('undangan_my_comments') || '{}'); }
@@ -926,13 +966,7 @@ async function loadComments(reset){
 }
 
 /* ======================================================================
-   TEMA / TAMPILAN — dibaca dari sheet PengaturanTema lewat action=config,
-   diatur dari dashboard admin (tab "Tampilan Uleman"), berlaku instan
-   tanpa perlu ubah kode index.html.
-
-   CATATAN KONTRAS: --gold-ink dihitung otomatis dengan color-mix() agar
-   teks/tombol tetap memenuhi rasio kontras minimal 4.5:1. Jika browser
-   tidak mendukung color-mix(), nilai cadangan dari :root statis dipakai.
+   TEMA
    ====================================================================== */
 function applyTema(tema){
   TEMA = { ...FALLBACK_TEMA, ...tema };
@@ -973,7 +1007,6 @@ function applyTema(tema){
   applySectionVisibility();
 }
 
-/* Tampil/sembunyikan section sesuai pengaturan dari dashboard (tab Tampilan Uleman). */
 const SECTION_IDS = {
   section_bride: 'bride',
   section_quotes: 'quotes',
@@ -995,7 +1028,6 @@ function applySectionVisibility(){
    INIT
    ====================================================================== */
 async function init(){
-  // Tema: ikuti pilihan tersimpan, kalau belum ada ikuti preferensi sistem
   const savedTheme = localStorage.getItem('undangan-theme');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const initialTheme = savedTheme || (systemDark ? 'night' : 'day');
@@ -1009,9 +1041,8 @@ async function init(){
       CFG = { ...FALLBACK_DATA, ...res.data };
       if(res.tema) applyTema(res.tema);
     }
-  } catch(err){
-    // pakai FALLBACK_DATA / FALLBACK_TEMA
-  }
+  } catch(err){}
+
   renderConfig(CFG);
   toggleJumlahField();
   loadComments(true);
@@ -1037,16 +1068,13 @@ $('open-btn').addEventListener('click', () => {
   $('fab-group').removeAttribute('inert');
   revealOnScroll();
 
-  // Pindahkan fokus ke judul utama agar pembaca layar langsung membacakan isi undangan.
   setTimeout(() => {
     const heroTitle = $('hero-names');
     if(heroTitle && typeof heroTitle.focus === 'function') heroTitle.focus();
   }, 750);
 
-  // Setelah animasi selesai, hapus welcome dari alur dokumen sepenuhnya.
   setTimeout(() => { welcome.style.display = 'none'; }, 900);
 
-  // Gestur pengguna ini yang dipakai untuk "membuka gerbang" autoplay musik.
   const audio = $('bg-music');
   if(audio.src){
     audio.muted = false;
@@ -1080,7 +1108,7 @@ document.addEventListener('click', (e) => {
   });
 });
 
-/* Galeri modal — aksesibel: fokus dikelola, ESC menutup, fokus dikembalikan */
+/* Galeri modal */
 let lastFocusedEl = null;
 
 function openImgModal(src, altText, trigger){
@@ -1119,7 +1147,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-/* Perangkap fokus di dalam modal */
 $('imgModal').addEventListener('keydown', (e) => {
   if(e.key !== 'Tab') return;
   const focusables = $('imgModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -1136,10 +1163,10 @@ $('imgModal').addEventListener('keydown', (e) => {
 /* Load more ucapan */
 $('load-more').addEventListener('click', () => loadComments(false));
 
-/* Tampilkan/sembunyikan field Jumlah yang Hadir sesuai pilihan Konfirmasi Kehadiran */
+/* Tampilkan/sembunyikan field Jumlah yang Hadir */
 $('f-presensi').addEventListener('change', toggleJumlahField);
 
-/* Klik "Ubah" / "Hapus" pada ucapan milik sendiri (dideteksi lewat token di localStorage) */
+/* Klik "Ubah" / "Hapus" */
 document.addEventListener('click', async (e) => {
   const editBtn = e.target.closest('.edit-comment-btn');
   if(editBtn){
@@ -1242,7 +1269,7 @@ $('rsvp-form').addEventListener('submit', async (e) => {
   }
 });
 
-/* Reveal-on-scroll sederhana */
+/* Reveal-on-scroll */
 function revealOnScroll(){
   const els = document.querySelectorAll('.fade-up');
   const io = new IntersectionObserver((entries) => {
