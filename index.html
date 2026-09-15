@@ -11,15 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Amiri:wght@400;700&family=Poppins:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
-  /* ============ DESIGN TOKENS ============
-     ATURAN KONTRAS (WCAG 2.2):
-       --gold      : dekoratif (garis/ikon)  -> minimal 3:1  (1.4.11)
-       --gold-ink  : teks & tombol           -> minimal 4.5:1 (1.4.3)
-       --gold-soft : judul beraksen          -> minimal 4.5:1
-       --muted     : teks sekunder           -> minimal 4.5:1
-       --field-line: garis input             -> minimal 3:1
-     Jika warna diubah dari dashboard, pastikan tetap memenuhi rasio di atas.
-  */
+  /* ============ DESIGN TOKENS ============ */
   :root{
     --gold:#A87A1F;
     --gold-ink:#7D5A0F;
@@ -108,7 +100,7 @@
   section{ padding:4rem 1.6rem; position:relative; }
   .center{ text-align:center; }
 
-  /* ============ SIGNATURE: LATTICE DIVIDER ============ */
+  /* ============ LATTICE DIVIDER ============ */
   .lattice{
     display:flex; align-items:center; justify-content:center; gap:.5rem;
     margin: 1.6rem 0; opacity:.9;
@@ -156,7 +148,7 @@
     font-family:var(--font-body); font-size:.85rem; letter-spacing:.1em; text-transform:uppercase;
     border:2px solid var(--gold-ink); color:var(--gold-ink); background:transparent;
     padding:.85rem 1.8rem; border-radius:999px; cursor:pointer;
-    text-decoration:none; /* hilangkan underline pada <a class="btn"> */
+    text-decoration:none;
     text-align:center;
     transition: background .3s ease, color .3s ease, transform .2s ease;
   }
@@ -456,6 +448,7 @@
       </div>
 
       <div class="location-card">
+        <span class="eyebrow" aria-hidden="true">Tempat Acara</span>
         <h3 class="serif" id="lokasi-nama">—</h3>
         <p id="lokasi-alamat">—</p>
 
@@ -466,7 +459,7 @@
             src=""
             title="Pratinjau lokasi acara di Google Maps"
             loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
+            referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen
             aria-label="Pratinjau peta lokasi acara"
           ></iframe>
@@ -597,7 +590,7 @@
 
 <script>
 /* ======================================================================
-   KONFIGURASI — WAJIB DIISI SEBELUM DIPAKAI
+   KONFIGURASI
    ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 
@@ -615,8 +608,10 @@ const FALLBACK_DATA = {
   waktu_resepsi: "09.30 - 22.00 WIB",
   nama_lokasi: "Rumah Mempelai Wanita",
   alamat_lokasi: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
-  link_maps: "https://maps.app.goo.gl/ey1uNg347TG7fnYVA",
-  link_maps_embed: "", /* opsional: tempel URL dari Google Maps > Bagikan > Sematkan peta */
+  /* Link "Lihat Google Maps" (dibuka di tab baru) */
+  link_maps: "https://maps.app.goo.gl/H6zRjLgtMvdBsCBSA",
+  /* URL embed untuk preview peta di halaman (dari Google Maps > Bagikan > Sematkan peta) */
+  link_maps_embed: "https://www.google.com/maps/embed?pb=!4v1789462390774!6m8!1m7!1sZP8gyPEZ48PxzTPIMQ4vuQ!2m2!1d-7.232824222753001!2d110.0715365076562!3f149.27!4f-9.049999999999997!5f0.7820865974627469",
   dress_code: "Bebas sopan",
   quote_1_teks: "Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah).",
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
