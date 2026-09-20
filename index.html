@@ -512,10 +512,6 @@
       <div class="gift-card">
         <div class="row"><span>Kirim Hadiah Fisik</span><span class="lbl">Gift</span></div>
         <div class="row" style="margin-top:.6rem;"><span class="val" id="gift-nama">—</span></div>
-        <!-- <div class="row" style="margin-top:.4rem;">
-          <span class="val" id="gift-hp">—</span>
-          <button class="copy" type="button" id="copy-hp" data-copy-target="gift-hp">Salin</button>
-        </div> -->
         <details>
           <summary>Lihat alamat</summary>
           <div class="row" style="margin-top:.6rem;">
@@ -581,9 +577,12 @@
     <svg id="music-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
     <svg id="music-icon-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" style="display:none;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
   </button>
+  <!-- Tombol ganti tema disembunyikan (di-comment) -->
+  <!--
   <button class="fab" type="button" id="theme-btn" aria-label="Aktifkan tema gelap" title="Aktifkan tema gelap">
-    <!-- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/></svg> -->
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/></svg>
   </button>
+  -->
 </div>
 
 <audio id="bg-music" loop preload="none" aria-hidden="true"></audio>
@@ -613,10 +612,8 @@ const FALLBACK_DATA = {
   waktu_resepsi: "09.30 - 22.00 WIB",
   nama_lokasi: "Rumah Mempelai Wanita",
   alamat_lokasi: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
-  /* Link "Lihat Google Maps" (dibuka di tab baru) */
   link_maps: "https://maps.app.goo.gl/kaokeqEnA6Dro1aW7",
-  /* URL embed untuk preview peta di halaman (dari Google Maps > Bagikan > Sematkan peta) */
-    link_maps_embed: "https://www.google.com/maps/embed?pb=!4v1789887121469!6m8!1m7!1sZP8gyPEZ48PxzTPIMQ4vuQ!2m2!1d-7.232824222753001!2d110.0715365076562!3f169.01356646348276!4f-12.565136419486919!5f0.4000000000000002",
+  link_maps_embed: "https://www.google.com/maps/embed?pb=!4v1789887121469!6m8!1m7!1sZP8gyPEZ48PxzTPIMQ4vuQ!2m2!1d-7.232824222753001!2d110.0715365076562!3f169.01356646348276!4f-12.565136419486919!5f0.4000000000000002",
   dress_code: "Bebas sopan",
   quote_1_teks: "Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat (kebesaran Allah).",
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
@@ -759,18 +756,14 @@ function renderConfig(cfg){
     link.setAttribute('aria-label', `Buka lokasi ${cfg.nama_lokasi} di Google Maps (tab baru)`);
   }
 
-  /* ---- Preview peta: pakai link_maps_embed kalau ada; kalau tidak,
-          hasilkan otomatis dari alamat lokasi. ---- */
   const mapWrap = $('lokasi-map-wrap');
   const mapFrame = $('lokasi-map');
   if(mapWrap && mapFrame){
     let embedSrc = (cfg.link_maps_embed || '').trim();
 
-    // Kalau user menempel kode <iframe src="...">, ambil URL-nya saja.
     const m = embedSrc.match(/src=["']([^"']+)["']/i);
     if(m) embedSrc = m[1];
 
-    // Kalau tetap kosong, buat dari alamat.
     if(!embedSrc && cfg.alamat_lokasi){
       embedSrc = 'https://maps.google.com/maps?q=' +
         encodeURIComponent(cfg.alamat_lokasi + ', ' + (cfg.nama_lokasi || '')) +
@@ -1051,8 +1044,10 @@ async function init(){
   setTimeout(() => { $('loading').style.display = 'none'; }, 600);
 }
 
+/* syncThemeButton: AMAN meski tombol tema tidak ada di DOM */
 function syncThemeButton(theme){
   const btn = $('theme-btn');
+  if(!btn) return;              // ← guard: kalau tombol dihapus/di-comment, keluar dengan aman
   const label = theme === 'night' ? 'Aktifkan tema terang' : 'Aktifkan tema gelap';
   btn.setAttribute('aria-label', label);
   btn.title = label;
@@ -1084,14 +1079,18 @@ $('open-btn').addEventListener('click', () => {
   }
 });
 
-/* Ganti tema */
-$('theme-btn').addEventListener('click', () => {
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'night' ? 'day' : 'night';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('undangan-theme', next);
-  syncThemeButton(next);
-});
+/* Ganti tema — AMAN meski tombol tema di-comment/dihapus */
+(function bindThemeButton(){
+  const themeBtn = $('theme-btn');
+  if(!themeBtn) return;         // ← guard: tidak error kalau tombol tidak ada
+  themeBtn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'night' ? 'day' : 'night';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('undangan-theme', next);
+    syncThemeButton(next);
+  });
+})();
 
 /* Salin ke clipboard */
 document.addEventListener('click', (e) => {
