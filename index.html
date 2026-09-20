@@ -9,10 +9,7 @@
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Favicon Standar -->
 <link rel="icon" type="image/png" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
-
-<!-- Apple Touch Icon (Opsional untuk perangkat iOS) -->
 <link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500;600&family=Amiri:wght@400;700&family=Poppins:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -34,6 +31,9 @@
     --maxw: 480px;
     --font-display:'Cormorant Garamond',serif;
     --font-body:'Jost',sans-serif;
+    --danger:#A03325;
+    --danger-hover:#8A2A1E;
+    --success:#1F6B37;
   }
   html[data-theme="night"]{
     --gold:#C9A24B;
@@ -48,6 +48,9 @@
     --field-line:#6B7A68;
     --focus:#E4C97A;
     --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --danger:#EF9A9A;
+    --danger-hover:#C24A3C;
+    --success:#7CD992;
   }
   html[data-font="modern"]{ --font-display:'Poppins',sans-serif; --font-body:'Inter',sans-serif; }
   html[data-font="classic"]{ --font-display:'Playfair Display',serif; --font-body:'Lato',sans-serif; }
@@ -85,7 +88,7 @@
     outline-offset:2px;
     border-radius:6px;
   }
-  .btn:focus-visible, .fab:focus-visible{ outline-offset:3px; }
+  .btn:focus-visible, .fab:focus-visible, .btn-mini:focus-visible, .copy:focus-visible{ outline-offset:3px; }
 
   .stage{
     max-width:var(--maxw); margin:0 auto; min-height:100dvh;
@@ -147,7 +150,7 @@
   #welcome .to-label{ font-size:.9rem; color:var(--muted); margin-top:1.6rem; }
   #welcome .to-name{ font-family:var(--font-display); font-size:1.4rem; margin-top:.2rem; }
 
-  /* ---- BUTTONS (tanpa underline untuk <a class="btn">) ---- */
+  /* ============ BUTTONS ============ */
   .btn{
     display:inline-block;
     font-family:var(--font-body); font-size:.85rem; letter-spacing:.1em; text-transform:uppercase;
@@ -160,12 +163,35 @@
   .btn:active{ transform:scale(.97); }
   .btn.solid{ background:var(--gold-ink); color:var(--surface); border-color:var(--gold-ink); }
   .btn:hover, .btn:focus-visible{ background:var(--gold-ink); color:var(--surface); }
-  /* Varian bahaya untuk tombol konfirmasi hapus */
-  .btn.danger{ background:#A03325; border-color:#A03325; color:#fff; }
-  .btn.danger:hover, .btn.danger:focus-visible{ background:#8A2A1E; border-color:#8A2A1E; color:#fff; }
-  html[data-theme="night"] .btn.danger{ background:#C24A3C; border-color:#C24A3C; color:#fff; }
-  html[data-theme="night"] .btn.danger:hover,
-  html[data-theme="night"] .btn.danger:focus-visible{ background:#A8392E; border-color:#A8392E; }
+  .btn.danger{ background:var(--danger); border-color:var(--danger); color:#fff; }
+  .btn.danger:hover, .btn.danger:focus-visible{ background:var(--danger-hover); border-color:var(--danger-hover); color:#fff; }
+  html[data-theme="night"] .btn.danger{ color:#1B2A20; }
+
+  /* ---- TOMBOL MINI (Ubah / Hapus di komentar) ---- */
+  .btn-mini{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-family:var(--font-body); font-size:.72rem; font-weight:500;
+    letter-spacing:.06em; text-transform:uppercase; line-height:1;
+    padding:.45rem .85rem; border-radius:999px;
+    border:1.5px solid var(--gold-ink); color:var(--gold-ink); background:transparent;
+    cursor:pointer; text-decoration:none;
+    transition: background .25s ease, color .25s ease, transform .15s ease, border-color .25s ease;
+  }
+  .btn-mini svg{ width:13px; height:13px; flex:none; }
+  .btn-mini:hover, .btn-mini:focus-visible{
+    background:var(--gold-ink); color:var(--surface);
+  }
+  .btn-mini:active{ transform:scale(.96); }
+  .btn-mini.danger{
+    border-color:var(--danger); color:var(--danger);
+  }
+  .btn-mini.danger:hover, .btn-mini.danger:focus-visible{
+    background:var(--danger); color:#fff;
+  }
+  html[data-theme="night"] .btn-mini.danger:hover,
+  html[data-theme="night"] .btn-mini.danger:focus-visible{
+    color:#1B2A20;
+  }
 
   /* ============ FLOATING CONTROLS ============ */
   .fab-group{ position:fixed; right:1rem; bottom:1.2rem; z-index:80; display:flex; flex-direction:row; gap:.7rem; }
@@ -268,11 +294,26 @@
   .gift-card .row{ display:flex; justify-content:space-between; align-items:center; gap:.6rem; }
   .gift-card .lbl{ font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--gold-ink); font-weight:600; }
   .gift-card .val{ font-size:.95rem; margin-top:.3rem; }
+
+  /* ---- TOMBOL SALIN (pill + ikon) ---- */
   .gift-card .copy{
-    border:2px solid var(--gold-ink); background:transparent; color:var(--gold-ink); border-radius:10px;
-    padding:.4rem .7rem; font-size:.78rem; font-weight:500; cursor:pointer; flex:none;
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-family:var(--font-body); font-size:.72rem; font-weight:500;
+    letter-spacing:.06em; text-transform:uppercase; line-height:1;
+    border:1.5px solid var(--gold-ink); background:transparent; color:var(--gold-ink);
+    border-radius:999px; padding:.45rem .85rem; cursor:pointer; flex:none;
+    transition: background .25s ease, color .25s ease, transform .15s ease, border-color .25s ease;
   }
-  .gift-card .copy:hover, .gift-card .copy:focus-visible{ background:var(--gold-ink); color:var(--surface); }
+  .gift-card .copy svg{ width:13px; height:13px; flex:none; }
+  .gift-card .copy:hover, .gift-card .copy:focus-visible{
+    background:var(--gold-ink); color:var(--surface);
+  }
+  .gift-card .copy:active{ transform:scale(.96); }
+  .gift-card .copy.copied{
+    border-color:var(--success); color:var(--success);
+    background:color-mix(in srgb, var(--success) 10%, transparent);
+  }
+
   .gift-card details{ margin-top:.8rem; }
   .gift-card summary{ font-size:.85rem; color:var(--gold-ink); cursor:pointer; list-style:none; font-weight:500; }
   .gift-card summary::-webkit-details-marker{ display:none; }
@@ -294,8 +335,8 @@
   .submit-row .btn{ width:100%; }
   #cancel-edit-btn{ width:100%; margin-top:.6rem; }
   .form-msg{ font-size:.85rem; margin-top:.7rem; min-height:1.2em; }
-  .form-msg.ok{ color:#1F6B37; font-weight:500; }
-  .form-msg.err{ color:#A03325; font-weight:500; }
+  .form-msg.ok{ color:var(--success); font-weight:500; }
+  .form-msg.err{ color:var(--danger); font-weight:500; }
   html[data-theme="night"] .form-msg.ok{ color:#7CD992; }
   html[data-theme="night"] .form-msg.err{ color:#EF9A9A; }
   .edit-banner{
@@ -303,6 +344,7 @@
     font-size:.85rem; padding:.6rem .9rem; border-radius:12px; margin:0 0 1rem; font-weight:500;
   }
 
+  /* ============ KOMENTAR ============ */
   .comment{ text-align:left; border-bottom:1px solid var(--line); padding:1rem 0; }
   .comment .head{ display:flex; justify-content:space-between; align-items:baseline; gap:.6rem; flex-wrap:wrap; }
   .comment .name{ font-family:var(--font-display); font-size:1.15rem; font-weight:600; }
@@ -319,13 +361,10 @@
   html[data-theme="night"] .comment .presence.ragu{ background:rgba(212,163,35,.22); color:#F0D17A; }
   .comment .text{ font-size:.9rem; color:var(--muted); margin-top:.4rem; line-height:1.6; }
   .comment .jumlah{ font-size:.8rem; color:var(--muted); margin-top:.25rem; }
-  .comment .my-actions{ margin-top:.6rem; display:flex; gap:1rem; }
-  .comment .my-actions button{
-    font-size:.78rem; background:none; border:none; color:var(--gold-ink); cursor:pointer;
-    padding:.2rem 0; text-decoration:underline; font-weight:500;
-  }
-  .comment .my-actions button.danger{ color:#A03325; }
-  html[data-theme="night"] .comment .my-actions button.danger{ color:#EF9A9A; }
+
+  /* container tombol Ubah / Hapus */
+  .comment .my-actions{ margin-top:.7rem; display:flex; gap:.5rem; flex-wrap:wrap; }
+
   #load-more{ margin-top:1.3rem; }
   .empty-state{ font-size:.9rem; color:var(--muted); padding:1.4rem 0; }
 
@@ -346,7 +385,10 @@
     position:absolute; top:1rem; right:1rem; color:#fff; font-size:1.8rem; line-height:1;
     cursor:pointer; background:rgba(0,0,0,.5); border:2px solid #fff; border-radius:50%;
     width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+    transition: background .25s ease, transform .15s ease;
   }
+  #imgModal .close:hover{ background:rgba(0,0,0,.8); }
+  #imgModal .close:active{ transform:scale(.94); }
   #imgModal .close:focus-visible{ outline:3px solid #FFD54A; outline-offset:2px; }
 
   /* ============ UI MODAL (Pengganti alert/confirm) ============ */
@@ -387,12 +429,9 @@
   .ui-modal-icon svg{ width:28px; height:28px; }
   .ui-modal-icon[data-type="info"]{ color:var(--gold-ink); }
   .ui-modal-icon[data-type="confirm"]{ color:var(--gold-ink); }
-  .ui-modal-icon[data-type="success"]{ color:#1F6B37; }
-  .ui-modal-icon[data-type="error"]{ color:#A03325; }
-  .ui-modal-icon[data-type="danger"]{ color:#A03325; }
-  html[data-theme="night"] .ui-modal-icon[data-type="success"]{ color:#7CD992; }
-  html[data-theme="night"] .ui-modal-icon[data-type="error"],
-  html[data-theme="night"] .ui-modal-icon[data-type="danger"]{ color:#EF9A9A; }
+  .ui-modal-icon[data-type="success"]{ color:var(--success); }
+  .ui-modal-icon[data-type="error"]{ color:var(--danger); }
+  .ui-modal-icon[data-type="danger"]{ color:var(--danger); }
 
   .ui-modal-title{
     font-family:var(--font-display);
@@ -530,7 +569,6 @@
         <h3 class="serif" id="lokasi-nama">—</h3>
         <p id="lokasi-alamat">—</p>
 
-        <!-- Preview Google Maps -->
         <div class="map-embed" id="lokasi-map-wrap" style="display:none;">
           <iframe
             id="lokasi-map"
@@ -567,7 +605,10 @@
         </div>
         <div class="row" style="margin-top:.6rem;">
           <span class="val" id="bank-rekening">—</span>
-          <button class="copy" type="button" id="copy-rek-1" data-copy-target="bank-rekening">Salin</button>
+          <button class="copy" type="button" id="copy-rek-1" data-copy-target="bank-rekening">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="copy-label">Salin</span>
+          </button>
         </div>
       </div>
 
@@ -578,7 +619,10 @@
         </div>
         <div class="row" style="margin-top:.6rem;">
           <span class="val" id="bank-rekening-2">—</span>
-          <button class="copy" type="button" id="copy-rek-2" data-copy-target="bank-rekening-2">Salin</button>
+          <button class="copy" type="button" id="copy-rek-2" data-copy-target="bank-rekening-2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="copy-label">Salin</span>
+          </button>
         </div>
       </div>
 
@@ -589,7 +633,10 @@
           <summary>Lihat alamat</summary>
           <div class="row" style="margin-top:.6rem;">
             <span class="val" id="gift-alamat" style="font-size:.88rem;">—</span>
-            <button class="copy" type="button" id="copy-alamat" data-copy-target="gift-alamat">Salin</button>
+            <button class="copy" type="button" id="copy-alamat" data-copy-target="gift-alamat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span class="copy-label">Salin</span>
+            </button>
           </div>
         </details>
       </div>
@@ -762,6 +809,12 @@ function escapeHtml(str){
   return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
+/* ---- Ikon SVG reusable ---- */
+const ICONS = {
+  edit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
+};
+
 async function apiGet(action, params){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_URL') === 0){
     throw new Error('APPS_SCRIPT_URL belum dikonfigurasi');
@@ -847,7 +900,6 @@ function uiModalClose(result){
   uiModalLastFocus = null;
 }
 
-/* Shorthand: alert bertema — tidak butuh return value */
 function showAlert(message, opts){
   return uiModalOpen(Object.assign({
     title: 'Pemberitahuan',
@@ -857,7 +909,6 @@ function showAlert(message, opts){
   }, opts || {}));
 }
 
-/* Shorthand: confirm bertema — mengembalikan Promise<boolean> */
 function showConfirm(message, opts){
   return uiModalOpen(Object.assign({
     title: 'Konfirmasi',
@@ -869,7 +920,6 @@ function showConfirm(message, opts){
   }, opts || {}));
 }
 
-/* Event handler modal */
 $('ui-modal-ok').addEventListener('click', () => uiModalClose(true));
 $('ui-modal-cancel').addEventListener('click', () => uiModalClose(false));
 $('uiModal').querySelector('.ui-modal-backdrop').addEventListener('click', () => uiModalClose(false));
@@ -1104,10 +1154,15 @@ function renderComments(items, append){
     const presenceClass = c.presensi === 'Hadir' ? 'hadir' : c.presensi === 'Tidak Hadir' ? 'tidak' : c.presensi === 'Masih Ragu' ? 'ragu' : '';
     const isMine = c.comment_id && myBank[c.comment_id];
     const jumlahLine = (c.presensi === 'Hadir' && c.jumlah_hadir) ? `<p class="jumlah">👥 ${escapeHtml(c.jumlah_hadir)} orang akan hadir</p>` : '';
+    /* --- Tombol Ubah / Hapus pakai gaya pill + ikon --- */
     const actions = isMine ? `
       <div class="my-actions">
-        <button type="button" class="edit-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Ubah ucapan dari ${escapeHtml(c.nama)}">Ubah</button>
-        <button type="button" class="danger delete-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Hapus ucapan dari ${escapeHtml(c.nama)}">Hapus</button>
+        <button type="button" class="btn-mini edit-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Ubah ucapan dari ${escapeHtml(c.nama)}">
+          ${ICONS.edit}<span>Ubah</span>
+        </button>
+        <button type="button" class="btn-mini danger delete-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Hapus ucapan dari ${escapeHtml(c.nama)}">
+          ${ICONS.trash}<span>Hapus</span>
+        </button>
       </div>` : '';
     return `
     <article class="comment">
@@ -1244,7 +1299,6 @@ async function init(){
   setTimeout(() => { $('loading').style.display = 'none'; }, 600);
 }
 
-/* syncThemeButton: AMAN meski tombol tema tidak ada di DOM */
 function syncThemeButton(theme){
   const btn = $('theme-btn');
   if(!btn) return;
@@ -1292,18 +1346,25 @@ $('open-btn').addEventListener('click', () => {
   });
 })();
 
-/* Salin ke clipboard */
+/* Salin ke clipboard — hanya ubah label, ikon tetap */
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-copy-target]');
   if(!btn) return;
   const text = $(btn.dataset.copyTarget).textContent;
+  const labelEl = btn.querySelector('.copy-label');
+  const oldLabel = labelEl ? labelEl.textContent : btn.textContent;
+  const setLabel = (v) => {
+    if(labelEl) labelEl.textContent = v;
+    else btn.textContent = v;
+  };
+
   navigator.clipboard.writeText(text).then(() => {
-    const old = btn.textContent;
-    btn.textContent = 'Tersalin';
-    setTimeout(() => { btn.textContent = old; }, 1500);
+    setLabel('Tersalin');
+    btn.classList.add('copied');
+    setTimeout(() => { setLabel(oldLabel); btn.classList.remove('copied'); }, 1600);
   }).catch(() => {
-    btn.textContent = 'Gagal';
-    setTimeout(() => { btn.textContent = 'Salin'; }, 1500);
+    setLabel('Gagal');
+    setTimeout(() => { setLabel(oldLabel); }, 1600);
   });
 });
 
@@ -1395,7 +1456,6 @@ document.addEventListener('click', async (e) => {
     const editToken = bank[id];
     if(!editToken) return;
 
-    /* Konfirmasi hapus — modal bertema (menggantikan confirm bawaan) */
     const lanjut = await showConfirm(
       'Ucapan & doa ini akan dihapus permanen dan tidak bisa dikembalikan. Lanjutkan?',
       { title: 'Hapus Ucapan?', type: 'danger', okLabel: 'Ya, Hapus', cancelLabel: 'Batal', danger: true }
@@ -1408,7 +1468,6 @@ document.addEventListener('click', async (e) => {
         removeMyComment(id);
         if(editingComment && editingComment.comment_id === id) resetFormToCreateMode();
         loadComments(true);
-        /* Notifikasi sukses bertema */
         showAlert('Ucapan & doa berhasil dihapus.', {
           title: 'Berhasil Dihapus', type: 'success', okLabel: 'Tutup'
         });
