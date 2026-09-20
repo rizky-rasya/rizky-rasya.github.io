@@ -160,6 +160,12 @@
   .btn:active{ transform:scale(.97); }
   .btn.solid{ background:var(--gold-ink); color:var(--surface); border-color:var(--gold-ink); }
   .btn:hover, .btn:focus-visible{ background:var(--gold-ink); color:var(--surface); }
+  /* Varian bahaya untuk tombol konfirmasi hapus */
+  .btn.danger{ background:#A03325; border-color:#A03325; color:#fff; }
+  .btn.danger:hover, .btn.danger:focus-visible{ background:#8A2A1E; border-color:#8A2A1E; color:#fff; }
+  html[data-theme="night"] .btn.danger{ background:#C24A3C; border-color:#C24A3C; color:#fff; }
+  html[data-theme="night"] .btn.danger:hover,
+  html[data-theme="night"] .btn.danger:focus-visible{ background:#A8392E; border-color:#A8392E; }
 
   /* ============ FLOATING CONTROLS ============ */
   .fab-group{ position:fixed; right:1rem; bottom:1.2rem; z-index:80; display:flex; flex-direction:row; gap:.7rem; }
@@ -342,6 +348,73 @@
     width:48px; height:48px; display:flex; align-items:center; justify-content:center;
   }
   #imgModal .close:focus-visible{ outline:3px solid #FFD54A; outline-offset:2px; }
+
+  /* ============ UI MODAL (Pengganti alert/confirm) ============ */
+  #uiModal{
+    position:fixed; inset:0; z-index:120;
+    display:none; align-items:center; justify-content:center; padding:1.4rem;
+  }
+  #uiModal.open{ display:flex; }
+  .ui-modal-backdrop{
+    position:absolute; inset:0;
+    background:rgba(20,15,10,.55);
+    -webkit-backdrop-filter:blur(3px);
+    backdrop-filter:blur(3px);
+    animation:uiFade .25s ease;
+  }
+  html[data-theme="night"] .ui-modal-backdrop{ background:rgba(0,0,0,.70); }
+  .ui-modal-box{
+    position:relative; z-index:1;
+    width:100%; max-width:360px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:1.7rem 1.4rem 1.3rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.30);
+    text-align:center;
+    animation:uiPop .32s cubic-bezier(.2,.9,.3,1.15);
+  }
+  @keyframes uiFade{ from{opacity:0} to{opacity:1} }
+  @keyframes uiPop{ from{opacity:0; transform:translateY(14px) scale(.96)} to{opacity:1; transform:none} }
+
+  .ui-modal-icon{
+    width:58px; height:58px; margin:0 auto .9rem;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid currentColor;
+    background:color-mix(in srgb, currentColor 8%, transparent);
+  }
+  .ui-modal-icon svg{ width:28px; height:28px; }
+  .ui-modal-icon[data-type="info"]{ color:var(--gold-ink); }
+  .ui-modal-icon[data-type="confirm"]{ color:var(--gold-ink); }
+  .ui-modal-icon[data-type="success"]{ color:#1F6B37; }
+  .ui-modal-icon[data-type="error"]{ color:#A03325; }
+  .ui-modal-icon[data-type="danger"]{ color:#A03325; }
+  html[data-theme="night"] .ui-modal-icon[data-type="success"]{ color:#7CD992; }
+  html[data-theme="night"] .ui-modal-icon[data-type="error"],
+  html[data-theme="night"] .ui-modal-icon[data-type="danger"]{ color:#EF9A9A; }
+
+  .ui-modal-title{
+    font-family:var(--font-display);
+    font-size:1.4rem;
+    font-weight:600;
+    color:var(--gold-soft);
+    margin:0 0 .55rem;
+    line-height:1.3;
+  }
+  .ui-modal-message{
+    font-size:.92rem;
+    color:var(--muted);
+    line-height:1.65;
+    margin:0 0 1.3rem;
+  }
+  .ui-modal-actions{
+    display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;
+  }
+  .ui-modal-actions .btn{
+    flex:1 1 auto; min-width:110px;
+    padding:.7rem 1.1rem; font-size:.78rem;
+  }
 </style>
 </head>
 <body>
@@ -422,7 +495,7 @@
     <section class="fade-up" id="story" aria-labelledby="story-title">
       <div class="center">
         <span class="eyebrow" aria-hidden="true">Perjalanan Kami</span>
-        <h2 class="serif" id="story-title" style="font-size:1.9rem; margin-top:.6rem;">Asmaraloka</h2>
+        <h2 class="serif" id="story-title" style="font-size:1.9rem; margin-top:.6rem;">Kisah Cinta</h2>
       </div>
       <div id="story-list" style="margin-top:1rem;"></div>
     </section>
@@ -592,6 +665,20 @@
   <img id="imgModalPic" src="" alt="">
 </div>
 
+<!-- ============ UI MODAL (pengganti alert/confirm) ============ -->
+<div id="uiModal" role="dialog" aria-modal="true" aria-labelledby="ui-modal-title" aria-describedby="ui-modal-message">
+  <div class="ui-modal-backdrop" data-ui-modal-close></div>
+  <div class="ui-modal-box">
+    <div class="ui-modal-icon" id="ui-modal-icon" data-type="info" aria-hidden="true"></div>
+    <h3 class="ui-modal-title" id="ui-modal-title">—</h3>
+    <p class="ui-modal-message" id="ui-modal-message">—</p>
+    <div class="ui-modal-actions">
+      <button class="btn" type="button" id="ui-modal-cancel">Batal</button>
+      <button class="btn solid" type="button" id="ui-modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ======================================================================
    KONFIGURASI
@@ -619,14 +706,14 @@ const FALLBACK_DATA = {
   quote_1_sumber: "QS. Adh-Dhariyat: 49",
   quote_2_teks: "dan sesungguhnya Dialah yang menciptakan pasangan laki-laki dan perempuan",
   quote_2_sumber: "QS. An-Najm: 45",
-  cerita_1_judul: "~",
-  cerita_1_isi: "Tidak semua awal perlu diceritakan panjang, Karena yang bertahan akan selalu menemukan jalannya. Bukan karena semuanya sempurna, melainkan karna kami terus belajar untuk tumbuh bersama.",
-  cerita_2_judul: "~",
-  cerita_2_isi: "Kami percaya, tidak ada pertemuan yang benar-benar kebetulan. Ada doa yang diam-diam dikabulkan, ada langkah yang diarahkan tanpa kita sadari. Dan Allah SWT, dengan cara-Nya yang paling tenang, menuntun kami sampai di titik ini.",
-  cerita_3_judul: "~",
-  cerita_3_isi: "Hingga pada waktunya, segala yang telah kami lewati bermuara pada satu keputusan yang sama. Dengan penuh syukur, kami memilih untuk saling menetap dalam ikatan yang diridhai oleh-Nya.",
-  cerita_4_judul: "~",
-  cerita_4_isi: "Semoga perjalanan ini selalu diliputi ketenangan, dan dipelihara dalam kebaikan yang panjang.",
+  cerita_1_judul: "Awal Kisah",
+  cerita_1_isi: "Pertemuan singkat yang tidak disangka-sangka menjadi titik awal dari segalanya. Dari berbagai kemungkinan yang ada di dunia, takdir mempertemukan kedua belah pihak dalam momen tak terduga untuk merajut narasi yang telah ditentukan.",
+  cerita_2_judul: "Saling Mendewasakan",
+  cerita_2_isi: "Perjalanan yang dijalani tidak sekadar berfokus pada kebahagiaan semata, melainkan proses belajar untuk tumbuh bersama. Berbagai perbedaan dipadukan, fondasi rasa percaya dibangun, dan setiap rintangan dipandang sebagai sarana untuk memperkokoh kebersamaan.",
+  cerita_3_judul: "Janji Setia",
+  cerita_3_isi: "Keputusan bulat telah diambil untuk mengakhiri pencarian. Lamaran yang terjadi menjadi manifestasi ketulusan hati serta kesiapan untuk melangkah ke jenjang yang lebih serius guna saling merawat dan menjaga selamanya.",
+  cerita_4_judul: "Awal Selamanya",
+  cerita_4_isi: "Dua permohonan kini telah berpadu menjadi satu tujuan. Berdiri di hadapan Sang Pencipta, ikrar suci diucapkan guna mengawali lembaran hidup yang baru, di mana pernikahan ini diposisikan sebagai pintu gerbang menuju perjalanan abadi bersama.",
   foto_cover_url: "https://blogger.googleusercontent.com/img/a/AVvXsEiAul1qBLweN9RRMQtZhRFcq2OlE10If5zKgCn0iVkqvkXtm1sjqkl6XcMKaTaQ6m_k5qRQKzcxqmdggB8CBe05mrHlGJgFhnq-xkhf2CuvndeM246oIoCUWEIpTLjcXmYYpLAcw7fqdfbCGLlFsJSREctDStr6atGIaqVdVCw4Xm2ZaqkR9sn1MQdtfCYcf",
   foto_pria_url: "https://blogger.googleusercontent.com/img/a/AVvXsEjVtHNNNLeH4tyotlzBtVrXwIcE_Du7AqX9WD1jC15r_Ak8Okveyq-QplH_n4i0LB-w1G_QMW2fpZXQFh9HQ5nDmFNrU4RGuEew2tFELt28COyuKGgv70A2j51_sl6KWTTpmCk91VR0MGtIoHe9qFa4LTTDJjfDnPrjSPFZm6dQzmjJ2Zl8JQJgrIdPwtj3",
   foto_wanita_url: "https://blogger.googleusercontent.com/img/a/AVvXsEii5_eI39rYxojSEVpNsmY2ruKJdCR0AslVtas9UAKW4Gapb5ekvSc9VYxyMW7s-qQPijLT_X6mqvuRu62U_eR63YmDJvhvzOCpE_FJzI5XzGEIj1HZ9cxqyNckuiCWXCt_UiBDAoJnIjcbQqi7SaDVAAunhR7u9B_iwSVvSTQUVSkzbJTf1lZ5jQtfEU3V",
@@ -694,6 +781,119 @@ async function apiPost(payload){
   });
   return res.json();
 }
+
+/* ======================================================================
+   UI MODAL — pengganti alert() & confirm() bawaan browser
+   ====================================================================== */
+const UI_MODAL_ICONS = {
+  info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  danger:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+  confirm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+};
+
+let uiModalResolve = null;
+let uiModalLastFocus = null;
+
+function uiModalOpen(opts){
+  const o = opts || {};
+  return new Promise((resolve) => {
+    uiModalLastFocus = document.activeElement;
+    uiModalResolve = resolve;
+
+    const modal    = $('uiModal');
+    const iconEl   = $('ui-modal-icon');
+    const titleEl  = $('ui-modal-title');
+    const msgEl    = $('ui-modal-message');
+    const okBtn    = $('ui-modal-ok');
+    const cancelBtn= $('ui-modal-cancel');
+
+    const type = o.type || 'info';
+    iconEl.dataset.type = type;
+    iconEl.innerHTML = UI_MODAL_ICONS[type] || UI_MODAL_ICONS.info;
+
+    titleEl.textContent = o.title || 'Pemberitahuan';
+    msgEl.textContent = o.message || '';
+    okBtn.textContent = o.okLabel || 'OK';
+    okBtn.classList.toggle('danger', !!o.danger);
+    okBtn.classList.toggle('solid', !o.danger);
+
+    if(o.cancelLabel){
+      cancelBtn.style.display = '';
+      cancelBtn.textContent = o.cancelLabel;
+    } else {
+      cancelBtn.style.display = 'none';
+    }
+
+    modal.classList.add('open');
+    setTimeout(() => { try{ okBtn.focus(); }catch(e){} }, 40);
+  });
+}
+
+function uiModalClose(result){
+  const modal = $('uiModal');
+  if(!modal.classList.contains('open')) return;
+  modal.classList.remove('open');
+
+  if(uiModalResolve){
+    const r = uiModalResolve;
+    uiModalResolve = null;
+    r(!!result);
+  }
+  if(uiModalLastFocus && typeof uiModalLastFocus.focus === 'function'){
+    try{ uiModalLastFocus.focus(); }catch(e){}
+  }
+  uiModalLastFocus = null;
+}
+
+/* Shorthand: alert bertema — tidak butuh return value */
+function showAlert(message, opts){
+  return uiModalOpen(Object.assign({
+    title: 'Pemberitahuan',
+    message: message,
+    type: 'info',
+    okLabel: 'OK'
+  }, opts || {}));
+}
+
+/* Shorthand: confirm bertema — mengembalikan Promise<boolean> */
+function showConfirm(message, opts){
+  return uiModalOpen(Object.assign({
+    title: 'Konfirmasi',
+    message: message,
+    type: 'confirm',
+    okLabel: 'Ya',
+    cancelLabel: 'Batal',
+    danger: false
+  }, opts || {}));
+}
+
+/* Event handler modal */
+$('ui-modal-ok').addEventListener('click', () => uiModalClose(true));
+$('ui-modal-cancel').addEventListener('click', () => uiModalClose(false));
+$('uiModal').querySelector('.ui-modal-backdrop').addEventListener('click', () => uiModalClose(false));
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && $('uiModal').classList.contains('open')){
+    e.preventDefault();
+    uiModalClose(false);
+  }
+});
+
+$('uiModal').addEventListener('keydown', (e) => {
+  if(e.key !== 'Tab') return;
+  const nodes = $('uiModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const focusables = Array.from(nodes).filter(el => el.offsetParent !== null);
+  if(focusables.length === 0) return;
+  const first = focusables[0];
+  const last  = focusables[focusables.length - 1];
+  if(e.shiftKey && document.activeElement === first){
+    e.preventDefault(); last.focus();
+  } else if(!e.shiftKey && document.activeElement === last){
+    e.preventDefault(); first.focus();
+  }
+});
 
 /* ======================================================================
    RENDER
@@ -1047,7 +1247,7 @@ async function init(){
 /* syncThemeButton: AMAN meski tombol tema tidak ada di DOM */
 function syncThemeButton(theme){
   const btn = $('theme-btn');
-  if(!btn) return;              // ← guard: kalau tombol dihapus/di-comment, keluar dengan aman
+  if(!btn) return;
   const label = theme === 'night' ? 'Aktifkan tema terang' : 'Aktifkan tema gelap';
   btn.setAttribute('aria-label', label);
   btn.title = label;
@@ -1082,7 +1282,7 @@ $('open-btn').addEventListener('click', () => {
 /* Ganti tema — AMAN meski tombol tema di-comment/dihapus */
 (function bindThemeButton(){
   const themeBtn = $('theme-btn');
-  if(!themeBtn) return;         // ← guard: tidak error kalau tombol tidak ada
+  if(!themeBtn) return;
   themeBtn.addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'night' ? 'day' : 'night';
@@ -1194,18 +1394,33 @@ document.addEventListener('click', async (e) => {
     const bank = getMyComments();
     const editToken = bank[id];
     if(!editToken) return;
-    if(!confirm('Hapus ucapan & doa ini? Tindakan ini tidak bisa dibatalkan.')) return;
+
+    /* Konfirmasi hapus — modal bertema (menggantikan confirm bawaan) */
+    const lanjut = await showConfirm(
+      'Ucapan & doa ini akan dihapus permanen dan tidak bisa dikembalikan. Lanjutkan?',
+      { title: 'Hapus Ucapan?', type: 'danger', okLabel: 'Ya, Hapus', cancelLabel: 'Batal', danger: true }
+    );
+    if(!lanjut) return;
+
     try{
       const res = await apiPost({ action: 'delete_comment', comment_id: id, edit_token: editToken });
       if(res.ok){
         removeMyComment(id);
         if(editingComment && editingComment.comment_id === id) resetFormToCreateMode();
         loadComments(true);
+        /* Notifikasi sukses bertema */
+        showAlert('Ucapan & doa berhasil dihapus.', {
+          title: 'Berhasil Dihapus', type: 'success', okLabel: 'Tutup'
+        });
       } else {
-        alert(res.error || 'Gagal menghapus ucapan.');
+        showAlert(res.error || 'Gagal menghapus ucapan. Silakan coba beberapa saat lagi.', {
+          title: 'Gagal Menghapus', type: 'error', okLabel: 'Tutup'
+        });
       }
     } catch(err){
-      alert('Tidak dapat terhubung ke server.');
+      showAlert('Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.', {
+        title: 'Koneksi Bermasalah', type: 'error', okLabel: 'Tutup'
+      });
     }
   }
 });
