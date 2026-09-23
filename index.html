@@ -702,7 +702,7 @@
     height:125px;
     left:0;
     top:50px;
-    background:url('assets/banner.png') center/100% 100% no-repeat;
+    /* background:url('assets/banner.png') center/100% 100% no-repeat; */
     opacity:1;
     pointer-events:none;
   }
@@ -712,20 +712,40 @@
     box-shadow:0 10px 28px rgba(43,38,32,.06);
   }
 
+  #comment{
+    overflow:hidden;
+  }
+  #comment::before{
+    content:"";
+    position:absolute;
+    width:100%;
+    height:125px;
+    left:0;
+    top:40px;
+    background:url('assets/banner.png') center/100% 100% no-repeat;
+    opacity:1;
+    pointer-events:none;
+  }
+  #comment > *{ position:relative; z-index:1; }
+  #comment .comment-card{
+    backdrop-filter:blur(2px);
+    box-shadow:0 10px 28px rgba(43,38,32,.06);
+  }
+
   footer{
     position:relative;
     overflow:hidden;
     background:
-      linear-gradient(rgba(250,246,236,.9),rgba(250,246,236,.97)),
+      linear-gradient(#faf3f1,#faf3f1),
       url('assets/ribbon.png') center bottom/110% auto no-repeat;
   }
   footer::before{
     content:"";
     display:block;
-    width:130px;
+    width:70px;
     height:92px;
     margin:-.7rem auto .3rem;
-    background:url('assets/crest.png') center/contain no-repeat;
+    background:url('assets/crest-red.png') center/contain no-repeat;
     opacity:.72;
   }
   footer .lattice{ position:relative; z-index:1; }
@@ -943,7 +963,8 @@
     <!-- COMMENT / RSVP -->
     <section class="center fade-up" id="comment" aria-labelledby="comment-title">
       <span class="eyebrow" aria-hidden="true">Doa Restu</span>
-      <h2 class="serif" id="comment-title" style="font-size:1.9rem; margin:.5rem 0 1.5rem;">Ucapan &amp; Doa</h2>
+      <!-- <h2 class="serif" id="comment-title" style="font-size:1.9rem; margin:.5rem 0 1.5rem;">Ucapan &amp; Doa</h2> -->
+      <h2 class="serif" id="comment-title" style="font-size:1.9rem;margin: .5rem 0 3rem;">Ucapan &amp; Doa</h2>
 
       <form id="rsvp-form" style="text-align:left;" novalidate>
         <p class="edit-banner" id="edit-banner" role="status" style="display:none;">✏️ Sedang mengubah ucapan Anda sebelumnya.</p>
