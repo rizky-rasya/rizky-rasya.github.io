@@ -454,293 +454,6 @@
     flex:1 1 auto; min-width:110px;
     padding:.7rem 1.1rem; font-size:.78rem;
   }
-
-  /* ============ WEDDING ASSET DECORATIONS ============ */
-  .asset-deco{
-    position:absolute;
-    pointer-events:none;
-    user-select:none;
-    z-index:0;
-    object-fit:contain;
-  }
-  .hero-crest{
-    width:112px;
-    height:auto;
-    left:50%;
-    top:6.5rem;
-    transform:translateX(-50%);
-    opacity:.96;
-    filter:drop-shadow(0 5px 12px rgba(125,90,15,.12));
-  }
-  .hero-flower-left{
-    width:150px;
-    left:-54px;
-    bottom:4.2rem;
-    transform:rotate(-5deg);
-    opacity:.9;
-  }
-  .hero-flower-right{
-    width:145px;
-    right:-52px;
-    top:5.2rem;
-    transform:rotate(5deg);
-    opacity:.86;
-  }
-  .hero-divider{
-    width:270px;
-    left:50%;
-    bottom:1.8rem;
-    transform:translateX(-50%);
-    opacity:.72;
-  }
-  #home .content{ position:relative; z-index:2; }
-  #home::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:
-      radial-gradient(circle at 50% 48%, rgba(255,255,255,.72), transparent 42%),
-      linear-gradient(to bottom, rgba(250,246,236,.28), rgba(250,246,236,.72));
-    z-index:1;
-    pointer-events:none;
-  }
-
-  .section-ornament{
-    width:230px;
-    height:auto;
-    margin:0 auto 1.2rem;
-    opacity:.82;
-    filter:drop-shadow(0 3px 8px rgba(125,90,15,.08));
-  }
-  .section-flower-left,
-  .section-flower-right{
-    width:108px;
-    max-height: 10%;
-    opacity:.72;
-    top:1.2rem;
-  }
-  /* .section-flower-left{ left:-42px; transform:rotate(-18deg); } */
-  .section-flower-left{ left:-20px; transform:rotate(-18deg); }
-  /* .section-flower-right{ right:-44px; transform:scaleX(-1) rotate(-18deg);}  */
-  .section-flower-right{ right: -18px; transform: rotate(14deg);  }
-
-  #bride{
-    background:
-      radial-gradient(circle at 8% 8%, rgba(255,255,255,.9), transparent 25%),
-      radial-gradient(circle at 92% 92%, rgba(241,234,217,.55), transparent 28%),
-      var(--bg);
-  }
-  #bride .couple-card{
-    position:relative;
-    padding:.8rem .2rem 1rem;
-  }
-  #bride .couple-card::after{
-    content:"";
-    display:block;
-    width:120px;
-    height:1px;
-    margin:1.1rem auto 0;
-    background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  }
-  .arch{
-    box-shadow:0 12px 30px rgba(78,54,25,.12);
-    background:linear-gradient(145deg,#fff,#f4eee2);
-  }
-  .arch img{ filter:saturate(.94) contrast(1.02); }
-
-  #quotes{
-    overflow:hidden;
-  }
-  #quotes::before{
-    content:"";
-    position:absolute;
-    width:260px;
-    height:75px;
-    left:50%;
-    top:.4rem;
-    transform:translateX(-50%);
-    background:url('assets/divider.png') center/contain no-repeat;
-    opacity:1;
-    pointer-events:none;
-  }
-  #quotes > *{ position:relative; z-index:1; }
-
-  .quote-card{
-    position:relative;
-    overflow:hidden;
-    background:
-      linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,255,255,.78)),
-      var(--surface);
-  }
-  .quote-card::after{
-    content:"";
-    position:absolute;
-    width:74px;
-    height:74px;
-    right:-20px;
-    bottom:-18px;
-    background:url('assets/flower.png') center/contain no-repeat;
-    opacity:.50;
-  }
-
-  #story{
-    overflow:hidden;
-    background:
-      linear-gradient(rgba(250,246,236,.94),rgba(250,246,236,.94)),
-      url('assets/ribbon.png') bottom center/100% auto no-repeat;
-  }
-  #story::after{
-    content:"";
-    display:block;
-    width:150px;
-    height:82px;
-    margin:1.8rem auto -1rem;
-    background:url('assets/branch.png') center/contain no-repeat;
-    opacity:.58;
-  }
-
-  #wedding-date{
-    overflow:hidden;
-  }
-  #wedding-date::before{
-    content: "";
-    position: absolute;
-    width: 175px;
-    height: 150px;
-    left: -25px;
-    bottom: 10px;
-    background: url(assets/floral-left.png) left bottom / contain no-repeat;
-    opacity: .28;
-    transform: rotate(321deg);
-}
-  #wedding-date::after{
-    content: "";
-    position: absolute;
-    width: 150px;
-    height: 155px;
-    right: -1px;
-    top: 1px;
-    background: url(assets/floral-right.png) right top / contain no-repeat;
-    opacity: .22;
-    transform: rotate(339deg);
-}
-  #wedding-date > *{ position:relative; z-index:1; }
-
-  .countdown{
-    position:relative;
-    padding:.7rem .2rem;
-    border-top:1px solid var(--line);
-    border-bottom:1px solid var(--line);
-  }
-  .countdown::before,
-  .countdown::after{
-    content:"✦";
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    color:var(--gold);
-    font-size:.7rem;
-  }
-  .countdown::before{ left:0; }
-  .countdown::after{ right:0; }
-
-  .agenda .item{
-    position:relative;
-    overflow:hidden;
-    background:
-      linear-gradient(145deg,rgba(255,255,255,.96),rgba(255,255,255,.78)),
-      var(--surface);
-    box-shadow:0 8px 22px rgba(43,38,32,.06);
-  }
-  .agenda .item::after{
-    content:"";
-    position:absolute;
-    width:65px;
-    height:65px;
-    right:-18px;
-    bottom:-18px;
-    background:url('assets/flower.png') center/contain no-repeat;
-    opacity:.50;
-  }
-
-  #gallery{
-    overflow:hidden;
-    background:
-      radial-gradient(circle at 50% 0, rgba(255,255,255,.85), transparent 36%),
-      var(--bg);
-  }
-  #gallery::before{
-    content:"";
-    display:block;
-    width:260px;
-    height:68px;
-    margin:-1.4rem auto 1rem;
-    background:url('assets/divider.png') center/contain no-repeat;
-    opacity:.55;
-  }
-  .gallery-grid .gal-item{
-    box-shadow:0 8px 20px rgba(43,38,32,.10);
-    border:1px solid rgba(168,122,31,.22);
-    background:var(--surface);
-  }
-  .gallery-grid .gal-item img{
-    transition:transform .45s ease, filter .45s ease;
-  }
-  .gallery-grid .gal-item:hover img,
-  .gallery-grid .gal-item:focus-visible img{
-    transform:scale(1.035);
-    filter:saturate(1.04);
-  }
-
-  #gift{
-    overflow:hidden;
-  }
-  #gift::before{
-    content:"";
-    position:absolute;
-    width:100%;
-    height:125px;
-    left:0;
-    top:50px;
-    background:url('assets/banner.png') center/100% 100% no-repeat;
-    opacity:1;
-    pointer-events:none;
-  }
-  #gift > *{ position:relative; z-index:1; }
-  #gift .gift-card{
-    backdrop-filter:blur(2px);
-    box-shadow:0 10px 28px rgba(43,38,32,.06);
-  }
-
-  footer{
-    position:relative;
-    overflow:hidden;
-    background:
-      linear-gradient(rgba(250,246,236,.9),rgba(250,246,236,.97)),
-      url('assets/ribbon.png') center bottom/110% auto no-repeat;
-  }
-  footer::before{
-    content:"";
-    display:block;
-    width:130px;
-    height:92px;
-    margin:-.7rem auto .3rem;
-    background:url('assets/crest.png') center/contain no-repeat;
-    opacity:.72;
-  }
-  footer .lattice{ position:relative; z-index:1; }
-
-  @media (max-width:520px){
-    .hero-crest{ width:92px; top:5.7rem; }
-    .hero-flower-left{ width:120px; left:-56px; bottom:3.2rem; }
-    .hero-flower-right{ width:120px; right:-52px; top:4.6rem; }
-    .hero-divider{ width:220px; bottom:1.2rem; }
-    .section-flower-left,.section-flower-right{ width:84px; }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .gallery-grid .gal-item img{ transition:none; }
-  }
-
 </style>
 </head>
 <body>
@@ -757,11 +470,6 @@
 
   <!-- WELCOME COVER -->
   <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="cv-names">
-    <!-- <img class="asset-deco" style="width:86px;top:3.2rem;left:50%;transform:translateX(-50%);opacity:.78;" src="assets/crest.png" alt="" aria-hidden="true"> -->
-    <!-- <img class="asset-deco" style="width:145px;left:-56px;bottom:4rem;opacity:.48;" src="assets/floral-left.png" alt="" aria-hidden="true"> -->
-    <img class="asset-deco" style="width: 150px;left: 40px;bottom: 1rem;opacity:.60;transform: rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true">
-    <!-- <img class="asset-deco" style="width:135px;right:-52px;top:4rem;opacity:.42;transform:scaleX(-1);" src="assets/floral-right.png" alt="" aria-hidden="true"> -->
-     <img class="asset-deco" style="width: 150px;right: 30px;top: 1rem;opacity:.60;transform: rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true">
     <span class="eyebrow" id="cv-eyebrow" aria-hidden="true">Uleman Palakrama</span>
     <div class="cover-frame"><img id="cv-photo" src="" alt=""></div>
     <h1 class="names serif" id="cv-names">— &amp; —</h1>
@@ -788,10 +496,7 @@
 
     <!-- MEMPELAI -->
     <section id="bride" class="center fade-up" aria-labelledby="bride-title">
-      <img class="asset-deco section-flower-left" src="assets/floral-left.png" alt="" aria-hidden="true">
-      <img class="asset-deco section-flower-right" src="assets/floral-right.png" alt="" aria-hidden="true">
       <h2 class="sr-only" id="bride-title">Mempelai</h2>
-      <img class="section-ornament" src="assets/divider.png" alt="" aria-hidden="true">
       <p class="arabic" lang="ar" style="font-size:1.6rem;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
       <p class="serif" style="font-size:1.6rem; margin-top:1rem;">Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
       <p style="font-size:.92rem; color:var(--muted); margin-top:1rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami.</p>
@@ -830,7 +535,6 @@
       <div class="center">
         <span class="eyebrow" aria-hidden="true">Perjalanan Kami</span>
         <h2 class="serif" id="story-title" style="font-size:1.9rem; margin-top:.6rem;">Asmaraloka</h2>
-        <img class="section-ornament" style="width:185px;margin:.35rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
       </div>
       <div id="story-list" style="margin-top:1rem;"></div>
     </section>
@@ -885,7 +589,6 @@
     <section class="center fade-up" id="gallery" aria-labelledby="gallery-title">
       <span class="eyebrow" aria-hidden="true">Galeri</span>
       <h2 class="serif" id="gallery-title" style="font-size:1.9rem; margin:.5rem 0 0;">Momen Kami</h2>
-      <img class="section-ornament" style="width:180px;margin:.3rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
       <div class="gallery-grid" id="gallery-grid"></div>
     </section>
 
@@ -893,7 +596,6 @@
     <section class="center fade-up" style="background:var(--surface-2);" id="gift" aria-labelledby="gift-title">
       <span class="eyebrow" aria-hidden="true">Tanda Kasih</span>
       <h2 class="serif" id="gift-title" style="font-size:1.9rem; margin:.5rem 0 0;">Kirim Hadiah</h2>
-      <img class="section-ornament" style="width:175px;margin:.25rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
       <p style="font-size:.9rem; color:var(--muted); margin-top:.6rem;">Doa restu Anda adalah hadiah terbesar. Namun jika ingin memberi tanda kasih, dapat melalui:</p>
 
       <div class="gift-card">
@@ -1059,11 +761,11 @@ const FALLBACK_DATA = {
   cerita_3_isi: "Hingga pada waktunya, segala yang telah kami lewati bermuara pada satu keputusan yang sama. Dengan penuh syukur, kami memilih untuk saling menetap dalam ikatan yang diridhai oleh-Nya.",
   cerita_4_judul: "Awal Selamanya",
   cerita_4_isi: "Semoga perjalanan ini selalu diliputi ketenangan, dan dipelihara dalam kebaikan yang panjang.",
-  foto_cover_url: "assets/wedding.webp",
-  foto_pria_url: "assets/rizky.webp",
-  foto_wanita_url: "assets/rasya.webp",
-  galeri_url: "assets/wedding.webp,assets/rasya.webp,assets/rizky.webp",
-  musik_url: "https://raw.githubusercontent.com/rizky-rasya/rizky-rasya.github.io/d95d29873d10cf058330b4556d4e009d9afdf2c1/amplop/KUSUMA%20WIJAYA%20-%20PAWESTRI%20(OFFICIAL%20MUSIC%20VIDEO).mp3",
+  foto_cover_url: "https://blogger.googleusercontent.com/img/a/AVvXsEhRzwMJwl4oJHYEcEunN9zkDIiaR-xzhXFUf9Dz7mStUntCxbGYFz1mdVggmm94ePvsi1tn6khsiRREMAcYmNUMuevcocVWTf6UimMFWHgFnhfrZXjDAdWTehS0cOT__ym8jBHyvdxZwGPU5f2a95piZw8Rzejt8-AjT45QVnKi0hp3PfI0StYD7fW4LzaM",
+  foto_pria_url: "https://blogger.googleusercontent.com/img/a/AVvXsEhlOrn43o9H5d144sr5Vry-U9E5QkJ-Ape4TrsbRQZIOhRhzs5vavnfgBoL5S0mxMi5Xgsqyq_CG1_XTbJvKSZYa5uP7ysWWOpFmJk3aTHDGEtBtmF0gzyHpeiSfPuGHVPrlBREsOq59U4WNPXiqPLO7dd_H-gcPrjF8_Kznri2D5V2brh-E0fcXiFKr5zX",
+  foto_wanita_url: "https://blogger.googleusercontent.com/img/a/AVvXsEiCas3GnqIgaT5yuYektW7xRHQhHUg-sCA4S1bHy0yGxRFkwi_riG-o1QKXGKuTj6bNNfAu6Osqit2ApMPtjrtPa8MTrtELtltwHfQF9Bvmj4MinNySkfI-njpfrGMK7aHkYfN_fani8riX6V7hnPn3cH5pPNhvbed2Ab2bC4hAsVdwWmDgfGxLPalcJK1f",
+  galeri_url: "https://picsum.photos/800/600?random=11,https://picsum.photos/800/600?random=12,https://picsum.photos/800/600?random=13,https://picsum.photos/800/600?random=14",
+  musik_url: "253777db51c2162dd1e7b0b03602f03922db1141/Bg-Nikah%2B1.wav",
   bank_nama: "SeaBank",  bank_rekening: "901713062941",  bank_atas_nama: "Rasya Agistiningtyas",
   bank_nama_2: "Bank BNI",  bank_rekening_2: "1919562256",  bank_atas_nama_2: "Rizky Hanifudin",
   qris_image_url: "https://interactive.co.id/product/images/assets/promo/6a69d185b4c8d-Wednesday,%2029-Jul-2026.jpeg",
