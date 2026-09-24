@@ -883,42 +883,6 @@
 
         /* ===== AKUN ===== */
         #changePasswordForm .form-field, #accountForm .form-field, #resetPassForm .form-field{ max-width:340px; }
-
-        /* ===== MODAL (disamakan dengan index.html undangan) ===== */
-        .modal-overlay, #uiModal{ -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
-        .modal-overlay{ background:rgba(20,15,10,.55); }
-        .modal-overlay.open .modal-box{ animation:uiPop .32s cubic-bezier(.2,.9,.3,1.15); }
-        .modal-box, .ui-modal-box{ border:1px solid var(--border); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.30); }
-        #uiModal{ position:fixed; inset:0; z-index:400; display:none; align-items:center; justify-content:center; padding:1.4rem; background:rgba(20,15,10,.55); }
-        #uiModal.open{ display:flex; animation:uiFade .25s ease; }
-        .ui-modal-box{ position:relative; width:100%; max-width:360px; background:var(--surface); padding:1.7rem 1.4rem 1.3rem; text-align:center; animation:uiPop .32s cubic-bezier(.2,.9,.3,1.15); }
-        @keyframes uiFade{ from{opacity:0} to{opacity:1} }
-        @keyframes uiPop{ from{opacity:0; transform:translateY(14px) scale(.96)} to{opacity:1; transform:none} }
-        .ui-modal-icon{ width:58px; height:58px; margin:0 auto .9rem; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid currentColor; background:color-mix(in srgb, currentColor 8%, transparent); }
-        .ui-modal-icon svg{ width:28px; height:28px; }
-        .ui-modal-icon[data-type="info"], .ui-modal-icon[data-type="confirm"]{ color:var(--gold); }
-        .ui-modal-icon[data-type="success"]{ color:#3f9a58; }
-        .ui-modal-icon[data-type="error"], .ui-modal-icon[data-type="danger"]{ color:var(--danger,#c65b5b); }
-        .ui-modal-title{ font-family:'Cormorant Garamond',Georgia,serif; font-size:1.4rem; font-weight:600; color:var(--gold); margin:0 0 .55rem; line-height:1.3; }
-        .ui-modal-message{ font-size:.92rem; color:var(--muted); line-height:1.65; margin:0 0 1.3rem; white-space:pre-line; }
-        .ui-modal-actions{ display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; }
-        .ui-modal-actions button{ flex:1 1 auto; min-width:110px; padding:.7rem 1.1rem; font-size:.82rem; font-family:inherit; border-radius:999px; cursor:pointer; border:1.5px solid var(--gold); background:transparent; color:var(--gold); }
-        .ui-modal-actions button.solid{ background:var(--gold); color:#fff; }
-        .ui-modal-actions button.danger{ background:var(--danger,#c65b5b); border-color:var(--danger,#c65b5b); color:#fff; }
-        /* ===== ATUR METADATA ===== */
-        .meta-row{ display:grid; grid-template-columns:minmax(200px,1fr) 2fr; gap:.6rem 1rem; align-items:start; padding:.7rem 0; border-bottom:1px dashed var(--border); }
-        .meta-row .switch-line{ display:flex; gap:.6rem; align-items:flex-start; font-size:.82rem; cursor:pointer; }
-        .meta-row code{ display:block; font-size:.7rem; color:var(--muted); margin-top:.15rem; }
-        .meta-row textarea, .meta-row input[type=text]{ width:100%; box-sizing:border-box; padding:.55rem .7rem; font:inherit; font-size:.85rem; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); }
-        .meta-row.off textarea, .meta-row.off input[type=text]{ opacity:.45; }
-        @media (max-width:640px){ .meta-row{ grid-template-columns:1fr; } }
-        .share-card{ max-width:420px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface); }
-        .share-card img{ width:100%; aspect-ratio:1.91/1; object-fit:cover; display:block; background:var(--surface-2,#eee); }
-        .share-card .sc-body{ padding:.7rem .9rem; font-size:.8rem; }
-        .share-card .sc-site{ text-transform:uppercase; letter-spacing:.05em; font-size:.68rem; color:var(--muted); }
-        .share-card .sc-title{ font-weight:600; font-size:.92rem; margin:.15rem 0; }
-        .share-card .sc-desc{ color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        #metaSnippet{ width:100%; box-sizing:border-box; min-height:220px; font:12px/1.5 ui-monospace,Menlo,Consolas,monospace; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); }
     </style>
 </head>
 <body>
@@ -976,14 +940,6 @@
             <a href="#" data-section="tema">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h10a2 2 0 002-2v-4a2 2 0 00-2-2h-2.5M7 21v-4"/><circle cx="7" cy="7" r="1"/></svg>
                 Tampilan Undangan
-            </a>
-            <a href="#" data-section="meta">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                Atur Metadata
-            </a>
-            <a href="#" id="navPreview" title="Buka undangan (Base URL) di tab baru">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                Preview
             </a>
             <a href="#" data-section="akun">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/><path d="M18 8.5c1 .3 2 1.2 2 2.5 0 1.5-1.2 2.5-2.5 2.5M16 21v-1a5.5 5.5 0 00-1.5-3.8"/></svg>
@@ -1210,7 +1166,25 @@
                 <div class="panel-title">
                     <span>📋 Variabel yang Tersedia</span>
                 </div>
-                <div id="varInfoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:0.4rem;font-size:0.8rem;"></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.4rem;font-size:0.8rem;">
+                    <div><code>$nama_tamu</code> — Nama tamu</div>
+                    <div><code>$nama_pria</code> — Nama lengkap pria</div>
+                    <div><code>$nama_wanita</code> — Nama lengkap wanita</div>
+                    <div><code>$panggilan_pria</code> — Panggilan pria</div>
+                    <div><code>$panggilan_wanita</code> — Panggilan wanita</div>
+                    <div><code>$tanggal_acara</code> — Tanggal acara</div>
+                    <div><code>$waktu_akad</code> — Waktu akad</div>
+                    <div><code>$waktu_resepsi</code> — Waktu resepsi</div>
+                    <div><code>$nama_lokasi</code> — Nama lokasi</div>
+                    <div><code>$alamat_lokasi</code> — Alamat lokasi</div>
+                    <div><code>$link_maps</code> — Link Google Maps</div>
+                    <div><code>$link_undangan</code> — Link undangan tamu</div>
+                    <div><code>$ayah_pria</code> — Ayah mempelai pria</div>
+                    <div><code>$ibu_pria</code> — Ibu mempelai pria</div>
+                    <div><code>$ayah_wanita</code> — Ayah mempelai wanita</div>
+                    <div><code>$ibu_wanita</code> — Ibu mempelai wanita</div>
+                    <div><code>$dress_code</code> — Dress code</div>
+                </div>
             </div>
         </div>
 
@@ -1238,7 +1212,7 @@
                 </div>
                 <div id="temaPreviewBox" class="tema-preview-box">
                     <div class="tp-eyebrow">Undangan Pernikahan</div>
-                    <div class="tp-title">Wahyu &amp; Riski</div>
+                    <div class="tp-title">Rasya &amp; Rizky</div>
                     <div class="tp-quote">"Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat."</div>
                     <div class="tp-count">
                         <span>12<small>Hari</small></span>
@@ -1295,7 +1269,7 @@
                 </div>
                 <div id="animPreview" class="tema-preview-box" style="margin-top:1rem;overflow:hidden;position:relative;">
                     <div class="anim-item tp-eyebrow">Pratinjau Animasi</div>
-                    <div class="anim-item tp-title">Wahyu &amp; Riski</div>
+                    <div class="anim-item tp-title">Rasya &amp; Rizky</div>
                     <div class="anim-item tp-quote">"Kartu, teks, dan tombol masuk dengan gaya yang dipilih."</div>
                     <div class="anim-item"><span class="tp-btn">Buka Undangan</span></div>
                     <div class="anim-leaf" aria-hidden="true">🌿</div>
@@ -1343,40 +1317,6 @@
         </div>
 
         <!-- ===== SECTION: AKUN ===== -->
-        <!-- ===== SECTION: ATUR METADATA ===== -->
-        <div id="section-meta" class="section-content" style="display:none;">
-            <div class="panel">
-                <div class="panel-title"><span>🏷️ Atur Metadata (judul, deskripsi &amp; gambar saat dibagikan)</span></div>
-                <p style="font-size:0.82rem;color:var(--muted);line-height:1.6;margin:0 0 0.6rem;">
-                    Nyalakan/matikan tiap tag metadata dan atur isinya. Kosongkan isi untuk memakai nilai bawaan. Variabel:
-                    <code>$namatamu</code> <code>$namapria</code> <code>$namawanita</code> (panggilan), <code>$nama_pria</code> <code>$nama_wanita</code> (lengkap), <code>$tanggal</code>, <code>$lokasi</code>.
-                    <b>og:url</b> otomatis mengikuti link undangan tamu (dengan kode/nama), dan <b>og:image / twitter:image</b> otomatis memakai URL Foto Cover.
-                </p>
-                <div style="font-size:0.78rem;background:var(--surface-2,#f1ead9);border-radius:8px;padding:0.6rem 0.8rem;line-height:1.6;">
-                    ⚠️ <b>Penting:</b> perubahan langsung memengaruhi judul tab &amp; tag di browser. Namun aplikasi pembuat pratinjau (WhatsApp, Facebook, Telegram, dll.) <b>tidak menjalankan JavaScript</b>, jadi untuk pratinjau share tempel hasil di kotak "Kode &lt;head&gt;" di bawah ke <code>index.html</code> (antara <code>META:START</code> dan <code>META:END</code>) lalu upload ulang. Pratinjau share memakai nama tamu umum karena hosting statis tidak bisa membuat kartu berbeda per tamu.
-                </div>
-                <div id="metaRows" style="margin-top:0.6rem;"></div>
-                <div class="actions" style="margin-top:0.9rem;">
-                    <button class="btn-sm primary" id="saveMetaBtn" type="button">💾 Simpan Metadata</button>
-                    <button class="btn-sm gold-outline" id="metaAllOn" type="button">Nyalakan semua</button>
-                    <button class="btn-sm gold-outline" id="metaAllOff" type="button">Matikan semua</button>
-                    <span id="metaMsg" style="font-size:0.82rem;"></span>
-                </div>
-            </div>
-            <div class="panel" style="margin-top:0.5rem;">
-                <div class="panel-title"><span>👁️ Pratinjau Share (contoh WhatsApp)</span></div>
-                <div class="share-card" id="metaPreview"></div>
-            </div>
-            <div class="panel" style="margin-top:0.5rem;">
-                <div class="panel-title"><span>📋 Kode &lt;head&gt; untuk index.html</span></div>
-                <textarea id="metaSnippet" readonly></textarea>
-                <div class="actions" style="margin-top:0.6rem;">
-                    <button class="btn-sm primary" id="copyMetaBtn" type="button">📋 Salin</button>
-                    <button class="btn-sm gold-outline" id="downloadMetaBtn" type="button">⬇️ Unduh .html</button>
-                </div>
-            </div>
-        </div>
-
         <div id="section-akun" class="section-content" style="display:none;">
 
             <div class="panel">
@@ -1474,18 +1414,6 @@
     <div class="toast" id="toast"></div>
 
     <!-- ===== SCRIPTS ===== -->
-    <div id="uiModal" role="dialog" aria-modal="true" aria-labelledby="ui-modal-title" aria-describedby="ui-modal-message">
-        <div class="ui-modal-box">
-            <div class="ui-modal-icon" id="ui-modal-icon" data-type="info" aria-hidden="true"></div>
-            <h3 class="ui-modal-title" id="ui-modal-title">—</h3>
-            <p class="ui-modal-message" id="ui-modal-message">—</p>
-            <div class="ui-modal-actions">
-                <button type="button" id="ui-modal-cancel">Batal</button>
-                <button type="button" class="solid" id="ui-modal-ok">OK</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ========================================================================
         //  SESI LOGIN
@@ -1569,8 +1497,8 @@
             }
         }
 
-        async function performLogout() {
-            if (await showConfirm('Yakin ingin keluar?', { title: 'Keluar', okLabel: 'Keluar', type: 'confirm' })) {
+        function performLogout() {
+            if (confirm('Yakin ingin keluar?')) {
                 clearToken();
                 checkLogin();
                 document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
@@ -1674,114 +1602,6 @@
         //  DOM UTILITY
         // ========================================================================
         const $ = (id) => document.getElementById(id);
-const UI_MODAL_ICONS = {
-  info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-  success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-  error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-  danger:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
-  confirm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-};
-
-let uiModalResolve = null;
-let uiModalLastFocus = null;
-
-function uiModalOpen(opts){
-  const o = opts || {};
-  return new Promise((resolve) => {
-    uiModalLastFocus = document.activeElement;
-    uiModalResolve = resolve;
-
-    const modal    = $('uiModal');
-    const iconEl   = $('ui-modal-icon');
-    const titleEl  = $('ui-modal-title');
-    const msgEl    = $('ui-modal-message');
-    const okBtn    = $('ui-modal-ok');
-    const cancelBtn= $('ui-modal-cancel');
-
-    const type = o.type || 'info';
-    iconEl.dataset.type = type;
-    iconEl.innerHTML = UI_MODAL_ICONS[type] || UI_MODAL_ICONS.info;
-
-    titleEl.textContent = o.title || 'Pemberitahuan';
-    msgEl.textContent = o.message || '';
-    okBtn.textContent = o.okLabel || 'OK';
-    okBtn.classList.toggle('danger', !!o.danger);
-    okBtn.classList.toggle('solid', !o.danger);
-
-    if(o.cancelLabel){
-      cancelBtn.style.display = '';
-      cancelBtn.textContent = o.cancelLabel;
-    } else {
-      cancelBtn.style.display = 'none';
-    }
-
-    modal.classList.add('open');
-    setTimeout(() => { try{ okBtn.focus(); }catch(e){} }, 40);
-  });
-}
-
-function uiModalClose(result){
-  const modal = $('uiModal');
-  if(!modal.classList.contains('open')) return;
-  modal.classList.remove('open');
-
-  if(uiModalResolve){
-    const r = uiModalResolve;
-    uiModalResolve = null;
-    r(!!result);
-  }
-  if(uiModalLastFocus && typeof uiModalLastFocus.focus === 'function'){
-    try{ uiModalLastFocus.focus(); }catch(e){}
-  }
-  uiModalLastFocus = null;
-}
-
-function showAlert(message, opts){
-  return uiModalOpen(Object.assign({
-    title: 'Pemberitahuan',
-    message: message,
-    type: 'info',
-    okLabel: 'OK'
-  }, opts || {}));
-}
-
-function showConfirm(message, opts){
-  return uiModalOpen(Object.assign({
-    title: 'Konfirmasi',
-    message: message,
-    type: 'confirm',
-    okLabel: 'Ya',
-    cancelLabel: 'Batal',
-    danger: false
-  }, opts || {}));
-}
-
-$('ui-modal-ok').addEventListener('click', () => uiModalClose(true));
-$('ui-modal-cancel').addEventListener('click', () => uiModalClose(false));
-$('uiModal').addEventListener('click', (e) => { if(e.target === $('uiModal')) uiModalClose(false); });
-
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape' && $('uiModal').classList.contains('open')){
-    e.preventDefault();
-    uiModalClose(false);
-  }
-});
-
-$('uiModal').addEventListener('keydown', (e) => {
-  if(e.key !== 'Tab') return;
-  const nodes = $('uiModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  const focusables = Array.from(nodes).filter(el => el.offsetParent !== null);
-  if(focusables.length === 0) return;
-  const first = focusables[0];
-  const last  = focusables[focusables.length - 1];
-  if(e.shiftKey && document.activeElement === first){
-    e.preventDefault(); last.focus();
-  } else if(!e.shiftKey && document.activeElement === last){
-    e.preventDefault(); first.focus();
-  }
-});
-
-
         const qs = (sel, ctx = document) => ctx.querySelector(sel);
         const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
@@ -2184,8 +2004,8 @@ $('uiModal').addEventListener('keydown', (e) => {
                 }
             });
 
-            $('resetTemaBtn').addEventListener('click', async () => {
-                if (!await showConfirm('Kembalikan ke preset "Emerald Gold" bawaan? Warna kustom yang belum disimpan akan hilang.')) return;
+            $('resetTemaBtn').addEventListener('click', () => {
+                if (!confirm('Kembalikan ke preset "Emerald Gold" bawaan? Warna kustom yang belum disimpan akan hilang.')) return;
                 temaState = { ...FALLBACK_TEMA };
                 renderTemaTab();
             });
@@ -2336,56 +2156,30 @@ $('uiModal').addEventListener('keydown', (e) => {
             return `https://wa.me/${p}?text=${encoded}`;
         }
 
-        const igAt = (v) => { const u = String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, ''); return u ? '@' + u : ''; };
-        /* [variabel, label, fungsi nilai, alias?]  — SATU sumber untuk pratinjau, pengiriman WA, tombol editor & daftar variabel */
-        const TEMPLATE_VARS = [
-            ['$nama_tamu', 'Nama tamu', (g) => g.nama_tamu || 'Tamu'],
-            ['$namatamu', 'Alias $nama_tamu', (g) => g.nama_tamu || 'Tamu', true],
-            ['$nama_pria', 'Nama lengkap pria', (g, c) => c.nama_lengkap_pria],
-            ['$nama_wanita', 'Nama lengkap wanita', (g, c) => c.nama_lengkap_wanita],
-            ['$panggilan_pria', 'Panggilan pria', (g, c) => c.nama_panggilan_pria],
-            ['$panggilan_wanita', 'Panggilan wanita', (g, c) => c.nama_panggilan_wanita],
-            ['$namapria', 'Alias $panggilan_pria', (g, c) => c.nama_panggilan_pria, true],
-            ['$namawanita', 'Alias $panggilan_wanita', (g, c) => c.nama_panggilan_wanita, true],
-            ['$ayah_pria', 'Ayah pria', (g, c) => c.ayah_pria],
-            ['$ibu_pria', 'Ibu pria', (g, c) => c.ibu_pria],
-            ['$ayah_wanita', 'Ayah wanita', (g, c) => c.ayah_wanita],
-            ['$ibu_wanita', 'Ibu wanita', (g, c) => c.ibu_wanita],
-            ['$instagram_pria', 'Instagram pria (@user)', (g, c) => igAt(c.instagram_pria)],
-            ['$instagram_wanita', 'Instagram wanita (@user)', (g, c) => igAt(c.instagram_wanita)],
-            ['$tanggal_acara', 'Tanggal Akad & Resepsi', (g, c) => c.tanggal_tampil],
-            ['$waktu_akad', 'Waktu akad', (g, c) => c.waktu_akad],
-            ['$waktu_resepsi', 'Waktu resepsi', (g, c) => c.waktu_resepsi],
-            ['$nama_lokasi', 'Nama lokasi', (g, c) => c.nama_lokasi],
-            ['$alamat_lokasi', 'Alamat lokasi', (g, c) => c.alamat_lokasi],
-            ['$link_maps', 'Link Google Maps', (g, c) => c.link_maps],
-            ['$dress_code', 'Dress code', (g, c) => c.dress_code],
-            ['$tanggal_ngunduh', 'Tanggal Ngunduh Mantu', (g, c) => c.ngunduh_tanggal_tampil],
-            ['$waktu_ngunduh', 'Waktu Ngunduh Mantu', (g, c) => c.waktu_ngunduh_mantu],
-            ['$lokasi_ngunduh', 'Nama lokasi Ngunduh Mantu', (g, c) => c.ngunduh_nama_lokasi],
-            ['$alamat_ngunduh', 'Alamat Ngunduh Mantu', (g, c) => c.ngunduh_alamat_lokasi],
-            ['$link_maps_ngunduh', 'Link Maps Ngunduh Mantu', (g, c) => c.ngunduh_link_maps],
-            ['$dress_code_ngunduh', 'Dress code Ngunduh Mantu', (g, c) => c.ngunduh_dress_code],
-            ['$live_instagram', 'Instagram Live (@user)', (g, c) => igAt(c.live_instagram)],
-            ['$live_youtube', 'Link YouTube Live', (g, c) => c.live_youtube],
-            ['$live_zoom', 'Link Zoom', (g, c) => c.live_zoom],
-            ['$bank_1', 'Nama bank 1', (g, c) => c.bank_nama],
-            ['$rekening_1', 'No. rekening 1', (g, c) => c.bank_rekening],
-            ['$atas_nama_1', 'Atas nama rekening 1', (g, c) => c.bank_atas_nama],
-            ['$bank_2', 'Nama bank 2', (g, c) => c.bank_nama_2],
-            ['$rekening_2', 'No. rekening 2', (g, c) => c.bank_rekening_2],
-            ['$atas_nama_2', 'Atas nama rekening 2', (g, c) => c.bank_atas_nama_2],
-            ['$penerima_hadiah', 'Nama penerima hadiah', (g, c) => c.gift_nama],
-            ['$hp_hadiah', 'No. HP penerima hadiah', (g, c) => c.gift_hp],
-            ['$alamat_hadiah', 'Alamat kirim hadiah', (g, c) => c.gift_alamat],
-            ['$link_undangan', 'Link undangan tamu', (g, c) => g.link_undangan || c.base_url]
-        ];
-
         function replaceVariables(text, guest, config) {
             if (!text) return '';
-            let result = String(text);
-            TEMPLATE_VARS.slice().sort((x, y) => y[0].length - x[0].length).forEach(([key, , fn]) => {
-                result = result.split(key).join(fn(guest || {}, config || {}) || '');
+            let result = text;
+            const map = {
+                '$nama_tamu': guest.nama_tamu || 'Tamu',
+                '$nama_pria': config.nama_lengkap_pria || '',
+                '$nama_wanita': config.nama_lengkap_wanita || '',
+                '$panggilan_pria': config.nama_panggilan_pria || '',
+                '$panggilan_wanita': config.nama_panggilan_wanita || '',
+                '$tanggal_acara': config.tanggal_tampil || '',
+                '$waktu_akad': config.waktu_akad || '',
+                '$waktu_resepsi': config.waktu_resepsi || '',
+                '$nama_lokasi': config.nama_lokasi || '',
+                '$alamat_lokasi': config.alamat_lokasi || '',
+                '$link_maps': config.link_maps || '',
+                '$link_undangan': guest.link_undangan || config.base_url || '',
+                '$ayah_pria': config.ayah_pria || '',
+                '$ibu_pria': config.ibu_pria || '',
+                '$ayah_wanita': config.ayah_wanita || '',
+                '$ibu_wanita': config.ibu_wanita || '',
+                '$dress_code': config.dress_code || '',
+            };
+            Object.entries(map).forEach(([key, val]) => {
+                result = result.split(key).join(val || '');
             });
             return result;
         }
@@ -2595,9 +2389,25 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         function renderTemplateEditor() {
-            const vars = TEMPLATE_VARS.filter(v => !v[3]).map(v => ({ key: v[0], label: v[1] }));
-            const info = $('varInfoGrid');
-            if (info) info.innerHTML = TEMPLATE_VARS.map(v => `<div><code>${v[0]}</code> — ${v[1]}</div>`).join('');
+            const vars = [
+                { key: '$nama_tamu', label: 'Nama Tamu' },
+                { key: '$nama_pria', label: 'Nama Pria' },
+                { key: '$nama_wanita', label: 'Nama Wanita' },
+                { key: '$panggilan_pria', label: 'Panggilan Pria' },
+                { key: '$panggilan_wanita', label: 'Panggilan Wanita' },
+                { key: '$tanggal_acara', label: 'Tanggal Acara' },
+                { key: '$waktu_akad', label: 'Waktu Akad' },
+                { key: '$waktu_resepsi', label: 'Waktu Resepsi' },
+                { key: '$nama_lokasi', label: 'Nama Lokasi' },
+                { key: '$alamat_lokasi', label: 'Alamat' },
+                { key: '$link_maps', label: 'Link Maps' },
+                { key: '$link_undangan', label: 'Link Undangan' },
+                { key: '$ayah_pria', label: 'Ayah Pria' },
+                { key: '$ibu_pria', label: 'Ibu Pria' },
+                { key: '$ayah_wanita', label: 'Ayah Wanita' },
+                { key: '$ibu_wanita', label: 'Ibu Wanita' },
+                { key: '$dress_code', label: 'Dress Code' },
+            ];
 
             const container = $('varButtons');
             container.innerHTML = vars.map(v =>
@@ -2644,7 +2454,7 @@ $('uiModal').addEventListener('keydown', (e) => {
             });
 
             $('resetTemplateBtn').addEventListener('click', async () => {
-                if (await showConfirm('Reset template ke default?', { title: 'Reset Template', okLabel: 'Reset', danger: true, type: 'danger' })) {
+                if (confirm('Reset template ke default?')) {
                     $('templateText').value = DEFAULT_TEMPLATE;
                     await saveTemplate(DEFAULT_TEMPLATE);
                     showToast('Template direset ke default.', 'success');
@@ -2680,7 +2490,7 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         async function deleteGuest(rowNumber, nama) {
-            if (!await showConfirm(`Hapus tamu "${nama}" dari daftar? Tindakan ini tidak bisa dibatalkan.`)) return;
+            if (!confirm(`Hapus tamu "${nama}" dari daftar? Tindakan ini tidak bisa dibatalkan.`)) return;
             try {
                 const res = await apiPost({ action: 'delete_guest', token: getToken(), row: rowNumber });
                 if (handleSessionError(res.error)) return;
@@ -2817,11 +2627,11 @@ $('uiModal').addEventListener('keydown', (e) => {
             { title: '🎁 Hadiah', fields: [
                 ['bank_nama', 'Bank 1 — Nama Bank', 'text'],
                 ['bank_rekening', 'Bank 1 — No. Rekening', 'text'],
-                ['bank_logo', 'Bank 1 — URL Logo (opsional). Diisi = tampil logo saja (nama bank jadi alt). Wajib isi Nama Bank', 'text'],
+                ['bank_logo', 'Bank 1 — URL Logo (opsional, gambar langsung)', 'text'],
                 ['bank_atas_nama', 'Bank 1 — Atas Nama', 'text'],
                 ['bank_nama_2', 'Bank 2 — Nama Bank (opsional)', 'text'],
                 ['bank_rekening_2', 'Bank 2 — No. Rekening (opsional)', 'text'],
-                ['bank_logo_2', 'Bank 2 — URL Logo (opsional). Wajib isi Nama Bank 2 bila logo diisi', 'text'],
+                ['bank_logo_2', 'Bank 2 — URL Logo (opsional)', 'text'],
                 ['bank_atas_nama_2', 'Bank 2 — Atas Nama (opsional)', 'text'],
                 ['qris_image_url', 'URL Gambar QRIS', 'text'],
                 ['gift_nama', 'Nama Penerima Hadiah', 'text'],
@@ -2878,14 +2688,6 @@ $('uiModal').addEventListener('keydown', (e) => {
                 const multi = {};
                 qsa('#mempelaiGroups [data-multi-key]').forEach(el => { (multi[el.dataset.multiKey] = multi[el.dataset.multiKey] || []); if (el.checked) multi[el.dataset.multiKey].push(el.value); });
                 Object.keys(multi).forEach(k => { fields[k] = multi[k].join(','); });
-                for (const [logo, nama, label] of [['bank_logo', 'bank_nama', 'Bank 1'], ['bank_logo_2', 'bank_nama_2', 'Bank 2']]) {
-                    if (String(fields[logo] || '').trim() && !String(fields[nama] || '').trim()) {
-                        await showAlert(`${label}: URL logo sudah diisi, tetapi nama bank masih kosong.\nIsi nama bank dulu — nama dipakai sebagai teks alternatif logo.`, { type: 'error', title: 'Nama bank wajib diisi' });
-                        const el = $('mf-' + nama);
-                        if (el) { const d = el.closest('details'); if (d) d.open = true; el.focus(); }
-                        return;
-                    }
-                }
                 const msg = $('mempelaiMsg');
                 msg.textContent = 'Menyimpan…';
                 msg.style.color = 'var(--muted)';
@@ -2947,8 +2749,8 @@ $('uiModal').addEventListener('keydown', (e) => {
                 btn.addEventListener('click', async () => {
                     const username = btn.dataset.user;
                     if (username === myUsername) {
-                        if (!await showConfirm(`"${username}" adalah akun yang sedang Anda pakai login. Yakin ingin menghapusnya? Anda akan otomatis logout.`)) return;
-                    } else if (!await showConfirm(`Hapus akun "${username}"?`)) {
+                        if (!confirm(`"${username}" adalah akun yang sedang Anda pakai login. Yakin ingin menghapusnya? Anda akan otomatis logout.`)) return;
+                    } else if (!confirm(`Hapus akun "${username}"?`)) {
                         return;
                     }
                     try {
@@ -3122,7 +2924,7 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         async function resetSentStatus() {
-            if (!await showConfirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim di sheet.')) return;
+            if (!confirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim di sheet.')) return;
             try {
                 const res = await apiPost({ action: 'reset_status', token: getToken() });
                 if (!res.ok) throw new Error(res.error || 'Gagal reset status.');
@@ -3155,128 +2957,13 @@ $('uiModal').addEventListener('keydown', (e) => {
                 send: 'Kirim WA',
                 template: 'Template Pesan',
                 tema: 'Tampilan Undangan',
-                meta: 'Atur Metadata',
                 akun: 'Akun'
             };
             $('pageTitle').textContent = titles[section] || 'Dashboard';
-            if (section === 'meta') renderMetaForm();
             closeSidebar();
         }
 
-const META_TAGS = [["title", "title", "", "Judul halaman (tab browser)", "Uleman Palakrama - $namawanita & $namapria", ""], ["description", "name", "description", "Deskripsi (SEO)", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["robots", "name", "robots", "Robots (indeks mesin pencari)", "follow, noindex", ""], ["og_locale", "property", "og:locale", "og:locale", "id_ID", ""], ["og_type", "property", "og:type", "og:type", "article", ""], ["og_title", "property", "og:title", "og:title (judul saat dibagikan)", "Uleman Palakrama $namawanita & $namapria", ""], ["og_description", "property", "og:description", "og:description (deskripsi saat dibagikan)", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["og_url", "property", "og:url", "og:url (otomatis = link undangan tamu + kode/nama)", "", "url"], ["og_site_name", "property", "og:site_name", "og:site_name", "Uleman Digital Website", ""], ["article_section", "property", "article:section", "article:section", "Uleman", ""], ["og_image", "property", "og:image", "og:image (otomatis = URL Foto Cover)", "", "cover"], ["og_image_secure_url", "property", "og:image:secure_url", "og:image:secure_url (otomatis = URL Foto Cover)", "", "cover"], ["og_image_width", "property", "og:image:width", "og:image:width", "1080", ""], ["og_image_height", "property", "og:image:height", "og:image:height", "1620", ""], ["og_image_alt", "property", "og:image:alt", "og:image:alt", "Uleman Palakrama $namawanita & $namapria", ""], ["og_image_type", "property", "og:image:type", "og:image:type", "image/webp", ""], ["twitter_card", "name", "twitter:card", "twitter:card", "summary_large_image", ""], ["twitter_title", "name", "twitter:title", "twitter:title", "Uleman Palakrama $namawanita & $namapria", ""], ["twitter_description", "name", "twitter:description", "twitter:description", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["twitter_image", "name", "twitter:image", "twitter:image (otomatis = URL Foto Cover)", "", "cover"], ["twitter_label1", "name", "twitter:label1", "twitter:label1", "Written by", ""], ["twitter_data1", "name", "twitter:data1", "twitter:data1", "admin", ""], ["twitter_label2", "name", "twitter:label2", "twitter:label2", "Time to read", ""], ["twitter_data2", "name", "twitter:data2", "twitter:data2", "2 minutes", ""]];
-const META_DEFAULT_GUEST = 'Bapak/Ibu/Saudara/i';
-/* Variabel metadata: $namatamu, $namapria/$namawanita (panggilan), $nama_pria/$nama_wanita (lengkap), $tanggal, $lokasi */
-function metaResolveVars(text, cfg, tamu){
-  const map = {
-    '$namatamu': tamu || META_DEFAULT_GUEST, '$nama_tamu': tamu || META_DEFAULT_GUEST,
-    '$namapria': cfg.nama_panggilan_pria || '', '$namawanita': cfg.nama_panggilan_wanita || '',
-    '$nama_pria': cfg.nama_lengkap_pria || '', '$nama_wanita': cfg.nama_lengkap_wanita || '',
-    '$tanggal': cfg.tanggal_tampil || '', '$lokasi': cfg.nama_lokasi || ''
-  };
-  let out = String(text || '');
-  Object.keys(map).sort((a, b) => b.length - a.length).forEach(k => { out = out.split(k).join(map[k]); });
-  return out;
-}
-function metaAbsUrl(u, base){ u = String(u || '').trim(); if(!u) return ''; try{ return new URL(u, base || location.href).href; }catch(e){ return u; } }
-/* Hasil akhir satu tag: {on, val}. ctx = {tamu, url, base} */
-function metaResolve(t, cfg, ctx){
-  const on = String(cfg['meta_' + t[0] + '_aktif'] || 'on').toLowerCase() !== 'off';
-  let v = cfg['meta_' + t[0]];
-  if(v === undefined || v === null || String(v).trim() === ''){
-    v = t[5] === 'url' ? ctx.url : t[5] === 'cover' ? metaAbsUrl(cfg.foto_cover_url, ctx.base) : t[4];
-  }
-  return { on, val: metaResolveVars(v, cfg, ctx.tamu) };
-}
-
-        /* ================= ATUR METADATA ================= */
-        const attrEsc = (v) => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-        function metaCfgFromUI() {
-            const cfg = { ...configData };
-            META_TAGS.forEach(t => {
-                const on = document.querySelector(`[data-meta-on="${t[0]}"]`), val = document.querySelector(`[data-meta-val="${t[0]}"]`);
-                if (on) cfg['meta_' + t[0] + '_aktif'] = on.checked ? 'on' : 'off';
-                if (val) cfg['meta_' + t[0]] = val.value;
-            });
-            return cfg;
-        }
-        function renderMetaForm() {
-            const box = $('metaRows'); if (!box) return;
-            box.innerHTML = META_TAGS.map(t => {
-                const on = String(configData['meta_' + t[0] + '_aktif'] || 'on').toLowerCase() !== 'off';
-                const val = configData['meta_' + t[0]] || '';
-                const ph = t[5] === 'url' ? 'Otomatis: link undangan tamu' : t[5] === 'cover' ? 'Otomatis: URL Foto Cover' : t[4];
-                const long = (t[4] || '').length > 70;
-                const tag = t[1] === 'title' ? '&lt;title&gt;' : `${t[1]}="${t[2]}"`;
-                return `<div class="meta-row ${on ? '' : 'off'}" data-row="${t[0]}">
-                    <label class="switch-line"><input type="checkbox" data-meta-on="${t[0]}" ${on ? 'checked' : ''}><span><b>${escapeHtml(t[3])}</b><code>${tag}</code></span></label>
-                    ${long ? `<textarea rows="3" data-meta-val="${t[0]}" placeholder="${attrEsc(ph)}">${escapeHtml(val)}</textarea>` : `<input type="text" data-meta-val="${t[0]}" placeholder="${attrEsc(ph)}" value="${attrEsc(val)}">`}
-                </div>`;
-            }).join('');
-            updateMetaOutput();
-        }
-        function updateMetaOutput() {
-            const cfg = metaCfgFromUI();
-            const base = String(cfg.base_url || '').trim();
-            const ctx = { tamu: META_DEFAULT_GUEST, url: base || location.href, base: base || location.href };
-            const get = (k) => metaResolve(META_TAGS.find(t => t[0] === k), cfg, ctx);
-            const img = get('og_image'), ti = get('og_title'), de = get('og_description'), si = get('og_site_name');
-            $('metaPreview').innerHTML = `${img.on && img.val ? `<img src="${attrEsc(img.val)}" alt="">` : ''}<div class="sc-body">
-                ${si.on ? `<div class="sc-site">${escapeHtml(si.val)}</div>` : ''}${ti.on ? `<div class="sc-title">${escapeHtml(ti.val)}</div>` : ''}${de.on ? `<div class="sc-desc">${escapeHtml(de.val)}</div>` : ''}</div>`;
-            const lines = [];
-            META_TAGS.forEach(t => {
-                const r = metaResolve(t, cfg, ctx);
-                if (!r.on || !r.val) return;
-                lines.push(t[1] === 'title' ? `<title>${escapeHtml(r.val)}</title>` : `<meta ${t[1]}="${t[2]}" content="${attrEsc(r.val)}">`);
-            });
-            $('metaSnippet').value = '<!-- META:START -->\n' + lines.join('\n') + '\n<!-- META:END -->';
-            qsa('#metaRows .meta-row').forEach(r => r.classList.toggle('off', !r.querySelector('[data-meta-on]').checked));
-        }
-        function wireMetaForm() {
-            const box = $('metaRows'); if (!box) return;
-            box.addEventListener('input', updateMetaOutput);
-            box.addEventListener('change', updateMetaOutput);
-            $('metaAllOn').addEventListener('click', () => { qsa('[data-meta-on]').forEach(c => c.checked = true); updateMetaOutput(); });
-            $('metaAllOff').addEventListener('click', () => { qsa('[data-meta-on]').forEach(c => c.checked = false); updateMetaOutput(); });
-            $('copyMetaBtn').addEventListener('click', async () => {
-                try { await navigator.clipboard.writeText($('metaSnippet').value); showToast('Kode metadata disalin.'); }
-                catch (_) { $('metaSnippet').select(); document.execCommand('copy'); showToast('Kode metadata disalin.'); }
-            });
-            $('downloadMetaBtn').addEventListener('click', () => {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([$('metaSnippet').value], { type: 'text/html' }));
-                a.download = 'metadata-head.html'; a.click(); URL.revokeObjectURL(a.href);
-            });
-            $('saveMetaBtn').addEventListener('click', async () => {
-                const fields = {};
-                META_TAGS.forEach(t => {
-                    fields['meta_' + t[0]] = document.querySelector(`[data-meta-val="${t[0]}"]`).value;
-                    fields['meta_' + t[0] + '_aktif'] = document.querySelector(`[data-meta-on="${t[0]}"]`).checked ? 'on' : 'off';
-                });
-                const msg = $('metaMsg'); msg.textContent = 'Menyimpan…'; msg.style.color = 'var(--muted)';
-                try {
-                    const res = await apiPost({ action: 'save_mempelai', token: getToken(), fields });
-                    if (handleSessionError(res.error)) return;
-                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan.');
-                    configData = { ...FALLBACK_CONFIG, ...res.data };
-                    msg.textContent = '✅ Tersimpan. Judul tab langsung berlaku; tempel kode <head> ke index.html agar pratinjau share ikut berubah.';
-                    msg.style.color = '#3f9a58';
-                } catch (err) { msg.textContent = '❌ ' + err.message; msg.style.color = 'var(--danger,#c65b5b)'; }
-            });
-        }
-        wireMetaForm();
-
-        $('navPreview').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const u = String(configData.base_url || '').trim();
-            if (!/^https?:\/\//i.test(u)) {
-                await showAlert('Base URL Situs Undangan belum diisi / tidak valid.\nIsi di Data Mempelai > Teknis, lalu simpan.', { type: 'error', title: 'Base URL belum diatur' });
-                return;
-            }
-            window.open(u, '_blank', 'noopener');
-            closeSidebar();
-        });
-
-        const sections = ['dashboard', 'mempelai', 'guests', 'send', 'template', 'tema', 'meta', 'akun'];
+        const sections = ['dashboard', 'mempelai', 'guests', 'send', 'template', 'tema', 'akun'];
         const sectionEls = {};
         sections.forEach(s => sectionEls[s] = $(`section-${s}`));
 
@@ -3367,7 +3054,7 @@ function metaResolve(t, cfg, ctx){
                     showToast('Semua tamu sudah terkirim.', 'error');
                     return;
                 }
-                if (!await showConfirm(`Kirim undangan ke ${unsent.length} tamu yang belum dikirim?`)) return;
+                if (!confirm(`Kirim undangan ke ${unsent.length} tamu yang belum dikirim?`)) return;
                 let count = 0;
                 for (const g of unsent) {
                     const template = loadTemplate();

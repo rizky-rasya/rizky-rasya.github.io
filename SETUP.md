@@ -66,10 +66,57 @@ Soal `config.js` di situs publik: itu dipisah **hanya untuk kerapian kode**, buk
 - Ringkasan & **statistik** kehadiran (total tamu, hadir/tidak/ragu, WA terkirim, total orang, per acara).
 - Kelola **daftar tamu** & kirim undangan via WhatsApp; kelola **Data Mempelai** (semua teks, foto, hadiah, footer, Ngunduh Mantu, Live).
 - **Tampilan Undangan**: preset tema & warna kustom, bentuk & font, bagian yang ditampilkan (on/off), detail kartu ucapan, fitur (musik, mode), animasi + pratinjau. Tersimpan di sheet `PengaturanTema`, tanpa upload ulang file.
+- **Atur Metadata**: judul, deskripsi & gambar share (SEO/Open Graph/Twitter Card), tiap tag bisa di on/off, dengan pratinjau kartu share dan kode siap tempel ke `index.html`.
+- **Preview**: buka undangan (Base URL) di tab baru, satu klik dari sidebar.
+- **Modal konfirmasi & notifikasi** bergaya sama dengan undangan (bukan popup bawaan browser).
 
 **Backend (Google Apps Script + Sheets)**
 - Sheet: `DataMempelai`, `DaftarTamu`, `KonfirmasiTamuUndangan` (kolom `acara_hadir`), `PengaturanTema`.
 - Kolom sheet lama diperbaiki otomatis; tamu hanya bisa mengubah ucapannya sendiri lewat `edit_token`.
+
+---
+
+## 🆕 Revisi Terbaru (Tahap 3)
+
+### Apa yang berubah
+| # | Perubahan | Di mana mengaturnya |
+|---|---|---|
+| 1 | **Menu "🏷️ Atur Metadata"** baru di dashboard: judul, deskripsi, gambar, dan seluruh tag Open Graph/Twitter Card (gaya Rank Math) bisa diatur **per tag on/off** + isi teksnya, lengkap dengan pratinjau kartu share dan kode `<head>` siap tempel | Dashboard > Atur Metadata |
+| 2 | **Bug tombol musik di halaman "Buka Uleman" diperbaiki.** Sebelumnya tombol musik tidak bisa diklik karena tombol berada di dalam kontainer yang diberi atribut `inert` sebelum undangan dibuka. Sekarang tombol musik & tema aktif sejak awal | Otomatis |
+| 3 | **Menu "Preview"** di sidebar (di atas menu Akun): sekali klik langsung membuka **Base URL Situs Undangan** di tab baru. Jika Base URL belum diisi, muncul peringatan | Dashboard > Data Mempelai > Teknis, isi `base_url` dulu |
+| 4 | **Logika kartu 🎁 Hadiah** diperbaiki: <br>• Nama bank diisi, logo kosong → tampil **teks nama bank**.<br>• Nama bank & logo **dua-duanya diisi** → tampil **logo saja** (nama bank jadi `alt` teks, tidak tampil dobel).<br>• **Logo diisi tapi nama bank kosong** → saat *Simpan*, muncul **popup peringatan** minta nama bank diisi dulu (berlaku utuk rekening 1/pria & 2/wanita) | Dashboard > Data Mempelai > Hadiah |
+| 5 | **Modal dashboard admin disamakan gaya visualnya** dengan modal di `index.html` undangan (ikon lingkaran, judul serif emas, tombol pil). Semua `confirm()` bawaan browser (hapus tamu, hapus akun, reset tema, dsb.) sekarang memakai modal kustom ini | Otomatis |
+| 6 | **📋 Variabel yang Tersedia** di Template Pesan diperbarui total — sekarang mencakup semua field baru (Instagram, Ngunduh Mantu, Live Streaming, dll.), dan sumber datanya **sama persis** dengan yang dipakai pratinjau pesan & pengiriman WA, jadi tidak akan meleset lagi | Dashboard > Template Pesan |
+
+### Field baru "Atur Metadata" (disatukan ke sheet `DataMempelai`, sesuai posisi pengaturan pengaya lain)
+Untuk tiap tag di bawah ada 2 kolom: `meta_<nama>` (isi teks, boleh kosong = pakai default) dan `meta_<nama>_aktif` (`on`/`off`).
+
+| Tag | Field isi | Keterangan |
+|---|---|---|
+| `<title>` | `meta_title` | Judul tab browser |
+| `meta description` | `meta_description` | Deskripsi SEO |
+| `meta robots` | `meta_robots` | Default `follow, noindex` |
+| `og:locale` | `meta_og_locale` | |
+| `og:type` | `meta_og_type` | |
+| `og:title` | `meta_og_title` | |
+| `og:description` | `meta_og_description` | |
+| `og:url` | `meta_og_url` | Kosong = **otomatis** memakai link undangan tamu yang sedang dibuka |
+| `og:site_name` | `meta_og_site_name` | |
+| `article:section` | `meta_article_section` | |
+| `og:image`, `og:image:secure_url` | `meta_og_image`, `meta_og_image_secure_url` | Kosong = **otomatis** memakai URL Foto Cover |
+| `og:image:width/height/alt/type` | `meta_og_image_width` dst. | |
+| `twitter:card/title/description/image` | `meta_twitter_*` | `twitter:image` kosong = otomatis Foto Cover |
+| `twitter:label1/data1/label2/data2` | `meta_twitter_label1` dst. | |
+
+**Variabel** yang bisa dipakai di teks metadata: `$namatamu`, `$namapria`, `$namawanita` (panggilan), `$nama_pria`, `$nama_wanita` (nama lengkap), `$tanggal`, `$lokasi`.
+
+> ⚠️ **Penting — batas hosting statis:** Dashboard mengganti judul & tag metadata **secara langsung di browser (JavaScript)** begitu undangan dibuka, jadi cukup untuk tab judul dan SEO umum. Namun aplikasi pembuat pratinjau tautan (WhatsApp, Facebook, Telegram, dll.) **mengambil metadata dari HTML mentah sebelum JavaScript berjalan**, dan karena situs ini file statis (bukan server), pratinjau share **tidak bisa otomatis berbeda per tamu**. Solusinya: setelah mengatur & menyimpan di tab **Atur Metadata**, salin kode dari kotak **"📋 Kode `<head>` untuk index.html"**, tempel ke `index.html` (menimpa bagian di antara `<!-- META:START -->` dan `<!-- META:END -->`), lalu upload ulang. Pratinjau share akan memakai sapaan tamu umum ("Bapak/Ibu/Saudara/i"), bukan nama tamu spesifik.
+
+### Langkah update
+1. Ganti `Code.gs` → **Deploy > Manage deployments > Edit > New version** (tidak ada perubahan skema wajib kali ini, tapi tetap disarankan pakai versi terbaru).
+2. Upload ulang `index.html` dan `rahasia/index.html` ke GitHub.
+3. Dashboard → **Atur Metadata** → isi/pilih tag yang diinginkan → **Simpan Metadata** → salin kode `<head>` → tempel ke `index.html` → upload ulang.
+4. Cek **Data Mempelai > Hadiah**: kalau ada URL logo tanpa nama bank, Anda akan diminta melengkapi nama bank saat menyimpan.
 
 ---
 
@@ -173,9 +220,9 @@ Field yang bisa Anda ubah di sini (semua diambil dari template undangan Anda):
 | Field | Contoh isi | Dipakai untuk |
 |---|---|---|
 | `judul_hero` | Undangan Pernikahan | Judul kecil di halaman |
-| `nama_panggilan_pria` / `nama_panggilan_wanita` | Rasya / Rizky | Judul besar & pesan WA |
-| `nama_lengkap_pria` / `nama_lengkap_wanita` | Rasya Siapa / Rizky Siapa | Bagian "Mempelai" |
-| `status_anak_pria` / `status_anak_wanita` | Putri ke-1 / Putra ke-1 | |
+| `nama_panggilan_pria` / `nama_panggilan_wanita` | Wahyu / Riski | Judul besar & pesan WA |
+| `nama_lengkap_pria` / `nama_lengkap_wanita` | Wahyu Siapa / Riski Siapa | Bagian "Mempelai" |
+| `status_anak_pria` / `status_anak_wanita` | Putra ke-1 / Putri ke-2 | |
 | `ayah_pria`, `ibu_pria`, `ayah_wanita`, `ibu_wanita` | Bapak/Ibu ... | |
 | `tanggal_acara_iso` | `2026-12-15 10:00:00` | **Wajib** format ini, dipakai hitung mundur |
 | `tanggal_tampil` | Selasa, 15 Desember 2026 | Teks tanggal + dipakai di pesan WA |
