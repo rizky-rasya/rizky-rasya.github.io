@@ -173,9 +173,9 @@ Field yang bisa Anda ubah di sini (semua diambil dari template undangan Anda):
 | Field | Contoh isi | Dipakai untuk |
 |---|---|---|
 | `judul_hero` | Undangan Pernikahan | Judul kecil di halaman |
-| `nama_panggilan_pria` / `nama_panggilan_wanita` | Wahyu / Riski | Judul besar & pesan WA |
-| `nama_lengkap_pria` / `nama_lengkap_wanita` | Wahyu Siapa / Riski Siapa | Bagian "Mempelai" |
-| `status_anak_pria` / `status_anak_wanita` | Putra ke-1 / Putri ke-2 | |
+| `nama_panggilan_pria` / `nama_panggilan_wanita` | Rasya / Rizky | Judul besar & pesan WA |
+| `nama_lengkap_pria` / `nama_lengkap_wanita` | Rasya Siapa / Rizky Siapa | Bagian "Mempelai" |
+| `status_anak_pria` / `status_anak_wanita` | Putri ke-1 / Putra ke-1 | |
 | `ayah_pria`, `ibu_pria`, `ayah_wanita`, `ibu_wanita` | Bapak/Ibu ... | |
 | `tanggal_acara_iso` | `2026-12-15 10:00:00` | **Wajib** format ini, dipakai hitung mundur |
 | `tanggal_tampil` | Selasa, 15 Desember 2026 | Teks tanggal + dipakai di pesan WA |
