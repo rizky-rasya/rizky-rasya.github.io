@@ -523,9 +523,9 @@
     top:1.2rem;
   }
   /* .section-flower-left{ left:-42px; transform:rotate(-18deg); } */
-  .section-flower-left{ left:-20px; transform:rotate(-18deg); }
+  .section-flower-left{ left:1px; transform:rotate(-18deg); }
   /* .section-flower-right{ right:-44px; transform:scaleX(-1) rotate(-18deg);}  */
-  .section-flower-right{ right: -18px; transform: rotate(14deg);  }
+  .section-flower-right{ right: -1px; transform: rotate(14deg);  }
 
   #bride{
     background:
@@ -610,8 +610,10 @@
     position: absolute;
     width: 175px;
     height: 150px;
-    left: -25px;
-    bottom: 10px;
+    /* left: -25px;
+    bottom: 10px; */
+    left: 30px;
+    bottom: -20px;
     background: url(assets/floral-left.png) left bottom / contain no-repeat;
     opacity: .28;
     transform: rotate(321deg);
@@ -621,7 +623,8 @@
     position: absolute;
     width: 150px;
     height: 155px;
-    right: -1px;
+    /* right: -1px; */
+    right: 30px;
     top: 1px;
     background: url(assets/floral-right.png) right top / contain no-repeat;
     opacity: .22;
@@ -843,8 +846,10 @@
   .arch-flower{ z-index:0; opacity:.9; }
   .arch-flower.tl{ width:96px; left:-52px; top:-30px; transform-origin:100% 100%; }
   .arch-flower.tr{ width:96px; right:-52px; top:-30px; transform-origin:0 100%; }
-  .arch-flower.br{ width:62px; right:-30px; bottom:-14px; transform-origin:0 0; }
-  .arch-flower.bl{ width:62px; left:-30px; bottom:-14px; transform-origin:100% 0; }
+  /* .arch-flower.br{ width:62px; right:-30px; bottom:-14px; transform-origin:0 0; } */
+  .arch-flower.br{ width:62px; right:-50px; bottom:-30px; transform-origin:0 0; }
+  /* .arch-flower.bl{ width:62px; left:-30px; bottom:-14px; transform-origin:100% 0; } */
+  .arch-flower.bl{ width:62px; left:-50px; bottom:-30px; transform-origin:100% 0; }
   #ngunduh-card{ margin-top:.4rem; }
   #ngunduh-card .agenda{ justify-content:center; }
   #ngunduh-card .agenda .item{ max-width:none; }
@@ -891,9 +896,10 @@
   <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="cv-names">
     <!-- <img class="asset-deco" style="width:86px;top:3.2rem;left:50%;transform:translateX(-50%);opacity:.78;" src="assets/crest.png" alt="" aria-hidden="true"> -->
     <!-- <img class="asset-deco" style="width:145px;left:-56px;bottom:4rem;opacity:.48;" src="assets/floral-left.png" alt="" aria-hidden="true"> -->
-    <img class="asset-deco" style="width: 100px;left: 40px;bottom: 1rem;opacity:.60;transform: rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true">
+    <!-- <img class="asset-deco" style="width: 100px;left: 40px;bottom: 1rem;opacity:.60;transform: rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true"> -->
+    <img class="asset-deco" style="width: 100px;left: 100px;bottom: 5rem;opacity:.60;transform: rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true">
     <!-- <img class="asset-deco" style="width:135px;right:-52px;top:4rem;opacity:.42;transform:scaleX(-1);" src="assets/floral-right.png" alt="" aria-hidden="true"> -->
-     <img class="asset-deco" style="width: 100px;right: 30px;top: 1rem;opacity:.60;transform: rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true">
+    <img class="asset-deco" style="width: 100px;right: 30px;top: 1rem;opacity:.60;transform: rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true">
     <span class="eyebrow" id="cv-eyebrow" aria-hidden="true">Uleman Palakrama</span>
     <div class="cover-frame"><img id="cv-photo" src="" alt=""></div>
     <h1 class="names serif" id="cv-names">— &amp; —</h1>
