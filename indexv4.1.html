@@ -119,7 +119,7 @@
   }
 
   /* ============ LOADING ============ */
-  #loading{
+  /* #loading{
     position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
     flex-direction:column; gap:1rem; background:var(--bg); transition:opacity .6s ease;
   }
@@ -129,6 +129,18 @@
     animation:spin 1s linear infinite;
   }
   @keyframes spin{ to{ transform:rotate(360deg); } }
+  #loading p{ font-family:var(--font-display); font-size:1.1rem; color:var(--muted); letter-spacing:.05em; } */
+    /* ============ LOADING ============ */
+  #loading{
+    position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:1rem; background:var(--bg); transition:opacity .6s ease;
+  }
+  #loading .loading-gif{
+    width:50%;
+    max-width:150px;
+    height:auto;
+    display:block;
+  }
   #loading p{ font-family:var(--font-display); font-size:1.1rem; color:var(--muted); letter-spacing:.05em; }
 
   /* ============ WELCOME / COVER ============ */
@@ -830,41 +842,9 @@
   html.leaf-on .hero-flower-left, html.leaf-on .hero-flower-right{ transform-origin:50% 100%; animation:sway 7s ease-in-out infinite; }
   html.leaf-on #wedding-date::before{ transform-origin:0 100%; animation:sway 7s ease-in-out infinite; }
   html.leaf-on #wedding-date::after{ transform-origin:100% 0; animation:sway2 8s ease-in-out infinite; }
-  html.leaf-on .arch-flower{ animation:sway 6s ease-in-out infinite; }
-  html.leaf-on .arch-flower.tr, html.leaf-on .arch-flower.bl{ animation-name:sway2; }
   html.leaf-on .quote-card::after, html.leaf-on .agenda .item::after{ transform-origin:100% 100%; animation:sway 5s ease-in-out infinite; }
   html.leaf-on #story::after{ transform-origin:50% 100%; animation:sway2 6s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce){ html.leaf-on *{ animation:none !important; } }
-
-  /* ============ REVISI 2 ============ */
-  #loading .load-gif{ width:96px; height:96px; object-fit:contain; }
-  .arch-wrap{ position:relative; width:150px; margin:0 auto 1.2rem; }
-  .arch-wrap .arch{ margin:0 auto; z-index:1; }
-  .arch-flower{ z-index:0; opacity:.9; }
-  .arch-flower.tl{ width:96px; left:-52px; top:-30px; transform-origin:100% 100%; }
-  .arch-flower.tr{ width:96px; right:-52px; top:-30px; transform-origin:0 100%; }
-  .arch-flower.br{ width:62px; right:-30px; bottom:-14px; transform-origin:0 0; }
-  .arch-flower.bl{ width:62px; left:-30px; bottom:-14px; transform-origin:100% 0; }
-  #ngunduh-card{ margin-top:.4rem; }
-  #ngunduh-card .agenda{ justify-content:center; }
-  #ngunduh-card .agenda .item{ max-width:none; }
-  .comment .head{ align-items:center; }
-  .comment .who{ display:flex; align-items:center; gap:.55rem; flex-wrap:wrap; min-width:0; }
-  .comment .presence{ margin-top:0; }
-  .comment .body{ margin-top:.6rem; padding:.8rem 1rem; background:var(--surface); border:1px solid var(--line); border-radius:calc(var(--radius) * .6); }
-  .comment .body > *:first-child{ margin-top:0; }
-  .comment .body .text{ margin-top:.4rem; }
-  .bank-id{ display:inline-flex; align-items:center; gap:.6rem; min-width:0; }
-  .bank-logo{ height:28px; max-width:84px; width:auto; object-fit:contain; flex:none; }
-  footer.tone-a{ background:var(--bg) !important; }
-  footer.tone-b{ background:var(--surface-2) !important; }
-  .footer-meta{ display:flex; flex-direction:column; align-items:center; gap:.5rem; padding-bottom:.6rem; }
-  .footer-meta small{ font-size:.78rem; color:var(--muted); letter-spacing:.06em; }
-  .ft-links{ display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
-  .ft-links a{ color:var(--gold-ink); text-decoration:none; display:inline-flex; align-items:center; gap:.35rem; }
-  .ft-links a:hover, .ft-links a:focus-visible{ text-decoration:underline; }
-  .ft-ico{ display:inline-flex; vertical-align:-2px; margin:0 .2rem; color:var(--gold-ink); }
-  .ft-ico svg{ width:13px; height:13px; }
 </style>
 </head>
 <body>
@@ -881,10 +861,16 @@
 <div class="stage" id="stage">
 
   <!-- LOADING -->
+  <!-- <div id="loading" role="status" aria-live="polite">
+    <div class="ring" aria-hidden="true"></div>
+    <p>Menyiapkan uleman…</p>
+  </div> -->
+  <!-- LOADING -->
   <div id="loading" role="status" aria-live="polite">
-    <img class="load-gif" src="assets/loading.gif" alt="" aria-hidden="true" width="96" height="96">
+    <img src="assets/gif-loading.webp" alt="" class="loading-gif" aria-hidden="true">
     <p>Menyiapkan uleman…</p>
   </div>
+
 
   <!-- WELCOME COVER -->
   <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="cv-names">
@@ -928,11 +914,7 @@
       <p style="font-size:.92rem; color:var(--muted); margin-top:1rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami.</p>
 
       <div class="couple-card">
-        <div class="arch-wrap">
-          <img class="asset-deco arch-flower tl" src="assets/floral-left1.png" alt="" aria-hidden="true">
-          <img class="asset-deco arch-flower br" src="assets/floral-right.png" alt="" aria-hidden="true">
-          <div class="arch"><img id="wanita-foto" src="" alt=""></div>
-        </div>
+        <div class="arch"><img id="wanita-foto" src="" alt=""></div>
         <h3 class="serif" id="wanita-nama">—</h3>
         <p class="role" id="wanita-status">—</p>
         <p class="parents" id="wanita-ortu">—</p>
@@ -942,11 +924,7 @@
       <p class="amp" aria-hidden="true">&amp;</p>
 
       <div class="couple-card">
-        <div class="arch-wrap">
-          <img class="asset-deco arch-flower tr" src="assets/floral-right1.png" alt="" aria-hidden="true">
-          <img class="asset-deco arch-flower bl" src="assets/floral-left.png" alt="" aria-hidden="true">
-          <div class="arch"><img id="pria-foto" src="" alt=""></div>
-        </div>
+        <div class="arch"><img id="pria-foto" src="" alt=""></div>
         <h3 class="serif" id="pria-nama">—</h3>
         <p class="role" id="pria-status">—</p>
         <p class="parents" id="pria-ortu">—</p>
@@ -1021,31 +999,17 @@
         <a class="btn" id="lokasi-link" href="#" target="_blank" rel="noopener">Lihat Google Maps</a>
       </div>
 
-      <div id="ngunduh-card" role="group" aria-labelledby="ng-judul" style="display:none;">
-        <img class="section-ornament" style="width:185px;margin:2rem auto .4rem;" src="assets/divider.png" alt="" aria-hidden="true">
-        <span class="eyebrow" id="ng-judul">Ngunduh Mantu</span>
-        <p class="serif" style="font-size:1.3rem; color:var(--gold-soft); margin-top:.6rem;" id="ng-tanggal">—</p>
-
-        <div class="agenda">
-          <div class="item"><h3 class="serif">Ngunduh Mantu</h3><p id="ng-waktu">—</p></div>
+      <div class="location-card" id="ngunduh-card" style="display:none;">
+        <span class="eyebrow" aria-hidden="true">Ngunduh Mantu</span>
+        <h3 class="serif" id="ng-tanggal">—</h3>
+        <p id="ng-waktu" style="margin-bottom:.2rem;">—</p>
+        <h3 class="serif sub" id="ng-lokasi">—</h3>
+        <p id="ng-alamat">—</p>
+        <div class="map-embed" id="ng-map-wrap" style="display:none;">
+          <iframe id="ng-map" src="" title="Pratinjau lokasi ngunduh mantu di Google Maps" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>
-
-        <div class="dresscode" id="ng-dress-wrap">
-          <span class="lbl eyebrow no-margin">Dress Code</span>
-          <p id="ng-dress" style="margin-top:.4rem;">—</p>
-        </div>
-
-        <div class="location-card">
-          <span class="eyebrow" aria-hidden="true">Tempat Acara</span>
-          <h3 class="serif" id="ng-lokasi">—</h3>
-          <p id="ng-alamat">—</p>
-
-          <div class="map-embed" id="ng-map-wrap" style="display:none;">
-            <iframe id="ng-map" src="" title="Pratinjau peta lokasi ngunduh mantu" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen aria-label="Pratinjau peta lokasi ngunduh mantu"></iframe>
-          </div>
-
-          <a class="btn" id="ng-link" href="#" target="_blank" rel="noopener">Lihat Google Maps</a>
-        </div>
+        <a class="btn" id="ng-link" href="#" target="_blank" rel="noopener">Lihat Google Maps</a>
+        <div class="dresscode"><span class="lbl eyebrow no-margin">Dress Code</span><p id="ng-dress" style="margin-top:.4rem;">—</p></div>
       </div>
     </section>
 
@@ -1074,7 +1038,7 @@
       <p style="font-size:.9rem; color:var(--muted); margin-top:.6rem;">Doa restu Anda adalah hadiah terbesar. Namun jika ingin memberi tanda kasih, dapat melalui:</p>
 
       <div class="gift-card">
-        <div class="row"><span class="bank-id"><img class="bank-logo" id="bank-logo" src="" alt="" style="display:none;"><span id="bank-nama">—</span></span><span class="lbl">Transfer</span></div>
+        <div class="row"><span id="bank-nama">—</span><span class="lbl">Transfer</span></div>
         <div class="row" style="margin-top:.6rem;">
           <div><span class="lbl" style="display:block;">A/N</span><span class="val" id="bank-anama">—</span></div>
         </div>
@@ -1088,7 +1052,7 @@
       </div>
 
       <div class="gift-card" id="gift-card-bank-2" style="display:none;">
-        <div class="row"><span class="bank-id"><img class="bank-logo" id="bank-logo-2" src="" alt="" style="display:none;"><span id="bank-nama-2">—</span></span><span class="lbl">Transfer</span></div>
+        <div class="row"><span id="bank-nama-2">—</span><span class="lbl">Transfer</span></div>
         <div class="row" style="margin-top:.6rem;">
           <div><span class="lbl" style="display:block;">A/N</span><span class="val" id="bank-anama-2">—</span></div>
         </div>
@@ -1170,13 +1134,7 @@
       <div class="lattice" aria-hidden="true">
         <svg viewBox="0 0 100 12" fill="none" focusable="false" aria-hidden="true"><path d="M0 6 L15 0 L30 6 L45 0 L60 6 L75 0 L90 6 L100 3" stroke="currentColor" stroke-width="1"/></svg>
       </div>
-      <div class="footer-meta" id="footer-meta">
-        <small class="sig" id="ft-dev">Dibuat dengan ♥ oleh keluarga besar</small>
-        <div class="ft-links" id="ft-links">
-          <small><a id="ft-ig" href="#" target="_blank" rel="noopener" style="display:none;"></a></small>
-          <small><a id="ft-music" href="#" target="_blank" rel="noopener" style="display:none;"></a></small>
-        </div>
-      </div>
+      <p class="sig">Dibuat dengan ♥ oleh keluarga besar</p>
     </footer>
 
   </main>
@@ -1264,9 +1222,7 @@ const FALLBACK_DATA = {
   link_maps_embed_aktif: "on",
   ngunduh_tanggal_tampil: "", waktu_ngunduh_mantu: "", ngunduh_nama_lokasi: "", ngunduh_alamat_lokasi: "",
   ngunduh_link_maps: "", ngunduh_link_maps_embed: "", ngunduh_embed_aktif: "on", ngunduh_dress_code: "",
-  live_channels: "", live_instagram: "", live_youtube: "", live_zoom: "",
-  bank_logo: "", bank_logo_2: "",
-  footer_dev_nama: "", footer_instagram_url: "", footer_musik_url: ""
+  live_channels: "", live_instagram: "", live_youtube: "", live_zoom: ""
 };
 
 let CFG = FALLBACK_DATA;
@@ -1285,7 +1241,6 @@ const FALLBACK_TEMA = {
   section_gallery: 'on', section_gift: 'on', section_comment: 'on',
   section_livestream: 'on', section_ngunduh: 'on',
   fitur_musik: 'on', fitur_mode: 'both',
-  komentar_nama: 'on', komentar_presensi: 'on', komentar_jumlah: 'on', komentar_acara: 'on', komentar_teks: 'on', komentar_aksi: 'on',
   anim_aktif: 'on', anim_gaya: 'naik', anim_kecepatan: 'normal', anim_daun: 'on', anim_smooth: 'on'
 };
 let TEMA = FALLBACK_TEMA;
@@ -1539,7 +1494,6 @@ function renderConfig(cfg){
       <img src="${escapeHtml(u)}" alt="Foto galeri ${i+1} dari ${urls.length}" loading="lazy" decoding="async">
     </button>`).join('');
 
-  setLogo('bank-logo', cfg.bank_logo, cfg.bank_nama);
   setText('bank-nama', cfg.bank_nama);
   setText('bank-anama', cfg.bank_atas_nama);
   setText('bank-rekening', cfg.bank_rekening);
@@ -1548,7 +1502,6 @@ function renderConfig(cfg){
 
   if(cfg.bank_nama_2 || cfg.bank_rekening_2){
     $('gift-card-bank-2').style.display = '';
-    setLogo('bank-logo-2', cfg.bank_logo_2, cfg.bank_nama_2);
     setText('bank-nama-2', cfg.bank_nama_2);
     setText('bank-anama-2', cfg.bank_atas_nama_2);
     setText('bank-rekening-2', cfg.bank_rekening_2);
@@ -1565,7 +1518,6 @@ function renderConfig(cfg){
   if(copyAlamat) copyAlamat.setAttribute('aria-label', 'Salin alamat pengiriman hadiah');
 
   renderNgunduh(cfg);
-  renderFooter(cfg);
   renderLive(cfg);
   buildAcaraOptions();
   setupMusic(cfg.musik_url);
@@ -1586,22 +1538,6 @@ const SVG_YT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 const SVG_ZOOM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/></svg>';
 const igUser = (v) => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '').replace(/\?.*$/, '');
 
-const SVG_HEART = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-8.5-5.2-8.5-11A4.7 4.7 0 0 1 12 7.6 4.7 4.7 0 0 1 20.5 10c0 5.8-8.5 11-8.5 11z"/></svg>';
-const SVG_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
-function renderFooter(cfg){
-  const dev = String(cfg.footer_dev_nama || '').trim();
-  $('ft-dev').innerHTML = dev ? `Build with <span class="ft-ico">${SVG_HEART}</span> ${escapeHtml(dev)}` : 'Dibuat dengan ♥ oleh keluarga besar';
-  const ig = String(cfg.footer_instagram_url || '').trim();
-  const a = $('ft-ig');
-  if(ig){ a.href = /^https?:/i.test(ig) ? ig : 'https://instagram.com/' + encodeURIComponent(igUser(ig)); a.innerHTML = `<span class="ft-ico">${SVG_IG}</span>Instagram`; a.style.display = ''; } else a.style.display = 'none';
-  const mu = String(cfg.footer_musik_url || '').trim();
-  const m = $('ft-music');
-  if(mu){ m.href = mu; m.innerHTML = `<span class="ft-ico">${SVG_NOTE}</span>Music`; m.style.display = ''; } else m.style.display = 'none';
-}
-function setLogo(id, url, nama){
-  const el = $(id); if(!el) return;
-  if(url){ el.src = url; el.alt = 'Logo ' + (nama || 'bank'); el.style.display = ''; } else el.style.display = 'none';
-}
 function setIg(id, val){
   const el = $(id); if(!el) return;
   const u = igUser(val);
@@ -1623,18 +1559,16 @@ function renderNgunduh(cfg){
   const card = $('ngunduh-card'); if(!card) return;
   const has = cfg.ngunduh_tanggal_tampil || cfg.waktu_ngunduh_mantu || cfg.ngunduh_nama_lokasi;
   card.dataset.hasData = has ? '1' : '';
-  $('ng-dress-wrap').style.display = cfg.ngunduh_dress_code ? '' : 'none';
-  document.querySelector('#ngunduh-card .agenda').style.display = cfg.waktu_ngunduh_mantu ? '' : 'none';
   setText('ng-tanggal', cfg.ngunduh_tanggal_tampil);
   setText('ng-waktu', cfg.waktu_ngunduh_mantu);
   setText('ng-lokasi', cfg.ngunduh_nama_lokasi);
   setText('ng-alamat', cfg.ngunduh_alamat_lokasi);
   setText('ng-dress', cfg.ngunduh_dress_code);
   const link = $('ng-link');
-  if(cfg.ngunduh_link_maps){ link.href = cfg.ngunduh_link_maps; link.setAttribute('aria-label', `Buka lokasi ${cfg.ngunduh_nama_lokasi || 'ngunduh mantu'} di Google Maps (tab baru)`); link.style.display = ''; } else link.style.display = 'none';
+  if(cfg.ngunduh_link_maps){ link.href = cfg.ngunduh_link_maps; link.style.display = ''; } else link.style.display = 'none';
   const wrap = $('ng-map-wrap');
   const src = String(cfg.ngunduh_embed_aktif).toLowerCase() === 'off' ? '' : embedSrcOf(cfg.ngunduh_link_maps_embed, cfg.ngunduh_alamat_lokasi, cfg.ngunduh_nama_lokasi);
-  if(src){ $('ng-map').src = src; $('ng-map').title = `Pratinjau peta lokasi ${cfg.ngunduh_nama_lokasi || 'ngunduh mantu'}`; wrap.style.display = ''; } else wrap.style.display = 'none';
+  if(src){ $('ng-map').src = src; wrap.style.display = ''; } else wrap.style.display = 'none';
   card.style.display = (has && TEMA.section_ngunduh !== 'off') ? '' : 'none';
 }
 function ngunduhAktif(){ const c = $('ngunduh-card'); return !!(c && c.dataset.hasData && TEMA.section_ngunduh !== 'off' && TEMA.section_wedding_date !== 'off'); }
@@ -1789,23 +1723,17 @@ function renderComments(items, append){
         </button>
       </div>` : '';
     const acaraLine = (c.presensi === 'Hadir' && c.acara_hadir) ? `<p class="acara">🎉 ${escapeHtml(c.acara_hadir)}</p>` : '';
-    const on = (k) => TEMA[k] !== 'off';
-    const bodyParts = [
-      on('komentar_jumlah') ? jumlahLine : '',
-      on('komentar_acara') ? acaraLine : '',
-      on('komentar_teks') ? `<p class="text">${escapeHtml(c.ucapan_doa)}</p>` : ''
-    ].join('');
     return `
     <article class="comment">
       <div class="head">
-        <div class="who">
-          ${on('komentar_nama') ? `<h3 class="name serif">${escapeHtml(c.nama)}</h3>` : ''}
-          ${(on('komentar_presensi') && c.presensi) ? `<span class="presence ${presenceClass}">${escapeHtml(c.presensi)}</span>` : ''}
-        </div>
+        <h3 class="name serif">${escapeHtml(c.nama)}</h3>
         <span class="when">${when}</span>
       </div>
-      ${bodyParts.trim() ? `<div class="body">${bodyParts}</div>` : ''}
-      ${on('komentar_aksi') ? actions : ''}
+      ${c.presensi ? `<span class="presence ${presenceClass}">${escapeHtml(c.presensi)}</span>` : ''}
+      ${jumlahLine}
+      ${acaraLine}
+      <p class="text">${escapeHtml(c.ucapan_doa)}</p>
+      ${actions}
     </article>`;
   }).join('');
   list.insertAdjacentHTML('beforeend', html);
@@ -1919,9 +1847,7 @@ function applySectionVisibility(){
    jadi kalau ada section dimatikan, dua section bertetangga tidak pernah sewarna. */
 function applySectionTones(){
   let i = 0;
-  const ft = document.querySelector('footer');
-  ['bride','quotes','story','wedding-date','livestream','gallery','gift','comment','__footer'].forEach(id => {
-    if(id === '__footer'){ ft.classList.remove('tone-a','tone-b'); ft.classList.add(i % 2 === 0 ? 'tone-a' : 'tone-b'); return; }
+  ['bride','quotes','story','wedding-date','livestream','gallery','gift','comment'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
     el.classList.remove('tone-a','tone-b');
@@ -1953,7 +1879,7 @@ function applyThemeMode(){
    ANIMASI — Motion (mesin animasi yang sama dengan Framer Motion) + Lenis (scroll halus)
    ====================================================================== */
 let opened = false, motionStart = 0, lenis = null;
-const MO_SEL = '#home .content > *, #bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, #ng-tanggal, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
+const MO_SEL = '#home .content > *, #bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
 const MO_STYLE = {
   naik:  (i) => ({ transform: 'translateY(34px)' }),
   pudar: (i) => ({ transform: 'none' }),

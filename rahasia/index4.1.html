@@ -979,10 +979,6 @@
                 <div class="stat-card ragu"><div class="num" id="statRagu">0</div><div class="lbl">Masih Ragu</div><div class="sub-lbl" id="statRaguPct">—</div></div>
                 <div class="stat-card"><div class="num" id="statBelumKirim">0</div><div class="lbl">Belum Kirim WA</div></div>
                 <div class="stat-card"><div class="num" id="statSudahKirim">0</div><div class="lbl">Sudah Kirim WA</div></div>
-                <div class="stat-card hadir"><div class="num" id="statOrang">0</div><div class="lbl">Total Orang Hadir</div><div class="sub-lbl" id="statOrangSub">—</div></div>
-                <div class="stat-card"><div class="num" id="statAkad">0</div><div class="lbl">💍 Hadir Akad</div><div class="sub-lbl" id="statAkadSub">—</div></div>
-                <div class="stat-card"><div class="num" id="statResepsi">0</div><div class="lbl">🥂 Hadir Resepsi</div><div class="sub-lbl" id="statResepsiSub">—</div></div>
-                <div class="stat-card"><div class="num" id="statNgunduh">0</div><div class="lbl">❤️ Hadir Ngunduh Mantu</div><div class="sub-lbl" id="statNgunduhSub">—</div></div>
             </div>
 
             <div class="panel">
@@ -1212,7 +1208,7 @@
                 </div>
                 <div id="temaPreviewBox" class="tema-preview-box">
                     <div class="tp-eyebrow">Undangan Pernikahan</div>
-                    <div class="tp-title">Wahyu &amp; Riski</div>
+                    <div class="tp-title">Rasya &amp; Rizky</div>
                     <div class="tp-quote">"Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat."</div>
                     <div class="tp-count">
                         <span>12<small>Hari</small></span>
@@ -1230,12 +1226,6 @@
                     Matikan bagian yang tidak perlu ditampilkan ke tamu — perubahan langsung terlihat di pratinjau di atas. Warna latar tiap bagian akan otomatis bergantian (terang ↔ kontras) di antara bagian yang tampil, jadi dua bagian bersebelahan tidak pernah sewarna. Halaman sampul (pembuka) dan footer penutup selalu tampil, tidak bisa dimatikan.
                 </p>
                 <div class="section-toggle-list" id="sectionToggleList"><!-- diisi JS --></div>
-            </div>
-
-            <div class="panel" style="margin-top:0.5rem;">
-                <div class="panel-title"><span>💬 Detail Tampilan Ucapan &amp; Doa</span></div>
-                <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.8rem;">Pilih bagian mana saja yang tampil di tiap kartu ucapan.</p>
-                <div class="section-toggle-list" id="komentarToggleList"></div>
             </div>
 
             <div class="panel" style="margin-top:0.5rem;">
@@ -1269,7 +1259,7 @@
                 </div>
                 <div id="animPreview" class="tema-preview-box" style="margin-top:1rem;overflow:hidden;position:relative;">
                     <div class="anim-item tp-eyebrow">Pratinjau Animasi</div>
-                    <div class="anim-item tp-title">Wahyu &amp; Riski</div>
+                    <div class="anim-item tp-title">Rasya &amp; Rizky</div>
                     <div class="anim-item tp-quote">"Kartu, teks, dan tombol masuk dengan gaya yang dipilih."</div>
                     <div class="anim-item"><span class="tp-btn">Buka Undangan</span></div>
                     <div class="anim-leaf" aria-hidden="true">🌿</div>
@@ -1680,7 +1670,6 @@
             section_gallery: 'on', section_gift: 'on', section_comment: 'on',
             section_livestream: 'on', section_ngunduh: 'on',
             fitur_musik: 'on', fitur_mode: 'both',
-            komentar_nama: 'on', komentar_presensi: 'on', komentar_jumlah: 'on', komentar_acara: 'on', komentar_teks: 'on', komentar_aksi: 'on',
             anim_aktif: 'on', anim_gaya: 'naik', anim_kecepatan: 'normal', anim_daun: 'on', anim_smooth: 'on'
         };
         let temaState = { ...FALLBACK_TEMA };
@@ -1854,16 +1843,6 @@
                     { duration: ANIM_DUR[temaState.anim_kecepatan] || 800, delay: i * 110, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' });
             });
         }
-        const KOMENTAR_TOGGLES = [
-            ['komentar_nama', '👤 Nama tamu'], ['komentar_presensi', '✅ Badge kehadiran (Hadir / Tidak / Ragu)'],
-            ['komentar_jumlah', '👥 Jumlah yang hadir'], ['komentar_acara', '🎉 Acara yang dihadiri'],
-            ['komentar_teks', '📝 Isi ucapan & doa'], ['komentar_aksi', '✏️ Tombol Ubah / Hapus (dimatikan = tamu tidak bisa ubah/hapus ucapannya)']
-        ];
-        function renderKomentarToggles() {
-            $('komentarToggleList').innerHTML = KOMENTAR_TOGGLES.map(([k, l]) =>
-                `<label class="section-toggle-item"><input type="checkbox" data-kom-key="${k}" ${temaState[k] !== 'off' ? 'checked' : ''}><span>${l}</span></label>`).join('');
-            qsa('#komentarToggleList input').forEach(cb => cb.addEventListener('change', () => { temaState[cb.dataset.komKey] = cb.checked ? 'on' : 'off'; }));
-        }
         function renderFiturState() {
             const set = (id, v) => { const el = $(id); if (el) el.checked = v; };
             set('fiturMusik', temaState.fitur_musik !== 'off');
@@ -1903,7 +1882,6 @@
             renderPresetGrid();
             renderColorGrids();
             renderSectionToggles();
-            renderKomentarToggles();
             document.querySelectorAll('#radiusButtons [data-radius]').forEach(b =>
                 b.classList.toggle('active', b.dataset.radius === temaState.radius_bentuk));
             document.querySelectorAll('#fontButtons [data-font]').forEach(b =>
@@ -2223,20 +2201,6 @@
             $('statTidakPct').textContent = pct(tidak);
             $('statRaguPct').textContent = pct(ragu);
 
-            const orang = (c) => Math.max(parseInt(c.jumlah_hadir, 10) || 1, 1);
-            const hadirList = confirmations.filter(c => c.presensi === 'Hadir');
-            const perAcara = (nama) => {
-                const list = hadirList.filter(c => String(c.acara_hadir || '').split(',').map(x => x.trim()).includes(nama));
-                return [list.reduce((n, c) => n + orang(c), 0), list.length];
-            };
-            $('statOrang').textContent = hadirList.reduce((n, c) => n + orang(c), 0);
-            $('statOrangSub').textContent = hadirList.length + ' konfirmasi';
-            [['Akad', 'statAkad'], ['Resepsi', 'statResepsi'], ['Ngunduh Mantu', 'statNgunduh']].forEach(([n, id]) => {
-                const [p, k] = perAcara(n);
-                $(id).textContent = p;
-                $(id + 'Sub').textContent = k + ' konfirmasi';
-            });
-
             $('recentBadge').textContent = confirmations.length;
             renderConfirmationsList();
 
@@ -2254,7 +2218,7 @@
             const { pageItems, totalPages } = paginateItems(confirmations, confirmPager);
             $('recentComments').innerHTML = pageItems.map(c =>
                 `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-                <span><strong>${escapeHtml(c.nama)}</strong> · <span class="status-badge ${presensiBadgeClass(c.presensi)}">${escapeHtml(c.presensi)}</span>${c.presensi === 'Hadir' && (c.jumlah_hadir || c.acara_hadir) ? `<br><small style="color:var(--muted);">👥 ${escapeHtml(String(c.jumlah_hadir || '-'))} · 🎉 ${escapeHtml(c.acara_hadir || '-')}</small>` : ''}</span>
+                <span><strong>${escapeHtml(c.nama)}</strong> · <span class="status-badge ${presensiBadgeClass(c.presensi)}">${escapeHtml(c.presensi)}</span></span>
                 <span style="font-size:0.75rem;color:var(--muted);">${c.ucapan_doa ? escapeHtml(c.ucapan_doa.slice(0,40))+(c.ucapan_doa.length>40?'…':'') : ''}</span>
               </div>`
             ).join('');
@@ -2627,21 +2591,14 @@
             { title: '🎁 Hadiah', fields: [
                 ['bank_nama', 'Bank 1 — Nama Bank', 'text'],
                 ['bank_rekening', 'Bank 1 — No. Rekening', 'text'],
-                ['bank_logo', 'Bank 1 — URL Logo (opsional, gambar langsung)', 'text'],
                 ['bank_atas_nama', 'Bank 1 — Atas Nama', 'text'],
                 ['bank_nama_2', 'Bank 2 — Nama Bank (opsional)', 'text'],
                 ['bank_rekening_2', 'Bank 2 — No. Rekening (opsional)', 'text'],
-                ['bank_logo_2', 'Bank 2 — URL Logo (opsional)', 'text'],
                 ['bank_atas_nama_2', 'Bank 2 — Atas Nama (opsional)', 'text'],
                 ['qris_image_url', 'URL Gambar QRIS', 'text'],
                 ['gift_nama', 'Nama Penerima Hadiah', 'text'],
                 ['gift_hp', 'No. HP Penerima Hadiah', 'text'],
                 ['gift_alamat', 'Alamat Kirim Hadiah', 'textarea']
-            ]},
-            { title: '🦶 Footer', fields: [
-                ['footer_dev_nama', 'Nama Developer ("Build with ♥ ...") — kosong = teks bawaan', 'text'],
-                ['footer_instagram_url', 'Instagram Developer (username atau link) — kosong = tidak tampil', 'text'],
-                ['footer_musik_url', 'Link Kredit Musik — kosong = tidak tampil', 'text']
             ]},
             { title: '⚙️ Teknis', fields: [
                 ['base_url', 'Base URL Situs Undangan (WAJIB benar, dipakai membuat semua link tamu)', 'text']

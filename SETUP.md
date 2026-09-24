@@ -24,6 +24,55 @@ Soal `config.js` di situs publik: itu dipisah **hanya untuk kerapian kode**, buk
 
 ---
 
+## 🆕 Revisi Terbaru (Tahap 2)
+
+### Apa yang berubah
+| # | Perubahan | Di mana mengaturnya |
+|---|---|---|
+| 1 | **Loading** memakai GIF (cincin emas + hati berdenyut), bukan ring CSS | Ganti file `assets/loading.gif` (GIF transparan ±96×96 px) |
+| 2 | **Statistik acara** di dashboard: Total Orang Hadir, Hadir Akad, Hadir Resepsi, Hadir Ngunduh Mantu (jumlah orang + jumlah konfirmasi). Daftar konfirmasi terbaru juga menampilkan jumlah & acara | Dashboard > Ringkasan (otomatis dari kolom `acara_hadir` & `jumlah_hadir`) |
+| 3 | **Bunga di belakang foto mempelai**. Wanita: `floral-left1` kiri-atas, `floral-right` kanan-bawah. Pria: `floral-right1` kanan-atas, `floral-left` kiri-bawah. Ikut bergoyang bila animasi daun aktif | Tetap (CSS `.arch-flower`); posisi/ukuran bisa diubah di CSS |
+| 4 | **Tampilan Ngunduh Mantu** disamakan dengan Akad & Resepsi: tanggal (gaya `serif` emas), kartu acara (`.agenda .item` + ornamen bunga), Dress Code, dan kartu **Tempat Acara** (alamat, peta embed, tombol Maps). Bagian yang kosong (dress code / waktu) otomatis disembunyikan; tombol & peta punya `aria-label` | Dashboard > Data Mempelai > Acara Ngunduh Mantu |
+| 5 | **Detail tampilan Ucapan & Doa** bisa on/off per bagian: nama, badge kehadiran, jumlah, acara, teks, tombol Ubah/Hapus | Dashboard > Tampilan Undangan > 💬 Detail Tampilan Ucapan & Doa |
+| 6 | **Tata letak kartu ucapan** baru: badge kehadiran persis di kanan nama; jumlah, acara, dan teks ucapan berada dalam satu kotak; tombol Ubah/Hapus di bawahnya | Otomatis |
+| 7 | **Logo bank** di kartu hadiah (bank pria & wanita/bank 1 & 2) | Dashboard > Data Mempelai > Hadiah: `bank_logo`, `bank_logo_2` (URL gambar langsung) |
+| 8 | **Footer mengikuti tema**: warna footer tidak lagi berdiri sendiri, ia melanjutkan pola warna bergantian section dan ikut mode terang/gelap | Otomatis |
+| 9 | **Detail footer** di bawah garis ornamen: "Build with ♥ Nama dev" + tautan Instagram + Music (ikon inline, tanpa Font Awesome). Kosong = tidak tampil; bila nama dev kosong dipakai teks bawaan | Dashboard > Data Mempelai > 🦶 Footer: `footer_dev_nama`, `footer_instagram_url`, `footer_musik_url` |
+
+### Field/kolom baru di Spreadsheet (sudah ada di xlsx terbaru)
+- **`DataMempelai`**: `bank_logo`, `bank_logo_2`, `footer_dev_nama`, `footer_instagram_url`, `footer_musik_url`.
+- **`PengaturanTema`**: `komentar_nama`, `komentar_presensi`, `komentar_jumlah`, `komentar_acara`, `komentar_teks`, `komentar_aksi` (semua `on`/`off`).
+- Baris otomatis dibuat juga bila Anda mengisinya dari dashboard, jadi mengetik manual tidak wajib.
+
+### Langkah update
+1. Ganti `Code.gs` → **Deploy > Manage deployments > Edit > New version**.
+2. Upload ulang ke GitHub: `index.html`, `rahasia/index.html`, dan folder `assets/` (ada file baru `loading.gif`).
+3. Dashboard → isi field baru → **Tampilan Undangan → Simpan Tampilan**.
+
+> Catatan: mematikan **Tombol Ubah/Hapus** membuat tamu tidak bisa lagi mengubah/menghapus ucapannya sendiri.
+
+---
+
+## 📚 Daftar Lengkap Fitur
+
+**Halaman tamu**
+- Cover *Buka Uleman* dengan nama tamu dari link (`?to=Nama`), animasi **gerbang + asap** saat dibuka, musik latar yang langsung menyala & tidak restart.
+- Loading GIF; mode **terang/gelap** (bisa dikunci ke satu mode); tombol musik (bisa dimatikan).
+- Mempelai (foto berbingkai lengkung + bunga, nama orang tua, tombol **Instagram**), kutipan, kisah cinta, **Acara** (Akad & Resepsi + peta embed + tombol Maps + Dress Code), **Ngunduh Mantu**, **hitung mundur**, **Live Streaming** (Instagram / YouTube / Zoom), galeri, **hadiah** (rekening + logo bank, salin nomor, alamat kirim), **Ucapan & Doa** (RSVP), footer dengan kredit developer.
+- **RSVP**: pilih Hadir / Tidak Hadir / Masih Ragu; bila hadir pilih **acara** (Akad / Resepsi / Ngunduh Mantu, boleh lebih dari satu) dan **jumlah 1–10**; tamu bisa **mengubah/menghapus** ucapannya sendiri.
+- **Warna section dinamis** (bergantian otomatis meski ada section dimatikan), animasi masuk **Motion (Framer Motion)**, daun/bunga bergoyang, scroll halus.
+
+**Dashboard admin (`rahasia/`)**
+- Ringkasan & **statistik** kehadiran (total tamu, hadir/tidak/ragu, WA terkirim, total orang, per acara).
+- Kelola **daftar tamu** & kirim undangan via WhatsApp; kelola **Data Mempelai** (semua teks, foto, hadiah, footer, Ngunduh Mantu, Live).
+- **Tampilan Undangan**: preset tema & warna kustom, bentuk & font, bagian yang ditampilkan (on/off), detail kartu ucapan, fitur (musik, mode), animasi + pratinjau. Tersimpan di sheet `PengaturanTema`, tanpa upload ulang file.
+
+**Backend (Google Apps Script + Sheets)**
+- Sheet: `DataMempelai`, `DaftarTamu`, `KonfirmasiTamuUndangan` (kolom `acara_hadir`), `PengaturanTema`.
+- Kolom sheet lama diperbaiki otomatis; tamu hanya bisa mengubah ucapannya sendiri lewat `edit_token`.
+
+---
+
 ## 🆕 Pembaruan Versi Ini (Revisi Musik, Gerbang, Ngunduh Mantu, Live, RSVP, Animasi)
 
 ### Ringkasan file yang berubah
