@@ -764,85 +764,9 @@
     .gallery-grid .gal-item img{ transition:none; }
   }
 
-
-  /* ============ REVISI: TONE SECTION DINAMIS ============ */
-  section.tone-a{ background:var(--bg) !important; }
-  section.tone-b{ background:var(--surface-2) !important; }
-  html,body{ overflow-x:hidden; }
-  html.lenis, html.lenis body{ height:auto; }
-  .lenis.lenis-smooth{ scroll-behavior:auto !important; }
-  html:not(.lenis){ scroll-behavior:smooth; }
-
-  /* ============ GERBANG + ASAP ============ */
-  #gate{ position:fixed; inset:0; z-index:95; max-width:var(--maxw); margin:0 auto; display:none; overflow:hidden; pointer-events:none;
-    --smoke:rgba(255,255,255,.96); }
-  html[data-theme="night"] #gate{ --smoke:rgba(214,226,218,.55); }
-  #gate.show{ display:block; }
-  .gate-bg{ position:absolute; inset:0; opacity:0; transition:opacity .45s ease;
-    background:radial-gradient(circle at 50% 45%, var(--surface-2), var(--bg) 70%); }
-  #gate.closing .gate-bg{ opacity:1; }
-  #gate.open .gate-bg{ opacity:0; transition:opacity 1.2s ease .7s; }
-  .gate-door{ position:absolute; top:0; height:100%; width:50%; transition:transform 1.9s cubic-bezier(.75,0,.2,1) .3s; will-change:transform; }
-  .gate-door.l{ left:0; } .gate-door.r{ right:0; }
-  #gate.open .gate-door.l{ transform:translateX(-104%); }
-  #gate.open .gate-door.r{ transform:translateX(104%); }
-  .puff{ position:absolute; border-radius:50%; opacity:0; filter:blur(18px);
-    background:radial-gradient(circle, var(--smoke) 0%, transparent 68%); }
-  #gate.open .puff{ animation:puff 2.6s ease-out forwards; }
-  @keyframes puff{ 0%{opacity:0; transform:translate(0,30px) scale(.5);} 25%{opacity:1;} 100%{opacity:0; transform:translate(var(--dx,0),-90px) scale(2.4);} }
-
-  /* ============ INSTAGRAM & LIVE ============ */
-  .ig-btn, .live-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; text-decoration:none; cursor:pointer;
-    font-family:var(--font-body); font-size:.9rem; font-weight:500; letter-spacing:.05em; color:var(--gold-ink);
-    border:1.5px solid var(--gold-ink); border-radius:999px; padding:.5rem 1.1rem; background:transparent;
-    transition:background .25s ease, color .25s ease, transform .2s ease; }
-  .ig-btn svg, .live-btn svg{ width:18px; height:18px; flex:none; }
-  .ig-btn:hover, .ig-btn:focus-visible, .live-btn:hover, .live-btn:focus-visible{ background:var(--gold-ink); color:var(--surface); transform:translateY(-2px); }
-  .ig-btn{ margin-top:.8rem; }
-  .live-links{ display:flex; flex-direction:column; align-items:center; gap:.8rem; margin-top:1.4rem; }
-  .live-links .live-btn{ min-width:230px; }
-  #livestream{ overflow:hidden; }
-
-  /* ============ NGUNDUH MANTU ============ */
-  #ngunduh-card .dresscode{ margin-top:1.1rem; }
-  #ngunduh-card .sub{ font-size:1.05rem; margin-top:.9rem; }
-
-  /* ============ RSVP: PILIH ACARA ============ */
-  .acara-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; }
-  .acara-opt{ position:relative; display:block; cursor:pointer; margin:0 !important; }
-  .acara-opt input{ position:absolute; opacity:0; inset:0; width:100%; height:100%; cursor:pointer; margin:0; }
-  .acara-card{ display:flex; flex-direction:column; align-items:center; gap:.45rem; text-align:center;
-    padding:.8rem .3rem; border:2px solid var(--field-line); border-radius:14px; background:var(--surface);
-    font-size:.72rem; letter-spacing:.04em; text-transform:none; color:var(--muted); font-weight:500;
-    transition:border-color .25s ease, background .25s ease, color .25s ease, transform .2s ease; }
-  .acara-card svg{ width:30px; height:30px; }
-  .acara-opt input:checked + .acara-card{ border-color:var(--gold-ink); color:var(--gold-ink); background:color-mix(in srgb, var(--gold) 12%, var(--surface)); transform:translateY(-2px); }
-  .acara-opt input:focus-visible + .acara-card{ outline:3px solid var(--focus); outline-offset:2px; }
-  .comment .acara{ font-size:.8rem; color:var(--muted); margin-top:.25rem; }
-
-  /* ============ ANIMASI (Motion) & DAUN BERGOYANG ============ */
-  html.mo-on .fade-up{ opacity:1 !important; transform:none !important; transition:none !important; }
-  html.mo-on .mo{ opacity:0; }
-  @keyframes sway{ 0%,100%{ rotate:-3.5deg; } 50%{ rotate:3.5deg; } }
-  @keyframes sway2{ 0%,100%{ rotate:2.5deg; } 50%{ rotate:-3deg; } }
-  html.leaf-on .asset-deco[src*="floral"]{ transform-origin:50% 100%; animation:sway 6s ease-in-out infinite; }
-  html.leaf-on .asset-deco[src*="floral-right"]{ animation-name:sway2; animation-duration:7s; }
-  html.leaf-on .hero-flower-left, html.leaf-on .hero-flower-right{ transform-origin:50% 100%; animation:sway 7s ease-in-out infinite; }
-  html.leaf-on #wedding-date::before{ transform-origin:0 100%; animation:sway 7s ease-in-out infinite; }
-  html.leaf-on #wedding-date::after{ transform-origin:100% 0; animation:sway2 8s ease-in-out infinite; }
-  html.leaf-on .quote-card::after, html.leaf-on .agenda .item::after{ transform-origin:100% 100%; animation:sway 5s ease-in-out infinite; }
-  html.leaf-on #story::after{ transform-origin:50% 100%; animation:sway2 6s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce){ html.leaf-on *{ animation:none !important; } }
 </style>
 </head>
 <body>
-
-<div id="gate" aria-hidden="true">
-  <div class="gate-bg"></div>
-  <img class="gate-door l" src="assets/gate-left.png" alt="">
-  <img class="gate-door r" src="assets/gate-right.png" alt="">
-  <div id="smoke"></div>
-</div>
 
 <a class="skip-link" href="#home">Lewati ke isi undangan</a>
 
@@ -900,7 +824,6 @@
         <h3 class="serif" id="wanita-nama">—</h3>
         <p class="role" id="wanita-status">—</p>
         <p class="parents" id="wanita-ortu">—</p>
-        <a class="ig-btn" id="wanita-ig" href="#" target="_blank" rel="noopener" style="display:none;"></a>
       </div>
 
       <p class="amp" aria-hidden="true">&amp;</p>
@@ -910,12 +833,11 @@
         <h3 class="serif" id="pria-nama">—</h3>
         <p class="role" id="pria-status">—</p>
         <p class="parents" id="pria-ortu">—</p>
-        <a class="ig-btn" id="pria-ig" href="#" target="_blank" rel="noopener" style="display:none;"></a>
       </div>
     </section>
 
     <!-- QUOTES -->
-    <section class="center fade-up" id="quotes" aria-labelledby="quotes-title">
+    <section class="center fade-up" style="background:var(--surface-2);" id="quotes" aria-labelledby="quotes-title">
       <h2 class="sr-only" id="quotes-title">Firman Allah</h2>
       <span class="eyebrow" aria-hidden="true">Firman Allah</span>
       <div class="quote-card">
@@ -937,7 +859,7 @@
     </section>
 
     <!-- COUNTDOWN & ACARA -->
-    <section class="center fade-up" id="wedding-date" aria-labelledby="wedding-date-title">
+    <section class="center fade-up" style="background:var(--surface-2);" id="wedding-date" aria-labelledby="wedding-date-title">
       <h2 class="sr-only" id="wedding-date-title">Waktu dan Tempat Acara</h2>
       <span class="eyebrow" aria-hidden="true">Menghitung Hari</span>
 
@@ -980,28 +902,6 @@
 
         <a class="btn" id="lokasi-link" href="#" target="_blank" rel="noopener">Lihat Google Maps</a>
       </div>
-
-      <div class="location-card" id="ngunduh-card" style="display:none;">
-        <span class="eyebrow" aria-hidden="true">Ngunduh Mantu</span>
-        <h3 class="serif" id="ng-tanggal">—</h3>
-        <p id="ng-waktu" style="margin-bottom:.2rem;">—</p>
-        <h3 class="serif sub" id="ng-lokasi">—</h3>
-        <p id="ng-alamat">—</p>
-        <div class="map-embed" id="ng-map-wrap" style="display:none;">
-          <iframe id="ng-map" src="" title="Pratinjau lokasi ngunduh mantu di Google Maps" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        </div>
-        <a class="btn" id="ng-link" href="#" target="_blank" rel="noopener">Lihat Google Maps</a>
-        <div class="dresscode"><span class="lbl eyebrow no-margin">Dress Code</span><p id="ng-dress" style="margin-top:.4rem;">—</p></div>
-      </div>
-    </section>
-
-    <!-- LIVE STREAMING -->
-    <section class="center fade-up" id="livestream" aria-labelledby="live-title">
-      <span class="eyebrow" aria-hidden="true">Live Streaming</span>
-      <h2 class="serif" id="live-title" style="font-size:1.9rem; margin:.5rem 0 0;">Siaran Langsung</h2>
-      <img class="section-ornament" style="width:180px;margin:.3rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
-      <p style="font-size:.9rem; color:var(--muted); margin-top:.6rem;">Temui kami secara virtual untuk menyaksikan acara pernikahan kami melalui tautan di bawah ini:</p>
-      <div class="live-links" id="live-links"></div>
     </section>
 
     <!-- GALLERY -->
@@ -1013,7 +913,7 @@
     </section>
 
     <!-- GIFT -->
-    <section class="center fade-up" id="gift" aria-labelledby="gift-title">
+    <section class="center fade-up" style="background:var(--surface-2);" id="gift" aria-labelledby="gift-title">
       <span class="eyebrow" aria-hidden="true">Tanda Kasih</span>
       <h2 class="serif" id="gift-title" style="font-size:1.9rem; margin:.5rem 0 0;">Kirim Hadiah</h2>
       <img class="section-ornament" style="width:175px;margin:.25rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
@@ -1083,17 +983,9 @@
             <option value="Masih Ragu">Masih Ragu</option>
           </select>
         </div>
-        <div class="field" id="field-acara" style="display:none;">
-          <label id="lbl-acara">Akan Hadir di Acara</label>
-          <div class="acara-grid" id="acara-grid" role="group" aria-labelledby="lbl-acara"></div>
-        </div>
         <div class="field" id="field-jumlah" style="display:none;">
           <label for="f-jumlah">Jumlah yang Hadir</label>
-          <select id="f-jumlah" name="jumlah">
-            <option value="">Pilih jumlah (termasuk Anda)</option>
-            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
-          </select>
+          <input id="f-jumlah" name="jumlah" type="number" min="1" step="1" placeholder="Termasuk Anda, mis. 2" inputmode="numeric">
         </div>
         <div class="field">
           <label for="f-ucapan">Ucapan &amp; Doa</label>
@@ -1127,9 +1019,12 @@
     <svg id="music-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
     <svg id="music-icon-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" style="display:none;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
   </button>
-  <button class="fab" type="button" id="theme-btn" aria-label="Aktifkan tema gelap" title="Aktifkan tema gelap" style="display:none;">
-    <svg id="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"></svg>
+  <!-- Tombol ganti tema disembunyikan (di-comment) -->
+  <!--
+  <button class="fab" type="button" id="theme-btn" aria-label="Aktifkan tema gelap" title="Aktifkan tema gelap">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/></svg>
   </button>
+  -->
 </div>
 
 <audio id="bg-music" loop preload="none" aria-hidden="true"></audio>
@@ -1153,8 +1048,6 @@
   </div>
 </div>
 
-<script src="assets/motion.min.js"></script>
-<script src="assets/lenis.min.js"></script>
 <script>
 /* ======================================================================
    KONFIGURASI
@@ -1199,12 +1092,7 @@ const FALLBACK_DATA = {
   bank_nama_2: "Bank BNI",  bank_rekening_2: "1919562256",  bank_atas_nama_2: "Rizky Hanifudin",
   qris_image_url: "https://interactive.co.id/product/images/assets/promo/6a69d185b4c8d-Wednesday,%2029-Jul-2026.jpeg",
   gift_nama: "Rasya Agistiningtyas",  gift_hp: "6285743764697",
-  gift_alamat: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
-  instagram_pria: "", instagram_wanita: "",
-  link_maps_embed_aktif: "on",
-  ngunduh_tanggal_tampil: "", waktu_ngunduh_mantu: "", ngunduh_nama_lokasi: "", ngunduh_alamat_lokasi: "",
-  ngunduh_link_maps: "", ngunduh_link_maps_embed: "", ngunduh_embed_aktif: "on", ngunduh_dress_code: "",
-  live_channels: "", live_instagram: "", live_youtube: "", live_zoom: ""
+  gift_alamat: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256"
 };
 
 let CFG = FALLBACK_DATA;
@@ -1220,10 +1108,7 @@ const FALLBACK_TEMA = {
   radius_bentuk: 'lembut',
   gaya_font: 'elegant',
   section_bride: 'on', section_quotes: 'on', section_story: 'on', section_wedding_date: 'on',
-  section_gallery: 'on', section_gift: 'on', section_comment: 'on',
-  section_livestream: 'on', section_ngunduh: 'on',
-  fitur_musik: 'on', fitur_mode: 'both',
-  anim_aktif: 'on', anim_gaya: 'naik', anim_kecepatan: 'normal', anim_daun: 'on', anim_smooth: 'on'
+  section_gallery: 'on', section_gift: 'on', section_comment: 'on'
 };
 let TEMA = FALLBACK_TEMA;
 
@@ -1410,9 +1295,6 @@ function renderConfig(cfg){
   setText('wanita-status', cfg.status_anak_wanita);
   setText('wanita-ortu', `${cfg.ayah_wanita} & ${cfg.ibu_wanita}`);
 
-  setIg('pria-ig', cfg.instagram_pria);
-  setIg('wanita-ig', cfg.instagram_wanita);
-
   setText('q1-teks', cfg.quote_1_teks);
   setText('q1-sumber', cfg.quote_1_sumber);
   setText('q2-teks', cfg.quote_2_teks);
@@ -1448,8 +1330,7 @@ function renderConfig(cfg){
 
   const mapWrap = $('lokasi-map-wrap');
   const mapFrame = $('lokasi-map');
-  if(mapWrap && mapFrame && String(cfg.link_maps_embed_aktif).toLowerCase() === 'off'){ mapWrap.style.display = 'none'; }
-  else if(mapWrap && mapFrame){
+  if(mapWrap && mapFrame){
     let embedSrc = (cfg.link_maps_embed || '').trim();
 
     const m = embedSrc.match(/src=["']([^"']+)["']/i);
@@ -1499,9 +1380,6 @@ function renderConfig(cfg){
   const copyAlamat = $('copy-alamat');
   if(copyAlamat) copyAlamat.setAttribute('aria-label', 'Salin alamat pengiriman hadiah');
 
-  renderNgunduh(cfg);
-  renderLive(cfg);
-  buildAcaraOptions();
   setupMusic(cfg.musik_url);
 
   if(guestName && guestName !== 'Tamu Uleman'){
@@ -1511,118 +1389,22 @@ function renderConfig(cfg){
   startCountdown(cfg.tanggal_acara_iso);
 }
 
-
-/* ======================================================================
-   INSTAGRAM, LIVE STREAMING, NGUNDUH MANTU
-   ====================================================================== */
-const SVG_IG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>';
-const SVG_YT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg>';
-const SVG_ZOOM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/></svg>';
-const igUser = (v) => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '').replace(/\?.*$/, '');
-
-function setIg(id, val){
-  const el = $(id); if(!el) return;
-  const u = igUser(val);
-  if(!u){ el.style.display = 'none'; return; }
-  el.href = 'https://instagram.com/' + encodeURIComponent(u);
-  el.innerHTML = SVG_IG + '<span>@' + escapeHtml(u) + '</span>';
-  el.setAttribute('aria-label', 'Buka Instagram @' + u + ' (tab baru)');
-  el.style.display = '';
-}
-
-function embedSrcOf(raw, addr, name){
-  let src = String(raw || '').trim();
-  const m = src.match(/src=["']([^"']+)["']/i); if(m) src = m[1];
-  if(!src && addr) src = 'https://maps.google.com/maps?q=' + encodeURIComponent(addr + ', ' + (name || '')) + '&z=16&output=embed';
-  return src;
-}
-
-function renderNgunduh(cfg){
-  const card = $('ngunduh-card'); if(!card) return;
-  const has = cfg.ngunduh_tanggal_tampil || cfg.waktu_ngunduh_mantu || cfg.ngunduh_nama_lokasi;
-  card.dataset.hasData = has ? '1' : '';
-  setText('ng-tanggal', cfg.ngunduh_tanggal_tampil);
-  setText('ng-waktu', cfg.waktu_ngunduh_mantu);
-  setText('ng-lokasi', cfg.ngunduh_nama_lokasi);
-  setText('ng-alamat', cfg.ngunduh_alamat_lokasi);
-  setText('ng-dress', cfg.ngunduh_dress_code);
-  const link = $('ng-link');
-  if(cfg.ngunduh_link_maps){ link.href = cfg.ngunduh_link_maps; link.style.display = ''; } else link.style.display = 'none';
-  const wrap = $('ng-map-wrap');
-  const src = String(cfg.ngunduh_embed_aktif).toLowerCase() === 'off' ? '' : embedSrcOf(cfg.ngunduh_link_maps_embed, cfg.ngunduh_alamat_lokasi, cfg.ngunduh_nama_lokasi);
-  if(src){ $('ng-map').src = src; wrap.style.display = ''; } else wrap.style.display = 'none';
-  card.style.display = (has && TEMA.section_ngunduh !== 'off') ? '' : 'none';
-}
-function ngunduhAktif(){ const c = $('ngunduh-card'); return !!(c && c.dataset.hasData && TEMA.section_ngunduh !== 'off' && TEMA.section_wedding_date !== 'off'); }
-
-function renderLive(cfg){
-  const ch = String(cfg.live_channels || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean);
-  const out = [];
-  if(ch.includes('instagram') && igUser(cfg.live_instagram)){
-    const u = igUser(cfg.live_instagram);
-    out.push(`<a class="live-btn" href="https://instagram.com/${encodeURIComponent(u)}" target="_blank" rel="noopener">${SVG_IG}<span>@${escapeHtml(u)}</span></a>`);
-  }
-  if(ch.includes('youtube') && cfg.live_youtube) out.push(`<a class="live-btn" href="${escapeHtml(cfg.live_youtube)}" target="_blank" rel="noopener">${SVG_YT}<span>Tonton di YouTube</span></a>`);
-  if(ch.includes('zoom') && cfg.live_zoom) out.push(`<a class="live-btn" href="${escapeHtml(cfg.live_zoom)}" target="_blank" rel="noopener">${SVG_ZOOM}<span>Gabung via Zoom</span></a>`);
-  $('live-links').innerHTML = out.join('');
-  $('livestream').dataset.hasData = out.length ? '1' : '';
-}
-
-/* ---- Pilihan acara di form RSVP ---- */
-const ACARA_ICONS = {
-  'Akad': '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="20" r="7"/><circle cx="21" cy="20" r="7"/><path d="M8 8l3-4 3 4-3 3z"/></svg>',
-  'Resepsi': '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h8l-.6 7a3.4 3.4 0 0 1-6.8 0z"/><path d="M9 14.5V26M6 26h6"/><circle cx="23" cy="19" r="7"/><circle cx="23" cy="19" r="3.6"/></svg>',
-  'Ngunduh Mantu': '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 27S4 19.5 4 11.8A6.3 6.3 0 0 1 16 8.6a6.3 6.3 0 0 1 12 3.2C28 19.5 16 27 16 27z"/></svg>'
-};
-function buildAcaraOptions(){
-  const list = ['Akad', 'Resepsi'].concat(ngunduhAktif() ? ['Ngunduh Mantu'] : []);
-  const checked = Array.from(document.querySelectorAll('#acara-grid input:checked')).map(i => i.value);
-  $('acara-grid').innerHTML = list.map(a => `<label class="acara-opt"><input type="checkbox" name="acara" value="${a}" ${checked.includes(a) ? 'checked' : ''}><span class="acara-card">${ACARA_ICONS[a]}<span>${a}</span></span></label>`).join('');
-  $('acara-grid').style.gridTemplateColumns = `repeat(${list.length},1fr)`;
-}
-const getAcara = () => Array.from(document.querySelectorAll('#acara-grid input:checked')).map(i => i.value);
-const setAcara = (str) => { const v = String(str || '').split(',').map(x => x.trim()); document.querySelectorAll('#acara-grid input').forEach(i => { i.checked = v.includes(i.value); }); };
-
 /* ======================================================================
    MUSIK LATAR
    ====================================================================== */
-let userMuted = false, unlockBound = false;
 function setupMusic(url){
   const audio = $('bg-music');
   const btn = $('music-btn');
-  if(TEMA.fitur_musik === 'off' || !url){          /* fitur mati: tanpa audio & tanpa tombol */
-    audio.pause(); audio.removeAttribute('src'); btn.style.display = 'none'; return;
-  }
-  btn.style.display = 'flex';
-  if(audio.getAttribute('src') === url) return;    /* jangan restart kalau sudah dimuat */
-  audio.preload = 'auto';
-  audio.src = url;
-  audio.muted = false;
+  if(!url){ btn.style.display = 'none'; return; }
 
-  /* 1) coba langsung bersuara; 2) kalau diblokir browser, jalan senyap lalu
-        dibunyikan pada sentuhan/klik pertama — posisi lagu TIDAK diulang */
-  const unlock = () => {
-    if(userMuted) return;
-    audio.muted = false;
-    audio.play().then(() => {
-      updateMusicIcon(false);
-      ['pointerdown','touchstart','keydown','click'].forEach(ev => window.removeEventListener(ev, unlock, true));
-    }).catch(() => {});
-  };
-  audio.play().then(() => updateMusicIcon(false)).catch(() => {
-    audio.muted = true;
-    audio.play().catch(() => {});
-    updateMusicIcon(true);
-    if(!unlockBound){
-      unlockBound = true;
-      ['pointerdown','touchstart','keydown','click'].forEach(ev => window.addEventListener(ev, unlock, true));
-    }
-  });
-  updateMusicIcon(audio.muted);
+  audio.src = url;
+  audio.muted = true;
+  audio.play().catch(() => {});
+  btn.style.display = 'flex';
+  updateMusicIcon(true);
 
   btn.addEventListener('click', () => {
     audio.muted = !audio.muted;
-    userMuted = audio.muted;
     if(!audio.muted) audio.play().catch(() => {});
     updateMusicIcon(audio.muted);
   });
@@ -1704,7 +1486,6 @@ function renderComments(items, append){
           ${ICONS.trash}<span>Hapus</span>
         </button>
       </div>` : '';
-    const acaraLine = (c.presensi === 'Hadir' && c.acara_hadir) ? `<p class="acara">🎉 ${escapeHtml(c.acara_hadir)}</p>` : '';
     return `
     <article class="comment">
       <div class="head">
@@ -1713,22 +1494,19 @@ function renderComments(items, append){
       </div>
       ${c.presensi ? `<span class="presence ${presenceClass}">${escapeHtml(c.presensi)}</span>` : ''}
       ${jumlahLine}
-      ${acaraLine}
       <p class="text">${escapeHtml(c.ucapan_doa)}</p>
       ${actions}
     </article>`;
   }).join('');
   list.insertAdjacentHTML('beforeend', html);
   items.forEach(c => { if(c.comment_id) knownComments[c.comment_id] = c; });
-  motionScan();
 }
 
 function toggleJumlahField(){
   const show = $('f-presensi').value === 'Hadir';
   $('field-jumlah').style.display = show ? '' : 'none';
-  $('field-acara').style.display = show ? '' : 'none';
   $('f-jumlah').required = show;
-  if(!show){ $('f-jumlah').value = ''; setAcara(''); }
+  if(!show) $('f-jumlah').value = '';
 }
 
 function resetFormToCreateMode(){
@@ -1797,8 +1575,6 @@ function applyTema(tema){
   document.documentElement.setAttribute('data-font', TEMA.gaya_font || 'elegant');
   document.documentElement.setAttribute('data-radius', TEMA.radius_bentuk || 'lembut');
   applySectionVisibility();
-  applyThemeMode();
-  applyMotionFlags();
 }
 
 const SECTION_IDS = {
@@ -1808,105 +1584,26 @@ const SECTION_IDS = {
   section_wedding_date: 'wedding-date',
   section_gallery: 'gallery',
   section_gift: 'gift',
-  section_comment: 'comment',
-  section_livestream: 'livestream'
+  section_comment: 'comment'
 };
 function applySectionVisibility(){
   Object.keys(SECTION_IDS).forEach(key => {
     const el = document.getElementById(SECTION_IDS[key]);
     if(!el) return;
-    let off = TEMA[key] === 'off';
-    if(key === 'section_livestream' && !(el.dataset.hasData)) off = true;   /* tanpa tautan live → sembunyikan */
-    el.style.display = off ? 'none' : '';
+    el.style.display = (TEMA[key] === 'off') ? 'none' : '';
   });
-  const ng = $('ngunduh-card');
-  if(ng) ng.style.display = ngunduhAktif() ? '' : 'none';
-  applySectionTones();
-  if($('acara-grid')) buildAcaraOptions();
-}
-
-/* Warna latar section BERGANTIAN otomatis (terang ↔ kontras) hanya di antara section yang tampil,
-   jadi kalau ada section dimatikan, dua section bertetangga tidak pernah sewarna. */
-function applySectionTones(){
-  let i = 0;
-  ['bride','quotes','story','wedding-date','livestream','gallery','gift','comment'].forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.classList.remove('tone-a','tone-b');
-    if(el.style.display === 'none') return;
-    el.classList.add(i % 2 === 0 ? 'tone-a' : 'tone-b');
-    i++;
-  });
-}
-
-/* Mode tema: 'both' (tombol tampil) | 'light' (terang saja) | 'dark' (gelap saja) */
-function applyThemeMode(){
-  const mode = TEMA.fitur_mode || 'both';
-  const btn = $('theme-btn');
-  if(mode === 'light' || mode === 'dark'){
-    const t = mode === 'dark' ? 'night' : 'day';
-    document.documentElement.setAttribute('data-theme', t);
-    if(btn) btn.style.display = 'none';
-    return;
-  }
-  const saved = localStorage.getItem('undangan-theme');
-  const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
-  const t = saved || sys;
-  document.documentElement.setAttribute('data-theme', t);
-  if(btn) btn.style.display = 'flex';
-  syncThemeButton(t);
-}
-
-/* ======================================================================
-   ANIMASI — Motion (mesin animasi yang sama dengan Framer Motion) + Lenis (scroll halus)
-   ====================================================================== */
-let opened = false, motionStart = 0, lenis = null;
-const MO_SEL = '#home .content > *, #bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
-const MO_STYLE = {
-  naik:  (i) => ({ transform: 'translateY(34px)' }),
-  pudar: (i) => ({ transform: 'none' }),
-  zoom:  (i) => ({ transform: 'scale(.9)' }),
-  geser: (i) => ({ transform: `translateX(${i % 2 ? 36 : -36}px)` })
-};
-const MO_SPEED = { cepat: .5, normal: .85, lambat: 1.3 };
-
-function motionOn(){ return TEMA.anim_aktif !== 'off' && window.Motion && !window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
-function applyMotionFlags(){
-  const h = document.documentElement;
-  h.classList.toggle('mo-on', motionOn());
-  h.classList.toggle('leaf-on', TEMA.anim_aktif !== 'off' && TEMA.anim_daun !== 'off');
-}
-function motionScan(){
-  if(!motionOn() || !opened) return;
-  const { animate, inView } = window.Motion;
-  const dur = MO_SPEED[TEMA.anim_kecepatan] || .85;
-  const fromFn = MO_STYLE[TEMA.anim_gaya] || MO_STYLE.naik;
-  document.querySelectorAll(MO_SEL).forEach((el) => {
-    if(el.dataset.mo) return;
-    el.dataset.mo = '1'; el.classList.add('mo');
-    const sibs = Array.from(el.parentElement.children).filter(c => c.classList.contains('mo'));
-    const idx = Math.max(0, sibs.indexOf(el));
-    const delay = Math.min(idx * .09, .45);
-    const start = () => inView(el, () => {
-      const c = animate(el, { opacity: [0, 1], transform: [fromFn(idx).transform, 'none'] }, { duration: dur, delay, ease: [.22, 1, .36, 1] });
-      (c.finished || c).then(() => { el.classList.remove('mo'); el.style.opacity = ''; el.style.transform = ''; });
-    }, { margin: '0px 0px -8% 0px', amount: .15 });
-    const wait = motionStart - Date.now();
-    wait > 0 ? setTimeout(start, wait) : start();
-  });
-}
-function startSmoothScroll(){
-  if(lenis || TEMA.anim_smooth === 'off' || !window.Lenis || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  lenis = new Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: .9 });
-  const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
-  requestAnimationFrame(raf);
 }
 
 /* ======================================================================
    INIT
    ====================================================================== */
 async function init(){
+  const savedTheme = localStorage.getItem('undangan-theme');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme = savedTheme || (systemDark ? 'night' : 'day');
+  document.documentElement.setAttribute('data-theme', initialTheme);
   applyTema(FALLBACK_TEMA);
+  syncThemeButton(initialTheme);
 
   try{
     const res = await apiGet('config');
@@ -1917,7 +1614,6 @@ async function init(){
   } catch(err){}
 
   renderConfig(CFG);
-  applySectionVisibility();
   toggleJumlahField();
   loadComments(true);
 
@@ -1931,54 +1627,32 @@ function syncThemeButton(theme){
   const label = theme === 'night' ? 'Aktifkan tema terang' : 'Aktifkan tema gelap';
   btn.setAttribute('aria-label', label);
   btn.title = label;
-  $('theme-icon').innerHTML = theme === 'night'
-    ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
-    : '<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/>';
 }
 
 /* Buka Uleman */
 $('open-btn').addEventListener('click', () => {
-  const welcome = $('welcome'), gate = $('gate');
-
-  /* MUSIK: tidak di-restart — lanjut dari posisi sekarang, cukup pastikan bersuara */
-  const audio = $('bg-music');
-  if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
-    if(!userMuted){ audio.muted = false; updateMusicIcon(false); }
-    audio.play().catch(() => {});
-  }
-
-  /* GERBANG + ASAP */
-  const smoke = $('smoke');
-  if(!smoke.children.length){
-    for(let i = 0; i < 9; i++){
-      const p = document.createElement('div');
-      const size = 200 + Math.random() * 160;
-      p.className = 'puff';
-      p.style.cssText = `width:${size}px;height:${size}px;left:${(i / 8) * 100 - 20}%;top:${25 + Math.random() * 45}%;--dx:${(Math.random() - .5) * 120}px;animation-delay:${(i % 5) * .18}s`;
-      smoke.appendChild(p);
-    }
-  }
-  gate.classList.add('show');
-  requestAnimationFrame(() => requestAnimationFrame(() => gate.classList.add('closing')));
-
-  setTimeout(() => {
-    welcome.style.display = 'none';
-    welcome.setAttribute('aria-hidden', 'true');
-    $('content').style.visibility = 'visible';
-    $('fab-group').removeAttribute('inert');
-    gate.classList.add('open');
-    opened = true;
-    motionStart = Date.now() + 900;
-    revealOnScroll();
-    motionScan();
-    startSmoothScroll();
-  }, 480);
+  const welcome = $('welcome');
+  welcome.classList.add('hide');
+  welcome.setAttribute('aria-hidden', 'true');
+  const content = $('content');
+  content.style.visibility = 'visible';
+  $('fab-group').removeAttribute('inert');
+  revealOnScroll();
 
   setTimeout(() => {
     const heroTitle = $('hero-names');
-    if(heroTitle && typeof heroTitle.focus === 'function') heroTitle.focus({ preventScroll: true });
-  }, 1500);
-  setTimeout(() => { gate.classList.remove('show','closing','open'); }, 3600);
+    if(heroTitle && typeof heroTitle.focus === 'function') heroTitle.focus();
+  }, 750);
+
+  setTimeout(() => { welcome.style.display = 'none'; }, 900);
+
+  const audio = $('bg-music');
+  if(audio.src){
+    audio.muted = false;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+    updateMusicIcon(false);
+  }
 });
 
 /* Ganti tema — AMAN meski tombol tema di-comment/dihapus */
@@ -1986,7 +1660,6 @@ $('open-btn').addEventListener('click', () => {
   const themeBtn = $('theme-btn');
   if(!themeBtn) return;
   themeBtn.addEventListener('click', () => {
-    if((TEMA.fitur_mode || 'both') !== 'both') return;
     const cur = document.documentElement.getAttribute('data-theme');
     const next = cur === 'night' ? 'day' : 'night';
     document.documentElement.setAttribute('data-theme', next);
@@ -2087,8 +1760,7 @@ document.addEventListener('click', async (e) => {
     $('f-nama').value = c.nama;
     $('f-presensi').value = c.presensi || 'Hadir';
     toggleJumlahField();
-    $('f-jumlah').value = c.jumlah_hadir ? String(Math.min(c.jumlah_hadir, 10)) : '';
-    setAcara(c.acara_hadir);
+    $('f-jumlah').value = c.jumlah_hadir || '';
     $('f-ucapan').value = c.ucapan_doa;
     $('edit-banner').style.display = '';
     $('cancel-edit-btn').style.display = 'inline-block';
@@ -2142,7 +1814,6 @@ $('rsvp-form').addEventListener('submit', async (e) => {
   const nama = $('f-nama').value.trim();
   const presensi = $('f-presensi').value;
   const jumlahHadir = presensi === 'Hadir' ? (parseInt($('f-jumlah').value, 10) || null) : null;
-  const acaraHadir = presensi === 'Hadir' ? getAcara().join(', ') : '';
   const ucapan = $('f-ucapan').value.trim();
   const msg = $('form-msg');
   const btn = $('submit-btn');
@@ -2151,12 +1822,6 @@ $('rsvp-form').addEventListener('submit', async (e) => {
     msg.textContent = 'Nama dan ucapan wajib diisi.';
     msg.className = 'form-msg err';
     (!nama ? $('f-nama') : $('f-ucapan')).focus();
-    return;
-  }
-
-  if(presensi === 'Hadir' && (!acaraHadir || !jumlahHadir)){
-    msg.textContent = !acaraHadir ? 'Pilih minimal satu acara yang akan dihadiri.' : 'Pilih jumlah tamu yang hadir.';
-    msg.className = 'form-msg err';
     return;
   }
 
@@ -2171,10 +1836,10 @@ $('rsvp-form').addEventListener('submit', async (e) => {
     if(editingComment){
       res = await apiPost({
         action: 'edit_comment', comment_id: editingComment.comment_id, edit_token: editingComment.edit_token,
-        nama, presensi, jumlah_hadir: jumlahHadir, acara_hadir: acaraHadir, ucapan_doa: ucapan
+        nama, presensi, jumlah_hadir: jumlahHadir, ucapan_doa: ucapan
       });
     } else {
-      res = await apiPost({ action: 'comment', nama, presensi, jumlah_hadir: jumlahHadir, acara_hadir: acaraHadir, ucapan_doa: ucapan, id_tamu: guestId });
+      res = await apiPost({ action: 'comment', nama, presensi, jumlah_hadir: jumlahHadir, ucapan_doa: ucapan, id_tamu: guestId });
     }
 
     if(res.ok){

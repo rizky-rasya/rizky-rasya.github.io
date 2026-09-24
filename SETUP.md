@@ -24,6 +24,93 @@ Soal `config.js` di situs publik: itu dipisah **hanya untuk kerapian kode**, buk
 
 ---
 
+## 🆕 Pembaruan Versi Ini (Revisi Musik, Gerbang, Ngunduh Mantu, Live, RSVP, Animasi)
+
+### Ringkasan file yang berubah
+| File | Perubahan |
+|---|---|
+| `index.html` | Semua fitur baru di bawah |
+| `assets/gate-left.png`, `assets/gate-right.png` | **Baru** — gerbang (dipotong dari `asset-sheet.png`) untuk animasi buka undangan |
+| `assets/motion.min.js`, `assets/lenis.min.js` | **Baru** — pustaka animasi & scroll halus (dilokalkan, tidak bergantung CDN). **Wajib ikut di-upload ke GitHub** |
+| `Code.gs` | Kolom `acara_hadir`, default tema baru. **Wajib di-deploy ulang** (Deploy > Manage deployments > Edit > New version) |
+| `rahasia/index.html` (dashboard) | Field baru, sakelar Fitur, pengaturan Animasi + pratinjau |
+| `Undangan_Pernikahan_RasyaRizky.xlsx` | Baris & kolom baru (lihat "Perubahan Spreadsheet") |
+
+### Perubahan Spreadsheet (PANDU MANUAL kalau Anda pakai Sheet sendiri, bukan file xlsx ini)
+1. **`KonfirmasiTamuUndangan`** → tambah kolom **`acara_hadir`** di paling kanan (setelah `id_tamu`). Berisi acara yang dipilih tamu, mis. `Akad, Resepsi, Ngunduh Mantu`. *(Code.gs juga menambahkannya otomatis saat ada ucapan pertama masuk.)*
+2. **`DataMempelai`** → tambah baris (kolom `field` | `value`) berikut, atau cukup isi lewat Dashboard > Data Mempelai (baris dibuat otomatis):
+
+| Field | Isi | Keterangan |
+|---|---|---|
+| `instagram_pria`, `instagram_wanita` | `rizky` | Username tanpa @. Kosong = tombol tidak tampil |
+| `link_maps_embed` | URL/kode iframe | Peta embed Akad & Resepsi |
+| `link_maps_embed_aktif` | `on` / `off` | `off` = peta embed disembunyikan |
+| `ngunduh_tanggal_tampil` | Minggu, 22 November 2026 | |
+| `waktu_ngunduh_mantu` | 10.00 - Selesai | |
+| `ngunduh_nama_lokasi`, `ngunduh_alamat_lokasi` | | |
+| `ngunduh_link_maps` | link Google Maps | Untuk tombol |
+| `ngunduh_link_maps_embed` | URL/kode iframe | |
+| `ngunduh_embed_aktif` | `on` / `off` | |
+| `ngunduh_dress_code` | | |
+| `live_channels` | `instagram,youtube,zoom` | Pilih satu atau banyak (pisah koma) |
+| `live_instagram` | username | tanpa @ |
+| `live_youtube`, `live_zoom` | link | |
+
+3. **`PengaturanTema`** → baris baru (dibuat otomatis saat klik *Simpan Tampilan*): `section_livestream`, `section_ngunduh`, `fitur_musik`, `fitur_mode`, `anim_aktif`, `anim_gaya`, `anim_kecepatan`, `anim_daun`, `anim_smooth`.
+
+> Cara mengambil peta embed: Google Maps → cari lokasi → **Bagikan → Sematkan peta → Salin HTML**. Boleh tempel seluruh kode `<iframe ...>` atau hanya isi `src`-nya.
+
+### 1. Musik langsung menyala & tidak restart
+- Begitu link dibuka, musik langsung dicoba diputar. Browser (terutama HP) sering menolak suara otomatis sebelum ada interaksi; jika ditolak, musik tetap **berjalan senyap** lalu **otomatis dibunyikan pada sentuhan/klik pertama di mana pun** (termasuk tombol *Buka Uleman*).
+- Saat *Buka Uleman* ditekan, musik **tidak diulang dari awal** (`currentTime = 0` sudah dihapus) — lanjut mulus dari posisi terakhir.
+- Tamu yang menekan tombol 🔇 sendiri **tidak** akan dibunyikan paksa lagi.
+
+### 2. Animasi gerbang + asap saat Buka Uleman
+Gerbang (aset lengkung bunga dari `asset-sheet.png`) menutup layar → terbelah ke kiri & kanan sambil 9 gumpalan asap mengepul → isi undangan terungkap. Musik tidak terpengaruh. Untuk mengganti gerbang, timpa `assets/gate-left.png` & `assets/gate-right.png` (dua PNG transparan, separuh kiri & kanan). Durasi total ±3 detik; ubah di CSS `.gate-door` (`transition`) dan `.puff` (`animation`).
+
+### 3. Instagram mempelai
+Isi `instagram_pria` / `instagram_wanita` di Dashboard > Data Mempelai > *Mempelai*. Tombol berlogo IG + `@username` muncul di bawah nama orang tua (ukuran font sama dengan status "Putra/Putri ke-…"). Kosong = tombol tidak tampil.
+
+### 4. Warna section dinamis (Bagian yang Ditampilkan)
+Warna latar tiap section **tidak lagi manual**. Sistem menghitung ulang setiap kali ada section dimatikan: section yang tampil diberi warna **bergantian** (`--bg` ↔ `--surface-2`) secara berurutan, jadi dua section bersebelahan **tidak pernah sewarna**. Pratinjau di dashboard juga ikut bergantian. (Efek samping: latar dekoratif lama pada *Mempelai*, *Kisah Cinta* dan *Galeri* diganti warna bergantian ini — sekalian memperbaiki *Kisah Cinta* yang warnanya tidak cocok di mode gelap.)
+
+### 5. Sakelar Musik & Mode Terang/Gelap
+Dashboard > **Tampilan Undangan > 🔧 Fitur Undangan**:
+- **Musik latar** on/off — off: tidak ada audio & tombol musik hilang.
+- **Mode**: *Terang & Gelap* (tombol ☀️/🌙 tampil di pojok kanan bawah), *Terang saja* atau *Gelap saja* (mode dikunci & tombol hilang).
+Klik **Simpan Tampilan**.
+
+### 6. Acara Ngunduh Mantu
+Dashboard > Data Mempelai > **🎊 Acara Ngunduh Mantu** (field di tabel di atas). Kartu tampil **di bawah tombol lokasi Akad & Resepsi**. Peta embed-nya bisa dimatikan lewat `ngunduh_embed_aktif`; seluruh kartu bisa dimatikan lewat *Bagian yang Ditampilkan > Ngunduh Mantu*. Kartu otomatis tersembunyi bila tanggal, waktu, dan lokasinya kosong.
+
+### 7. Peta embed Akad & Resepsi
+Ada field baru **Link Peta Embed** + sakelar **Tampilkan peta embed** (`link_maps_embed_aktif`). Bila embed kosong, peta dibuat otomatis dari alamat.
+
+### 8. Live Streaming
+Section baru di antara *Menghitung Hari* dan *Galeri* (bisa di-on/off di *Bagian yang Ditampilkan*). Di Dashboard > Data Mempelai > **📡 Live Streaming** centang salah satu/banyak: **Instagram, YouTube, Zoom**, lalu isi username/link-nya. Tiap pilihan tampil sebagai tombol berikon (font seukuran status mempelai). Kalau tidak ada tautan terisi, section otomatis tersembunyi.
+
+### 9. Form Ucapan & Doa (RSVP)
+- Jika memilih **Hadir**: muncul kartu pilihan acara (boleh **1 atau lebih**): 💍 *Akad*, 🥂🍽️ *Resepsi*, ❤️ *Ngunduh Mantu* (ikon di atas, nama di bawah). *Ngunduh Mantu* hanya muncul bila kartunya aktif.
+- **Jumlah yang Hadir** kini **dropdown 1–10** (server juga membatasi maks. 10).
+- Hadir wajib memilih minimal 1 acara & jumlah. Pilihan tersimpan di kolom `acara_hadir` dan tampil di kartu ucapan. Saat tamu memilih **Ubah**, pilihan acara ikut terisi.
+
+### 10. Animasi (Framer Motion) & scroll halus
+Situs undangan berupa HTML statis (bukan React), jadi dipakai **Motion** — versi vanilla dari **Framer Motion** (mesin & kurva animasi yang sama, tanpa perlu React/build) — plus **Lenis** untuk scroll berinersia yang halus. Dikontrol di Dashboard > Tampilan Undangan > **✨ Animasi**:
+- **Aktifkan animasi**: section, kartu, foto, teks, tombol, hitung mundur, ucapan masuk dengan efek saat digulir.
+- **Gaya masuk**: Naik / Pudar / Zoom / Geser. **Kecepatan**: Cepat / Normal / Lambat. Item bersaudara muncul berurutan (stagger).
+- **Daun & bunga bergoyang**: semua aset floral/daun bergoyang pelan seperti tertiup angin.
+- **Scroll halus** antar section.
+- Ada kotak **Pratinjau** + tombol *▶ Putar Ulang* di dashboard untuk melihat efeknya sebelum disimpan.
+Pengguna dengan pengaturan sistem "kurangi gerakan" otomatis tidak diberi animasi.
+
+### Langkah update
+1. Ganti `Code.gs` di Apps Script → **Deploy > Manage deployments > Edit > New version**.
+2. Perbarui Sheet (lihat "Perubahan Spreadsheet") atau pakai xlsx terbaru.
+3. Upload ke GitHub Pages: `index.html`, `config.js`, dan **folder `assets/` lengkap** (ada 4 file baru).
+4. Buka Dashboard → isi field baru → **Tampilan Undangan** → *Simpan Tampilan*.
+
+---
+
 ## 1. Buat Google Sheet
 
 Buat 1 Spreadsheet baru, lalu buat **4 sheet (tab)** dengan nama PERSIS seperti berikut (huruf besar/kecil berpengaruh):
@@ -52,7 +139,7 @@ Field yang bisa Anda ubah di sini (semua diambil dari template undangan Anda):
 | `galeri_url` | url1,url2,url3 (pisahkan koma) | Galeri foto |
 | `bank_nama`, `bank_rekening`, `bank_atas_nama`, `qris_image_url` | | Love Gift — rekening 1 |
 | `bank_nama_2`, `bank_rekening_2`, `bank_atas_nama_2` | | Love Gift — rekening 2 (opsional, kosongkan semua kalau cuma 1 rekening) |
-| `musik_url` | | Opsional, musik latar. **Wajib link file mp3 langsung**, lihat catatan di bawah tabel |
+| `musik_url` | | Opsional, musik latar (on/off dari Dashboard > Tampilan > Fitur). **Wajib link file mp3 langsung**, lihat catatan di bawah tabel |
 | `gift_nama`, `gift_hp`, `gift_alamat` | | Love Gift — kirim hadiah fisik |
 | `base_url` | `https://rizky-rasya.github.io/amplop/` | **Wajib**, dipakai membuat link tamu (`$link_undangan`) |
 | `apps_script_url` | (isi setelah langkah 2) | referensi Anda sendiri |
@@ -95,7 +182,7 @@ Import **`sheet-template/NamaTamuUndangan.csv`**.
 > Kalau sheet Anda **sudah terlanjur** memakai id lama yang berurutan (`T1`, `T2`, ...) dan **belum ada undangan yang benar-benar terkirim** ke tamu asli, jalankan **`regenerateAllGuestIds`** sekali (juga dari dropdown fungsi Apps Script) untuk mengganti SEMUA id jadi token acak baru sekaligus. Kalau sudah ada tamu yang menerima link lamanya, regenerate akan memutus deteksi-absen-otomatis untuk link yang sudah terkirim itu (linknya tetap bisa dibuka, cuma bagian absen-otomatisnya yang perlu link baru dikirim ulang).
 
 ### c. `KonfirmasiTamuUndangan`
-Kolom: `timestamp | comment_id | nama | presensi | jumlah_hadir | ucapan_doa | edit_token | id_tamu`
+Kolom: `timestamp | comment_id | nama | presensi | jumlah_hadir | ucapan_doa | edit_token | id_tamu | acara_hadir`
 Import **`sheet-template/KonfirmasiTamuUndangan.csv`** (cukup header — baris di bawahnya terisi otomatis dari form "Ucapan & Doa" di situs publik).
 
 - **`comment_id`**: token acak, ditampilkan ke publik lewat daftar ucapan (dipakai untuk menunjuk "ucapan yang mana").
@@ -145,7 +232,7 @@ Import **`sheet-template/AkunAdmin.csv`**, lalu **ganti password contohnya** den
 
 ### Ucapan & Doa — jumlah hadir, ubah, dan hapus
 
-Saat tamu memilih **Hadir** di form Ucapan & Doa, muncul field tambahan **"Jumlah yang Hadir"** (minimal 1, tanpa batas atas) — hilang otomatis kalau mereka pilih Tidak Hadir/Masih Ragu, karena memang tidak relevan.
+Saat tamu memilih **Hadir** di form Ucapan & Doa, muncul pilihan **acara yang dihadiri** (Akad / Resepsi / Ngunduh Mantu) dan dropdown **"Jumlah yang Hadir"** (1–10) — hilang otomatis kalau mereka pilih Tidak Hadir/Masih Ragu, karena memang tidak relevan.
 
 Setelah mengirim, tamu bisa **Ubah** atau **Hapus** ucapannya sendiri kapan saja — tombolnya otomatis muncul di kartu ucapan miliknya sendiri (dideteksi lewat token tersimpan di browser mereka, bukan lewat login). Kalau mereka membuka situs dari **browser/perangkat lain**, tombol itu tidak akan muncul (token hanya ada di perangkat tempat mereka pertama mengirim) — itu wajar dan sesuai desain keamanannya.
 
@@ -229,7 +316,7 @@ Klik **Simpan Tampilan** untuk menyimpannya ke sheet, atau **Reset ke Preset Baw
 
 ## Tema Terang / Gelap (situs publik)
 
-Tombol bulat di pojok kanan bawah halaman ( ◐ ) mengganti tema **light (day)** ↔ **night**. Pilihan disimpan di browser tamu; kalau belum pernah memilih, otomatis mengikuti preferensi sistem perangkat mereka.
+Tombol bulat di pojok kanan bawah halaman (☀️/🌙) mengganti tema **light (day)** ↔ **night** — bisa dikunci ke satu mode (tombol hilang) dari Dashboard > Tampilan Undangan > Fitur. Pilihan disimpan di browser tamu; kalau belum pernah memilih, otomatis mengikuti preferensi sistem perangkat mereka.
 
 ## Catatan keamanan & teknis
 

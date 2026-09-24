@@ -1,0 +1,2927 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Dashboard Undangan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <style>
+        /* ===== RESET & TOKENS ===== */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --bg: #f6f3ef;
+            --surface: #ffffff;
+            --surface-2: #f0ebe4;
+            --text: #1f1b17;
+            --muted: #7a7266;
+            --gold: #b8892b;
+            --gold-soft: #9c6b2e;
+            --gold-light: #e8d5b0;
+            --border: #d9d0c4;
+            --shadow: 0 8px 30px rgba(31, 27, 23, 0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --maxw: 1200px;
+            --nav-w: 220px;
+            --transition: 0.3s ease;
+        }
+        html[data-theme="night"] {
+            --bg: #0e1a13;
+            --surface: #15221a;
+            --surface-2: #1b2a20;
+            --text: #f2ecdd;
+            --muted: #a9b6a6;
+            --gold: #c9a24b;
+            --gold-soft: #e4c97a;
+            --gold-light: #3a4a3a;
+            --border: #2a3a2e;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+        }
+        html {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            transition: background var(--transition), color var(--transition);
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg);
+            transition: background var(--transition);
+        }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+        button {
+            font-family: var(--font);
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: inherit;
+        }
+        input,
+        select,
+        textarea {
+            font-family: var(--font);
+            color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.85rem;
+            font-size: 0.9rem;
+            width: 100%;
+            transition: border var(--transition), box-shadow var(--transition);
+            outline: none;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(184, 137, 43, 0.15);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--surface-2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 4px;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--nav-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.6rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background var(--transition), border var(--transition);
+        }
+        .sidebar .brand {
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sidebar .brand span {
+            font-weight: 300;
+            color: var(--muted);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            flex: 1;
+        }
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted);
+            transition: background var(--transition), color var(--transition);
+        }
+        .sidebar nav a:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        .sidebar nav a.active {
+            background: var(--gold-light);
+            color: var(--gold);
+        }
+        .sidebar nav a svg {
+            flex: none;
+            width: 18px;
+            height: 18px;
+        }
+        .sidebar .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            color: var(--muted);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            width: 100%;
+            transition: background var(--transition);
+            margin-bottom: 0.3rem;
+        }
+        .sidebar .theme-toggle:hover {
+            background: var(--border);
+        }
+        .sidebar .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            color: #b55a4a;
+            background: transparent;
+            border: 1px solid #b55a4a;
+            width: 100%;
+            transition: background var(--transition), color var(--transition);
+            margin-top: 0.3rem;
+        }
+        .sidebar .logout-btn:hover {
+            background: #b55a4a;
+            color: #fff;
+        }
+
+        /* ===== MAIN ===== */
+        .main {
+            margin-left: var(--nav-w);
+            flex: 1;
+            padding: 1.8rem 2rem 3rem;
+            max-width: var(--maxw);
+            transition: margin var(--transition);
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-weight: 600;
+            font-size: 1.6rem;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        .page-header .sub {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.2rem 1.2rem 1rem;
+            box-shadow: var(--shadow);
+            transition: background var(--transition), border var(--transition);
+        }
+        .stat-card .num {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--gold);
+        }
+        .stat-card .lbl {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-top: 0.1rem;
+        }
+        .stat-card .sub-lbl {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+        }
+        .stat-card.hadir .num {
+            color: #2d8f5c;
+        }
+        .stat-card.tidak .num {
+            color: #b55a4a;
+        }
+        .stat-card.ragu .num {
+            color: #c9943a;
+        }
+
+        /* ===== PANELS ===== */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.4rem 1.6rem 1.8rem;
+            margin-bottom: 2rem;
+            transition: background var(--transition), border var(--transition);
+        }
+        .panel-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .panel-title .badge {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--muted);
+            background: var(--surface-2);
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+        }
+        .panel .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+        .panel .toolbar .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .panel .toolbar .filter-group button {
+            padding: 0.3rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            background: transparent;
+            transition: all var(--transition);
+        }
+        .panel .toolbar .filter-group button.active {
+            background: var(--gold);
+            color: #fff;
+            border-color: var(--gold);
+        }
+        .panel .toolbar .filter-group button:hover:not(.active) {
+            background: var(--surface-2);
+        }
+        .panel .toolbar .search-box {
+            flex: 1;
+            min-width: 140px;
+        }
+        .panel .toolbar .search-box input {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        .panel .toolbar .btn-sm {
+            margin-left: 0.2rem;
+        }
+
+        /* ===== TABLE ===== */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 0 -0.4rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        table th {
+            text-align: left;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            padding: 0.6rem 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        table td {
+            padding: 0.6rem 0.4rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        table tr:last-child td {
+            border-bottom: none;
+        }
+        table .status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        .status-badge.hadir {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-badge.tidak {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-badge.ragu {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-badge.belum {
+            background: var(--surface-2);
+            color: var(--muted);
+        }
+        .status-badge.sudah {
+            background: var(--gold-light);
+            color: var(--gold);
+        }
+        html[data-theme="night"] .status-badge.hadir {
+            background: rgba(76, 175, 100, 0.18);
+            color: #7cd992;
+        }
+        html[data-theme="night"] .status-badge.tidak {
+            background: rgba(224, 90, 90, 0.18);
+            color: #ef9a9a;
+        }
+        html[data-theme="night"] .status-badge.ragu {
+            background: rgba(224, 178, 55, 0.18);
+            color: #f0d17a;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            transition: all var(--transition);
+            white-space: nowrap;
+        }
+        .btn-sm:hover {
+            background: var(--surface-2);
+        }
+        .btn-sm.primary {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #fff;
+        }
+        .btn-sm.primary:hover {
+            opacity: 0.85;
+        }
+        .btn-sm.gold-outline {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .btn-sm.gold-outline:hover {
+            background: var(--gold);
+            color: #fff;
+        }
+        .btn-sm.success {
+            background: #2d8f5c;
+            border-color: #2d8f5c;
+            color: #fff;
+        }
+        .btn-sm.danger {
+            background: #b55a4a;
+            border-color: #b55a4a;
+            color: #fff;
+        }
+        .btn-sm:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* ===== TEMPLATE EDITOR ===== */
+        .template-editor .var-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+        .template-editor .var-buttons button {
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            font-weight: 500;
+            background: var(--surface-2);
+            color: var(--text);
+            transition: all var(--transition);
+            font-family: monospace;
+        }
+        .template-editor .var-buttons button:hover {
+            background: var(--gold-light);
+            border-color: var(--gold);
+        }
+        .template-editor .var-buttons button .var-label {
+            font-family: var(--font);
+            font-weight: 400;
+            font-size: 0.6rem;
+            color: var(--muted);
+            margin-left: 0.2rem;
+        }
+        .template-editor textarea {
+            min-height: 160px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+        .template-editor .preview-box {
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-top: 0.8rem;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .template-editor .preview-box .empty {
+            color: var(--muted);
+            font-style: italic;
+        }
+        .template-editor .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 1rem;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1.5rem;
+            transition: opacity 0.5s ease;
+        }
+        #loginScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loginScreen .login-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem 2rem 2.2rem;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        #loginScreen .login-box h2 {
+            font-weight: 600;
+            font-size: 1.4rem;
+            margin: 0 0 0.3rem;
+            color: var(--gold);
+        }
+        #loginScreen .login-box p {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin: 0 0 1.5rem;
+        }
+        #loginScreen .login-box .field {
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+        #loginScreen .login-box .field label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.2rem;
+        }
+        #loginScreen .login-box .field input {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        #loginScreen .login-box .btn {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 999px;
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+            transition: opacity var(--transition);
+            margin-top: 0.5rem;
+        }
+        #loginScreen .login-box .btn:hover {
+            opacity: 0.85;
+        }
+        #loginScreen .login-box .login-error {
+            color: #b55a4a;
+            font-size: 0.8rem;
+            margin-top: 0.8rem;
+            min-height: 1.2em;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 0.8rem;
+            left: 0.8rem;
+            z-index: 60;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.6rem;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            color: var(--text);
+        }
+        .mobile-toggle:hover {
+            background: var(--surface-2);
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+        }
+
+        @media (max-width: 820px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 240px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay.open {
+                display: block;
+            }
+            .main {
+                margin-left: 0;
+                padding: 1.2rem 1rem 2.5rem;
+            }
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .panel {
+                padding: 1rem;
+            }
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.6rem;
+            }
+            .stat-card .num {
+                font-size: 1.5rem;
+            }
+            .panel .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .panel .toolbar .filter-group {
+                justify-content: center;
+            }
+        }
+
+        /* ===== LOADING ===== */
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.2s steps(3) infinite;
+        }
+        @keyframes dots {
+            0% {
+                content: '';
+            }
+            33% {
+                content: '.';
+            }
+            66% {
+                content: '..';
+            }
+            100% {
+                content: '...';
+            }
+        }
+
+        /* ===== MISC ===== */
+        .text-gold {
+            color: var(--gold);
+        }
+        .text-muted {
+            color: var(--muted);
+        }
+        .mb-1 {
+            margin-bottom: 0.6rem;
+        }
+        .mt-1 {
+            margin-top: 0.6rem;
+        }
+        .flex {
+            display: flex;
+        }
+        .flex-center {
+            align-items: center;
+        }
+        .gap-1 {
+            gap: 0.6rem;
+        }
+        .gap-2 {
+            gap: 1rem;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 120px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 1.2rem;
+            box-shadow: var(--shadow);
+            font-size: 0.85rem;
+            z-index: 99;
+            max-width: 320px;
+            animation: slideUp 0.3s ease;
+            display: none;
+        }
+        .toast.show {
+            display: block;
+        }
+        .toast.success {
+            border-left: 4px solid #2d8f5c;
+        }
+        .toast.error {
+            border-left: 4px solid #b55a4a;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* warning banner */
+        .warning-banner {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        html[data-theme="night"] .warning-banner {
+            background: #3a2e1a;
+            color: #e4c97a;
+            border-color: #c9943a;
+        }
+
+        /* ===== TAB TEMA / TAMPILAN UNDANGAN ===== */
+        .preset-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:0.7rem; }
+        .preset-card{
+            border:2px solid var(--border); border-radius:12px; padding:0.7rem; cursor:pointer; text-align:left;
+            background:var(--surface); transition:border-color .15s; font-family:inherit;
+        }
+        .preset-card.active{ border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
+        .preset-swatch{ display:flex; gap:4px; margin-bottom:0.5rem; }
+        .preset-swatch span{ width:20px; height:20px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.12); }
+        .preset-name{ font-size:0.82rem; font-weight:600; }
+        .preset-desc{ font-size:0.68rem; color:var(--muted); margin-top:0.15rem; }
+
+        .tema-preview-toggle, .tema-color-tabs, .option-buttons{ display:flex; gap:0.5rem; margin-bottom:0.9rem; flex-wrap:wrap; }
+        .tema-preview-toggle .btn-sm.active, .tema-color-tabs .btn-sm.active, .option-buttons .btn-sm.active{
+            background:var(--gold); color:#fff; border-color:var(--gold);
+        }
+
+        .tema-preview-box{
+            border-radius: var(--tp-radius, 20px); padding:2.2rem 1.4rem; text-align:center;
+            background: var(--tp-bg,#FAF6EC); color:var(--tp-text,#2B2620);
+            border:1px solid var(--tp-line, rgba(184,137,43,.28)); transition: background .2s ease, color .2s ease;
+            font-family: var(--tp-font-body, 'Jost',sans-serif);
+        }
+        .tema-preview-box .tp-eyebrow{ font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--tp-gold,#B8892B); font-weight:600; }
+        .tema-preview-box .tp-title{ font-family:var(--tp-font-display,'Cormorant Garamond',serif); font-size:1.9rem; margin:0.5rem 0; }
+        .tema-preview-box .tp-quote{
+            font-family:var(--tp-font-display,'Cormorant Garamond',serif); font-style:italic; font-size:0.92rem;
+            background:var(--tp-surface,#fff); border:1px solid var(--tp-line,rgba(184,137,43,.28)); border-radius:var(--tp-radius,16px);
+            padding:0.9rem; margin:1.1rem auto; max-width:280px;
+        }
+        .tema-preview-box .tp-count{ display:flex; justify-content:center; gap:1.2rem; margin:1.1rem 0; font-family:var(--tp-font-display,'Cormorant Garamond',serif); font-size:1.4rem; color:var(--tp-gold,#B8892B); }
+        .tema-preview-box .tp-count small{ display:block; font-family:var(--tp-font-body,'Jost',sans-serif); font-size:0.6rem; color:var(--tp-muted,#7A7266); text-transform:uppercase; letter-spacing:.05em; }
+        .tema-preview-box .tp-btn{
+            font-family:var(--tp-font-body,'Jost',sans-serif); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+            border:1px solid var(--tp-gold,#B8892B); color:#fff; background:var(--tp-gold,#B8892B); padding:0.65rem 1.5rem; border-radius:999px; cursor:default; display:inline-block;
+        }
+        .tema-preview-box .tp-sections{ display:flex; flex-wrap:wrap; gap:0.35rem; justify-content:center; margin-top:1.1rem; }
+        .tema-preview-box .tp-sections .chip{
+            font-size:0.85rem; padding:0.25rem 0.5rem; border-radius:999px; border:1px solid var(--tp-line,rgba(184,137,43,.28));
+            background:var(--tp-surface,#fff); transition:opacity .15s;
+        }
+        .tema-preview-box .tp-sections .chip.off{ opacity:0.3; filter:grayscale(1); }
+
+        .section-toggle-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:0.6rem; }
+        .section-toggle-item{
+            display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; padding:0.65rem 0.85rem;
+            background:var(--surface); border:1px solid var(--border); border-radius:10px; cursor:pointer;
+        }
+        .section-toggle-item input{ width:17px; height:17px; accent-color:var(--gold); cursor:pointer; flex:none; }
+
+        .color-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:0.8rem; }
+        .color-item label{ font-size:0.72rem; color:var(--muted); display:block; margin-bottom:0.3rem; }
+        .color-item .row{ display:flex; align-items:center; gap:0.4rem; }
+        .color-item input[type=color]{ width:34px; height:34px; border:1px solid var(--border); border-radius:8px; padding:0; cursor:pointer; background:none; flex:none; }
+        .color-item input[type=text]{ flex:1; min-width:0; font-size:0.72rem; padding:0.4rem 0.5rem; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-family:monospace; }
+
+        /* ===== PAGINASI ===== */
+        .pagination-bar{
+            display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;
+            margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border);
+        }
+        .page-size-group{ display:flex; gap:0.3rem; }
+        .page-size-group .btn-sm{ padding:0.3rem 0.6rem; font-size:0.72rem; }
+        .page-size-group .btn-sm.active{ background:var(--gold); color:#fff; border-color:var(--gold); }
+        .page-nav-group{ display:flex; align-items:center; gap:0.6rem; }
+        .page-nav-group .btn-sm{ font-size:0.72rem; padding:0.3rem 0.6rem; }
+        .page-nav-group .btn-sm:disabled{ opacity:0.4; cursor:not-allowed; }
+        .page-info{ font-size:0.75rem; color:var(--muted); white-space:nowrap; }
+
+        /* ===== MODAL TAMBAH/UBAH TAMU ===== */
+        .modal-overlay{
+            display:none; position:fixed; inset:0; background:rgba(20,16,10,0.55); z-index:200;
+            align-items:center; justify-content:center; padding:1rem;
+        }
+        .modal-overlay.open{ display:flex; }
+        .modal-box{ background:var(--surface); border-radius:16px; padding:1.4rem; max-width:380px; width:100%; }
+        .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; font-weight:600; }
+        .modal-close{ background:none; border:none; font-size:1.3rem; line-height:1; cursor:pointer; color:var(--muted); }
+        .form-field{ margin-bottom:0.9rem; text-align:left; }
+        .form-field label{ display:block; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:0.3rem; }
+        .form-field input{
+            width:100%; padding:0.6rem 0.8rem; font-size:0.88rem; border:1px solid var(--border);
+            border-radius:8px; background:var(--bg); color:var(--text); box-sizing:border-box;
+        }
+        .modal-actions{ display:flex; gap:0.6rem; margin-top:1rem; }
+        .modal-actions .btn-sm{ flex:1; padding:0.6rem; }
+        .jenis-filter-select{
+            padding:0.5rem 0.7rem; font-size:0.82rem; border:1px solid var(--border); border-radius:8px;
+            background:var(--surface); color:var(--text);
+        }
+
+        /* ===== DATA MEMPELAI ===== */
+        .mempelai-group{ border:1px solid var(--border); border-radius:12px; margin-bottom:0.7rem; overflow:hidden; }
+        .mempelai-group summary{
+            padding:0.8rem 1rem; cursor:pointer; font-weight:600; font-size:0.88rem; background:var(--surface-2);
+            list-style:none; display:flex; align-items:center; gap:0.4rem;
+        }
+        .mempelai-group summary::-webkit-details-marker{ display:none; }
+        .mempelai-fields{ padding:1rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:0.8rem; }
+        .form-field textarea{
+            width:100%; padding:0.6rem 0.8rem; font-size:0.85rem; border:1px solid var(--border);
+            border-radius:8px; background:var(--bg); color:var(--text); box-sizing:border-box; resize:vertical; font-family:inherit;
+        }
+
+        /* ===== AKUN ===== */
+        #changePasswordForm .form-field, #accountForm .form-field, #resetPassForm .form-field{ max-width:340px; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 Dashboard</h2>
+            <p>Masuk untuk mengelola undangan</p>
+            <form id="loginForm">
+                <div class="field">
+                    <label for="loginUser">Username</label>
+                    <input type="text" id="loginUser" placeholder="rr" required />
+                </div>
+                <div class="field">
+                    <label for="loginPass">Password</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" required />
+                </div>
+                <button type="submit" class="btn">Masuk</button>
+                <div class="login-error" id="loginError"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MOBILE TOGGLE ===== -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle sidebar">☰</button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            🏠 <span>Dashboard</span>
+        </div>
+        <nav>
+            <a href="#" class="active" data-section="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
+            <a href="#" data-section="mempelai">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg>
+                Data Mempelai
+            </a>
+            <a href="#" data-section="guests">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                Daftar Tamu
+            </a>
+            <a href="#" data-section="send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                Kirim WA
+            </a>
+            <a href="#" data-section="template">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Template Pesan
+            </a>
+            <a href="#" data-section="tema">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h10a2 2 0 002-2v-4a2 2 0 00-2-2h-2.5M7 21v-4"/><circle cx="7" cy="7" r="1"/></svg>
+                Tampilan Undangan
+            </a>
+            <a href="#" data-section="akun">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/><path d="M18 8.5c1 .3 2 1.2 2 2.5 0 1.5-1.2 2.5-2.5 2.5M16 21v-1a5.5 5.5 0 00-1.5-3.8"/></svg>
+                Akun
+            </a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/></svg>
+            <span id="themeLabel">Tema Gelap</span>
+        </button>
+        <button class="logout-btn" id="logoutBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Keluar
+        </button>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main" id="mainContent">
+
+        <!-- ===== PAGE HEADER ===== -->
+        <div class="page-header">
+            <div>
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="sub" id="pageSub">Undangan Pernikahan · <span id="headerNames">—</span></div>
+            </div>
+            <div style="font-size:0.8rem;color:var(--muted);">
+                <span id="lastUpdate">—</span>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: DASHBOARD ===== -->
+        <div id="section-dashboard" class="section-content">
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Total Tamu</div></div>
+                <div class="stat-card hadir"><div class="num" id="statHadir">0</div><div class="lbl">Hadir</div><div class="sub-lbl" id="statHadirPct">—</div></div>
+                <div class="stat-card tidak"><div class="num" id="statTidak">0</div><div class="lbl">Tidak Hadir</div><div class="sub-lbl" id="statTidakPct">—</div></div>
+                <div class="stat-card ragu"><div class="num" id="statRagu">0</div><div class="lbl">Masih Ragu</div><div class="sub-lbl" id="statRaguPct">—</div></div>
+                <div class="stat-card"><div class="num" id="statBelumKirim">0</div><div class="lbl">Belum Kirim WA</div></div>
+                <div class="stat-card"><div class="num" id="statSudahKirim">0</div><div class="lbl">Sudah Kirim WA</div></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <span>📋 Konfirmasi Terbaru</span>
+                    <div class="action-buttons">
+                        <span class="badge" id="recentBadge">—</span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="dashboard">🔄 Refresh</button>
+                    </div>
+                </div>
+                <div id="recentComments" style="font-size:0.85rem;color:var(--muted);min-height:60px;">
+                    <span class="loading-dots">Memuat</span>
+                </div>
+                <div class="pagination-bar" id="confirmPagination"></div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: DATA MEMPELAI ===== -->
+        <div id="section-mempelai" class="section-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>💍 Data Mempelai</span>
+                    <div class="action-buttons">
+                        <button class="btn-sm gold-outline refresh-btn" data-target="mempelai">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">
+                    Semua field di sini disimpan ke sheet <code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">DataMempelai</code> dan langsung dipakai situs undangan publik begitu disimpan. Klik nama kelompok untuk buka/tutup.
+                </p>
+                <div id="mempelaiGroups"><!-- diisi JS --></div>
+                <div class="actions" style="margin-top:1rem;">
+                    <button class="btn-sm primary" id="saveMempelaiBtn">💾 Simpan Semua Perubahan</button>
+                    <span class="msg" id="mempelaiMsg" style="font-size:0.8rem;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: GUESTS ===== -->
+        <div id="section-guests" class="section-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>📋 Daftar Tamu</span>
+                    <div class="action-buttons">
+                        <span class="badge" id="guestCount">0 tamu</span>
+                        <button class="btn-sm primary" id="addGuestBtn">➕ Tambah Tamu</button>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="guests">🔄 Refresh</button>
+                    </div>
+                </div>
+                <div id="guestWarning" class="warning-banner" style="display:none;">
+                    ⚠️ Menggunakan data contoh (mock). Data tidak diambil dari sheet. Periksa endpoint API.
+                </div>
+                <div class="toolbar">
+                    <select class="jenis-filter-select" id="jenisFilter"><option value="all">Semua Jenis Tamu</option></select>
+                    <div class="search-box">
+                        <input type="text" id="guestSearch" placeholder="Cari nama..." />
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:30px;">#</th>
+                                <th>Nama</th>
+                                <th>Jenis Tamu</th>
+                                <th>No HP</th>
+                                <th style="width:80px;">Status WA</th>
+                                <th style="width:100px;">Status Absen</th>
+                                <th style="width:90px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guestTableBody">
+                            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-bar" id="guestPagination"></div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: SEND WA ===== -->
+        <div id="section-send" class="section-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>📨 Kirim Undangan via WhatsApp</span>
+                    <div class="action-buttons">
+                        <span class="badge" id="sendCount">0 tamu</span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="send">🔄 Refresh</button>
+                    </div>
+                </div>
+                <div id="sendWarning" class="warning-banner" style="display:none;">
+                    ⚠️ Menggunakan data contoh (mock). Data tidak diambil dari sheet. Periksa endpoint API.
+                </div>
+                <div class="toolbar">
+                    <select class="jenis-filter-select" id="sendJenisFilter"><option value="all">Semua Jenis Tamu</option></select>
+                    <div class="search-box">
+                        <input type="text" id="sendSearch" placeholder="Cari nama..." />
+                    </div>
+                    <button class="btn-sm primary" id="sendAllBtn">Kirim Semua</button>
+                    <button class="btn-sm danger" id="resetStatusBtn">↺ Reset Status</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:30px;">#</th>
+                                <th>Nama</th>
+                                <th>Jenis Tamu</th>
+                                <th>No HP</th>
+                                <th style="width:80px;">Status</th>
+                                <th style="width:100px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sendTableBody">
+                            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-bar" id="sendPagination"></div>
+            </div>
+        </div>
+
+        <!-- ===== MODAL: TAMBAH / UBAH TAMU ===== -->
+        <div class="modal-overlay" id="guestModalOverlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span id="guestModalTitle">Tambah Tamu</span>
+                    <button type="button" class="modal-close" id="guestModalClose">&times;</button>
+                </div>
+                <form id="guestForm">
+                    <input type="hidden" id="guestFormRow" value="">
+                    <div class="form-field">
+                        <label for="guestFormNama">Nama Tamu</label>
+                        <input type="text" id="guestFormNama" maxlength="60" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="guestFormJenis">Jenis Tamu</label>
+                        <input type="text" id="guestFormJenis" list="jenisTamuOptions" placeholder="Ketik baru atau pilih dari daftar" autocomplete="off">
+                        <datalist id="jenisTamuOptions"></datalist>
+                    </div>
+                    <div class="form-field">
+                        <label for="guestFormHp">No HP</label>
+                        <input type="text" id="guestFormHp" placeholder="08xxxxxxxxxx" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-sm primary" id="guestFormSubmit">Simpan</button>
+                        <button type="button" class="btn-sm" id="guestFormCancel">Batal</button>
+                    </div>
+                    <p class="msg" id="guestFormMsg" style="font-size:0.8rem;margin-top:0.5rem;"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: TEMPLATE ===== -->
+        <div id="section-template" class="section-content" style="display:none;">
+            <div class="panel template-editor">
+                <div class="panel-title">
+                    <span>✏️ Pengaturan Template Pesan WA</span>
+                    <div class="action-buttons">
+                        <span class="badge">Gunakan <code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">$nama_tamu</code></span>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="template">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.6rem;">
+                    Klik tombol variabel untuk menyisipkan ke template. Pesan akan diganti dengan data tamu saat dikirim.
+                </p>
+                <div class="var-buttons" id="varButtons">
+                    <!-- diisi JS -->
+                </div>
+                <textarea id="templateText" spellcheck="false"></textarea>
+                <div class="actions">
+                    <button class="btn-sm primary" id="saveTemplateBtn">💾 Simpan Template</button>
+                    <button class="btn-sm gold-outline" id="resetTemplateBtn">↺ Reset ke Default</button>
+                    <button class="btn-sm" id="previewTemplateBtn">👁️ Pratinjau</button>
+                </div>
+                <div class="preview-box" id="templatePreview">
+                    <span class="empty">Klik "Pratinjau" untuk melihat hasil template dengan contoh data.</span>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title">
+                    <span>📋 Variabel yang Tersedia</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.4rem;font-size:0.8rem;">
+                    <div><code>$nama_tamu</code> — Nama tamu</div>
+                    <div><code>$nama_pria</code> — Nama lengkap pria</div>
+                    <div><code>$nama_wanita</code> — Nama lengkap wanita</div>
+                    <div><code>$panggilan_pria</code> — Panggilan pria</div>
+                    <div><code>$panggilan_wanita</code> — Panggilan wanita</div>
+                    <div><code>$tanggal_acara</code> — Tanggal acara</div>
+                    <div><code>$waktu_akad</code> — Waktu akad</div>
+                    <div><code>$waktu_resepsi</code> — Waktu resepsi</div>
+                    <div><code>$nama_lokasi</code> — Nama lokasi</div>
+                    <div><code>$alamat_lokasi</code> — Alamat lokasi</div>
+                    <div><code>$link_maps</code> — Link Google Maps</div>
+                    <div><code>$link_undangan</code> — Link undangan tamu</div>
+                    <div><code>$ayah_pria</code> — Ayah mempelai pria</div>
+                    <div><code>$ibu_pria</code> — Ibu mempelai pria</div>
+                    <div><code>$ayah_wanita</code> — Ayah mempelai wanita</div>
+                    <div><code>$ibu_wanita</code> — Ibu mempelai wanita</div>
+                    <div><code>$dress_code</code> — Dress code</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION: TEMA / TAMPILAN UNDANGAN ===== -->
+        <div id="section-tema" class="section-content" style="display:none;">
+
+            <div class="panel">
+                <div class="panel-title">
+                    <span>🎨 Preset Tema</span>
+                    <div class="action-buttons">
+                        <button class="btn-sm gold-outline refresh-btn" data-target="tema">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">
+                    Pilih preset sebagai titik awal, lalu sesuaikan warnanya sendiri kalau perlu. Semua pengaturan di tab ini berlaku untuk situs undangan (<code style="background:var(--surface-2);padding:0.1rem 0.4rem;border-radius:4px;">index.html</code>) yang dilihat tamu — bukan tampilan dashboard ini.
+                </p>
+                <div class="preset-grid" id="presetGrid"><!-- diisi JS --></div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>🖼️ Pratinjau</span></div>
+                <div class="tema-preview-toggle">
+                    <button class="btn-sm active" id="previewLightBtn" type="button">☀️ Mode Terang</button>
+                    <button class="btn-sm" id="previewNightBtn" type="button">🌙 Mode Gelap</button>
+                </div>
+                <div id="temaPreviewBox" class="tema-preview-box">
+                    <div class="tp-eyebrow">Undangan Pernikahan</div>
+                    <div class="tp-title">Wahyu &amp; Riski</div>
+                    <div class="tp-quote">"Dan segala sesuatu Kami ciptakan berpasang-pasangan agar kamu mengingat."</div>
+                    <div class="tp-count">
+                        <span>12<small>Hari</small></span>
+                        <span>08<small>Jam</small></span>
+                        <span>45<small>Menit</small></span>
+                    </div>
+                    <span class="tp-btn">Buka Undangan</span>
+                    <div class="tp-sections" id="tpSections"><!-- diisi JS --></div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>👁️ Bagian yang Ditampilkan</span></div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.8rem;">
+                    Matikan bagian yang tidak perlu ditampilkan ke tamu — perubahan langsung terlihat di pratinjau di atas. Halaman sampul (pembuka) dan footer penutup selalu tampil, tidak bisa dimatikan.
+                </p>
+                <div class="section-toggle-list" id="sectionToggleList"><!-- diisi JS --></div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>🎛️ Warna Kustom</span></div>
+                <div class="tema-color-tabs">
+                    <button class="btn-sm active" id="colorTabLight" type="button">Mode Terang</button>
+                    <button class="btn-sm" id="colorTabNight" type="button">Mode Gelap</button>
+                </div>
+                <div id="colorGridLight" class="color-grid"><!-- diisi JS --></div>
+                <div id="colorGridNight" class="color-grid" style="display:none;"><!-- diisi JS --></div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>◻️ Bentuk &amp; Tipografi</span></div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.5rem;">Bentuk sudut kartu/foto</p>
+                <div class="option-buttons" id="radiusButtons">
+                    <button class="btn-sm" data-radius="tajam" type="button">Tajam</button>
+                    <button class="btn-sm" data-radius="lembut" type="button">Lembut</button>
+                    <button class="btn-sm" data-radius="bulat" type="button">Bulat</button>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0.9rem 0 0.5rem;">Gaya font</p>
+                <div class="option-buttons" id="fontButtons">
+                    <button class="btn-sm" data-font="elegant" type="button">Elegant</button>
+                    <button class="btn-sm" data-font="modern" type="button">Modern</button>
+                    <button class="btn-sm" data-font="classic" type="button">Klasik</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="actions">
+                    <button class="btn-sm primary" id="saveTemaBtn">💾 Simpan Tampilan</button>
+                    <button class="btn-sm gold-outline" id="resetTemaBtn">↺ Reset ke Preset Bawaan</button>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;">
+                    Setelah disimpan, tamu yang membuka/refresh situs undangan langsung melihat tampilan barunya — tidak perlu upload ulang file apa pun.
+                </p>
+                <p class="msg" id="temaMsg" style="font-size:0.8rem;margin-top:0.4rem;"></p>
+            </div>
+
+        </div>
+
+        <!-- ===== SECTION: AKUN ===== -->
+        <div id="section-akun" class="section-content" style="display:none;">
+
+            <div class="panel">
+                <div class="panel-title"><span>🔑 Ganti Password Saya</span></div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">Masuk sebagai <strong id="akunMeLabel">—</strong>. Masukkan password lama untuk verifikasi sebelum mengganti.</p>
+                <form id="changePasswordForm">
+                    <div class="form-field">
+                        <label for="cpOld">Password Lama</label>
+                        <input type="password" id="cpOld" required autocomplete="current-password">
+                    </div>
+                    <div class="form-field">
+                        <label for="cpNew">Password Baru</label>
+                        <input type="password" id="cpNew" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="form-field">
+                        <label for="cpConfirm">Ulangi Password Baru</label>
+                        <input type="password" id="cpConfirm" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn-sm primary">Ganti Password</button>
+                    <span class="msg" id="cpMsg" style="font-size:0.8rem;margin-left:0.6rem;"></span>
+                </form>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title">
+                    <span>👥 Akun Dashboard</span>
+                    <div class="action-buttons">
+                        <button class="btn-sm primary" id="addAccountBtn">➕ Tambah Akun</button>
+                        <button class="btn-sm gold-outline refresh-btn" data-target="akun">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;">Semua akun ini bisa membuka dashboard ini. Password akun lain tidak ditampilkan — Anda hanya bisa mengatur ulang (reset) dengan password baru.</p>
+                <table>
+                    <thead><tr><th>Username</th><th style="width:170px;">Aksi</th></tr></thead>
+                    <tbody id="accountsTableBody"><tr><td colspan="2" style="text-align:center;color:var(--muted);padding:1.2rem;">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- ===== MODAL: TAMBAH AKUN ===== -->
+        <div class="modal-overlay" id="accountModalOverlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span>Tambah Akun Dashboard</span>
+                    <button type="button" class="modal-close" id="accountModalClose">&times;</button>
+                </div>
+                <form id="accountForm">
+                    <div class="form-field">
+                        <label for="accFormUser">Username</label>
+                        <input type="text" id="accFormUser" required autocomplete="off">
+                    </div>
+                    <div class="form-field">
+                        <label for="accFormPass">Password (minimal 4 karakter)</label>
+                        <input type="password" id="accFormPass" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-sm primary">Tambah</button>
+                        <button type="button" class="btn-sm" id="accountFormCancel">Batal</button>
+                    </div>
+                    <p class="msg" id="accountFormMsg" style="font-size:0.8rem;margin-top:0.5rem;"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== MODAL: RESET PASSWORD AKUN LAIN ===== -->
+        <div class="modal-overlay" id="resetPassModalOverlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <span>Reset Password — <span id="resetPassUserLabel">—</span></span>
+                    <button type="button" class="modal-close" id="resetPassModalClose">&times;</button>
+                </div>
+                <form id="resetPassForm">
+                    <input type="hidden" id="resetPassUsername">
+                    <div class="form-field">
+                        <label for="resetPassNew">Password Baru (minimal 4 karakter)</label>
+                        <input type="password" id="resetPassNew" required minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-sm primary">Simpan</button>
+                        <button type="button" class="btn-sm" id="resetPassCancel">Batal</button>
+                    </div>
+                    <p class="msg" id="resetPassMsg" style="font-size:0.8rem;margin-top:0.5rem;"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div style="text-align:center;padding:2rem 0 0.5rem;font-size:0.7rem;color:var(--muted);border-top:1px solid var(--border);margin-top:1rem;">
+            Dashboard Undangan · Data dari Google Sheets
+        </div>
+    </main>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script>
+        // ========================================================================
+        //  SESI LOGIN
+        //  Tidak ada kredensial tersimpan di file ini. Username & password
+        //  divalidasi di server (Apps Script) terhadap sheet AkunAdmin, lalu
+        //  server mengeluarkan token sesi (berlaku 6 jam) yang disimpan di
+        //  localStorage. Setiap panggilan API yang sensitif (guests,
+        //  update_status, reset_status, save_template) WAJIB menyertakan
+        //  token ini dan divalidasi ulang di server setiap kali dipanggil.
+        // ========================================================================
+        const TOKEN_KEY = 'undangan_admin_token';
+        const USERNAME_KEY = 'undangan_admin_username';
+        const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
+        const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
+        const clearToken = () => { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USERNAME_KEY); };
+
+        /** Kalau respons API menandakan sesi tidak valid/kedaluwarsa, paksa logout. */
+        function handleSessionError(message) {
+            if (!message) return false;
+            const lower = message.toLowerCase();
+            if (lower.indexOf('sesi') !== -1) {
+                clearToken();
+                checkLogin();
+                showToast('Sesi berakhir, silakan login kembali.', 'error');
+                return true;
+            }
+            return false;
+        }
+
+        // ========================================================================
+        //  LOGIN / LOGOUT
+        // ========================================================================
+        function checkLogin() {
+            const loggedIn = !!getToken();
+            if (loggedIn) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('mobileToggle').style.display = 'flex';
+                if (typeof initDashboard === 'function') {
+                    if (!window._dashboardInited) {
+                        window._dashboardInited = true;
+                        initDashboard();
+                    }
+                }
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'none';
+                document.getElementById('mobileToggle').style.display = 'none';
+                window._dashboardInited = false;
+            }
+        }
+
+        async function performLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            const errorEl = document.getElementById('loginError');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            errorEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Memeriksa…';
+            try {
+                const res = await apiPost({ action: 'login', username: user, password: pass });
+                if (res.ok) {
+                    setToken(res.token);
+                    myUsername = res.username || user;
+                    localStorage.setItem(USERNAME_KEY, myUsername);
+                    checkLogin();
+                    if (typeof refreshAll === 'function') refreshAll();
+                } else {
+                    errorEl.textContent = '❌ ' + (res.error || 'Username atau password salah.');
+                }
+            } catch (err) {
+                errorEl.textContent = '❌ Tidak bisa terhubung ke server: ' + err.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Masuk';
+            }
+        }
+
+        function performLogout() {
+            if (confirm('Yakin ingin keluar?')) {
+                clearToken();
+                checkLogin();
+                document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
+                document.getElementById('section-dashboard').style.display = 'block';
+            }
+        }
+
+        // ========================================================================
+        //  DOM REFS & GLOBAL STATE
+        // ========================================================================
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
+
+        const FALLBACK_CONFIG = {
+            nama_panggilan_pria: "Rizky",
+            nama_panggilan_wanita: "Rasya",
+            nama_lengkap_pria: "Rizky Hanifudin, S.Kom., M.Kom.",
+            nama_lengkap_wanita: "Rasya Agistiningtyas",
+            tanggal_acara_iso: "2026-12-12 10:00:00",
+            tanggal_tampil: "Sabtu, 12 Desember 2026",
+            waktu_akad: "08.00 - 10.00 WIB",
+            waktu_resepsi: "11.00 - 14.00 WIB",
+            nama_lokasi: "Rumah Mempelai Wanita",
+            alamat_lokasi: "RT 10 RW 02, Desa Pajerukan, Kec. Kalibagor, Kab. Banyumas, Jawa Tengah 53191",
+            link_maps: "https://goo.gl/maps/ALZR6FJZU3kxVwN86",
+            dress_code: "Batik dan bersepatu tertutup",
+            ayah_pria: "Bapak Muchammat Manan",
+            ibu_pria: "Ibu Saminah",
+            ayah_wanita: "Bapak Slamet Widodo",
+            ibu_wanita: "Ibu Teguh Rahayu",
+            foto_cover_url: "https://picsum.photos/seed/cover/600/750",
+            base_url: "https://rizky-rasya.github.io/amplop/"
+        };
+
+        const DEFAULT_TEMPLATE =
+            `Assalamu'alaikum Warahmatullahi Wabarakatuh.
+
+        Tanpa mengurangi rasa hormat, kami bermaksud mengundang Bapak/Ibu/Saudara/i $nama_tamu untuk menghadiri acara pernikahan kami:
+        $nama_pria & $nama_wanita
+
+        Yang insyaAllah akan dilaksanakan pada:
+        • Hari/Tanggal: $tanggal_acara
+        • Pukul: $waktu_akad - $waktu_resepsi
+        • Tempat: $nama_lokasi
+
+        Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.
+        Informasi lengkap, denah lokasi, dan RSVP dapat dilihat melalui tautan berikut:
+        $link_undangan
+
+        Atas kehadiran dan doa restunya, kami ucapkan terima kasih.
+        Wassalamu'alaikum Warahmatullahi Wabarakatuh.
+        $nama_pria & $nama_wanita sekeluarga.`;
+
+        let configData = { ...FALLBACK_CONFIG };
+        let allGuests = [];
+        let confirmations = [];
+        let usingMockData = false;
+
+        // ========================================================================
+        //  PAGINASI GENERIK — dipakai Daftar Tamu, Kirim WA, & Konfirmasi Terbaru.
+        //  pageSize: 10 | 50 | 100 | 'all'.
+        // ========================================================================
+        const guestPager = { page: 1, pageSize: 10 };
+        const sendPager = { page: 1, pageSize: 10 };
+        const confirmPager = { page: 1, pageSize: 10 };
+
+        function paginateItems(items, pager) {
+            if (pager.pageSize === 'all') return { pageItems: items, totalPages: 1 };
+            const totalPages = Math.max(1, Math.ceil(items.length / pager.pageSize));
+            if (pager.page > totalPages) pager.page = totalPages;
+            if (pager.page < 1) pager.page = 1;
+            const start = (pager.page - 1) * pager.pageSize;
+            return { pageItems: items.slice(start, start + pager.pageSize), totalPages };
+        }
+
+        function renderPaginationBar(barId, pager, totalPages, onChange) {
+            const bar = $(barId);
+            if (!bar) return;
+            const sizes = [10, 50, 100, 'all'];
+            bar.innerHTML = `
+                <div class="page-size-group">
+                    ${sizes.map(sz => `<button type="button" class="btn-sm page-size-btn ${pager.pageSize === sz ? 'active' : ''}" data-size="${sz}">${sz === 'all' ? 'All' : sz}</button>`).join('')}
+                </div>
+                <div class="page-nav-group">
+                    <button type="button" class="btn-sm" id="${barId}-prev" ${pager.page <= 1 ? 'disabled' : ''}>‹ Sebelumnya</button>
+                    <span class="page-info">Hal. ${pager.page} / ${totalPages}</span>
+                    <button type="button" class="btn-sm" id="${barId}-next" ${pager.page >= totalPages ? 'disabled' : ''}>Berikutnya ›</button>
+                </div>
+            `;
+            qsa('.page-size-btn', bar).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    pager.pageSize = btn.dataset.size === 'all' ? 'all' : parseInt(btn.dataset.size, 10);
+                    pager.page = 1;
+                    onChange();
+                });
+            });
+            $(`${barId}-prev`).addEventListener('click', () => { if (pager.page > 1) { pager.page--; onChange(); } });
+            $(`${barId}-next`).addEventListener('click', () => { if (pager.page < totalPages) { pager.page++; onChange(); } });
+        }
+
+        // ========================================================================
+        //  DOM UTILITY
+        // ========================================================================
+        const $ = (id) => document.getElementById(id);
+        const qs = (sel, ctx = document) => ctx.querySelector(sel);
+        const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+        // ========================================================================
+        //  TOAST
+        // ========================================================================
+        let toastTimer = null;
+
+        function showToast(msg, type = 'success') {
+            const el = $('toast');
+            el.textContent = msg;
+            el.className = `toast show ${type}`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3500);
+        }
+
+        // ========================================================================
+        //  API
+        // ========================================================================
+        async function apiGet(action, params = {}) {
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_URL') === 0) {
+                throw new Error('APPS_SCRIPT_URL belum dikonfigurasi.');
+            }
+            const url = new URL(APPS_SCRIPT_URL);
+            url.searchParams.set('action', action);
+            Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+            const res = await fetch(url.toString());
+            return res.json();
+        }
+
+        async function apiPost(payload) {
+            const res = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            return res.json();
+        }
+
+        // ========================================================================
+        //  DATA FETCH — PRIORITAS API, MOCK HANYA SEBAGAI FALLBACK DENGAN PERINGATAN
+        // ========================================================================
+        async function fetchConfig() {
+            try {
+                const res = await apiGet('config');
+                if (res.ok && res.data) {
+                    configData = { ...FALLBACK_CONFIG, ...res.data };
+                }
+                if (res.ok && res.tema) {
+                    temaState = { ...FALLBACK_TEMA, ...res.tema };
+                }
+            } catch (_) { /* pakai fallback */ }
+            const names = `${configData.nama_panggilan_wanita} & ${configData.nama_panggilan_pria}`;
+            $('headerNames').textContent = names;
+            document.title = `Dashboard · ${names}`;
+            return configData;
+        }
+
+        // ========================================================================
+        //  TEMA / TAMPILAN UNDANGAN — sinkron dengan index.html lewat sheet
+        //  PengaturanTema. Preview di sini memakai variabel CSS --tp-* yang sengaja
+        //  terpisah dari palet dashboard sendiri, supaya WYSIWYG akurat terlepas
+        //  dari tema gelap/terang yang sedang dipakai dashboard ini.
+        // ========================================================================
+        const FALLBACK_TEMA = {
+            preset_aktif: 'emerald_gold',
+            warna_bg_light: '#FAF6EC', warna_surface_light: '#FFFFFF', warna_surface2_light: '#F1EAD9',
+            warna_text_light: '#2B2620', warna_muted_light: '#7A7266',
+            warna_aksen_light: '#B8892B', warna_aksen_soft_light: '#9C6B2E',
+            warna_bg_night: '#0E1A13', warna_surface_night: '#15221A', warna_surface2_night: '#1B2A20',
+            warna_text_night: '#F2ECDD', warna_muted_night: '#A9B6A6',
+            warna_aksen_night: '#C9A24B', warna_aksen_soft_night: '#E4C97A',
+            radius_bentuk: 'lembut',
+            gaya_font: 'elegant',
+            section_bride: 'on', section_quotes: 'on', section_story: 'on', section_wedding_date: 'on',
+            section_gallery: 'on', section_gift: 'on', section_comment: 'on'
+        };
+        let temaState = { ...FALLBACK_TEMA };
+        let temaPreviewMode = 'light';
+        let temaColorTab = 'light';
+
+        const SECTION_TOGGLES = [
+            ['section_bride', "👰🤵 Mempelai"],
+            ['section_quotes', "📖 Ayat Al-Qur'an"],
+            ['section_story', '💌 Kisah Cinta'],
+            ['section_wedding_date', '📅 Acara, Lokasi & Hitung Mundur'],
+            ['section_gallery', '🖼️ Galeri Foto'],
+            ['section_gift', '🎁 Hadiah / Amplop Digital'],
+            ['section_comment', '💬 Ucapan & Doa']
+        ];
+
+        const TEMA_PRESETS = {
+            emerald_gold: {
+                nama: 'Emerald Gold', desc: 'Hijau tua & emas, klasik islami',
+                swatch: ['#0E1A13', '#B8892B', '#FAF6EC'],
+                warna_bg_light:'#FAF6EC', warna_surface_light:'#FFFFFF', warna_surface2_light:'#F1EAD9',
+                warna_text_light:'#2B2620', warna_muted_light:'#7A7266', warna_aksen_light:'#B8892B', warna_aksen_soft_light:'#9C6B2E',
+                warna_bg_night:'#0E1A13', warna_surface_night:'#15221A', warna_surface2_night:'#1B2A20',
+                warna_text_night:'#F2ECDD', warna_muted_night:'#A9B6A6', warna_aksen_night:'#C9A24B', warna_aksen_soft_night:'#E4C97A'
+            },
+            rose_blush: {
+                nama: 'Rose Blush', desc: 'Merah muda & rose-gold, romantis',
+                swatch: ['#1C1013', '#B8657A', '#FAF3F1'],
+                warna_bg_light:'#FAF3F1', warna_surface_light:'#FFFFFF', warna_surface2_light:'#F3E3DE',
+                warna_text_light:'#3A2A28', warna_muted_light:'#8C7370', warna_aksen_light:'#B8657A', warna_aksen_soft_light:'#9C4F63',
+                warna_bg_night:'#1C1013', warna_surface_night:'#241619', warna_surface2_night:'#2E1B1F',
+                warna_text_night:'#F5E6E4', warna_muted_night:'#C7A8A6', warna_aksen_night:'#E28FA0', warna_aksen_soft_night:'#F0B4C0'
+            },
+            ocean_teal: {
+                nama: 'Ocean Teal', desc: 'Biru-hijau tosca, tenang',
+                swatch: ['#0A1717', '#2E7D7B', '#F2F7F7'],
+                warna_bg_light:'#F2F7F7', warna_surface_light:'#FFFFFF', warna_surface2_light:'#E3EEEE',
+                warna_text_light:'#1F2E2E', warna_muted_light:'#5F7877', warna_aksen_light:'#2E7D7B', warna_aksen_soft_light:'#1F5E5C',
+                warna_bg_night:'#0A1717', warna_surface_night:'#102222', warna_surface2_night:'#163030',
+                warna_text_night:'#E4F1F1', warna_muted_night:'#9FBDBC', warna_aksen_night:'#4FB8B5', warna_aksen_soft_night:'#7ED4D1'
+            },
+            midnight_mono: {
+                nama: 'Midnight Mono', desc: 'Hitam-putih, minimalis',
+                swatch: ['#121212', '#3A3A36', '#F7F7F5'],
+                warna_bg_light:'#F7F7F5', warna_surface_light:'#FFFFFF', warna_surface2_light:'#EAEAE6',
+                warna_text_light:'#1C1C1A', warna_muted_light:'#6E6E68', warna_aksen_light:'#3A3A36', warna_aksen_soft_light:'#58584F',
+                warna_bg_night:'#121212', warna_surface_night:'#1A1A1A', warna_surface2_night:'#232323',
+                warna_text_night:'#F0F0EC', warna_muted_night:'#A6A6A0', warna_aksen_night:'#D8D8D2', warna_aksen_soft_night:'#B8B8B0'
+            }
+        };
+
+        const COLOR_FIELD_LABELS = {
+            warna_bg: 'Latar Belakang', warna_surface: 'Kartu/Permukaan', warna_surface2: 'Permukaan Sekunder',
+            warna_text: 'Teks Utama', warna_muted: 'Teks Redup', warna_aksen: 'Aksen / Emas', warna_aksen_soft: 'Aksen Lembut'
+        };
+        const COLOR_FIELD_BASES = ['warna_bg', 'warna_surface', 'warna_surface2', 'warna_text', 'warna_muted', 'warna_aksen', 'warna_aksen_soft'];
+
+        function detectActivePreset() {
+            for (const key of Object.keys(TEMA_PRESETS)) {
+                const p = TEMA_PRESETS[key];
+                const match = COLOR_FIELD_BASES.every(base =>
+                    (temaState[base + '_light'] || '').toUpperCase() === p[base + '_light'].toUpperCase() &&
+                    (temaState[base + '_night'] || '').toUpperCase() === p[base + '_night'].toUpperCase()
+                );
+                if (match) return key;
+            }
+            return 'custom';
+        }
+
+        function renderPresetGrid() {
+            const active = detectActivePreset();
+            const cards = Object.keys(TEMA_PRESETS).map(key => {
+                const p = TEMA_PRESETS[key];
+                return `<button type="button" class="preset-card ${key === active ? 'active' : ''}" data-preset="${key}">
+                    <div class="preset-swatch">${p.swatch.map(c => `<span style="background:${c};"></span>`).join('')}</div>
+                    <div class="preset-name">${p.nama}</div>
+                    <div class="preset-desc">${p.desc}</div>
+                </button>`;
+            }).join('');
+            const customActive = active === 'custom';
+            $('presetGrid').innerHTML = cards + `
+                <button type="button" class="preset-card ${customActive ? 'active' : ''}" data-preset="custom">
+                    <div class="preset-swatch"><span style="background:${temaState.warna_aksen_light};"></span><span style="background:${temaState.warna_bg_light};border:1px solid #ddd;"></span></div>
+                    <div class="preset-name">Kustom</div>
+                    <div class="preset-desc">Warna pilihan Anda sendiri</div>
+                </button>`;
+        }
+
+        function applyPreset(key) {
+            if (key === 'custom') { renderPresetGrid(); return; }
+            const p = TEMA_PRESETS[key];
+            if (!p) return;
+            COLOR_FIELD_BASES.forEach(base => {
+                temaState[base + '_light'] = p[base + '_light'];
+                temaState[base + '_night'] = p[base + '_night'];
+            });
+            temaState.preset_aktif = key;
+            renderPresetGrid();
+            renderColorGrids();
+            updateTemaPreview();
+        }
+
+        function renderColorGrids() {
+            const buildGrid = (mode) => COLOR_FIELD_BASES.map(base => {
+                const field = `${base}_${mode}`;
+                const val = temaState[field] || '#000000';
+                return `<div class="color-item">
+                    <label>${COLOR_FIELD_LABELS[base]}</label>
+                    <div class="row">
+                        <input type="color" data-field="${field}" value="${val}">
+                        <input type="text" data-field-text="${field}" value="${val}" maxlength="7">
+                    </div>
+                </div>`;
+            }).join('');
+            $('colorGridLight').innerHTML = buildGrid('light');
+            $('colorGridNight').innerHTML = buildGrid('night');
+        }
+
+        function hexToRgba(hex, alpha) {
+            const h = (hex || '#000000').replace('#', '');
+            const r = parseInt(h.substring(0, 2), 16) || 0;
+            const g = parseInt(h.substring(2, 4), 16) || 0;
+            const b = parseInt(h.substring(4, 6), 16) || 0;
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        const RADIUS_PX = { tajam: '10px', lembut: '20px', bulat: '32px' };
+        const FONT_PREVIEW = {
+            elegant: { display: "'Cormorant Garamond',serif", body: "'Jost',sans-serif" },
+            modern: { display: "'Poppins',sans-serif", body: "'Inter',sans-serif" },
+            classic: { display: "'Playfair Display',serif", body: "'Lato',sans-serif" }
+        };
+
+        function updateTemaPreview() {
+            const mode = temaPreviewMode;
+            const box = $('temaPreviewBox');
+            box.style.setProperty('--tp-bg', temaState[`warna_bg_${mode}`]);
+            box.style.setProperty('--tp-surface', temaState[`warna_surface_${mode}`]);
+            box.style.setProperty('--tp-text', temaState[`warna_text_${mode}`]);
+            box.style.setProperty('--tp-muted', temaState[`warna_muted_${mode}`]);
+            box.style.setProperty('--tp-gold', temaState[`warna_aksen_${mode}`]);
+            box.style.setProperty('--tp-line', hexToRgba(temaState[`warna_aksen_${mode}`], 0.28));
+            box.style.setProperty('--tp-radius', RADIUS_PX[temaState.radius_bentuk] || '20px');
+            const fonts = FONT_PREVIEW[temaState.gaya_font] || FONT_PREVIEW.elegant;
+            box.style.setProperty('--tp-font-display', fonts.display);
+            box.style.setProperty('--tp-font-body', fonts.body);
+
+            $('tpSections').innerHTML = SECTION_TOGGLES.map(([key, label]) => {
+                const on = temaState[key] !== 'off';
+                const icon = label.split(' ')[0];
+                return `<span class="chip ${on ? '' : 'off'}" title="${label}${on ? '' : ' (disembunyikan)'}">${icon}</span>`;
+            }).join('');
+        }
+
+        function renderSectionToggles() {
+            $('sectionToggleList').innerHTML = SECTION_TOGGLES.map(([key, label]) => {
+                const on = temaState[key] !== 'off';
+                return `<label class="section-toggle-item">
+                    <input type="checkbox" data-section-key="${key}" ${on ? 'checked' : ''}>
+                    <span>${label}</span>
+                </label>`;
+            }).join('');
+            qsa('#sectionToggleList input[type=checkbox]').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    temaState[cb.dataset.sectionKey] = cb.checked ? 'on' : 'off';
+                    updateTemaPreview();
+                });
+            });
+        }
+
+        function renderTemaTab() {
+            renderPresetGrid();
+            renderColorGrids();
+            renderSectionToggles();
+            document.querySelectorAll('#radiusButtons [data-radius]').forEach(b =>
+                b.classList.toggle('active', b.dataset.radius === temaState.radius_bentuk));
+            document.querySelectorAll('#fontButtons [data-font]').forEach(b =>
+                b.classList.toggle('active', b.dataset.font === temaState.gaya_font));
+            updateTemaPreview();
+        }
+
+        function wireTemaEvents() {
+            $('presetGrid').addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-preset]');
+                if (btn) applyPreset(btn.dataset.preset);
+            });
+
+            $('previewLightBtn').addEventListener('click', () => {
+                temaPreviewMode = 'light';
+                $('previewLightBtn').classList.add('active');
+                $('previewNightBtn').classList.remove('active');
+                updateTemaPreview();
+            });
+            $('previewNightBtn').addEventListener('click', () => {
+                temaPreviewMode = 'night';
+                $('previewNightBtn').classList.add('active');
+                $('previewLightBtn').classList.remove('active');
+                updateTemaPreview();
+            });
+
+            $('colorTabLight').addEventListener('click', () => {
+                temaColorTab = 'light';
+                $('colorTabLight').classList.add('active');
+                $('colorTabNight').classList.remove('active');
+                $('colorGridLight').style.display = '';
+                $('colorGridNight').style.display = 'none';
+            });
+            $('colorTabNight').addEventListener('click', () => {
+                temaColorTab = 'night';
+                $('colorTabNight').classList.add('active');
+                $('colorTabLight').classList.remove('active');
+                $('colorGridNight').style.display = '';
+                $('colorGridLight').style.display = 'none';
+            });
+
+            ['colorGridLight', 'colorGridNight'].forEach(id => {
+                $(id).addEventListener('input', (e) => {
+                    const colorInput = e.target.matches('input[type=color]') ? e.target : null;
+                    const textInput = e.target.matches('input[type=text]') ? e.target : null;
+                    if (colorInput) {
+                        const field = colorInput.dataset.field;
+                        temaState[field] = colorInput.value;
+                        const twin = document.querySelector(`[data-field-text="${field}"]`);
+                        if (twin) twin.value = colorInput.value;
+                    } else if (textInput) {
+                        const field = textInput.dataset.fieldText;
+                        const val = textInput.value.trim();
+                        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+                            temaState[field] = val;
+                            const twin = document.querySelector(`[data-field="${field}"]`);
+                            if (twin) twin.value = val;
+                        }
+                    }
+                    temaState.preset_aktif = 'custom';
+                    renderPresetGrid();
+                    updateTemaPreview();
+                });
+            });
+
+            document.querySelectorAll('#radiusButtons [data-radius]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    temaState.radius_bentuk = btn.dataset.radius;
+                    document.querySelectorAll('#radiusButtons [data-radius]').forEach(b => b.classList.toggle('active', b === btn));
+                    updateTemaPreview();
+                });
+            });
+            document.querySelectorAll('#fontButtons [data-font]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    temaState.gaya_font = btn.dataset.font;
+                    document.querySelectorAll('#fontButtons [data-font]').forEach(b => b.classList.toggle('active', b === btn));
+                    updateTemaPreview();
+                });
+            });
+
+            $('saveTemaBtn').addEventListener('click', async () => {
+                const msg = $('temaMsg');
+                msg.textContent = 'Menyimpan...';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'save_theme', token: getToken(), tema: temaState });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan.');
+                    if (res.tema) temaState = { ...FALLBACK_TEMA, ...res.tema };
+                    msg.textContent = '✅ Tersimpan. Situs undangan tamu akan memakai tampilan baru ini.';
+                    msg.style.color = '#3f9a58';
+                    renderTemaTab();
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger, #c65b5b)';
+                }
+            });
+
+            $('resetTemaBtn').addEventListener('click', () => {
+                if (!confirm('Kembalikan ke preset "Emerald Gold" bawaan? Warna kustom yang belum disimpan akan hilang.')) return;
+                temaState = { ...FALLBACK_TEMA };
+                renderTemaTab();
+            });
+        }
+
+        async function fetchGuests() {
+            // Reset
+            allGuests = [];
+            usingMockData = false;
+            // Sembunyikan warning
+            $('guestWarning').style.display = 'none';
+            $('sendWarning').style.display = 'none';
+
+            try {
+                const res = await apiGet('guests', { token: getToken() });
+                if (handleSessionError(res.error)) return;
+                if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+                    allGuests = res.data.map(g => ({
+                        ...g,
+                        nomor_hp: String(g.nomor_hp || '').trim(),
+                        status_kirim: g.status_kirim === true || String(g.status_kirim).toUpperCase() === 'TRUE'
+                    }));
+                    console.log('✅ Data tamu dari API:', allGuests.length, 'tamu');
+                    return;
+                } else {
+                    console.warn('⚠️ API /guests tidak mengembalikan data valid:', res);
+                }
+            } catch (err) {
+                console.warn('⚠️ Gagal mengambil data dari API:', err.message);
+            }
+
+            // Jika gagal, gunakan mock tapi tampilkan peringatan
+            console.warn('⚠️ Menggunakan data contoh (mock) karena API tidak tersedia.');
+            usingMockData = true;
+            $('guestWarning').style.display = 'flex';
+            $('sendWarning').style.display = 'flex';
+
+            // Data mock hanya sebagai fallback
+            allGuests = [{
+                no: 1,
+                nama_tamu: 'Bapak Contoh Nama (MOCK)',
+                jenis_tamu: 'Keluarga',
+                nomor_hp: '81234567890',
+                link_undangan: configData.base_url + '?to=' + encodeURIComponent('Bapak Contoh Nama')
+            }, {
+                no: 2,
+                nama_tamu: 'Ibu Contoh Nama (MOCK)',
+                jenis_tamu: 'Teman Kantor',
+                nomor_hp: '81234567891',
+                link_undangan: configData.base_url + '?to=' + encodeURIComponent('Ibu Contoh Nama')
+            }, {
+                no: 3,
+                nama_tamu: 'Ibu Siapa Contoh (MOCK)',
+                jenis_tamu: 'Teman Kantor',
+                nomor_hp: '6281234567891',
+                link_undangan: configData.base_url + '?to=' + encodeURIComponent('Ibu Siapa Contoh')
+            }];
+            allGuests.forEach(g => {
+                g.nomor_hp = String(g.nomor_hp || '').replace(/[^0-9]/g, '');
+                if (g.nomor_hp.startsWith('0')) {
+                    g.nomor_hp = '62' + g.nomor_hp.slice(1);
+                }
+            });
+        }
+
+        async function fetchConfirmations() {
+            try {
+                const res = await apiGet('comments', { limit: 5000, offset: 0 });
+                if (res.ok && Array.isArray(res.items)) {
+                    confirmations = res.items;
+                    return;
+                }
+            } catch (_) { /* pakai mock */ }
+            confirmations = [
+                { timestamp: '2026-08-04 20:54:23', nama: 'Testing', presensi: 'Hadir', ucapan_doa: 'Alhamdulillah' },
+                { timestamp: '2026-08-04 21:37:39', nama: 'oke', presensi: 'Tidak Hadir', ucapan_doa: 'aaa' },
+                { timestamp: '2026-08-04 22:26:19', nama: 'Cho kyu', presensi: 'Hadir',
+                ucapan_doa: 'Semoga bahagia dunia akhirat' },
+            ];
+        }
+
+        // ========================================================================
+        //  STATUS KIRIM — sumber kebenaran adalah sheet NamaTamuUndangan,
+        //  bukan localStorage, supaya konsisten di semua perangkat/browser.
+        // ========================================================================
+        function isSent(hp) {
+            const g = allGuests.find(x => x.nomor_hp === hp);
+            return !!(g && g.status_kirim);
+        }
+
+        /** Update status di UI dulu (responsif), lalu sinkronkan ke sheet lewat API. */
+        async function markSent(hp) {
+            if (!hp) return;
+            const g = allGuests.find(x => x.nomor_hp === hp);
+            if (!g) return;
+            g.status_kirim = true;
+            g.tanggal_kirim = new Date().toISOString();
+            try {
+                const res = await apiPost({ action: 'update_status', token: getToken(), row: g._row, status: true });
+                if (!res.ok) throw new Error(res.error || 'Gagal menyimpan status.');
+            } catch (err) {
+                if (!handleSessionError(err.message)) {
+                    showToast('Gagal menyimpan status ke sheet: ' + err.message, 'error');
+                }
+            }
+        }
+
+        // ========================================================================
+        //  TEMPLATE — disimpan di sheet DataMempelai (field template_pesan_wa)
+        //  lewat API, bukan localStorage.
+        // ========================================================================
+        function loadTemplate() {
+            return (configData.template_pesan_wa && String(configData.template_pesan_wa).trim())
+                ? configData.template_pesan_wa
+                : DEFAULT_TEMPLATE;
+        }
+
+        async function saveTemplate(text) {
+            configData.template_pesan_wa = text;
+            try {
+                const res = await apiPost({ action: 'save_template', token: getToken(), text: text });
+                if (!res.ok) throw new Error(res.error || 'Gagal menyimpan template.');
+            } catch (err) {
+                if (!handleSessionError(err.message)) {
+                    showToast('Gagal menyimpan template: ' + err.message, 'error');
+                }
+            }
+        }
+
+        // ========================================================================
+        //  HELPERS
+        // ========================================================================
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+                "'": '&#39;' }[m]));
+        }
+
+        function formatPhoneForWA(hp) {
+            let s = String(hp || '').replace(/[^0-9]/g, '');
+            if (s.startsWith('0')) s = '62' + s.slice(1);
+            if (!s.startsWith('62')) s = '62' + s;
+            return s;
+        }
+
+        function buildWALink(phone, message) {
+            const p = formatPhoneForWA(phone);
+            const encoded = encodeURIComponent(message);
+            return `https://wa.me/${p}?text=${encoded}`;
+        }
+
+        function replaceVariables(text, guest, config) {
+            if (!text) return '';
+            let result = text;
+            const map = {
+                '$nama_tamu': guest.nama_tamu || 'Tamu',
+                '$nama_pria': config.nama_lengkap_pria || '',
+                '$nama_wanita': config.nama_lengkap_wanita || '',
+                '$panggilan_pria': config.nama_panggilan_pria || '',
+                '$panggilan_wanita': config.nama_panggilan_wanita || '',
+                '$tanggal_acara': config.tanggal_tampil || '',
+                '$waktu_akad': config.waktu_akad || '',
+                '$waktu_resepsi': config.waktu_resepsi || '',
+                '$nama_lokasi': config.nama_lokasi || '',
+                '$alamat_lokasi': config.alamat_lokasi || '',
+                '$link_maps': config.link_maps || '',
+                '$link_undangan': guest.link_undangan || config.base_url || '',
+                '$ayah_pria': config.ayah_pria || '',
+                '$ibu_pria': config.ibu_pria || '',
+                '$ayah_wanita': config.ayah_wanita || '',
+                '$ibu_wanita': config.ibu_wanita || '',
+                '$dress_code': config.dress_code || '',
+            };
+            Object.entries(map).forEach(([key, val]) => {
+                result = result.split(key).join(val || '');
+            });
+            return result;
+        }
+
+        // ========================================================================
+        //  RENDER FUNCTIONS
+        // ========================================================================
+        function presensiBadgeClass(presensi) {
+            if (presensi === 'Hadir') return 'hadir';
+            if (presensi === 'Tidak Hadir') return 'tidak';
+            if (presensi === 'Masih Ragu') return 'ragu';
+            return 'belum';
+        }
+
+        function presensiLabel(presensi) {
+            if (presensi === 'Hadir') return '🟢 Hadir';
+            if (presensi === 'Tidak Hadir') return '🔴 Tidak Hadir';
+            if (presensi === 'Masih Ragu') return '🟡 Masih Ragu';
+            return '— Belum Absen';
+        }
+
+        function renderStats() {
+            const total = allGuests.length;
+            const hadir = confirmations.filter(c => c.presensi === 'Hadir').length;
+            const tidak = confirmations.filter(c => c.presensi === 'Tidak Hadir').length;
+            const ragu = confirmations.filter(c => c.presensi === 'Masih Ragu').length;
+            const totalRespon = hadir + tidak + ragu;
+
+            const sudahKirim = allGuests.filter(g => isSent(g.nomor_hp)).length;
+            const belumKirim = total - sudahKirim;
+
+            $('statTotal').textContent = total;
+            $('statHadir').textContent = hadir;
+            $('statTidak').textContent = tidak;
+            $('statRagu').textContent = ragu;
+            $('statSudahKirim').textContent = sudahKirim;
+            $('statBelumKirim').textContent = belumKirim;
+
+            const pct = (n) => totalRespon > 0 ? Math.round((n / totalRespon) * 100) + '%' : '—';
+            $('statHadirPct').textContent = pct(hadir);
+            $('statTidakPct').textContent = pct(tidak);
+            $('statRaguPct').textContent = pct(ragu);
+
+            $('recentBadge').textContent = confirmations.length;
+            renderConfirmationsList();
+
+            const now = new Date();
+            $('lastUpdate').textContent = 'Terakhir: ' + now.toLocaleString('id-ID');
+        }
+
+        /** Daftar 10 (atau sesuai pageSize) konfirmasi terbaru + paginasi. confirmations sudah urut terbaru dulu. */
+        function renderConfirmationsList() {
+            if (confirmations.length === 0) {
+                $('recentComments').innerHTML = '<span class="text-muted">Belum ada konfirmasi.</span>';
+                $('confirmPagination').innerHTML = '';
+                return;
+            }
+            const { pageItems, totalPages } = paginateItems(confirmations, confirmPager);
+            $('recentComments').innerHTML = pageItems.map(c =>
+                `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+                <span><strong>${escapeHtml(c.nama)}</strong> · <span class="status-badge ${presensiBadgeClass(c.presensi)}">${escapeHtml(c.presensi)}</span></span>
+                <span style="font-size:0.75rem;color:var(--muted);">${c.ucapan_doa ? escapeHtml(c.ucapan_doa.slice(0,40))+(c.ucapan_doa.length>40?'…':'') : ''}</span>
+              </div>`
+            ).join('');
+            renderPaginationBar('confirmPagination', confirmPager, totalPages, renderConfirmationsList);
+        }
+
+        function filterGuestData(source, filter, search) {
+            let list = [...source];
+            if (filter !== 'all') list = list.filter(g => g.jenis_tamu === filter);
+            if (search.trim()) {
+                const q = search.trim().toLowerCase();
+                list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
+            }
+            return list.slice().reverse(); // tamu yang ditambah terakhir muncul duluan ("terbaru")
+        }
+
+        function renderGuestList(filter = 'all', search = '') {
+            const tbody = $('guestTableBody');
+            const list = filterGuestData(allGuests, filter, search);
+            $('guestCount').textContent = list.length + ' tamu' + (usingMockData ? ' (MOCK)' : '');
+
+            if (list.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">Tidak ada tamu.</td></tr>`;
+                $('guestPagination').innerHTML = '';
+                return;
+            }
+
+            const { pageItems, totalPages } = paginateItems(list, guestPager);
+            tbody.innerHTML = pageItems.map((g, idx) => {
+                const status = isSent(g.nomor_hp) ? 'sudah' : 'belum';
+                const statusLabel = isSent(g.nomor_hp) ? '✅ Sudah' : '⬜ Belum';
+                const absen = g.status_absen || '';
+                return `<tr>
+                <td>${(guestPager.pageSize === 'all' ? 0 : (guestPager.page - 1) * guestPager.pageSize) + idx + 1}</td>
+                <td><strong>${escapeHtml(g.nama_tamu)}</strong></td>
+                <td>${escapeHtml(g.jenis_tamu || '-')}</td>
+                <td>${escapeHtml(g.nomor_hp)}</td>
+                <td><span class="status-badge ${status}">${statusLabel}</span></td>
+                <td><span class="status-badge ${presensiBadgeClass(absen)}">${presensiLabel(absen)}</span></td>
+                <td>
+                  <button type="button" class="btn-sm edit-guest-btn" data-row="${g._row}" title="Ubah">✏️</button>
+                  <button type="button" class="btn-sm danger delete-guest-btn" data-row="${g._row}" data-nama="${escapeHtml(g.nama_tamu)}" title="Hapus">🗑️</button>
+                </td>
+              </tr>`;
+            }).join('');
+            renderPaginationBar('guestPagination', guestPager, totalPages, () => renderGuestList(filter, search));
+
+            qsa('.edit-guest-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => openGuestModal(parseInt(btn.dataset.row, 10)));
+            });
+            qsa('.delete-guest-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => deleteGuest(parseInt(btn.dataset.row, 10), btn.dataset.nama));
+            });
+        }
+
+        function renderSendList(filter = 'all', search = '') {
+            const tbody = $('sendTableBody');
+            const list = filterGuestData(allGuests, filter, search);
+            $('sendCount').textContent = list.length + ' tamu' + (usingMockData ? ' (MOCK)' : '');
+
+            if (list.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Tidak ada tamu.</td></tr>`;
+                $('sendPagination').innerHTML = '';
+                return;
+            }
+
+            const { pageItems, totalPages } = paginateItems(list, sendPager);
+            tbody.innerHTML = pageItems.map((g, idx) => {
+                const sent = isSent(g.nomor_hp);
+                const statusLabel = sent ? '✅ Sudah' : '⬜ Belum';
+                return `<tr>
+                <td>${(sendPager.pageSize === 'all' ? 0 : (sendPager.page - 1) * sendPager.pageSize) + idx + 1}</td>
+                <td><strong>${escapeHtml(g.nama_tamu)}</strong></td>
+                <td>${escapeHtml(g.jenis_tamu || '-')}</td>
+                <td>${escapeHtml(g.nomor_hp)}</td>
+                <td><span class="status-badge ${sent ? 'sudah' : 'belum'}">${statusLabel}</span></td>
+                <td>
+                  <button class="btn-sm primary send-wa-btn" data-hp="${escapeHtml(g.nomor_hp)}" data-nama="${escapeHtml(g.nama_tamu)}" data-link="${escapeHtml(g.link_undangan || '')}" ${sent ? 'disabled' : ''}>
+                    ${sent ? '✅ Terkirim' : '📨 Kirim'}
+                  </button>
+                </td>
+              </tr>`;
+            }).join('');
+            renderPaginationBar('sendPagination', sendPager, totalPages, () => renderSendList(filter, search));
+
+            qsa('.send-wa-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const hp = btn.dataset.hp;
+                    const nama = btn.dataset.nama;
+                    const link = btn.dataset.link;
+                    sendWA(hp, nama, link, btn);
+                });
+            });
+        }
+
+        async function sendWA(hp, nama, link, btn) {
+            if (!hp) return showToast('Nomor HP tidak valid.', 'error');
+            if (isSent(hp)) {
+                showToast(`Undangan untuk ${nama} sudah terkirim.`, 'error');
+                return;
+            }
+            let template = loadTemplate();
+            const guest = allGuests.find(g => g.nomor_hp === hp) || { nama_tamu: nama, link_undangan: link || '' };
+            const message = replaceVariables(template, guest, configData);
+            const waLink = buildWALink(hp, message);
+
+            // PENTING: window.open harus jadi hal PERTAMA & langsung (synchronous) di
+            // handler klik, sebelum ada `await` apa pun. Kalau tidak, browser di HP
+            // (terutama Safari/Chrome iOS) menganggapnya bukan hasil langsung dari
+            // ketukan pengguna dan memblokirnya seperti pop-up iklan.
+            window.open(waLink, '_blank');
+
+            if (btn) {
+                btn.textContent = '✅ Terkirim';
+                btn.disabled = true;
+                btn.classList.remove('primary');
+                btn.classList.add('success');
+            }
+            showToast(`Undangan untuk ${nama} dikirim via WhatsApp.`, 'success');
+
+            await markSent(hp);
+            renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+            renderSendList(getActiveFilter('send'), $('sendSearch').value);
+            renderStats();
+        }
+
+        function getActiveFilter(tab) {
+            const select = tab === 'guest' ? $('jenisFilter') : $('sendJenisFilter');
+            return select ? select.value : 'all';
+        }
+
+        function renderTemplateEditor() {
+            const vars = [
+                { key: '$nama_tamu', label: 'Nama Tamu' },
+                { key: '$nama_pria', label: 'Nama Pria' },
+                { key: '$nama_wanita', label: 'Nama Wanita' },
+                { key: '$panggilan_pria', label: 'Panggilan Pria' },
+                { key: '$panggilan_wanita', label: 'Panggilan Wanita' },
+                { key: '$tanggal_acara', label: 'Tanggal Acara' },
+                { key: '$waktu_akad', label: 'Waktu Akad' },
+                { key: '$waktu_resepsi', label: 'Waktu Resepsi' },
+                { key: '$nama_lokasi', label: 'Nama Lokasi' },
+                { key: '$alamat_lokasi', label: 'Alamat' },
+                { key: '$link_maps', label: 'Link Maps' },
+                { key: '$link_undangan', label: 'Link Undangan' },
+                { key: '$ayah_pria', label: 'Ayah Pria' },
+                { key: '$ibu_pria', label: 'Ibu Pria' },
+                { key: '$ayah_wanita', label: 'Ayah Wanita' },
+                { key: '$ibu_wanita', label: 'Ibu Wanita' },
+                { key: '$dress_code', label: 'Dress Code' },
+            ];
+
+            const container = $('varButtons');
+            container.innerHTML = vars.map(v =>
+                `<button data-var="${v.key}" title="${v.label}">${v.key} <span class="var-label">${v.label}</span></button>`
+            ).join('');
+
+            container.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-var]');
+                if (!btn) return;
+                const key = btn.dataset.var;
+                const textarea = $('templateText');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const before = textarea.value.substring(0, start);
+                const after = textarea.value.substring(end);
+                textarea.value = before + key + after;
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = start + key.length;
+                textarea.dispatchEvent(new Event('input'));
+            });
+
+            const template = loadTemplate();
+            $('templateText').value = template;
+            $('templateText').addEventListener('input', () => {
+                clearTimeout(window._templateSaveTimer);
+                window._templateSaveTimer = setTimeout(() => {
+                    saveTemplate($('templateText').value);
+                }, 600);
+            });
+
+            $('previewTemplateBtn').addEventListener('click', () => {
+                const text = $('templateText').value;
+                const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
+                const preview = replaceVariables(text, sampleGuest, configData);
+                const previewEl = $('templatePreview');
+                previewEl.innerHTML = preview || '<span class="empty">(template kosong)</span>';
+                showToast('Pratinjau diperbarui.', 'success');
+            });
+
+            $('saveTemplateBtn').addEventListener('click', async () => {
+                const text = $('templateText').value;
+                await saveTemplate(text);
+                showToast('Template disimpan.', 'success');
+            });
+
+            $('resetTemplateBtn').addEventListener('click', async () => {
+                if (confirm('Reset template ke default?')) {
+                    $('templateText').value = DEFAULT_TEMPLATE;
+                    await saveTemplate(DEFAULT_TEMPLATE);
+                    showToast('Template direset ke default.', 'success');
+                }
+            });
+
+            setTimeout(() => {
+                const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
+                const preview = replaceVariables($('templateText').value, sampleGuest, configData);
+                $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
+            }, 300);
+        }
+
+        // ========================================================================
+        //  CRUD TAMU (modal Tambah/Ubah, Hapus)
+        // ========================================================================
+        function openGuestModal(rowNumber) {
+            const isEdit = !!rowNumber;
+            const guest = isEdit ? allGuests.find(g => g._row === rowNumber) : null;
+            $('guestModalTitle').textContent = isEdit ? 'Ubah Tamu' : 'Tambah Tamu';
+            $('guestFormRow').value = isEdit ? rowNumber : '';
+            $('guestFormNama').value = guest ? guest.nama_tamu : '';
+            $('guestFormJenis').value = guest ? (guest.jenis_tamu || '') : '';
+            $('guestFormHp').value = guest ? guest.nomor_hp : '';
+            $('guestFormMsg').textContent = '';
+            $('guestModalOverlay').classList.add('open');
+            $('guestFormNama').focus();
+        }
+
+        function closeGuestModal() {
+            $('guestModalOverlay').classList.remove('open');
+            $('guestForm').reset();
+        }
+
+        async function deleteGuest(rowNumber, nama) {
+            if (!confirm(`Hapus tamu "${nama}" dari daftar? Tindakan ini tidak bisa dibatalkan.`)) return;
+            try {
+                const res = await apiPost({ action: 'delete_guest', token: getToken(), row: rowNumber });
+                if (handleSessionError(res.error)) return;
+                if (!res.ok) throw new Error(res.error || 'Gagal menghapus tamu.');
+                allGuests = allGuests.filter(g => g._row !== rowNumber);
+                setupFilters();
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                renderStats();
+                showToast(`Tamu "${nama}" dihapus.`, 'success');
+            } catch (err) {
+                showToast('Gagal menghapus: ' + err.message, 'error');
+            }
+        }
+
+        function wireGuestCrud() {
+            $('addGuestBtn').addEventListener('click', () => openGuestModal(null));
+            $('guestModalClose').addEventListener('click', closeGuestModal);
+            $('guestFormCancel').addEventListener('click', closeGuestModal);
+            $('guestModalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'guestModalOverlay') closeGuestModal();
+            });
+
+            $('guestForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const rowValue = $('guestFormRow').value;
+                const isEdit = !!rowValue;
+                const fields = {
+                    nama_tamu: $('guestFormNama').value.trim(),
+                    jenis_tamu: $('guestFormJenis').value.trim(),
+                    nomor_hp: $('guestFormHp').value.trim()
+                };
+                const msg = $('guestFormMsg');
+                const submitBtn = $('guestFormSubmit');
+                if (!fields.nama_tamu) { msg.textContent = 'Nama tamu wajib diisi.'; msg.style.color = 'var(--danger,#c65b5b)'; return; }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Menyimpan…';
+                try {
+                    let res;
+                    if (isEdit) {
+                        res = await apiPost({ action: 'update_guest', token: getToken(), row: parseInt(rowValue, 10), fields });
+                    } else {
+                        res = await apiPost({ action: 'add_guest', token: getToken(), fields });
+                    }
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan tamu.');
+
+                    closeGuestModal();
+                    await fetchGuests();
+                    setupFilters();
+                    renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                    renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                    renderStats();
+                    showToast(isEdit ? 'Data tamu diperbarui.' : 'Tamu baru ditambahkan.', 'success');
+                } catch (err) {
+                    msg.textContent = err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Simpan';
+                }
+            });
+        }
+
+        // ========================================================================
+        //  DATA MEMPELAI (tab Data Mempelai)
+        // ========================================================================
+        const MEMPELAI_GROUPS = [
+            { title: '👰🤵 Mempelai', fields: [
+                ['judul_hero', 'Judul Hero', 'text'],
+                ['nama_panggilan_pria', 'Nama Panggilan Pria', 'text'],
+                ['nama_panggilan_wanita', 'Nama Panggilan Wanita', 'text'],
+                ['nama_lengkap_pria', 'Nama Lengkap Pria', 'text'],
+                ['nama_lengkap_wanita', 'Nama Lengkap Wanita', 'text'],
+                ['status_anak_pria', 'Status Anak Pria', 'text'],
+                ['ayah_pria', 'Nama Ayah Pria', 'text'],
+                ['ibu_pria', 'Nama Ibu Pria', 'text'],
+                ['status_anak_wanita', 'Status Anak Wanita', 'text'],
+                ['ayah_wanita', 'Nama Ayah Wanita', 'text'],
+                ['ibu_wanita', 'Nama Ibu Wanita', 'text']
+            ]},
+            { title: '📅 Acara & Lokasi', fields: [
+                ['tanggal_acara_iso', 'Tanggal Acara (format YYYY-MM-DD HH:mm:ss)', 'text'],
+                ['tanggal_tampil', 'Tanggal Tampil (teks)', 'text'],
+                ['waktu_akad', 'Waktu Akad', 'text'],
+                ['waktu_resepsi', 'Waktu Resepsi', 'text'],
+                ['nama_lokasi', 'Nama Lokasi', 'text'],
+                ['alamat_lokasi', 'Alamat Lengkap', 'textarea'],
+                ['link_maps', 'Link Google Maps', 'text'],
+                ['dress_code', 'Dress Code', 'text']
+            ]},
+            { title: '📖 Ayat & Kisah Cinta', fields: [
+                ['quote_1_teks', 'Ayat 1 — Teks', 'textarea'],
+                ['quote_1_sumber', 'Ayat 1 — Sumber', 'text'],
+                ['quote_2_teks', 'Ayat 2 — Teks', 'textarea'],
+                ['quote_2_sumber', 'Ayat 2 — Sumber', 'text'],
+                ['cerita_1_judul', 'Kisah Tahap 1 — Judul', 'text'],
+                ['cerita_1_isi', 'Kisah Tahap 1 — Isi', 'textarea'],
+                ['cerita_2_judul', 'Kisah Tahap 2 — Judul', 'text'],
+                ['cerita_2_isi', 'Kisah Tahap 2 — Isi', 'textarea'],
+                ['cerita_3_judul', 'Kisah Tahap 3 — Judul', 'text'],
+                ['cerita_3_isi', 'Kisah Tahap 3 — Isi', 'textarea'],
+                ['cerita_4_judul', 'Kisah Tahap 4 — Judul', 'text'],
+                ['cerita_4_isi', 'Kisah Tahap 4 — Isi', 'textarea']
+            ]},
+            { title: '🖼️ Media', fields: [
+                ['foto_cover_url', 'URL Foto Cover', 'text'],
+                ['foto_pria_url', 'URL Foto Pria', 'text'],
+                ['foto_wanita_url', 'URL Foto Wanita', 'text'],
+                ['galeri_url', 'URL Galeri (pisahkan koma)', 'textarea'],
+                ['musik_url', 'URL Musik (mp3 langsung, bukan link halaman)', 'text']
+            ]},
+            { title: '🎁 Hadiah', fields: [
+                ['bank_nama', 'Bank 1 — Nama Bank', 'text'],
+                ['bank_rekening', 'Bank 1 — No. Rekening', 'text'],
+                ['bank_atas_nama', 'Bank 1 — Atas Nama', 'text'],
+                ['bank_nama_2', 'Bank 2 — Nama Bank (opsional)', 'text'],
+                ['bank_rekening_2', 'Bank 2 — No. Rekening (opsional)', 'text'],
+                ['bank_atas_nama_2', 'Bank 2 — Atas Nama (opsional)', 'text'],
+                ['qris_image_url', 'URL Gambar QRIS', 'text'],
+                ['gift_nama', 'Nama Penerima Hadiah', 'text'],
+                ['gift_hp', 'No. HP Penerima Hadiah', 'text'],
+                ['gift_alamat', 'Alamat Kirim Hadiah', 'textarea']
+            ]},
+            { title: '⚙️ Teknis', fields: [
+                ['base_url', 'Base URL Situs Undangan (WAJIB benar, dipakai membuat semua link tamu)', 'text']
+            ]}
+        ];
+
+        function renderMempelaiForm() {
+            const container = $('mempelaiGroups');
+            if (!container) return;
+            container.innerHTML = MEMPELAI_GROUPS.map((g, gi) => `
+                <details class="mempelai-group" ${gi === 0 ? 'open' : ''}>
+                    <summary>${g.title}</summary>
+                    <div class="mempelai-fields">
+                        ${g.fields.map(([key, label, type]) => `
+                            <div class="form-field">
+                                <label for="mf-${key}">${label}</label>
+                                ${type === 'textarea'
+                                    ? `<textarea id="mf-${key}" data-key="${key}" rows="3">${escapeHtml(configData[key] || '')}</textarea>`
+                                    : `<input type="text" id="mf-${key}" data-key="${key}" value="${escapeHtml(configData[key] || '')}">`
+                                }
+                            </div>`).join('')}
+                    </div>
+                </details>`).join('');
+        }
+
+        function wireMempelaiForm() {
+            $('saveMempelaiBtn').addEventListener('click', async () => {
+                const fields = {};
+                qsa('#mempelaiGroups [data-key]').forEach(el => { fields[el.dataset.key] = el.value; });
+                const msg = $('mempelaiMsg');
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'save_mempelai', token: getToken(), fields });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menyimpan.');
+                    configData = { ...FALLBACK_CONFIG, ...res.data };
+                    msg.textContent = '✅ Tersimpan. Situs undangan tamu langsung memakai data terbaru.';
+                    msg.style.color = '#3f9a58';
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+        }
+
+        // ========================================================================
+        //  AKUN (tab Akun) — ganti password sendiri + CRUD akun lain
+        // ========================================================================
+        let myUsername = '';
+        let accountsCache = [];
+
+        async function fetchAccounts() {
+            try {
+                const res = await apiGet('accounts', { token: getToken() });
+                if (handleSessionError(res.error)) return;
+                if (res.ok) accountsCache = res.data;
+            } catch (_) { /* diamkan, tabel akan tampil kosong */ }
+        }
+
+        function renderAccountsList() {
+            const tbody = $('accountsTableBody');
+            if (!tbody) return;
+            $('akunMeLabel').textContent = myUsername || '—';
+            if (accountsCache.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:1.2rem;">Belum ada akun.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = accountsCache.map(a => `
+                <tr>
+                    <td>${escapeHtml(a.username)}${a.username === myUsername ? ' <span class="badge">Anda</span>' : ''}</td>
+                    <td>
+                        <button type="button" class="btn-sm reset-pass-btn" data-user="${escapeHtml(a.username)}">🔑 Reset</button>
+                        <button type="button" class="btn-sm danger delete-account-btn" data-user="${escapeHtml(a.username)}">🗑️</button>
+                    </td>
+                </tr>`).join('');
+
+            qsa('.reset-pass-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    $('resetPassUsername').value = btn.dataset.user;
+                    $('resetPassUserLabel').textContent = btn.dataset.user;
+                    $('resetPassNew').value = '';
+                    $('resetPassMsg').textContent = '';
+                    $('resetPassModalOverlay').classList.add('open');
+                });
+            });
+            qsa('.delete-account-btn', tbody).forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const username = btn.dataset.user;
+                    if (username === myUsername) {
+                        if (!confirm(`"${username}" adalah akun yang sedang Anda pakai login. Yakin ingin menghapusnya? Anda akan otomatis logout.`)) return;
+                    } else if (!confirm(`Hapus akun "${username}"?`)) {
+                        return;
+                    }
+                    try {
+                        const res = await apiPost({ action: 'delete_account', token: getToken(), username });
+                        if (handleSessionError(res.error)) return;
+                        if (!res.ok) throw new Error(res.error || 'Gagal menghapus akun.');
+                        showToast(`Akun "${username}" dihapus.`, 'success');
+                        if (username === myUsername) { clearToken(); checkLogin(); return; }
+                        await fetchAccounts();
+                        renderAccountsList();
+                    } catch (err) {
+                        showToast('Gagal: ' + err.message, 'error');
+                    }
+                });
+            });
+        }
+
+        function wireAkunTab() {
+            $('changePasswordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const oldPass = $('cpOld').value;
+                const newPass = $('cpNew').value;
+                const confirmPass = $('cpConfirm').value;
+                const msg = $('cpMsg');
+                if (newPass !== confirmPass) {
+                    msg.textContent = 'Konfirmasi password baru tidak cocok.';
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                    return;
+                }
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'change_my_password', token: getToken(), old_password: oldPass, new_password: newPass });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal mengganti password.');
+                    msg.textContent = '✅ Password berhasil diganti.';
+                    msg.style.color = '#3f9a58';
+                    $('changePasswordForm').reset();
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+
+            $('addAccountBtn').addEventListener('click', () => {
+                $('accFormUser').value = '';
+                $('accFormPass').value = '';
+                $('accountFormMsg').textContent = '';
+                $('accountModalOverlay').classList.add('open');
+            });
+            $('accountModalClose').addEventListener('click', () => $('accountModalOverlay').classList.remove('open'));
+            $('accountFormCancel').addEventListener('click', () => $('accountModalOverlay').classList.remove('open'));
+            $('accountModalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'accountModalOverlay') $('accountModalOverlay').classList.remove('open');
+            });
+            $('accountForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = $('accFormUser').value.trim();
+                const password = $('accFormPass').value;
+                const msg = $('accountFormMsg');
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'add_account', token: getToken(), username, password });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal menambah akun.');
+                    $('accountModalOverlay').classList.remove('open');
+                    await fetchAccounts();
+                    renderAccountsList();
+                    showToast(`Akun "${username}" ditambahkan.`, 'success');
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+
+            $('resetPassModalClose').addEventListener('click', () => $('resetPassModalOverlay').classList.remove('open'));
+            $('resetPassCancel').addEventListener('click', () => $('resetPassModalOverlay').classList.remove('open'));
+            $('resetPassModalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'resetPassModalOverlay') $('resetPassModalOverlay').classList.remove('open');
+            });
+            $('resetPassForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = $('resetPassUsername').value;
+                const newPassword = $('resetPassNew').value;
+                const msg = $('resetPassMsg');
+                msg.textContent = 'Menyimpan…';
+                msg.style.color = 'var(--muted)';
+                try {
+                    const res = await apiPost({ action: 'reset_account_password', token: getToken(), username, new_password: newPassword });
+                    if (handleSessionError(res.error)) return;
+                    if (!res.ok) throw new Error(res.error || 'Gagal reset password.');
+                    $('resetPassModalOverlay').classList.remove('open');
+                    showToast(`Password "${username}" berhasil direset.`, 'success');
+                } catch (err) {
+                    msg.textContent = '❌ ' + err.message;
+                    msg.style.color = 'var(--danger,#c65b5b)';
+                }
+            });
+        }
+
+        // ========================================================================
+        //  FILTERS
+        // ========================================================================
+        function setupFilters() {
+            const jenisSet = new Set(allGuests.map(g => g.jenis_tamu).filter(Boolean));
+            const jenisList = [...jenisSet].sort();
+
+            // Dropdown filter (Daftar Tamu & Kirim WA) — selalu ikut riwayat jenis_tamu terbaru dari sheet.
+            ['jenisFilter', 'sendJenisFilter'].forEach(id => {
+                const select = $(id);
+                if (!select) return;
+                const current = select.value || 'all';
+                select.innerHTML = '<option value="all">Semua Jenis Tamu</option>' +
+                    jenisList.map(j => `<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join('');
+                select.value = jenisList.includes(current) ? current : 'all';
+            });
+
+            // Datalist saran Jenis Tamu di form Tambah/Ubah Tamu — kombobox: boleh pilih yang sudah ada, boleh ketik baru.
+            $('jenisTamuOptions').innerHTML = jenisList.map(j => `<option value="${escapeHtml(j)}"></option>`).join('');
+
+            $('jenisFilter').onchange = () => {
+                guestPager.page = 1;
+                renderGuestList($('jenisFilter').value, $('guestSearch').value);
+            };
+            $('sendJenisFilter').onchange = () => {
+                sendPager.page = 1;
+                renderSendList($('sendJenisFilter').value, $('sendSearch').value);
+            };
+
+            $('guestSearch').addEventListener('input', () => {
+                guestPager.page = 1;
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+            });
+            $('sendSearch').addEventListener('input', () => {
+                sendPager.page = 1;
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+            });
+        }
+
+        // ========================================================================
+        //  REFRESH & RESET
+        // ========================================================================
+        async function refreshAll() {
+            showToast('Memuat ulang data dari sheet...', 'success');
+            try {
+                await fetchConfig();
+                await fetchGuests();
+                await fetchConfirmations();
+                renderStats();
+                const guestFilter = getActiveFilter('guest');
+                const guestSearch = $('guestSearch').value;
+                renderGuestList(guestFilter, guestSearch);
+                const sendFilter = getActiveFilter('send');
+                const sendSearch = $('sendSearch').value;
+                renderSendList(sendFilter, sendSearch);
+                const sampleGuest = allGuests[0] || { nama_tamu: 'Contoh Tamu', link_undangan: '#' };
+                const preview = replaceVariables($('templateText').value, sampleGuest, configData);
+                $('templatePreview').innerHTML = preview || '<span class="empty">(template kosong)</span>';
+                renderTemaTab();
+                renderMempelaiForm();
+                renderAccountsList();
+                if (usingMockData) {
+                    showToast('⚠️ Data menggunakan MOCK karena API tidak tersedia.', 'error');
+                } else {
+                    showToast('✅ Data berhasil diperbarui dari sheet.', 'success');
+                }
+            } catch (e) {
+                showToast('Gagal refresh: ' + e.message, 'error');
+            }
+        }
+
+        async function resetSentStatus() {
+            if (!confirm('Reset semua status pengiriman WA? Ini akan menandai semua tamu sebagai "Belum" dikirim di sheet.')) return;
+            try {
+                const res = await apiPost({ action: 'reset_status', token: getToken() });
+                if (!res.ok) throw new Error(res.error || 'Gagal reset status.');
+                allGuests.forEach(g => { g.status_kirim = false; g.tanggal_kirim = ''; });
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                renderStats();
+                showToast('Status WA direset ke "Belum" untuk semua tamu.', 'success');
+            } catch (err) {
+                if (!handleSessionError(err.message)) {
+                    showToast('Gagal reset status: ' + err.message, 'error');
+                }
+            }
+        }
+
+        // ========================================================================
+        //  NAVIGATION
+        // ========================================================================
+        function navigateTo(section) {
+            sections.forEach(s => {
+                sectionEls[s].style.display = s === section ? 'block' : 'none';
+            });
+            qsa('.sidebar nav a').forEach(a => {
+                a.classList.toggle('active', a.dataset.section === section);
+            });
+            const titles = {
+                dashboard: 'Dashboard',
+                mempelai: 'Data Mempelai',
+                guests: 'Daftar Tamu',
+                send: 'Kirim WA',
+                template: 'Template Pesan',
+                tema: 'Tampilan Undangan',
+                akun: 'Akun'
+            };
+            $('pageTitle').textContent = titles[section] || 'Dashboard';
+            closeSidebar();
+        }
+
+        const sections = ['dashboard', 'mempelai', 'guests', 'send', 'template', 'tema', 'akun'];
+        const sectionEls = {};
+        sections.forEach(s => sectionEls[s] = $(`section-${s}`));
+
+        qsa('.sidebar nav a').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = a.dataset.section;
+                if (section) navigateTo(section);
+            });
+        });
+
+        // ========================================================================
+        //  SIDEBAR MOBILE
+        // ========================================================================
+        function toggleSidebar() {
+            $('sidebar').classList.toggle('open');
+            $('sidebarOverlay').classList.toggle('open');
+        }
+
+        function closeSidebar() {
+            $('sidebar').classList.remove('open');
+            $('sidebarOverlay').classList.remove('open');
+        }
+
+        $('mobileToggle').addEventListener('click', toggleSidebar);
+        $('sidebarOverlay').addEventListener('click', closeSidebar);
+
+        // ========================================================================
+        //  THEME
+        // ========================================================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const cur = html.getAttribute('data-theme');
+            const next = cur === 'night' ? 'day' : 'night';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('undangan-theme', next);
+            $('themeLabel').textContent = next === 'night' ? 'Tema Terang' : 'Tema Gelap';
+        }
+
+        (function initTheme() {
+            const saved = localStorage.getItem('undangan-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = saved || (prefersDark ? 'night' : 'day');
+            document.documentElement.setAttribute('data-theme', theme);
+            $('themeLabel').textContent = theme === 'night' ? 'Tema Terang' : 'Tema Gelap';
+            $('themeToggle').addEventListener('click', toggleTheme);
+        })();
+
+        // ========================================================================
+        //  INIT DASHBOARD
+        // ========================================================================
+        async function initDashboard() {
+            myUsername = localStorage.getItem(USERNAME_KEY) || '';
+            await fetchConfig();
+            await fetchGuests();
+            await fetchConfirmations();
+            await fetchAccounts();
+            setupFilters();
+            renderStats();
+            renderGuestList('all', '');
+            renderSendList('all', '');
+            renderTemplateEditor();
+            wireTemaEvents();
+            renderTemaTab();
+            wireGuestCrud();
+            renderMempelaiForm();
+            wireMempelaiForm();
+            renderAccountsList();
+            wireAkunTab();
+            navigateTo('dashboard');
+            $('lastUpdate').textContent = 'Dimuat: ' + new Date().toLocaleString('id-ID');
+
+            document.querySelectorAll('.refresh-btn').forEach(btn => {
+                btn.addEventListener('click', refreshAll);
+            });
+            $('resetStatusBtn').addEventListener('click', resetSentStatus);
+            $('sendAllBtn').addEventListener('click', async () => {
+                const filter = getActiveFilter('send');
+                const search = $('sendSearch').value;
+                let list = [...allGuests];
+                if (filter !== 'all') list = list.filter(g => g.jenis_tamu === filter);
+                if (search.trim()) {
+                    const q = search.trim().toLowerCase();
+                    list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
+                }
+                const unsent = list.filter(g => !isSent(g.nomor_hp));
+                if (unsent.length === 0) {
+                    showToast('Semua tamu sudah terkirim.', 'error');
+                    return;
+                }
+                if (!confirm(`Kirim undangan ke ${unsent.length} tamu yang belum dikirim?`)) return;
+                let count = 0;
+                for (const g of unsent) {
+                    const template = loadTemplate();
+                    const message = replaceVariables(template, g, configData);
+                    const waLink = buildWALink(g.nomor_hp, message);
+                    window.open(waLink, '_blank');
+                    await markSent(g.nomor_hp);
+                    count++;
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                showToast(`✅ ${count} undangan dikirim.`, 'success');
+                renderGuestList(getActiveFilter('guest'), $('guestSearch').value);
+                renderSendList(getActiveFilter('send'), $('sendSearch').value);
+                renderStats();
+            });
+
+            if (usingMockData) {
+                showToast('⚠️ Data menggunakan MOCK karena API /guests tidak tersedia. Tambahkan endpoint di Apps Script.', 'error');
+            } else {
+                console.log('✅ Dashboard siap. Total tamu dari sheet:', allGuests.length);
+            }
+        }
+
+        // ========================================================================
+        //  INIT LOGIN
+        // ========================================================================
+        document.getElementById('loginForm').addEventListener('submit', performLogin);
+        document.getElementById('logoutBtn').addEventListener('click', performLogout);
+
+        // Jalankan checkLogin
+        checkLogin();
+    </script>
+</body>
+</html>

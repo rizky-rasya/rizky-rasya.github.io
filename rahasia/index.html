@@ -792,6 +792,8 @@
             background:var(--gold); color:#fff; border-color:var(--gold);
         }
 
+        .anim-leaf{ position:absolute; right:10px; top:6px; font-size:1.6rem; transform-origin:50% 100%; animation:leafSway 5s ease-in-out infinite; }
+        @keyframes leafSway{ 0%,100%{ rotate:-6deg; } 50%{ rotate:6deg; } }
         .tema-preview-box{
             border-radius: var(--tp-radius, 20px); padding:2.2rem 1.4rem; text-align:center;
             background: var(--tp-bg,#FAF6EC); color:var(--tp-text,#2B2620);
@@ -1221,9 +1223,48 @@
             <div class="panel" style="margin-top:0.5rem;">
                 <div class="panel-title"><span>👁️ Bagian yang Ditampilkan</span></div>
                 <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.8rem;">
-                    Matikan bagian yang tidak perlu ditampilkan ke tamu — perubahan langsung terlihat di pratinjau di atas. Halaman sampul (pembuka) dan footer penutup selalu tampil, tidak bisa dimatikan.
+                    Matikan bagian yang tidak perlu ditampilkan ke tamu — perubahan langsung terlihat di pratinjau di atas. Warna latar tiap bagian akan otomatis bergantian (terang ↔ kontras) di antara bagian yang tampil, jadi dua bagian bersebelahan tidak pernah sewarna. Halaman sampul (pembuka) dan footer penutup selalu tampil, tidak bisa dimatikan.
                 </p>
                 <div class="section-toggle-list" id="sectionToggleList"><!-- diisi JS --></div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>🔧 Fitur Undangan</span></div>
+                <label class="section-toggle-item"><input type="checkbox" id="fiturMusik"><span>🎵 Musik latar (jika mati: tidak ada musik & tombol musik tidak muncul)</span></label>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0.9rem 0 0.5rem;">Mode tampilan (jika hanya satu mode: tombol ganti mode tidak muncul)</p>
+                <div class="option-buttons" id="modeButtons">
+                    <button class="btn-sm" data-mode="both" type="button">☀️🌙 Terang &amp; Gelap</button>
+                    <button class="btn-sm" data-mode="light" type="button">☀️ Terang saja</button>
+                    <button class="btn-sm" data-mode="dark" type="button">🌙 Gelap saja</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;">
+                <div class="panel-title"><span>✨ Animasi (Motion / Framer Motion)</span></div>
+                <label class="section-toggle-item"><input type="checkbox" id="animAktif"><span>Aktifkan animasi (fade-in, gulir, kartu, tombol, foto, teks)</span></label>
+                <label class="section-toggle-item"><input type="checkbox" id="animDaun"><span>🍃 Daun & bunga bergoyang</span></label>
+                <label class="section-toggle-item"><input type="checkbox" id="animSmooth"><span>🧈 Scroll halus (inersia) antar section</span></label>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0.9rem 0 0.5rem;">Gaya masuk</p>
+                <div class="option-buttons" id="animGayaButtons">
+                    <button class="btn-sm" data-gaya="naik" type="button">Naik</button>
+                    <button class="btn-sm" data-gaya="pudar" type="button">Pudar</button>
+                    <button class="btn-sm" data-gaya="zoom" type="button">Zoom</button>
+                    <button class="btn-sm" data-gaya="geser" type="button">Geser</button>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0.9rem 0 0.5rem;">Kecepatan</p>
+                <div class="option-buttons" id="animSpeedButtons">
+                    <button class="btn-sm" data-speed="cepat" type="button">Cepat</button>
+                    <button class="btn-sm" data-speed="normal" type="button">Normal</button>
+                    <button class="btn-sm" data-speed="lambat" type="button">Lambat</button>
+                </div>
+                <div id="animPreview" class="tema-preview-box" style="margin-top:1rem;overflow:hidden;position:relative;">
+                    <div class="anim-item tp-eyebrow">Pratinjau Animasi</div>
+                    <div class="anim-item tp-title">Wahyu &amp; Riski</div>
+                    <div class="anim-item tp-quote">"Kartu, teks, dan tombol masuk dengan gaya yang dipilih."</div>
+                    <div class="anim-item"><span class="tp-btn">Buka Undangan</span></div>
+                    <div class="anim-leaf" aria-hidden="true">🌿</div>
+                </div>
+                <button class="btn-sm gold-outline" id="animReplayBtn" type="button" style="margin-top:0.6rem;">▶ Putar Ulang Pratinjau</button>
             </div>
 
             <div class="panel" style="margin-top:0.5rem;">
@@ -1626,7 +1667,10 @@
             radius_bentuk: 'lembut',
             gaya_font: 'elegant',
             section_bride: 'on', section_quotes: 'on', section_story: 'on', section_wedding_date: 'on',
-            section_gallery: 'on', section_gift: 'on', section_comment: 'on'
+            section_gallery: 'on', section_gift: 'on', section_comment: 'on',
+            section_livestream: 'on', section_ngunduh: 'on',
+            fitur_musik: 'on', fitur_mode: 'both',
+            anim_aktif: 'on', anim_gaya: 'naik', anim_kecepatan: 'normal', anim_daun: 'on', anim_smooth: 'on'
         };
         let temaState = { ...FALLBACK_TEMA };
         let temaPreviewMode = 'light';
@@ -1637,6 +1681,8 @@
             ['section_quotes', "📖 Ayat Al-Qur'an"],
             ['section_story', '💌 Kisah Cinta'],
             ['section_wedding_date', '📅 Acara, Lokasi & Hitung Mundur'],
+            ['section_ngunduh', '🎊 Ngunduh Mantu (di dalam Acara)'],
+            ['section_livestream', '📡 Live Streaming'],
             ['section_gallery', '🖼️ Galeri Foto'],
             ['section_gift', '🎁 Hadiah / Amplop Digital'],
             ['section_comment', '💬 Ucapan & Doa']
@@ -1773,11 +1819,47 @@
             box.style.setProperty('--tp-font-display', fonts.display);
             box.style.setProperty('--tp-font-body', fonts.body);
 
-            $('tpSections').innerHTML = SECTION_TOGGLES.map(([key, label]) => {
+            let toneIdx = 0;
+            $('tpSections').innerHTML = SECTION_TOGGLES.filter(([k]) => k !== 'section_ngunduh').map(([key, label]) => {
                 const on = temaState[key] !== 'off';
                 const icon = label.split(' ')[0];
-                return `<span class="chip ${on ? '' : 'off'}" title="${label}${on ? '' : ' (disembunyikan)'}">${icon}</span>`;
+                const tone = on ? (toneIdx++ % 2 === 0 ? 'var(--tp-bg)' : 'var(--tp-surface)') : 'transparent';
+                return `<span class="chip ${on ? '' : 'off'}" style="background:${tone};border:1px solid var(--tp-line);" title="${label}${on ? '' : ' (disembunyikan)'}">${icon}</span>`;
             }).join('');
+            renderFiturState();
+        }
+
+        const ANIM_FROM = { naik: () => 'translateY(30px)', pudar: () => 'none', zoom: () => 'scale(.9)', geser: (i) => `translateX(${i % 2 ? 34 : -34}px)` };
+        const ANIM_DUR = { cepat: 450, normal: 800, lambat: 1250 };
+        function playAnimPreview() {
+            const on = temaState.anim_aktif !== 'off';
+            const box = $('animPreview');
+            box.classList.toggle('no-leaf', temaState.anim_daun === 'off' || !on);
+            const leaf = box.querySelector('.anim-leaf');
+            if (leaf) leaf.style.animationPlayState = (temaState.anim_daun === 'off' || !on) ? 'paused' : 'running';
+            box.querySelectorAll('.anim-item').forEach((el, i) => {
+                if (!on || !el.animate) { el.style.opacity = 1; return; }
+                el.animate([{ opacity: 0, transform: (ANIM_FROM[temaState.anim_gaya] || ANIM_FROM.naik)(i) }, { opacity: 1, transform: 'none' }],
+                    { duration: ANIM_DUR[temaState.anim_kecepatan] || 800, delay: i * 110, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' });
+            });
+        }
+        function renderFiturState() {
+            const set = (id, v) => { const el = $(id); if (el) el.checked = v; };
+            set('fiturMusik', temaState.fitur_musik !== 'off');
+            set('animAktif', temaState.anim_aktif !== 'off');
+            set('animDaun', temaState.anim_daun !== 'off');
+            set('animSmooth', temaState.anim_smooth !== 'off');
+            qsa('#modeButtons [data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === (temaState.fitur_mode || 'both')));
+            qsa('#animGayaButtons [data-gaya]').forEach(b => b.classList.toggle('active', b.dataset.gaya === temaState.anim_gaya));
+            qsa('#animSpeedButtons [data-speed]').forEach(b => b.classList.toggle('active', b.dataset.speed === temaState.anim_kecepatan));
+        }
+        function wireFiturEvents() {
+            [['fiturMusik', 'fitur_musik'], ['animAktif', 'anim_aktif'], ['animDaun', 'anim_daun'], ['animSmooth', 'anim_smooth']].forEach(([id, key]) =>
+                $(id).addEventListener('change', (e) => { temaState[key] = e.target.checked ? 'on' : 'off'; if (key.startsWith('anim')) playAnimPreview(); }));
+            qsa('#modeButtons [data-mode]').forEach(b => b.addEventListener('click', () => { temaState.fitur_mode = b.dataset.mode; renderFiturState(); }));
+            qsa('#animGayaButtons [data-gaya]').forEach(b => b.addEventListener('click', () => { temaState.anim_gaya = b.dataset.gaya; renderFiturState(); playAnimPreview(); }));
+            qsa('#animSpeedButtons [data-speed]').forEach(b => b.addEventListener('click', () => { temaState.anim_kecepatan = b.dataset.speed; renderFiturState(); playAnimPreview(); }));
+            $('animReplayBtn').addEventListener('click', playAnimPreview);
         }
 
         function renderSectionToggles() {
@@ -1805,9 +1887,11 @@
             document.querySelectorAll('#fontButtons [data-font]').forEach(b =>
                 b.classList.toggle('active', b.dataset.font === temaState.gaya_font));
             updateTemaPreview();
+            playAnimPreview();
         }
 
         function wireTemaEvents() {
+            wireFiturEvents();
             $('presetGrid').addEventListener('click', (e) => {
                 const btn = e.target.closest('[data-preset]');
                 if (btn) applyPreset(btn.dataset.preset);
@@ -2451,7 +2535,9 @@
                 ['ibu_pria', 'Nama Ibu Pria', 'text'],
                 ['status_anak_wanita', 'Status Anak Wanita', 'text'],
                 ['ayah_wanita', 'Nama Ayah Wanita', 'text'],
-                ['ibu_wanita', 'Nama Ibu Wanita', 'text']
+                ['ibu_wanita', 'Nama Ibu Wanita', 'text'],
+                ['instagram_pria', 'Instagram Pria (username, tanpa @ — kosongkan bila tidak ada)', 'text'],
+                ['instagram_wanita', 'Instagram Wanita (username, tanpa @ — kosongkan bila tidak ada)', 'text']
             ]},
             { title: '📅 Acara & Lokasi', fields: [
                 ['tanggal_acara_iso', 'Tanggal Acara (format YYYY-MM-DD HH:mm:ss)', 'text'],
@@ -2460,8 +2546,26 @@
                 ['waktu_resepsi', 'Waktu Resepsi', 'text'],
                 ['nama_lokasi', 'Nama Lokasi', 'text'],
                 ['alamat_lokasi', 'Alamat Lengkap', 'textarea'],
-                ['link_maps', 'Link Google Maps', 'text'],
+                ['link_maps', 'Link Google Maps (tombol)', 'text'],
+                ['link_maps_embed', 'Link Peta Embed Akad & Resepsi (URL iframe atau kode iframe dari Google Maps > Bagikan > Sematkan peta)', 'textarea'],
+                ['link_maps_embed_aktif', 'Tampilkan peta embed Akad & Resepsi', 'toggle'],
                 ['dress_code', 'Dress Code', 'text']
+            ]},
+            { title: '🎊 Acara Ngunduh Mantu', fields: [
+                ['ngunduh_tanggal_tampil', 'Tanggal Tampil (teks, mis. Minggu, 22 November 2026)', 'text'],
+                ['waktu_ngunduh_mantu', 'Waktu Ngunduh Mantu', 'text'],
+                ['ngunduh_nama_lokasi', 'Nama Lokasi', 'text'],
+                ['ngunduh_alamat_lokasi', 'Alamat Lokasi', 'textarea'],
+                ['ngunduh_link_maps', 'Link Google Maps (tombol)', 'text'],
+                ['ngunduh_link_maps_embed', 'Link Peta Embed Ngunduh Mantu', 'textarea'],
+                ['ngunduh_embed_aktif', 'Tampilkan peta embed Ngunduh Mantu', 'toggle'],
+                ['ngunduh_dress_code', 'Dress Code', 'text']
+            ]},
+            { title: '📡 Live Streaming', fields: [
+                ['live_channels', 'Tautan yang ditampilkan (boleh pilih satu atau banyak)', 'multi:instagram=Instagram,youtube=YouTube,zoom=Zoom'],
+                ['live_instagram', 'Username Instagram Live (tanpa @)', 'text'],
+                ['live_youtube', 'Link YouTube', 'text'],
+                ['live_zoom', 'Link Zoom', 'text']
             ]},
             { title: '📖 Ayat & Kisah Cinta', fields: [
                 ['quote_1_teks', 'Ayat 1 — Teks', 'textarea'],
@@ -2482,7 +2586,7 @@
                 ['foto_pria_url', 'URL Foto Pria', 'text'],
                 ['foto_wanita_url', 'URL Foto Wanita', 'text'],
                 ['galeri_url', 'URL Galeri (pisahkan koma)', 'textarea'],
-                ['musik_url', 'URL Musik (mp3 langsung, bukan link halaman)', 'text']
+                ['musik_url', 'URL Musik (mp3 langsung, bukan link halaman). Aktif/nonaktif musik: tab Tampilan Undangan > Fitur', 'text']
             ]},
             { title: '🎁 Hadiah', fields: [
                 ['bank_nama', 'Bank 1 — Nama Bank', 'text'],
@@ -2501,6 +2605,26 @@
             ]}
         ];
 
+        function renderMempelaiField(key, label, type) {
+            const val = configData[key] === undefined || configData[key] === null ? '' : String(configData[key]);
+            if (type === 'toggle') {
+                const on = val.toLowerCase() !== 'off';
+                return `<div class="form-field"><label class="section-toggle-item"><input type="checkbox" data-toggle-key="${key}" ${on ? 'checked' : ''}><span>${label}</span></label></div>`;
+            }
+            if (type.startsWith('multi:')) {
+                const cur = val.toLowerCase().split(',').map(x => x.trim());
+                const opts = type.slice(6).split(',').map(o => o.split('='));
+                return `<div class="form-field"><label>${label}</label><div class="section-toggle-list">${opts.map(([v, l]) =>
+                    `<label class="section-toggle-item"><input type="checkbox" data-multi-key="${key}" value="${v}" ${cur.includes(v) ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div></div>`;
+            }
+            return `<div class="form-field">
+                <label for="mf-${key}">${label}</label>
+                ${type === 'textarea'
+                    ? `<textarea id="mf-${key}" data-key="${key}" rows="3">${escapeHtml(val)}</textarea>`
+                    : `<input type="text" id="mf-${key}" data-key="${key}" value="${escapeHtml(val)}">`}
+            </div>`;
+        }
+
         function renderMempelaiForm() {
             const container = $('mempelaiGroups');
             if (!container) return;
@@ -2508,14 +2632,7 @@
                 <details class="mempelai-group" ${gi === 0 ? 'open' : ''}>
                     <summary>${g.title}</summary>
                     <div class="mempelai-fields">
-                        ${g.fields.map(([key, label, type]) => `
-                            <div class="form-field">
-                                <label for="mf-${key}">${label}</label>
-                                ${type === 'textarea'
-                                    ? `<textarea id="mf-${key}" data-key="${key}" rows="3">${escapeHtml(configData[key] || '')}</textarea>`
-                                    : `<input type="text" id="mf-${key}" data-key="${key}" value="${escapeHtml(configData[key] || '')}">`
-                                }
-                            </div>`).join('')}
+                        ${g.fields.map(([key, label, type]) => renderMempelaiField(key, label, type)).join('')}
                     </div>
                 </details>`).join('');
         }
@@ -2524,6 +2641,10 @@
             $('saveMempelaiBtn').addEventListener('click', async () => {
                 const fields = {};
                 qsa('#mempelaiGroups [data-key]').forEach(el => { fields[el.dataset.key] = el.value; });
+                qsa('#mempelaiGroups [data-toggle-key]').forEach(el => { fields[el.dataset.toggleKey] = el.checked ? 'on' : 'off'; });
+                const multi = {};
+                qsa('#mempelaiGroups [data-multi-key]').forEach(el => { (multi[el.dataset.multiKey] = multi[el.dataset.multiKey] || []); if (el.checked) multi[el.dataset.multiKey].push(el.value); });
+                Object.keys(multi).forEach(k => { fields[k] = multi[k].join(','); });
                 const msg = $('mempelaiMsg');
                 msg.textContent = 'Menyimpan…';
                 msg.style.color = 'var(--muted)';
