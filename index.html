@@ -387,9 +387,9 @@
   }
 
   /* ---------------- FLORAL KIRI / KANAN ---------------- */
-  .gate-flower-l, .gate-flower-r{ bottom:1.5%; width:50%; z-index:4; transform-origin:50% 100%; }
-  .gate-flower-l{ left:-20%; }
-  .gate-flower-r{ right:-20%; }
+  .gate-flower-l, .gate-flower-r{ bottom:0%; width:40%; z-index:4; transform-origin:50% 100%; }
+  .gate-flower-l{ left:-15%%; }
+  .gate-flower-r{ right:-15%%; }
   #gate.closing .gate-flower-l{
     animation:
       gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) var(--t-bunga, 2s) forwards,
@@ -402,7 +402,7 @@
   }
 
   /* ---------------- WAYANG ---------------- */
-  .gate-wayang-l, .gate-wayang-r{ bottom:5%; width:34%; z-index:5; transform-origin:50% 100%; }
+  .gate-wayang-l, .gate-wayang-r{ bottom:-2%; width:50%; z-index:5; transform-origin:50% 100%; }
   .gate-wayang-l{ left:-2%; }
   .gate-wayang-r{ right:-2%; }
   #gate.closing .gate-wayang-l{
@@ -418,7 +418,7 @@
 
   /* ---------------- RUMAH JOGLO ---------------- */
   .gate-joglo{
-    left:50%; bottom:12%; width:62%; z-index:3;
+    left:50%; bottom:5%; width:62%; z-index:3;
     transform:translate3d(-50%,35px,0) scale(.92);
     transform-origin:50% 100%;
   }
@@ -428,7 +428,7 @@
 
   /* ---------------- ORNAMEN BAWAH ---------------- */
   .gate-bottom{
-    left:50%; bottom:0%; width:50%; z-index:6;
+    left:50%; bottom:-5%; width:100%; z-index:6;
     transform:translate3d(-50%,42px,0) scale(.82);
     transform-origin:50% 100%;
   }
