@@ -284,18 +284,11 @@
   html:not(.lenis){ scroll-behavior:smooth; }
 
   /* ==============================================================
-     GATE WAYANG / JOGLO — 10 ASET (BACKGROUND + 9 ASET)
+     GATE WAYANG / JOGLO — 10 ASET (dengan CSS Variables dari JS)
      --------------------------------------------------------------
-     Timeline:
-       0–2.0 s  : Welcome fade-out + awan masuk + background fade-in
-       1.0–3.5 s: Penjor masuk kiri/kanan (delay 1s dari bg)
-       2.0–4.5 s: Bunga masuk kiri/kanan
-       3.0–5.5 s: Wayang masuk kiri/kanan
-       4.0–5.85s: Gunungan fade + dissolve + bounce
-       5.0–6.9 s: Joglo scale-up halus
-       6.0–7.65s: Ornamen bawah fade + dissolve + bounce
-       7.65–10.65: HOLD 3 detik (komposisi utuh)
-       10.65–12.65: Gate fade-out + konten muncul
+     Semua animation-delay diambil dari var(--t-xxx) yang di-set
+     oleh GATE_TIMING di JavaScript. Ubah di JS = seluruh timeline
+     ikut berubah otomatis.
      ============================================================== */
   #gate{
     position:fixed; inset:0; z-index:95;
@@ -358,7 +351,7 @@
     user-select:none; pointer-events:none; -webkit-user-drag:none;
   }
 
-  /* ---------------- BACKGROUND (t=0s, paling bawah) ---------------- */
+  /* ---------------- BACKGROUND ---------------- */
   .gate-bg-asset{
     inset:0;
     width:100%; height:100%;
@@ -369,78 +362,78 @@
     width:100%; height:100%; object-fit:cover;
   }
   #gate.closing .gate-bg-asset{
-    animation: gateBackgroundIn 2.0s cubic-bezier(.22,1,.36,1) 0s forwards;
+    animation: gateBackgroundIn 2.0s cubic-bezier(.22,1,.36,1) var(--t-bg, 0s) forwards;
   }
 
-  /* ---------------- PENJOR (t=1s) ---------------- */
-  .gate-penjor-l, .gate-penjor-r{ top:-1.5%; width:68%; z-index:1; }
-  .gate-penjor-l{ left:-7%; }
-  .gate-penjor-r{ right:-7%; }
-  #gate.closing .gate-penjor-l{ animation: gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) 1s forwards; }
-  #gate.closing .gate-penjor-r{ animation: gateSlideRight 2.5s cubic-bezier(.18,.82,.22,1) 1s forwards; }
-  #gate.closing .gate-penjor-l img{ animation: gatePenjorNaturalLeft 7.2s ease-in-out 3.5s infinite; transform-origin:50% 6%; }
-  #gate.closing .gate-penjor-r img{ animation: gatePenjorNaturalRight 7.6s ease-in-out 3.5s infinite; transform-origin:50% 6%; }
+  /* ---------------- PENJOR ---------------- */
+  .gate-penjor-l, .gate-penjor-r{ top:-1.5%; width:56%; z-index:1; }
+  .gate-penjor-l{ left:-6%; }
+  .gate-penjor-r{ right:-6%; }
+  #gate.closing .gate-penjor-l{ animation: gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) var(--t-penjor, 1s) forwards; }
+  #gate.closing .gate-penjor-r{ animation: gateSlideRight 2.5s cubic-bezier(.18,.82,.22,1) var(--t-penjor, 1s) forwards; }
+  #gate.closing .gate-penjor-l img{ animation: gatePenjorNaturalLeft 7.2s ease-in-out var(--t-penjor-end, 3.5s) infinite; transform-origin:50% 6%; }
+  #gate.closing .gate-penjor-r img{ animation: gatePenjorNaturalRight 7.6s ease-in-out var(--t-penjor-end, 3.5s) infinite; transform-origin:50% 6%; }
 
-  /* ---------------- GUNUNGAN (t=4s) ---------------- */
+  /* ---------------- GUNUNGAN ---------------- */
   .gate-gunungan{
-    left:50%; top:2.5%; width:88%; z-index:3;
+    left:50%; top:2.5%; width:90%; z-index:3;
     transform:translate3d(-50%,0,0) scale(.76);
     transform-origin:50% 38%;
   }
   #gate.closing .gate-gunungan{
     animation:
-      gateDissolveBounce 1.85s cubic-bezier(.2,.82,.25,1.18) 4s forwards,
-      gateGununganBreath 7s ease-in-out 5.85s infinite;
+      gateDissolveBounce 1.85s cubic-bezier(.2,.82,.25,1.18) var(--t-gunungan, 4s) forwards,
+      gateGununganBreath 7s ease-in-out var(--t-gunungan-end, 5.85s) infinite;
   }
 
-  /* ---------------- FLORAL KIRI / KANAN (t=2s) ---------------- */
-  .gate-flower-l, .gate-flower-r{ bottom:1.5%; width:52%; z-index:4; transform-origin:50% 100%; }
-  .gate-flower-l{ left:-5%; }
-  .gate-flower-r{ right:-5%; }
+  /* ---------------- FLORAL KIRI / KANAN ---------------- */
+  .gate-flower-l, .gate-flower-r{ bottom:1.5%; width:50%; z-index:4; transform-origin:50% 100%; }
+  .gate-flower-l{ left:-20%; }
+  .gate-flower-r{ right:-20%; }
   #gate.closing .gate-flower-l{
     animation:
-      gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) 2s forwards,
-      gateNaturalLeft 6.6s ease-in-out 4.5s infinite;
+      gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) var(--t-bunga, 2s) forwards,
+      gateNaturalLeft 6.6s ease-in-out var(--t-bunga-end, 4.5s) infinite;
   }
   #gate.closing .gate-flower-r{
     animation:
-      gateSlideRight 2.5s cubic-bezier(.18,.82,.22,1) 2s forwards,
-      gateNaturalRight 7s ease-in-out 4.5s infinite;
+      gateSlideRight 2.5s cubic-bezier(.18,.82,.22,1) var(--t-bunga, 2s) forwards,
+      gateNaturalRight 7s ease-in-out var(--t-bunga-end, 4.5s) infinite;
   }
 
-  /* ---------------- WAYANG (t=3s) ---------------- */
-  .gate-wayang-l, .gate-wayang-r{ bottom:6.5%; width:34%; z-index:5; transform-origin:50% 100%; }
-  .gate-wayang-l{ left:7%; }
-  .gate-wayang-r{ right:7%; }
+  /* ---------------- WAYANG ---------------- */
+  .gate-wayang-l, .gate-wayang-r{ bottom:5%; width:34%; z-index:5; transform-origin:50% 100%; }
+  .gate-wayang-l{ left:-2%; }
+  .gate-wayang-r{ right:-2%; }
   #gate.closing .gate-wayang-l{
     animation:
-      gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) 3s forwards,
-      gateWayangLeft 7.2s ease-in-out 5.5s infinite;
+      gateSlideLeft 2.5s cubic-bezier(.18,.82,.22,1) var(--t-wayang, 3s) forwards,
+      gateWayangLeft 7.2s ease-in-out var(--t-wayang-end, 5.5s) infinite;
   }
   #gate.closing .gate-wayang-r{
     animation:
-      gateSlideRight 2.5s cubic-bezier(.18,.82,.22,1) 3s forwards,
-      gateWayangRight 7.5s ease-in-out 5.5s infinite;
+      gateSlideRight 2.5s cubic-bezier(.18,.82,.22,1) var(--t-wayang, 3s) forwards,
+      gateWayangRight 7.5s ease-in-out var(--t-wayang-end, 5.5s) infinite;
   }
 
-  /* ---------------- RUMAH JOGLO (t=5s) ---------------- */
+  /* ---------------- RUMAH JOGLO ---------------- */
   .gate-joglo{
-    left:50%; bottom:5.2%; width:61%; z-index:3;
+    left:50%; bottom:12%; width:62%; z-index:3;
     transform:translate3d(-50%,35px,0) scale(.92);
     transform-origin:50% 100%;
   }
   #gate.closing .gate-joglo{
-    animation: gateJogloIn 1.9s cubic-bezier(.2,.9,.25,1.08) 5s forwards;
+    animation: gateJogloIn 1.9s cubic-bezier(.2,.9,.25,1.08) var(--t-joglo, 5s) forwards;
   }
 
-  /* ---------------- ORNAMEN BAWAH (t=6s) ---------------- */
+  /* ---------------- ORNAMEN BAWAH ---------------- */
   .gate-bottom{
-    left:50%; bottom:-1.5%; width:65%; z-index:6;
+    left:50%; bottom:0%; width:50%; z-index:6;
     transform:translate3d(-50%,42px,0) scale(.82);
     transform-origin:50% 100%;
   }
   #gate.closing .gate-bottom{
-    animation: gateDissolveBounce 1.65s cubic-bezier(.2,.82,.25,1.18) 6s forwards;
+    animation: gateDissolveBounce 1.65s cubic-bezier(.2,.82,.25,1.18) var(--t-ornamen, 6s) forwards;
   }
 
   #smoke{ position:absolute; inset:0; z-index:7; pointer-events:none; }
@@ -451,8 +444,8 @@
 
   /* ============ KEYFRAMES ============ */
   @keyframes gateBackgroundIn{
-    0%{ opacity:0; transform:scale(1.06); filter:blur(6px); }
-    100%{ opacity:1; transform:scale(1); filter:blur(0); }
+    0%{ opacity:0; }
+    100%{ opacity:1; }
   }
   @keyframes gateSlideLeft{
     0%{ opacity:0; transform:translate3d(-118%,0,0) rotate(-3deg) scale(.96); }
@@ -576,30 +569,23 @@
   <div class="gate-bg"></div>
 
   <div class="gate-art" aria-hidden="true">
-    <!-- Background: t=0s (paling awal) -->
     <div class="gate-item gate-bg-asset">
-      <img src="assets/0_background.webp" alt="">
+      <img src="assets/0_background2.webp" alt="">
     </div>
 
-    <!-- Penjor: t=1s -->
     <div class="gate-item gate-penjor-l"><img src="assets/01_penjor_kiri.webp" alt=""></div>
     <div class="gate-item gate-penjor-r"><img src="assets/02_penjor_kanan.webp" alt=""></div>
 
-    <!-- Gunungan: t=4s -->
     <div class="gate-item gate-gunungan"><img src="assets/03_arch_gunungan_utama.webp" alt=""></div>
 
-    <!-- Floral: t=2s -->
     <div class="gate-item gate-flower-l"><img src="assets/04_dekorasi_bunga_daun_kiri.webp" alt=""></div>
     <div class="gate-item gate-flower-r"><img src="assets/05_dekorasi_bunga_daun_kanan.webp" alt=""></div>
 
-    <!-- Wayang: t=3s -->
     <div class="gate-item gate-wayang-l"><img src="assets/06_wayang_sinta_kiri.webp" alt=""></div>
     <div class="gate-item gate-wayang-r"><img src="assets/07_wayang_rama_kanan.webp" alt=""></div>
 
-    <!-- Joglo: t=5s -->
     <div class="gate-item gate-joglo"><img src="assets/08_rumah_joglo.webp" alt=""></div>
 
-    <!-- Ornamen bawah: t=6s -->
     <div class="gate-item gate-bottom"><img src="assets/11_ornamen_bawah_tengah.webp" alt=""></div>
   </div>
 
@@ -873,7 +859,72 @@
 <script src="assets/motion.min.js"></script>
 <script src="assets/lenis.min.js"></script>
 <script>
+/* ======================================================================
+   KONFIGURASI
+   ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
+
+/* ======================================================================
+   GATE TIMING — SATU SUMBER KEBENARAN
+   ----------------------------------------------------------------------
+   Ubah angka di sini saja untuk menyesuaikan seluruh timeline gate.
+   Semua nilai dalam DETIK (bukan ms).
+   GATE_BUILD otomatis dihitung = aset terakhir selesai + hold.
+   ====================================================================== */
+const GATE_TIMING = {
+  /* --- Delay mulai tiap aset (detik) --- */
+  bg:        0.0,
+  penjor:    1.0,
+  bunga:     2.0,
+  wayang:    3.0,
+  gunungan:  4.0,
+  joglo:     5.0,
+  ornamen:   6.0,
+
+  /* --- Durasi animasi masuk (detik) --- */
+  durasiBg:       2.0,
+  durasiMasuk:    2.5,
+  durasiGunungan: 1.85,
+  durasiJoglo:    1.9,
+  durasiOrnamen:  1.65,
+
+  /* --- Hold (diam) setelah semua aset terbentuk (detik) --- */
+  hold: 3.0,
+};
+
+/* Terapkan ke CSS variables */
+function applyGateTiming(){
+  const g = document.getElementById('gate');
+  if(!g) return;
+  const T = GATE_TIMING;
+  g.style.setProperty('--t-bg',       T.bg + 's');
+  g.style.setProperty('--t-penjor',   T.penjor + 's');
+  g.style.setProperty('--t-bunga',    T.bunga + 's');
+  g.style.setProperty('--t-wayang',   T.wayang + 's');
+  g.style.setProperty('--t-gunungan', T.gunungan + 's');
+  g.style.setProperty('--t-joglo',    T.joglo + 's');
+  g.style.setProperty('--t-ornamen',  T.ornamen + 's');
+  /* Delay untuk sway/breath = waktu aset selesai masuk */
+  g.style.setProperty('--t-penjor-end',   (T.penjor   + T.durasiMasuk)    + 's');
+  g.style.setProperty('--t-bunga-end',    (T.bunga    + T.durasiMasuk)    + 's');
+  g.style.setProperty('--t-wayang-end',   (T.wayang   + T.durasiMasuk)    + 's');
+  g.style.setProperty('--t-gunungan-end', (T.gunungan + T.durasiGunungan) + 's');
+}
+
+/* Hitung total build gate (ms) = aset terakhir selesai + hold */
+function hitungGateBuildMs(){
+  const T = GATE_TIMING;
+  const lastEnd = Math.max(
+    T.bg       + T.durasiBg,
+    T.penjor   + T.durasiMasuk,
+    T.bunga    + T.durasiMasuk,
+    T.wayang   + T.durasiMasuk,
+    T.gunungan + T.durasiGunungan,
+    T.joglo    + T.durasiJoglo,
+    T.ornamen  + T.durasiOrnamen
+  );
+  return (lastEnd + T.hold) * 1000;
+}
 
 const FALLBACK_DATA = {
   judul_hero: "Uleman Palakrama", nama_panggilan_pria: "Rizky", nama_panggilan_wanita: "Rasya",
@@ -1322,6 +1373,7 @@ function startSmoothScroll(){
 
 async function init(){
   applyTema(FALLBACK_TEMA);
+  applyGateTiming();                                    /* set CSS vars gate dari GATE_TIMING */
   try{
     const res = await apiGet('config');
     if(res.ok){ CFG = { ...FALLBACK_DATA, ...res.data }; if(res.tema) applyTema(res.tema); }
@@ -1347,20 +1399,10 @@ $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /*
-    Timeline:
-      0–2.0 s   : Welcome fade-out + awan masuk + BACKGROUND fade-in
-      1.0–3.5 s : Penjor masuk kiri/kanan (jeda 1s dari bg)
-      2.0–4.5 s : Bunga masuk kiri/kanan
-      3.0–5.5 s : Wayang masuk kiri/kanan
-      4.0–5.85s : Gunungan fade + dissolve + bounce
-      5.0–6.9 s : Joglo scale-up halus
-      6.0–7.65s : Ornamen bawah fade + dissolve + bounce
-      7.65–10.65: HOLD 3 detik
-      10.65–12.65: Gate fade-out + konten
-  */
+  /* --- hitung timing dari GATE_TIMING (satu sumber kebenaran) --- */
+  applyGateTiming();
   const WELCOME_TO_GATE = reducedMotion ? 40 : 2000;
-  const GATE_BUILD = reducedMotion ? 60 : 10700;    /* animasi selesai t=7.65s + hold 3s = 10.65s */
+  const GATE_BUILD      = reducedMotion ? 60 : hitungGateBuildMs();
   const GATE_TO_CONTENT = reducedMotion ? 60 : 2000;
   const TOTAL_GATE = GATE_BUILD + GATE_TO_CONTENT;
   const transitionCloud = $('transition-cloud');
@@ -1394,7 +1436,7 @@ $('open-btn').addEventListener('click', () => {
       gate.classList.add('closing');
       welcome.classList.add('hide');
       transitionCloud.classList.remove('content-cloud');
-      transitionCloud.classList.add('welcome-cloud');
+      /* welcome-cloud dihilangkan: transisi welcome → gate tanpa awan */
     });
   });
 
