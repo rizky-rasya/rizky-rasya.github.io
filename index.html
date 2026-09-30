@@ -66,11 +66,18 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--font-body); font-weight:300; -webkit-font-smoothing:antialiased; }
   @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
-  /* Optimasi: skip animasi berat untuk HP low-end / koneksi lambat */
   html[data-perf="low"] *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
   html[data-perf="low"] .fab, html[data-perf="low"] .btn{ box-shadow:none !important; }
   html[data-perf="low"] #transition-cloud{ display:none !important; }
   html[data-perf="low"] .quote-card, html[data-perf="low"] .gift-card{ backdrop-filter:none !important; }
+
+  /* ============ SCROLL LOCK ============ */
+  html.scroll-locked, html.scroll-locked body{
+    overflow:hidden !important;
+    height:100% !important;
+    touch-action:none !important;
+    overscroll-behavior:none !important;
+  }
 
   .sr-only{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
   .skip-link{ position:absolute; top:0; left:0; z-index:300; transform:translateY(-120%); background:var(--surface); color:var(--text); padding:.9rem 1.3rem; border:3px solid var(--gold-ink); border-radius:0 0 12px 0; font-family:var(--font-body); font-size:.9rem; font-weight:500; text-decoration:none; transition:transform .2s ease; }
@@ -95,10 +102,33 @@
   .lattice::before, .lattice::after{ content:""; height:1px; flex:1; max-width:60px; background:var(--line); }
 
   /* ============ LOADING ============ */
-  #loading{ position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.25rem; background:var(--bg); transition:opacity .4s ease; }
+  #loading{
+    position:fixed; inset:0; z-index:130;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.25rem;
+    background: radial-gradient(circle at 50% 20%, var(--surface-2), var(--bg) 65%);
+    color:var(--text);
+    transition:opacity .6s ease;
+    will-change: opacity;
+  }
+  #loading.hide{ opacity:0; pointer-events:none; }
   #loading p{ font-family:var(--font-display); font-size:1.1rem; color:var(--muted); letter-spacing:.05em; margin:0; }
   #loading .load-gif{ width:140px; height:140px; object-fit:contain; transform:scaleX(-1); margin-bottom:-.35rem; }
-  #loading.hide{ opacity:0; pointer-events:none; }
+  #loading .load-progress{
+    width:120px; height:2px; background:var(--line); margin-top:1.2rem; border-radius:2px; overflow:hidden; position:relative;
+  }
+  #loading .load-progress::after{
+    content:""; position:absolute; inset:0; background:var(--gold-ink);
+    transform-origin:left center; transform:scaleX(0);
+    animation: loadProgress 3s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes loadProgress{ 0%{ transform:scaleX(0); } 100%{ transform:scaleX(1); } }
+  #loading .load-dots::after{
+    content:""; display:inline-block;
+    animation: loadDots 1.4s steps(4, end) infinite;
+  }
+  @keyframes loadDots{
+    0%{ content:""; } 25%{ content:"."; } 50%{ content:".."; } 75%{ content:"..."; } 100%{ content:""; }
+  }
 
   /* ============ WELCOME ============ */
   #welcome{
@@ -106,7 +136,9 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     text-align:center; padding:2rem; background: radial-gradient(circle at 50% 20%, var(--surface-2), var(--bg) 65%);
     transition: transform 1s cubic-bezier(.65,0,.35,1), opacity 1s ease;
+    opacity:0; pointer-events:none;
   }
+  #welcome.visible{ opacity:1; pointer-events:auto; }
   #welcome.hide{ transform:translateY(-100%); opacity:0; pointer-events:none; }
   .cover-frame{ width:112px; height:140px; margin:0 auto 1.6rem; position:relative; border:2px solid var(--gold); border-radius:56px 56px calc(var(--radius) * 0.35) calc(var(--radius) * 0.35); padding:6px; overflow:hidden; background:var(--surface-2); }
   .cover-frame img{ width:100%; height:100%; object-fit:cover; border-radius:50px 50px 4px 4px; }
@@ -378,7 +410,8 @@
 
 <div id="loading" role="status" aria-live="polite">
   <img class="load-gif" src="assets/gif-loading-v2-compress.webp" alt="loading" aria-hidden="true" width="140" height="140" decoding="async">
-  <p>Menyiapkan uleman…</p>
+  <p>Menyiapkan uleman<span class="load-dots" aria-hidden="true"></span></p>
+  <div class="load-progress" aria-hidden="true"></div>
 </div>
 
 <div id="gate" aria-hidden="true">
@@ -395,8 +428,8 @@
 <div class="stage" id="stage">
 
   <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="cv-names">
-    <img class="asset-deco" style="width:100px;left:35px;bottom:2rem;transform:rotate(278deg);" src="assets/floral-left1.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="low">
-    <img class="asset-deco" style="width:100px;right:35px;top:2rem;transform:rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="low">
+    <img class="asset-deco" style="width:100px;left:35px;bottom:1.5rem;transform:rotate(286deg);" src="assets/floral-left1.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="low">
+    <img class="asset-deco" style="width:100px;right:35px;top:1.5rem;transform:rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="low">
     <span class="eyebrow" id="cv-eyebrow" aria-hidden="true">Uleman Palakrama</span>
     <div class="cover-frame"><img id="cv-photo" src="assets/wedding.webp" alt="" loading="eager" decoding="async" fetchpriority="high"></div>
     <h1 class="names serif" id="cv-names">Rasya &amp; Rizky</h1>
@@ -668,6 +701,7 @@
    ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 const PERF_LOW = document.documentElement.getAttribute('data-perf') === 'low';
+const LOADING_DURATION_MS = 3000; // 3 detik animasi menyiapkan uleman
 
 const CFG_CACHE_KEY = 'undangan_cfg_v2';
 const CFG_CACHE_TTL = 30 * 60 * 1000;
@@ -688,8 +722,8 @@ const GATE_VIDEO = {
   durasiVideo: 5.0,
   blurIn:      1.0,
   welcomeHide: 1.0,
-  cloudClose:  0.8,   // durasi awan menutup (fade-in)
-  cloudOpen:   0.8    // durasi awan membuka (fade-out)
+  cloudClose:  0.8,
+  cloudOpen:   0.8
 };
 
 const FALLBACK_DATA = {
@@ -751,6 +785,20 @@ const guestId = (qs.get('k') || qs.get('id') || '').trim();
 function setText(id, val){ const el = $(id); if(el) el.textContent = (val === undefined || val === null || val === '') ? '-' : val; }
 function setImg(id, src, alt){ const el = $(id); if(!el) return; if(src) el.src = src; if(alt !== undefined && alt !== null) el.alt = alt; }
 function escapeHtml(str){ return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ============ SCROLL LOCK HELPERS ============ */
+function lockScroll(){
+  document.documentElement.classList.add('scroll-locked');
+  // Simpan posisi scroll saat ini (kalau ada) supaya bisa restore setelah unlock
+  document.documentElement.dataset.lockedScrollY = String(window.scrollY || window.pageYOffset || 0);
+  // Pastikan halaman di atas supaya konten pertama terlihat saat unlock
+  window.scrollTo(0, 0);
+}
+function unlockScroll(){
+  document.documentElement.classList.remove('scroll-locked');
+  // Setelah unlock, paksa posisi di paling atas (konten pertama)
+  window.scrollTo(0, 0);
+}
 
 const ICONS = {
   edit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
@@ -1093,13 +1141,43 @@ function buildGateSmoke(){
 }
 
 /* ======================================================================
+   LOADING → WELCOME
+   ====================================================================== */
+function runLoadingThenWelcome(){
+  // Kunci scroll selama loading
+  lockScroll();
+  window.scrollTo(0, 0);
+
+  const loading = $('loading');
+  const welcome = $('welcome');
+
+  // Sembunyikan welcome terlebih dahulu (belum tampil)
+  welcome.classList.remove('visible', 'hide');
+  welcome.setAttribute('aria-hidden', 'true');
+
+  // Setelah durasi loading selesai:
+  // 1) Fade-out loading
+  // 2) Tampilkan welcome (fade-in)
+  setTimeout(() => {
+    loading.classList.add('hide');
+    setTimeout(() => {
+      loading.style.display = 'none';
+      // Tampilkan welcome
+      welcome.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          welcome.classList.add('visible');
+        });
+      });
+    }, 600); // durasi fade loading
+  }, LOADING_DURATION_MS);
+}
+
+/* ======================================================================
    INIT — Render instan, fetch di background
    ====================================================================== */
 function init(){
   applyTema(FALLBACK_TEMA);
-
-  $('loading').classList.add('hide');
-  setTimeout(() => { $('loading').style.display = 'none'; }, 400);
 
   const gateVideo = $('gate-video');
   if(gateVideo){ gateVideo.load(); }
@@ -1118,6 +1196,9 @@ function init(){
   }
 
   fetchConfigInBackground();
+
+  // Mulai animasi loading 3 detik → tampilkan welcome
+  runLoadingThenWelcome();
 }
 
 async function fetchConfigInBackground(){
@@ -1142,6 +1223,7 @@ async function fetchConfigInBackground(){
 
 /* ======================================================================
    BUKA ULEMAN — VIDEO → AWAN MENUTUP → TUKAR KONTEN → AWAN MEMBUKA
+   Scroll dikunci dari klik tombol sampai awan selesai membuka.
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate'), gateVideo = $('gate-video');
@@ -1150,6 +1232,10 @@ $('open-btn').addEventListener('click', () => {
   const G = GATE_VIDEO;
 
   const WELCOME_HIDE_MS = reducedMotion ? 40 : G.welcomeHide * 1000;
+
+  // Kunci scroll dari awal klik sampai selesai gate (biar user tetap di konten pertama)
+  lockScroll();
+  window.scrollTo(0, 0);
 
   const audio = $('bg-music');
   if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
@@ -1167,6 +1253,11 @@ $('open-btn').addEventListener('click', () => {
     document.documentElement.classList.add('opened');
     opened = true;
     revealOnScroll();
+    // Buka kunci scroll, tapi tetap di atas
+    requestAnimationFrame(() => {
+      unlockScroll();
+      window.scrollTo(0, 0);
+    });
     return;
   }
 
@@ -1193,25 +1284,24 @@ $('open-btn').addEventListener('click', () => {
   }
 
   const onVideoEnd = () => {
-    // Video blur-out di belakang awan
     gate.classList.remove('entering');
     gate.classList.add('leaving');
 
-    // 1) Awan mulai MENUTUP (fade-in)
+    // 1) Awan MENUTUP
     transitionCloud.classList.remove('opening');
     transitionCloud.classList.add('closing');
 
     const CLOSE_MS = G.cloudClose * 1000;
     const OPEN_MS  = G.cloudOpen  * 1000;
 
-    // 2) Tepat saat awan sudah menutupi layar penuh:
-    //    - sembunyikan gate hitam
-    //    - tampilkan konten di balik awan (tidak terlihat karena awan opaque)
-    //    - awan mulai MEMBUKA (fade-out) → konten langsung terlihat
+    // 2) Saat awan opaque penuh: sembunyikan gate, tampilkan konten di balik awan
     setTimeout(() => {
       gate.classList.remove('show', 'entering', 'leaving');
       gate.setAttribute('aria-hidden', 'true');
       if(gateVideo){ try { gateVideo.pause(); } catch(e){} }
+
+      // Pastikan konten di paling atas sebelum awan membuka
+      window.scrollTo(0, 0);
 
       $('content').style.visibility = 'visible';
       document.documentElement.classList.add('opened');
@@ -1219,16 +1309,20 @@ $('open-btn').addEventListener('click', () => {
       revealOnScroll();
       lazyLoadComments();
 
-      const heroTitle = $('hero-names');
-      if(heroTitle && typeof heroTitle.focus === 'function') heroTitle.focus({ preventScroll: true });
-
-      // 3) Awan membuka
+      // 3) Awan MEMBUKA
       transitionCloud.classList.remove('closing');
       transitionCloud.classList.add('opening');
 
       setTimeout(() => {
         transitionCloud.classList.remove('opening');
         if(gateVideo){ try { gateVideo.removeAttribute('src'); gateVideo.load(); } catch(e){} }
+
+        // Selesai awan membuka → buka kunci scroll
+        // Paksa posisi paling atas supaya user mulai dari konten pertama (#home)
+        window.scrollTo(0, 0);
+        unlockScroll();
+        // Paksa sekali lagi setelah unlock (untuk safety di beberapa browser mobile)
+        requestAnimationFrame(() => window.scrollTo(0, 0));
       }, OPEN_MS);
 
     }, CLOSE_MS);
