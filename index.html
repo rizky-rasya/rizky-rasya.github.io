@@ -25,7 +25,6 @@
 <meta name="twitter:image" content="https://blogger.googleusercontent.com/img/a/AVvXsEhRzwMJwl4oJHYEcEunN9zkDIiaR-xzhXFUf9Dz7mStUntCxbGYFz1mdVggmm94ePvsi1tn6khsiRREMAcYmNUMuevcocVWTf6UimMFWHgFnhfrZXjDAdWTehS0cOT__ym8jBHyvdxZwGPU5f2a95piZw8Rzejt8-AjT45QVnKi0hp3PfI0StYD7fW4LzaM">
 <meta name="theme-color" content="#0e1a13">
 <meta name="color-scheme" content="light dark">
-<!-- ⚡ OPTIMASI 1: Preconnect hanya ke domain yang benar-benar dipakai -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://blogger.googleusercontent.com">
@@ -33,7 +32,6 @@
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <link rel="icon" type="image/png" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
 <link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
-<!-- ⚡ OPTIMASI 2: Font dikurangi dari 7 keluarga → 3 keluarga, hanya weight yang dipakai -->
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&family=Amiri:wght@400;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&family=Amiri:wght@400;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&family=Amiri:wght@400;700&display=swap"></noscript>
@@ -68,7 +66,7 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--font-body); font-weight:300; -webkit-font-smoothing:antialiased; }
   @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
-  /* ⚡ OPTIMASI 3: skip animasi berat untuk HP low-end / koneksi lambat */
+  /* Optimasi: skip animasi berat untuk HP low-end / koneksi lambat */
   html[data-perf="low"] *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
   html[data-perf="low"] .fab, html[data-perf="low"] .btn{ box-shadow:none !important; }
   html[data-perf="low"] #transition-cloud{ display:none !important; }
@@ -90,7 +88,6 @@
   section{ padding:4rem 1.6rem; position:relative; }
   .center{ text-align:center; }
 
-  /* ⚡ OPTIMASI 4: content-visibility → browser skip section offscreen */
   section, footer { content-visibility: auto; contain-intrinsic-size: 800px; }
 
   .lattice{ display:flex; align-items:center; justify-content:center; gap:.5rem; margin: 1.6rem 0; opacity:.9; }
@@ -304,11 +301,35 @@
   #gate-smoke{ position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden; --smoke: rgba(255,255,255,.85); }
   html[data-theme="night"] #gate-smoke{ --smoke: rgba(214,226,218,.5); }
   #gate-smoke .puff{ position:absolute; border-radius:50%; opacity:0; filter:blur(28px); background:radial-gradient(circle, var(--smoke) 0%, transparent 68%); }
-  #gate.entering #gate-smoke .puff, #gate.leaving #gate-smoke .puff{ animation: puffCycle 1s ease-out forwards; }
+  #gate.entering #gate-smoke .puff{ animation: puffCycle 1s ease-out forwards; }
   @keyframes puffCycle{ 0%{ opacity:0; transform:translate3d(0,30px,0) scale(.5); } 40%{ opacity:.9; } 100%{ opacity:0; transform:translate3d(var(--dx,0),-40px,0) scale(2.2); } }
-  #transition-cloud{ position:fixed; inset:0; z-index:120; max-width:var(--maxw); margin:0 auto; pointer-events:none; opacity:0; overflow:hidden; visibility:hidden; background: radial-gradient(ellipse at 50% 44%, rgba(255,255,255,.99) 0%, rgba(255,255,255,.90) 28%, transparent 62%), linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.98)); filter:blur(7px); }
-  #transition-cloud.content-cloud{ visibility:visible; animation: cloudContent 2s cubic-bezier(.35,.75,.25,1) forwards; }
-  @keyframes cloudContent{ 0%{ opacity:0; } 34%{ opacity:1; } 58%{ opacity:1; } 100%{ opacity:0; visibility:hidden; } }
+
+  /* ============ TRANSITION CLOUD ============ */
+  #transition-cloud{
+    position:fixed; inset:0; z-index:120; max-width:var(--maxw); margin:0 auto;
+    pointer-events:none; opacity:0; overflow:hidden; visibility:hidden;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 50% 44%, color-mix(in srgb, var(--bg) 92%, #ffffff 8%) 0%, var(--bg) 45%, var(--bg) 100%),
+      linear-gradient(180deg, color-mix(in srgb, var(--bg) 95%, #ffffff 5%), var(--bg));
+    will-change: opacity;
+  }
+  #transition-cloud.closing{
+    visibility:visible;
+    animation: cloudClose .8s cubic-bezier(.45,0,.55,1) forwards;
+  }
+  #transition-cloud.opening{
+    visibility:visible;
+    animation: cloudOpen .8s cubic-bezier(.45,0,.55,1) forwards;
+  }
+  @keyframes cloudClose{
+    0%{ opacity:0; }
+    100%{ opacity:1; }
+  }
+  @keyframes cloudOpen{
+    0%{ opacity:1; }
+    100%{ opacity:0; visibility:hidden; }
+  }
 
   .ig-btn, .live-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; text-decoration:none; cursor:pointer; font-family:var(--font-body); font-size:.9rem; font-weight:500; color:var(--gold-ink); border:1.5px solid var(--gold-ink); border-radius:999px; padding:.5rem 1.1rem; background:transparent; }
   .ig-btn svg, .live-btn svg{ width:18px; height:18px; flex:none; }
@@ -374,8 +395,8 @@
 <div class="stage" id="stage">
 
   <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="cv-names">
-    <img class="asset-deco" style="width: 100px;left: 100px;bottom: 5rem;opacity: 1;transform: rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-    <img class="asset-deco" style="width: 100px;right: 30px;top: 1rem;opacity: 1;transform: rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+    <img class="asset-deco" style="width:100px;left:100px;bottom:5rem;transform:rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="low">
+    <img class="asset-deco" style="width:100px;right:30px;top:1rem;transform:rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="low">
     <span class="eyebrow" id="cv-eyebrow" aria-hidden="true">Uleman Palakrama</span>
     <div class="cover-frame"><img id="cv-photo" src="assets/wedding.webp" alt="" loading="eager" decoding="async" fetchpriority="high"></div>
     <h1 class="names serif" id="cv-names">Rasya &amp; Rizky</h1>
@@ -628,7 +649,7 @@
 
 <script>
 /* ======================================================================
-   OPTIMASI: Deteksi performa device & jaringan
+   Deteksi performa device & jaringan
    ====================================================================== */
 (function detectPerformance(){
   try {
@@ -648,9 +669,6 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 const PERF_LOW = document.documentElement.getAttribute('data-perf') === 'low';
 
-/* ======================================================================
-   OPTIMASI: Cache config di localStorage (TTL 30 menit)
-   ====================================================================== */
 const CFG_CACHE_KEY = 'undangan_cfg_v2';
 const CFG_CACHE_TTL = 30 * 60 * 1000;
 function loadCachedConfig(){
@@ -670,7 +688,8 @@ const GATE_VIDEO = {
   durasiVideo: 5.0,
   blurIn:      1.0,
   welcomeHide: 1.0,
-  puffOut:     1.0,
+  cloudClose:  0.8,   // durasi awan menutup (fade-in)
+  cloudOpen:   0.8    // durasi awan membuka (fade-out)
 };
 
 const FALLBACK_DATA = {
@@ -1043,7 +1062,6 @@ function applyThemeMode(){
 }
 
 let opened = false;
-function motionScan(){ /* di-nonaktifkan untuk performa; CSS IntersectionObserver yang handle */ }
 
 function revealOnScroll(){
   const els = document.querySelectorAll('.fade-up');
@@ -1080,15 +1098,12 @@ function buildGateSmoke(){
 function init(){
   applyTema(FALLBACK_TEMA);
 
-  /* 1. Sembunyikan loading segera, tampilkan welcome dengan fallback data */
   $('loading').classList.add('hide');
   setTimeout(() => { $('loading').style.display = 'none'; }, 400);
 
-  /* 2. Preload video metadata (tidak download full) */
   const gateVideo = $('gate-video');
   if(gateVideo){ gateVideo.load(); }
 
-  /* 3. Coba pakai cache dulu (instan) */
   const cached = loadCachedConfig();
   if(cached){
     CFG = { ...FALLBACK_DATA, ...cached.data };
@@ -1097,20 +1112,18 @@ function init(){
     applySectionVisibility();
     toggleJumlahField();
   } else {
-    /* Render pakai fallback dulu supaya user langsung lihat welcome */
     renderConfig(FALLBACK_DATA);
     applySectionVisibility();
     toggleJumlahField();
   }
 
-  /* 4. Fetch config dari server (non-blocking) */
   fetchConfigInBackground();
 }
 
 async function fetchConfigInBackground(){
   try {
     const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 8000); // 8s timeout
+    const timeout = setTimeout(() => ctrl.abort(), 8000);
     const url = new URL(APPS_SCRIPT_URL);
     url.searchParams.set('action', 'config');
     const res = await fetch(url.toString(), { signal: ctrl.signal });
@@ -1128,7 +1141,7 @@ async function fetchConfigInBackground(){
 }
 
 /* ======================================================================
-   BUKA ULEMAN — GATE VIDEO + BLUR + ASAP
+   BUKA ULEMAN — VIDEO → AWAN MENUTUP → TUKAR KONTEN → AWAN MEMBUKA
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate'), gateVideo = $('gate-video');
@@ -1137,19 +1150,19 @@ $('open-btn').addEventListener('click', () => {
   const G = GATE_VIDEO;
 
   const WELCOME_HIDE_MS = reducedMotion ? 40 : G.welcomeHide * 1000;
-  const PUFF_MS = reducedMotion ? 40 : G.puffOut * 1000;
 
-  /* Musik latar */
   const audio = $('bg-music');
   if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
     if(!userMuted){ audio.muted = false; updateMusicIcon(false); }
     audio.play().catch(() => {});
   }
 
-  /* Skip gate untuk koneksi lambat / reduced motion */
+  // Fallback: HP low-end / reduced-motion → langsung tampil konten
   if(reducedMotion || PERF_LOW){
     welcome.style.display = 'none';
     welcome.setAttribute('aria-hidden', 'true');
+    gate.classList.remove('show','entering','leaving');
+    gate.setAttribute('aria-hidden', 'true');
     $('content').style.visibility = 'visible';
     document.documentElement.classList.add('opened');
     opened = true;
@@ -1180,27 +1193,45 @@ $('open-btn').addEventListener('click', () => {
   }
 
   const onVideoEnd = () => {
+    // Video blur-out di belakang awan
     gate.classList.remove('entering');
     gate.classList.add('leaving');
-    transitionCloud.classList.add('content-cloud');
 
+    // 1) Awan mulai MENUTUP (fade-in)
+    transitionCloud.classList.remove('opening');
+    transitionCloud.classList.add('closing');
+
+    const CLOSE_MS = G.cloudClose * 1000;
+    const OPEN_MS  = G.cloudOpen  * 1000;
+
+    // 2) Tepat saat awan sudah menutupi layar penuh:
+    //    - sembunyikan gate hitam
+    //    - tampilkan konten di balik awan (tidak terlihat karena awan opaque)
+    //    - awan mulai MEMBUKA (fade-out) → konten langsung terlihat
     setTimeout(() => {
+      gate.classList.remove('show', 'entering', 'leaving');
+      gate.setAttribute('aria-hidden', 'true');
+      if(gateVideo){ try { gateVideo.pause(); } catch(e){} }
+
       $('content').style.visibility = 'visible';
       document.documentElement.classList.add('opened');
       opened = true;
       revealOnScroll();
-      loadComments(true); // Load komentar setelah konten terbuka
+      lazyLoadComments();
 
       const heroTitle = $('hero-names');
       if(heroTitle && typeof heroTitle.focus === 'function') heroTitle.focus({ preventScroll: true });
 
+      // 3) Awan membuka
+      transitionCloud.classList.remove('closing');
+      transitionCloud.classList.add('opening');
+
       setTimeout(() => {
-        gate.classList.remove('show','entering','leaving');
-        gate.setAttribute('aria-hidden', 'true');
-        if(gateVideo){ try{ gateVideo.pause(); gateVideo.removeAttribute('src'); gateVideo.load(); }catch(e){} }
-        transitionCloud.classList.remove('content-cloud');
-      }, 2200);
-    }, PUFF_MS);
+        transitionCloud.classList.remove('opening');
+        if(gateVideo){ try { gateVideo.removeAttribute('src'); gateVideo.load(); } catch(e){} }
+      }, OPEN_MS);
+
+    }, CLOSE_MS);
   };
 
   let handled = false;
@@ -1323,18 +1354,12 @@ $('rsvp-form').addEventListener('submit', async (e) => {
   finally { btn.disabled = false; if(!succeeded) btn.textContent = oldLabel; }
 });
 
-/* ======================================================================
-   SERVICE WORKER — cache aset untuk kunjungan berikutnya
-   ====================================================================== */
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }, { once: true });
 }
 
-/* ======================================================================
-   LAZY LOAD COMMENTS — hanya fetch saat section comment mendekati viewport
-   ====================================================================== */
 let commentsLoaded = false;
 function lazyLoadComments(){
   if(commentsLoaded) return;
@@ -1352,11 +1377,7 @@ function lazyLoadComments(){
   io.observe(target);
 }
 
-/* ======================================================================
-   MULAI
-   ====================================================================== */
 init();
-lazyLoadComments();
 </script>
 </body>
 </html>
