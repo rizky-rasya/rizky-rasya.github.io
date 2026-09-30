@@ -284,29 +284,94 @@
   html:not(.lenis){ scroll-behavior:smooth; }
 
   /* ==============================================================
-     GATE VIDEO — 1 VIDEO 6 DETIK
+     GATE VIDEO + BLUR + ASAP
+     --------------------------------------------------------------
+     t=0             : klik → gate show, video play, gate.entering
+     0 – 2s          : video blur 14→0 + opacity 0→1, asap muncul
+     2 – (dur−2s)    : video normal
+     (dur−2s) – dur  : video blur 0→14 + opacity 1→0, asap muncul
+     dur             : video ended → konten reveal
      ============================================================== */
   #gate{
     position:fixed; inset:0; z-index:95;
     max-width:var(--maxw); margin:0 auto;
     display:none; overflow:hidden; pointer-events:none;
     opacity:0; isolation:isolate; background:#000;
-    transition:opacity 1.2s cubic-bezier(.22,1,.36,1);
+    transition:opacity .3s ease;
   }
-  #gate.show{ display:block; }
-  #gate.closing{ opacity:1; }
+  #gate.show{ display:block; opacity:1; }
+  #gate.leaving{
+    opacity:0;
+    transition:opacity 2s cubic-bezier(.4,0,.2,1);
+  }
 
+  /* Video */
   .gate-video{
     position:absolute; inset:0;
     width:100%; height:100%;
     object-fit:cover;
     display:block;
     opacity:0;
-    transition:opacity .6s ease;
+    filter:blur(0px);
+    transform:scale(1);
+    will-change:opacity, filter, transform;
   }
-  #gate.closing .gate-video{ opacity:1; }
+  #gate.entering .gate-video{
+    animation: videoBlurIn 2s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  #gate.leaving .gate-video{
+    animation: videoBlurOut 2s cubic-bezier(.4,0,.2,1) forwards;
+  }
 
-  /* Awan transisi putih */
+  @keyframes videoBlurIn{
+    0%   { opacity:0; filter:blur(14px); transform:scale(1.08); }
+    100% { opacity:1; filter:blur(0px);  transform:scale(1); }
+  }
+  @keyframes videoBlurOut{
+    0%   { opacity:1; filter:blur(0px);  transform:scale(1); }
+    100% { opacity:0; filter:blur(14px); transform:scale(1.08); }
+  }
+
+  /* Asap (puff) */
+  #gate-smoke{
+    position:absolute; inset:0; z-index:2;
+    pointer-events:none; overflow:hidden;
+    --smoke: rgba(255,255,255,.85);
+  }
+  html[data-theme="night"] #gate-smoke{ --smoke: rgba(214,226,218,.5); }
+
+  #gate-smoke .puff{
+    position:absolute;
+    border-radius:50%;
+    opacity:0;
+    filter:blur(28px);
+    background:radial-gradient(circle, var(--smoke) 0%, transparent 68%);
+    will-change:transform, opacity;
+  }
+
+  /* Asap masuk — dipanggil saat .entering */
+  #gate.entering #gate-smoke .puff{
+    animation: puffCycleIn 2s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  /* Asap keluar — dipanggil saat .leaving (nama beda supaya restart animation) */
+  #gate.leaving #gate-smoke .puff{
+    animation: puffCycleOut 2s cubic-bezier(.4,0,.2,1) forwards;
+  }
+
+  @keyframes puffCycleIn{
+    0%   { opacity:0; transform:translate3d(0,30px,0) scale(.5); }
+    25%  { opacity:.85; }
+    60%  { opacity:.85; }
+    100% { opacity:0; transform:translate3d(var(--dx,0),-40px,0) scale(2.2); }
+  }
+  @keyframes puffCycleOut{
+    0%   { opacity:0; transform:translate3d(0,30px,0) scale(.5); }
+    25%  { opacity:.85; }
+    60%  { opacity:.85; }
+    100% { opacity:0; transform:translate3d(var(--dx,0),-40px,0) scale(2.2); }
+  }
+
+  /* Awan transisi ke konten (opsional, dipertahankan) */
   #transition-cloud{
     position:fixed; inset:0; z-index:120; max-width:var(--maxw); margin:0 auto;
     pointer-events:none; opacity:0; overflow:hidden; visibility:hidden;
@@ -317,18 +382,10 @@
       linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.98));
     filter:blur(7px); transform:scale(1.08);
   }
-  #transition-cloud::before, #transition-cloud::after{
-    content:""; position:absolute; inset:-15%;
-    background:
-      radial-gradient(ellipse at 20% 55%, rgba(255,255,255,.95) 0 13%, transparent 38%),
-      radial-gradient(ellipse at 42% 42%, rgba(255,255,255,.92) 0 16%, transparent 42%),
-      radial-gradient(ellipse at 67% 58%, rgba(255,255,255,.94) 0 15%, transparent 40%),
-      radial-gradient(ellipse at 84% 40%, rgba(255,255,255,.90) 0 14%, transparent 38%);
-    filter:blur(24px); transform:translate3d(-2%,0,0) scale(1.06);
+  #transition-cloud.content-cloud{
+    visibility:visible;
+    animation: cloudContent 2s cubic-bezier(.35,.75,.25,1) forwards;
   }
-  #transition-cloud::after{ opacity:.72; filter:blur(34px); transform:translate3d(3%,1%,0) scale(1.12); }
-  #transition-cloud.content-cloud{ visibility:visible; animation:cloudContent 2s cubic-bezier(.35,.75,.25,1) forwards; }
-
   @keyframes cloudContent{
     0%{ opacity:0; transform:scale(1.08); }
     34%{ opacity:1; transform:scale(1); }
@@ -337,11 +394,12 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    #gate, #gate.open{ transition:opacity .001ms linear !important; }
+    #gate, #gate.leaving{ transition:opacity .001ms linear !important; }
+    .gate-video{ animation:none !important; opacity:1 !important; filter:none !important; }
+    #gate-smoke .puff{ animation:none !important; opacity:0 !important; }
     #transition-cloud{ animation:none !important; opacity:0 !important; visibility:hidden !important; }
   }
 
-  /* ============ INSTAGRAM & LIVE ============ */
   .ig-btn, .live-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; text-decoration:none; cursor:pointer; font-family:var(--font-body); font-size:.9rem; font-weight:500; letter-spacing:.05em; color:var(--gold-ink); border:1.5px solid var(--gold-ink); border-radius:999px; padding:.5rem 1.1rem; background:transparent; transition:background .25s ease, color .25s ease, transform .2s ease; }
   .ig-btn svg, .live-btn svg{ width:18px; height:18px; flex:none; }
   .ig-btn:hover, .ig-btn:focus-visible, .live-btn:hover, .live-btn:focus-visible{ background:var(--gold-ink); color:var(--surface); transform:translateY(-2px); }
@@ -408,13 +466,14 @@
 <body>
 
 <!-- ==============================================================
-     GATE VIDEO — 1 VIDEO 6 DETIK
-     Ganti src video di bawah ini sesuai file Anda.
+     GATE VIDEO + BLUR + ASAP
+     Ganti src video di bawah sesuai file Anda.
      ============================================================== -->
 <div id="gate" aria-hidden="true">
   <video id="gate-video" class="gate-video" muted playsinline preload="auto">
     <source src="assets/gate.mp4" type="video/mp4">
   </video>
+  <div id="gate-smoke" aria-hidden="true"></div>
 </div>
 
 <div id="transition-cloud" aria-hidden="true"></div>
@@ -692,14 +751,13 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-p
 /* ======================================================================
    GATE VIDEO TIMING — SATU SUMBER KEBENARAN
    ----------------------------------------------------------------------
-   Ubah di sini saja. Semua nilai dalam DETIK.
+   Semua nilai dalam DETIK.
    ====================================================================== */
 const GATE_VIDEO = {
-  durasiVideo: 6.0,      /* durasi video (detik) */
-  fadeInVideo: 0.6,      /* fade-in video saat mulai */
-  fadeOutGate: 1.2,      /* fade-out gate → konten */
-  cloudContent: 2.0,     /* durasi awan transisi ke konten */
+  durasiVideo: 6.0,      /* total durasi video */
+  blurDurasi: 2.0,       /* durasi blur in (awal) & blur out (akhir) */
   welcomeHide: 1.2,      /* durasi welcome hide */
+  cloudReveal: 2.0,      /* durasi awan putih → konten */
 };
 
 const FALLBACK_DATA = {
@@ -1147,6 +1205,30 @@ function startSmoothScroll(){
   requestAnimationFrame(raf);
 }
 
+/* ======================================================================
+   GATE SMOKE PUFFS — bangun 12 puff sekali saja
+   ====================================================================== */
+function buildGateSmoke(){
+  const smoke = $('gate-smoke');
+  if(!smoke || smoke.children.length) return;
+  const frag = document.createDocumentFragment();
+  for(let i = 0; i < 12; i++){
+    const p = document.createElement('div');
+    const size = 200 + Math.random() * 160;
+    const px = Math.random() * 100;
+    const py = 15 + Math.random() * 70;
+    p.className = 'puff';
+    p.style.cssText =
+      `width:${size}px;height:${size}px;` +
+      `left:calc(${px}% - ${size/2}px);` +
+      `top:calc(${py}% - ${size/2}px);` +
+      `--dx:${(Math.random() - .5) * 140}px;` +
+      `animation-delay:${(i % 5) * 0.1}s`;
+    frag.appendChild(p);
+  }
+  smoke.appendChild(frag);
+}
+
 async function init(){
   applyTema(FALLBACK_TEMA);
   try{
@@ -1158,7 +1240,7 @@ async function init(){
   toggleJumlahField();
   loadComments(true);
 
-  /* Preload video agar siap saat tombol Buka Uleman diklik */
+  /* Preload video gate */
   const gateVideo = $('gate-video');
   if(gateVideo){
     gateVideo.load();
@@ -1177,48 +1259,57 @@ function syncThemeButton(theme){
     : '<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/>';
 }
 
-/* ============ BUKA ULEMAN — GATE VIDEO 6 DETIK ============ */
+/* ======================================================================
+   BUKA ULEMAN — GATE VIDEO dengan BLUR + ASAP
+   ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate'), gateVideo = $('gate-video');
+  const transitionCloud = $('transition-cloud');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const G = GATE_VIDEO;
 
+  const BLUR_MS           = reducedMotion ? 40 : G.blurDurasi * 1000;
+  const VIDEO_MS          = reducedMotion ? 60 : G.durasiVideo * 1000;
   const WELCOME_HIDE_MS   = reducedMotion ? 40 : G.welcomeHide * 1000;
-  const VIDEO_DURATION_MS = reducedMotion ? 60 : G.durasiVideo * 1000;
-  const FADE_OUT_MS       = reducedMotion ? 60 : G.fadeOutGate * 1000;
+  const CLOUD_REVEAL_MS   = reducedMotion ? 60 : G.cloudReveal * 1000;
 
-  /* Musik latar — langsung nyala saat tombol diklik */
+  /* Durasi efektif = pakai metadata video kalau lebih akurat */
+  let effectiveMs = VIDEO_MS;
+
+  /* Musik latar */
   const audio = $('bg-music');
   if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
     if(!userMuted){ audio.muted = false; updateMusicIcon(false); }
     audio.play().catch(() => {});
   }
 
-  /* Tampilkan gate dan putar video */
-  gate.classList.add('show');
-  gate.classList.add('closing');
+  /* Bangun puff sekali saja */
+  buildGateSmoke();
 
+  /* Tampilkan gate + mulai animasi masuk */
+  gate.classList.add('show');
+  gate.classList.add('entering');
+  gate.classList.remove('leaving');
+
+  /* Play video */
   if(gateVideo){
     try{
       gateVideo.currentTime = 0;
-      gateVideo.muted = true;               /* wajib untuk autoplay di mobile */
-      const playPromise = gateVideo.play();
-      if(playPromise && typeof playPromise.catch === 'function'){ playPromise.catch(() => {}); }
-    } catch(e){ /* diabaikan */ }
+      gateVideo.muted = true;               /* wajib untuk autoplay mobile */
+      gateVideo.play().catch(() => {});
+    } catch(e){}
   }
 
   /* Sembunyikan welcome */
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      welcome.classList.add('hide');
-    });
+    requestAnimationFrame(() => { welcome.classList.add('hide'); });
   });
   setTimeout(() => {
     welcome.style.display = 'none';
     welcome.setAttribute('aria-hidden', 'true');
   }, WELCOME_HIDE_MS);
 
-  /* Timer reveal konten — pakai event `ended` video jika tersedia, fallback durasi */
+  /* Reveal konten (dipanggil saat video selesai) */
   let revealed = false;
   const revealContent = () => {
     if(revealed) return;
@@ -1226,7 +1317,7 @@ $('open-btn').addEventListener('click', () => {
 
     $('content').style.visibility = 'visible';
     document.documentElement.classList.add('opened');
-    gate.classList.add('open');
+    transitionCloud.classList.add('content-cloud');
 
     opened = true;
     motionStart = Date.now() + (reducedMotion ? 0 : 400);
@@ -1235,30 +1326,50 @@ $('open-btn').addEventListener('click', () => {
     startSmoothScroll();
   };
 
+  /* Switch ke fase blur-out 2 detik terakhir video */
+  const scheduleLeave = (totalMs) => {
+    const leaveAt = Math.max(0, totalMs - BLUR_MS);
+    setTimeout(() => {
+      gate.classList.remove('entering');
+      gate.classList.add('leaving');
+    }, leaveAt);
+  };
+
+  /* Timer sequence */
   if(gateVideo){
-    gateVideo.addEventListener('ended', revealContent, { once: true });
-    /* Fallback: reveal kalau event ended tidak kepanggil */
-    setTimeout(revealContent, VIDEO_DURATION_MS + 200);
+    /* Kalau metadata sudah ada, pakai durasi asli */
+    if(gateVideo.duration && isFinite(gateVideo.duration) && gateVideo.duration > 0){
+      effectiveMs = gateVideo.duration * 1000;
+    }
+    scheduleLeave(effectiveMs);
+
+    /* Reveal saat video ended */
+    gateVideo.addEventListener('ended', () => {
+      setTimeout(revealContent, 100);
+    }, { once: true });
+
+    /* Fallback reveal kalau ended tidak terpanggil */
+    setTimeout(revealContent, effectiveMs + 200);
   } else {
-    setTimeout(revealContent, VIDEO_DURATION_MS);
+    scheduleLeave(effectiveMs);
+    setTimeout(revealContent, effectiveMs);
   }
 
-  /* Fokus judul setelah reveal */
+  /* Fokus judul */
   setTimeout(() => {
     const heroTitle = $('hero-names');
     if(heroTitle && typeof heroTitle.focus === 'function'){
       heroTitle.focus({ preventScroll: true });
     }
-  }, VIDEO_DURATION_MS + FADE_OUT_MS);
+  }, effectiveMs + 300);
 
-  /* Bersihkan gate setelah semua selesai */
+  /* Bersihkan gate */
   setTimeout(() => {
-    gate.classList.remove('show','closing','open');
+    gate.classList.remove('show','entering','leaving');
     gate.setAttribute('aria-hidden', 'true');
-    if(gateVideo){
-      try{ gateVideo.pause(); }catch(e){}
-    }
-  }, VIDEO_DURATION_MS + FADE_OUT_MS + 300);
+    if(gateVideo){ try{ gateVideo.pause(); }catch(e){} }
+    transitionCloud.classList.remove('content-cloud');
+  }, effectiveMs + CLOUD_REVEAL_MS + 400);
 });
 
 (function bindThemeButton(){
