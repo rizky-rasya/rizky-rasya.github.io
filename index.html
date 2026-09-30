@@ -287,10 +287,12 @@
      GATE VIDEO + BLUR + ASAP
      --------------------------------------------------------------
      Timeline:
-       0–1s       : Video blur 14→0 (opacity 0→1) + puff asap in
-       1–5s       : Video normal (tajam)
-       5–6s       : Video blur 0→14 (opacity 1→0) + puff asap out
-       6s         : Konten undangan tampil
+       0        : klik → gate show, video play, entering
+       0–1s     : video blur 14→0 (opacity 0→1) + 12 puff asap in
+       1s       : welcome display:none
+       1–5s     : video normal (tajam)
+       5s       : video ended → gate.leaving (puff asap out + blur out + content-cloud)
+       6s       : konten undangan terlihat
      ============================================================== */
   #gate{
     position:fixed; inset:0; z-index:95;
@@ -317,7 +319,6 @@
   #gate.leaving .gate-video{
     animation: videoBlurOut 1s cubic-bezier(.4,0,.2,1) forwards;
   }
-
   @keyframes videoBlurIn{
     0%   { opacity:0; filter:blur(14px); transform:scale(1.08); }
     100% { opacity:1; filter:blur(0px);  transform:scale(1); }
@@ -342,7 +343,6 @@
     background:radial-gradient(circle, var(--smoke) 0%, transparent 68%);
     will-change:transform, opacity;
   }
-
   #gate.entering #gate-smoke .puff{
     animation: puffCycle 1s cubic-bezier(.22,1,.36,1) forwards;
   }
@@ -733,14 +733,13 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-p
 
 /* ======================================================================
    GATE VIDEO TIMING — SATU SUMBER KEBENARAN
-   ----------------------------------------------------------------------
    Semua nilai dalam DETIK.
    ====================================================================== */
 const GATE_VIDEO = {
   durasiVideo: 5.0,      /* total durasi video */
   blurIn:      1.0,      /* durasi blur in awal */
   welcomeHide: 1.0,      /* durasi welcome hide */
-  puffOut:     1.0,      /* durasi puff + fade-out di akhir */
+  puffOut:     1.0,      /* durasi puff + blur out di akhir */
 };
 
 const FALLBACK_DATA = {
@@ -1245,10 +1244,12 @@ function syncThemeButton(theme){
 /* ======================================================================
    BUKA ULEMAN — GATE VIDEO dengan BLUR + ASAP
    Timeline:
-     0–1s : Blur in + puff asap in (video 0→1, blur 14→0)
-     1–5s : Video normal
-     5–6s : Blur out + puff asap out (video 1→0, blur 0→14)
-     6s   : Konten undangan tampil
+     0       : klik → gate show, video play, entering
+     0–1s    : video blur 14→0 (opacity 0→1) + 12 puff asap in
+     1s      : welcome display:none
+     1–5s    : video normal (tajam)
+     5s      : video ended → gate.leaving (puff asap out + blur out + content-cloud mulai)
+     6s      : konten undangan terlihat
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate'), gateVideo = $('gate-video');
@@ -1298,16 +1299,19 @@ $('open-btn').addEventListener('click', () => {
     durationMs = gateVideo.duration * 1000;
   }
 
-  /* Saat video selesai → fase puff + fade-out 1s → konten */
+  /* Saat video selesai → leaving phase 1s → reveal konten di 6s */
   const onVideoEnd = () => {
     gate.classList.remove('entering');
     gate.classList.add('leaving');
 
+    /* content-cloud mulai bersamaan dengan leaving (di 5s) untuk menutup
+       mulus momen pergantian gate → konten. Cloud akan selesai di ~7s. */
+    transitionCloud.classList.add('content-cloud');
+
     setTimeout(() => {
-      /* Reveal konten */
+      /* Reveal konten di 6s (1s setelah video ended) */
       $('content').style.visibility = 'visible';
       document.documentElement.classList.add('opened');
-      transitionCloud.classList.add('content-cloud');
 
       opened = true;
       motionStart = Date.now() + (reducedMotion ? 0 : 400);
@@ -1321,7 +1325,7 @@ $('open-btn').addEventListener('click', () => {
         heroTitle.focus({ preventScroll: true });
       }
 
-      /* Cleanup gate + awan */
+      /* Cleanup gate + awan setelah semua selesai */
       setTimeout(() => {
         gate.classList.remove('show','entering','leaving');
         gate.setAttribute('aria-hidden', 'true');
