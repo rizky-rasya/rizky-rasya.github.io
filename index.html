@@ -286,11 +286,11 @@
   /* ==============================================================
      GATE VIDEO + BLUR + ASAP
      --------------------------------------------------------------
-     t=0             : klik → gate show, video play, gate.entering
-     0 – 2s          : video blur 14→0 + opacity 0→1, asap muncul
-     2 – (dur−2s)    : video normal
-     (dur−2s) – dur  : video blur 0→14 + opacity 1→0, asap muncul
-     dur             : video ended → konten reveal
+     Timeline:
+       0–1s       : Video blur 14→0 (opacity 0→1) + puff asap in
+       1–5s       : Video normal (tajam)
+       5–6s       : Video blur 0→14 (opacity 1→0) + puff asap out
+       6s         : Konten undangan tampil
      ============================================================== */
   #gate{
     position:fixed; inset:0; z-index:95;
@@ -300,12 +300,7 @@
     transition:opacity .3s ease;
   }
   #gate.show{ display:block; opacity:1; }
-  #gate.leaving{
-    opacity:0;
-    transition:opacity 2s cubic-bezier(.4,0,.2,1);
-  }
 
-  /* Video */
   .gate-video{
     position:absolute; inset:0;
     width:100%; height:100%;
@@ -317,10 +312,10 @@
     will-change:opacity, filter, transform;
   }
   #gate.entering .gate-video{
-    animation: videoBlurIn 2s cubic-bezier(.22,1,.36,1) forwards;
+    animation: videoBlurIn 1s cubic-bezier(.22,1,.36,1) forwards;
   }
   #gate.leaving .gate-video{
-    animation: videoBlurOut 2s cubic-bezier(.4,0,.2,1) forwards;
+    animation: videoBlurOut 1s cubic-bezier(.4,0,.2,1) forwards;
   }
 
   @keyframes videoBlurIn{
@@ -332,7 +327,6 @@
     100% { opacity:0; filter:blur(14px); transform:scale(1.08); }
   }
 
-  /* Asap (puff) */
   #gate-smoke{
     position:absolute; inset:0; z-index:2;
     pointer-events:none; overflow:hidden;
@@ -349,29 +343,18 @@
     will-change:transform, opacity;
   }
 
-  /* Asap masuk — dipanggil saat .entering */
   #gate.entering #gate-smoke .puff{
-    animation: puffCycleIn 2s cubic-bezier(.22,1,.36,1) forwards;
+    animation: puffCycle 1s cubic-bezier(.22,1,.36,1) forwards;
   }
-  /* Asap keluar — dipanggil saat .leaving (nama beda supaya restart animation) */
   #gate.leaving #gate-smoke .puff{
-    animation: puffCycleOut 2s cubic-bezier(.4,0,.2,1) forwards;
+    animation: puffCycle 1s cubic-bezier(.4,0,.2,1) forwards;
   }
-
-  @keyframes puffCycleIn{
+  @keyframes puffCycle{
     0%   { opacity:0; transform:translate3d(0,30px,0) scale(.5); }
-    25%  { opacity:.85; }
-    60%  { opacity:.85; }
-    100% { opacity:0; transform:translate3d(var(--dx,0),-40px,0) scale(2.2); }
-  }
-  @keyframes puffCycleOut{
-    0%   { opacity:0; transform:translate3d(0,30px,0) scale(.5); }
-    25%  { opacity:.85; }
-    60%  { opacity:.85; }
+    40%  { opacity:.9; }
     100% { opacity:0; transform:translate3d(var(--dx,0),-40px,0) scale(2.2); }
   }
 
-  /* Awan transisi ke konten (opsional, dipertahankan) */
   #transition-cloud{
     position:fixed; inset:0; z-index:120; max-width:var(--maxw); margin:0 auto;
     pointer-events:none; opacity:0; overflow:hidden; visibility:hidden;
@@ -394,7 +377,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    #gate, #gate.leaving{ transition:opacity .001ms linear !important; }
+    #gate{ transition:opacity .001ms linear !important; }
     .gate-video{ animation:none !important; opacity:1 !important; filter:none !important; }
     #gate-smoke .puff{ animation:none !important; opacity:0 !important; }
     #transition-cloud{ animation:none !important; opacity:0 !important; visibility:hidden !important; }
@@ -754,10 +737,10 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-p
    Semua nilai dalam DETIK.
    ====================================================================== */
 const GATE_VIDEO = {
-  durasiVideo: 6.0,      /* total durasi video */
-  blurDurasi: 2.0,       /* durasi blur in (awal) & blur out (akhir) */
-  welcomeHide: 1.2,      /* durasi welcome hide */
-  cloudReveal: 2.0,      /* durasi awan putih → konten */
+  durasiVideo: 5.0,      /* total durasi video */
+  blurIn:      1.0,      /* durasi blur in awal */
+  welcomeHide: 1.0,      /* durasi welcome hide */
+  puffOut:     1.0,      /* durasi puff + fade-out di akhir */
 };
 
 const FALLBACK_DATA = {
@@ -1223,7 +1206,7 @@ function buildGateSmoke(){
       `left:calc(${px}% - ${size/2}px);` +
       `top:calc(${py}% - ${size/2}px);` +
       `--dx:${(Math.random() - .5) * 140}px;` +
-      `animation-delay:${(i % 5) * 0.1}s`;
+      `animation-delay:${(i % 5) * 0.05}s`;
     frag.appendChild(p);
   }
   smoke.appendChild(frag);
@@ -1261,6 +1244,11 @@ function syncThemeButton(theme){
 
 /* ======================================================================
    BUKA ULEMAN — GATE VIDEO dengan BLUR + ASAP
+   Timeline:
+     0–1s : Blur in + puff asap in (video 0→1, blur 14→0)
+     1–5s : Video normal
+     5–6s : Blur out + puff asap out (video 1→0, blur 0→14)
+     6s   : Konten undangan tampil
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate'), gateVideo = $('gate-video');
@@ -1268,13 +1256,8 @@ $('open-btn').addEventListener('click', () => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const G = GATE_VIDEO;
 
-  const BLUR_MS           = reducedMotion ? 40 : G.blurDurasi * 1000;
-  const VIDEO_MS          = reducedMotion ? 60 : G.durasiVideo * 1000;
-  const WELCOME_HIDE_MS   = reducedMotion ? 40 : G.welcomeHide * 1000;
-  const CLOUD_REVEAL_MS   = reducedMotion ? 60 : G.cloudReveal * 1000;
-
-  /* Durasi efektif = pakai metadata video kalau lebih akurat */
-  let effectiveMs = VIDEO_MS;
+  const WELCOME_HIDE_MS = reducedMotion ? 40 : G.welcomeHide * 1000;
+  const PUFF_MS         = reducedMotion ? 40 : G.puffOut * 1000;
 
   /* Musik latar */
   const audio = $('bg-music');
@@ -1286,7 +1269,7 @@ $('open-btn').addEventListener('click', () => {
   /* Bangun puff sekali saja */
   buildGateSmoke();
 
-  /* Tampilkan gate + mulai animasi masuk */
+  /* Tampilkan gate + mulai animasi blur-in */
   gate.classList.add('show');
   gate.classList.add('entering');
   gate.classList.remove('leaving');
@@ -1295,7 +1278,7 @@ $('open-btn').addEventListener('click', () => {
   if(gateVideo){
     try{
       gateVideo.currentTime = 0;
-      gateVideo.muted = true;               /* wajib untuk autoplay mobile */
+      gateVideo.muted = true;               /* wajib autoplay mobile */
       gateVideo.play().catch(() => {});
     } catch(e){}
   }
@@ -1309,67 +1292,55 @@ $('open-btn').addEventListener('click', () => {
     welcome.setAttribute('aria-hidden', 'true');
   }, WELCOME_HIDE_MS);
 
-  /* Reveal konten (dipanggil saat video selesai) */
-  let revealed = false;
-  const revealContent = () => {
-    if(revealed) return;
-    revealed = true;
-
-    $('content').style.visibility = 'visible';
-    document.documentElement.classList.add('opened');
-    transitionCloud.classList.add('content-cloud');
-
-    opened = true;
-    motionStart = Date.now() + (reducedMotion ? 0 : 400);
-    revealOnScroll();
-    motionScan();
-    startSmoothScroll();
-  };
-
-  /* Switch ke fase blur-out 2 detik terakhir video */
-  const scheduleLeave = (totalMs) => {
-    const leaveAt = Math.max(0, totalMs - BLUR_MS);
-    setTimeout(() => {
-      gate.classList.remove('entering');
-      gate.classList.add('leaving');
-    }, leaveAt);
-  };
-
-  /* Timer sequence */
-  if(gateVideo){
-    /* Kalau metadata sudah ada, pakai durasi asli */
-    if(gateVideo.duration && isFinite(gateVideo.duration) && gateVideo.duration > 0){
-      effectiveMs = gateVideo.duration * 1000;
-    }
-    scheduleLeave(effectiveMs);
-
-    /* Reveal saat video ended */
-    gateVideo.addEventListener('ended', () => {
-      setTimeout(revealContent, 100);
-    }, { once: true });
-
-    /* Fallback reveal kalau ended tidak terpanggil */
-    setTimeout(revealContent, effectiveMs + 200);
-  } else {
-    scheduleLeave(effectiveMs);
-    setTimeout(revealContent, effectiveMs);
+  /* Tentukan durasi efektif */
+  let durationMs = G.durasiVideo * 1000;
+  if(gateVideo && gateVideo.duration && isFinite(gateVideo.duration) && gateVideo.duration > 0){
+    durationMs = gateVideo.duration * 1000;
   }
 
-  /* Fokus judul */
-  setTimeout(() => {
-    const heroTitle = $('hero-names');
-    if(heroTitle && typeof heroTitle.focus === 'function'){
-      heroTitle.focus({ preventScroll: true });
-    }
-  }, effectiveMs + 300);
+  /* Saat video selesai → fase puff + fade-out 1s → konten */
+  const onVideoEnd = () => {
+    gate.classList.remove('entering');
+    gate.classList.add('leaving');
 
-  /* Bersihkan gate */
-  setTimeout(() => {
-    gate.classList.remove('show','entering','leaving');
-    gate.setAttribute('aria-hidden', 'true');
-    if(gateVideo){ try{ gateVideo.pause(); }catch(e){} }
-    transitionCloud.classList.remove('content-cloud');
-  }, effectiveMs + CLOUD_REVEAL_MS + 400);
+    setTimeout(() => {
+      /* Reveal konten */
+      $('content').style.visibility = 'visible';
+      document.documentElement.classList.add('opened');
+      transitionCloud.classList.add('content-cloud');
+
+      opened = true;
+      motionStart = Date.now() + (reducedMotion ? 0 : 400);
+      revealOnScroll();
+      motionScan();
+      startSmoothScroll();
+
+      /* Fokus judul */
+      const heroTitle = $('hero-names');
+      if(heroTitle && typeof heroTitle.focus === 'function'){
+        heroTitle.focus({ preventScroll: true });
+      }
+
+      /* Cleanup gate + awan */
+      setTimeout(() => {
+        gate.classList.remove('show','entering','leaving');
+        gate.setAttribute('aria-hidden', 'true');
+        if(gateVideo){ try{ gateVideo.pause(); }catch(e){} }
+        transitionCloud.classList.remove('content-cloud');
+      }, 2200);
+    }, PUFF_MS);
+  };
+
+  /* Pastikan handler hanya jalan sekali */
+  let handled = false;
+  const handleEnd = () => { if(handled) return; handled = true; onVideoEnd(); };
+
+  if(gateVideo){
+    gateVideo.addEventListener('ended', handleEnd, { once: true });
+    setTimeout(handleEnd, durationMs + 200);       /* fallback */
+  } else {
+    setTimeout(handleEnd, durationMs);
+  }
 });
 
 (function bindThemeButton(){
