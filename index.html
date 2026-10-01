@@ -135,7 +135,8 @@
     object-fit:cover;
     display:block;
     z-index:0;
-    opacity:0;
+    /* opacity:0; */
+    opacity:1;
     transition:opacity .35s ease;
     pointer-events:none;
   }
@@ -157,9 +158,10 @@
   /* Overlay gradient di atas video supaya teks terbaca */
   #home::before{
     content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-    background:
+    /* background:
       radial-gradient(circle at 50% 50%, rgba(0,0,0,.15), transparent 55%),
-      linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.35) 60%, rgba(0,0,0,.55));
+      linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.35) 60%, rgba(0,0,0,.55)); */
+    background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, .15), transparent 55%);
   }
 
   /* Konten hero — disembunyikan, muncul pada detik 3,5 */
@@ -425,9 +427,13 @@
   <main id="content" style="visibility:hidden;">
     <section id="home" aria-labelledby="hero-names">
       <!-- Video background (1x play, tanpa loop). Ganti src sesuai file Anda. -->
-      <video id="home-video" class="bgvideo" muted playsinline preload="auto" disablepictureinpicture>
+      <!-- <video id="home-video" class="bgvideo" muted playsinline preload="auto" disablepictureinpicture>
         <source src="assets/gate2c.mp4" type="video/mp4">
-      </video>
+      </video> -->
+      <video id="home-video" class="bgvideo" muted playsinline preload="auto"
+       poster="assets/wedding.webp" disablepictureinpicture>
+  <source src="assets/gate2c.mp4" type="video/mp4">
+</video>
       <!-- Gambar fallback kalau video gagal -->
       <img class="bgimg" id="home-bg" src="" alt="" aria-hidden="true">
 
