@@ -302,6 +302,7 @@
   #home .content{
     position:relative;
     z-index:2;
+    visibility:hidden;
   }
 
   /* Scroll dikunci selama video pembukaan berlangsung. */
@@ -403,7 +404,7 @@
     <button class="btn solid" id="open-btn" type="button" style="margin-top:2rem;">Buka Uleman</button>
   </div>
 
-  <main id="content" style="visibility:hidden;">
+  <main id="content">
     <section id="home" aria-labelledby="hero-names">
       <video class="hero-bg-video" id="home-bg-video" muted playsinline preload="auto" aria-hidden="true">
         <source src="assets/gate2c.mp4" type="video/mp4">
@@ -1139,9 +1140,11 @@ function syncThemeButton(theme){
 
 /* ======================================================================
    BUKA ULEMAN — HERO VIDEO INTRO
-   0s    : klik → video gate2c.mp4 mulai 1x
+   0s    : klik → video gate2c.mp4 langsung play
    3.5s  : .content / hero-names ditampilkan
-   END   : scroll dibuka, video berhenti di frame terakhir
+   4–5s  : bagian video ini di-loop terus
+   5min  : intro selesai → video pause + scroll dibuka
+   Tidak ada gate, asap, cloud, blur, atau fade-out.
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome');
@@ -1149,7 +1152,7 @@ $('open-btn').addEventListener('click', () => {
   const content = $('content');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* Kunci scroll dari awal intro. */
+  /* Kunci scroll sejak klik sampai total intro 5 menit selesai. */
   document.documentElement.classList.add('intro-lock');
   document.body.classList.add('intro-lock');
 
@@ -1160,36 +1163,33 @@ $('open-btn').addEventListener('click', () => {
     audio.play().catch(() => {});
   }
 
-  /* Tutup cover/welcome tanpa animasi gate atau fade-out. */
+  /* Cover langsung hilang tanpa transition/fade. Video sudah berada
+     di belakang cover sehingga tidak ada frame putih saat pergantian. */
   if(welcome){
-    welcome.classList.add('hide');
+    welcome.classList.remove('hide');
+    welcome.style.transition = 'none';
     welcome.style.display = 'none';
     welcome.setAttribute('aria-hidden', 'true');
   }
 
-  /* Video hero: hanya 1 kali putar, tidak looping. */
-  if(heroVideo){
-    heroVideo.loop = false;
-    heroVideo.currentTime = 0;
-    heroVideo.muted = true;
-    try { heroVideo.play().catch(() => {}); } catch(e){}
-  }
-
-  /* --------------------------------------------------------------
-     DETIK 3.5 — tampilkan .content hero-names.
-     Video masih terus berjalan sampai selesai.
-     -------------------------------------------------------------- */
   let contentShown = false;
+  let introFinished = false;
+  let loopHandler = null;
+  let finishTimer = null;
+
   const showHeroContent = () => {
     if(contentShown) return;
     contentShown = true;
 
-    content.style.visibility = 'visible';
+    /* Hanya .content yang ditahan sampai 3.5 detik; video sudah terlihat
+       sejak awal sehingga tidak ada blink putih. */
+    const heroContent = content ? content.querySelector('#home .content') : null;
+    if(heroContent) heroContent.style.visibility = 'visible';
+
     document.documentElement.classList.add('opened');
     opened = true;
     motionStart = Date.now() + (reducedMotion ? 0 : 100);
 
-    /* Jalankan animasi isi hero setelah .content tampil. */
     revealOnScroll();
     motionScan();
 
@@ -1199,178 +1199,62 @@ $('open-btn').addEventListener('click', () => {
     }
   };
 
+  /* .content muncul tepat 3.5 detik setelah tombol diklik/video mulai. */
   const SHOW_CONTENT_MS = 3500;
   const contentTimer = setTimeout(showHeroContent, SHOW_CONTENT_MS);
 
-  /* --------------------------------------------------------------
-     VIDEO SELESAI — baru buka scroll.
-     Tidak ada fade-out, gate, asap, cloud, atau perpindahan layer.
-     Video berhenti di frame terakhir karena loop=false.
-     -------------------------------------------------------------- */
-  let ended = false;
   const finishIntro = () => {
-    if(ended) return;
-    ended = true;
+    if(introFinished) return;
+    introFinished = true;
     clearTimeout(contentTimer);
+    if(finishTimer) clearTimeout(finishTimer);
 
-    /* Jika video ternyata lebih pendek dari 3.5s, content tetap muncul. */
     showHeroContent();
 
-    /* Sekarang video sudah selesai → scroll boleh aktif. */
+    if(heroVideo && loopHandler){
+      heroVideo.removeEventListener('timeupdate', loopHandler);
+    }
+
+    /* Setelah 5 menit, hentikan intro. Video tetap pada frame terakhir. */
+    if(heroVideo){
+      heroVideo.pause();
+    }
+
     document.documentElement.classList.remove('intro-lock');
     document.body.classList.remove('intro-lock');
-
-    /* Smooth scroll baru dimulai setelah intro selesai. */
     startSmoothScroll();
   };
 
   if(heroVideo){
-    heroVideo.addEventListener('ended', finishIntro, { once: true });
+    heroVideo.loop = false;
+    heroVideo.muted = true;
+    heroVideo.currentTime = 0;
 
-    /* Fallback jika event ended gagal di browser tertentu. */
-    const fallbackDuration = () => {
-      if(isFinite(heroVideo.duration) && heroVideo.duration > 0){
-        setTimeout(finishIntro, Math.ceil(heroVideo.duration * 1000) + 150);
+    /* Main video 0→4 detik, lalu hanya rentang 4→5 detik yang diulang. */
+    loopHandler = () => {
+      if(introFinished) return;
+      if(heroVideo.currentTime >= 5){
+        heroVideo.currentTime = 4;
+        const p = heroVideo.play();
+        if(p && typeof p.catch === 'function') p.catch(() => {});
       }
     };
+    heroVideo.addEventListener('timeupdate', loopHandler);
 
-    if(heroVideo.readyState >= 1) fallbackDuration();
-    else heroVideo.addEventListener('loadedmetadata', fallbackDuration, { once: true });
-  } else {
-    /* Jika video tidak tersedia, jangan mengunci halaman selamanya. */
-    finishIntro();
-  }
-});
+    /* Total durasi intro: 5 menit sejak klik. */
+    finishTimer = setTimeout(finishIntro, 5 * 60 * 1000);
 
-(function bindThemeButton(){
-  const themeBtn = $('theme-btn'); if(!themeBtn) return;
-  themeBtn.addEventListener('click', () => {
-    if((TEMA.fitur_mode || 'both') !== 'both') return;
-    const cur = document.documentElement.getAttribute('data-theme');
-    const next = cur === 'night' ? 'day' : 'night';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('undangan-theme', next);
-    syncThemeButton(next);
-  });
-})();
-
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-copy-target]');
-  if(!btn) return;
-  const text = $(btn.dataset.copyTarget).textContent;
-  const labelEl = btn.querySelector('.copy-label');
-  const oldLabel = labelEl ? labelEl.textContent : btn.textContent;
-  const setLabel = (v) => { if(labelEl) labelEl.textContent = v; else btn.textContent = v; };
-  navigator.clipboard.writeText(text).then(() => {
-    setLabel('Tersalin'); btn.classList.add('copied');
-    setTimeout(() => { setLabel(oldLabel); btn.classList.remove('copied'); }, 1600);
-  }).catch(() => { setLabel('Gagal'); setTimeout(() => { setLabel(oldLabel); }, 1600); });
-});
-
-let lastFocusedEl = null;
-function openImgModal(src, altText, trigger){
-  lastFocusedEl = trigger || document.activeElement;
-  const pic = $('imgModalPic'); pic.src = src; pic.alt = altText || 'Pratinjau foto galeri';
-  $('imgModal').classList.add('open'); $('imgClose').focus();
-}
-function closeImgModal(){ $('imgModal').classList.remove('open'); if(lastFocusedEl && typeof lastFocusedEl.focus === 'function'){ lastFocusedEl.focus(); } }
-document.addEventListener('click', (e) => { const item = e.target.closest('.gal-item'); if(!item) return; e.preventDefault(); const img = item.querySelector('img'); openImgModal(item.dataset.src, img ? img.alt : '', item); });
-$('imgClose').addEventListener('click', closeImgModal);
-$('imgModal').addEventListener('click', (e) => { if(e.target.id === 'imgModal') closeImgModal(); });
-document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && $('imgModal').classList.contains('open')){ closeImgModal(); } });
-$('imgModal').addEventListener('keydown', (e) => {
-  if(e.key !== 'Tab') return;
-  const focusables = $('imgModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  if(focusables.length === 0) return;
-  const first = focusables[0], last = focusables[focusables.length - 1];
-  if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-  else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
-});
-
-$('load-more').addEventListener('click', () => loadComments(false));
-$('f-presensi').addEventListener('change', toggleJumlahField);
-
-document.addEventListener('click', async (e) => {
-  const editBtn = e.target.closest('.edit-comment-btn');
-  if(editBtn){
-    const id = editBtn.dataset.id; const c = knownComments[id]; const bank = getMyComments();
-    if(!c || !bank[id]) return;
-    editingComment = { comment_id: id, edit_token: bank[id] };
-    $('f-nama').value = c.nama; $('f-presensi').value = c.presensi || 'Hadir';
-    toggleJumlahField();
-    $('f-jumlah').value = c.jumlah_hadir ? String(Math.min(c.jumlah_hadir, 10)) : '';
-    setAcara(c.acara_hadir); $('f-ucapan').value = c.ucapan_doa;
-    $('edit-banner').style.display = ''; $('cancel-edit-btn').style.display = 'inline-block';
-    $('submit-btn').textContent = 'Simpan Perubahan'; $('form-msg').textContent = '';
-    $('f-nama').focus(); $('rsvp-form').scrollIntoView({ behavior:'smooth', block:'center' });
-    return;
-  }
-  const delBtn = e.target.closest('.delete-comment-btn');
-  if(delBtn){
-    const id = delBtn.dataset.id; const bank = getMyComments(); const editToken = bank[id];
-    if(!editToken) return;
-    const lanjut = await showConfirm('Ucapan & doa ini akan dihapus permanen dan tidak bisa dikembalikan. Lanjutkan?',
-      { title: 'Hapus Ucapan?', type: 'danger', okLabel: 'Ya, Hapus', cancelLabel: 'Batal', danger: true });
-    if(!lanjut) return;
-    try{
-      const res = await apiPost({ action: 'delete_comment', comment_id: id, edit_token: editToken });
-      if(res.ok){
-        removeMyComment(id);
-        if(editingComment && editingComment.comment_id === id) resetFormToCreateMode();
-        loadComments(true);
-        showAlert('Ucapan & doa berhasil dihapus.', { title: 'Berhasil Dihapus', type: 'success', okLabel: 'Tutup' });
-      } else {
-        showAlert(res.error || 'Gagal menghapus ucapan. Silakan coba beberapa saat lagi.', { title: 'Gagal Menghapus', type: 'error', okLabel: 'Tutup' });
+    /* Play langsung dari gesture klik. */
+    try {
+      const playPromise = heroVideo.play();
+      if(playPromise && typeof playPromise.catch === 'function'){
+        playPromise.catch(() => {});
       }
-    } catch(err){
-      showAlert('Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.', { title: 'Koneksi Bermasalah', type: 'error', okLabel: 'Tutup' });
-    }
+    } catch(e){}
+  } else {
+    finishTimer = setTimeout(finishIntro, 100);
   }
 });
-
-$('cancel-edit-btn').addEventListener('click', resetFormToCreateMode);
-
-$('rsvp-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const nama = $('f-nama').value.trim();
-  const presensi = $('f-presensi').value;
-  const jumlahHadir = presensi === 'Hadir' ? (parseInt($('f-jumlah').value, 10) || null) : null;
-  const acaraHadir = presensi === 'Hadir' ? getAcara().join(', ') : '';
-  const ucapan = $('f-ucapan').value.trim();
-  const msg = $('form-msg'), btn = $('submit-btn');
-  if(!nama || !ucapan){ msg.textContent = 'Nama dan ucapan wajib diisi.'; msg.className = 'form-msg err'; (!nama ? $('f-nama') : $('f-ucapan')).focus(); return; }
-  if(presensi === 'Hadir' && (!acaraHadir || !jumlahHadir)){ msg.textContent = !acaraHadir ? 'Pilih minimal satu acara yang akan dihadiri.' : 'Pilih jumlah tamu yang hadir.'; msg.className = 'form-msg err'; return; }
-  btn.disabled = true; const oldLabel = btn.textContent;
-  btn.textContent = editingComment ? 'Menyimpan…' : 'Mengirim…';
-  msg.textContent = ''; let succeeded = false;
-  try{
-    let res;
-    if(editingComment){
-      res = await apiPost({ action: 'edit_comment', comment_id: editingComment.comment_id, edit_token: editingComment.edit_token, nama, presensi, jumlah_hadir: jumlahHadir, acara_hadir: acaraHadir, ucapan_doa: ucapan });
-    } else {
-      res = await apiPost({ action: 'comment', nama, presensi, jumlah_hadir: jumlahHadir, acara_hadir: acaraHadir, ucapan_doa: ucapan, id_tamu: guestId });
-    }
-    if(res.ok){
-      if(!editingComment && res.comment_id && res.edit_token){ saveMyComment(res.comment_id, res.edit_token); }
-      msg.textContent = editingComment ? 'Ucapan & doa berhasil diperbarui.' : 'Terima kasih atas doa & ucapannya.';
-      msg.className = 'form-msg ok';
-      resetFormToCreateMode(); loadComments(true); succeeded = true;
-    } else { msg.textContent = res.error || 'Gagal mengirim, silakan coba lagi.'; msg.className = 'form-msg err'; }
-  } catch(err){
-    msg.textContent = 'Tidak dapat terhubung ke server. Pastikan APPS_SCRIPT_URL sudah dikonfigurasi.';
-    msg.className = 'form-msg err';
-  } finally { btn.disabled = false; if(!succeeded) btn.textContent = oldLabel; }
-});
-
-function revealOnScroll(){
-  const els = document.querySelectorAll('.fade-up');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(en => { if(en.isIntersecting) en.target.classList.add('in'); });
-  }, { threshold: 0.15 });
-  els.forEach(el => io.observe(el));
-}
-
-init();
 </script>
 </body>
 </html>
