@@ -284,104 +284,38 @@
   html:not(.lenis){ scroll-behavior:smooth; }
 
   /* ==============================================================
-     GATE VIDEO + BLUR + ASAP
+     HERO VIDEO
      --------------------------------------------------------------
-     Urutan akhir:
-       VIDEO → VIDEO mulai blur → AWAN/ASAP menutup layar → HALAMAN UNDANGAN
+     Setelah Buka Uleman:
+       0s      : video gate2c.mp4 mulai diputar 1x
+       3.5s    : .content hero ditampilkan
+       selesai : scroll dibuka + Lenis/smooth scroll boleh aktif
      ============================================================== */
-  #gate{
-    position:fixed; inset:0; z-index:95;
-    max-width:var(--maxw); margin:0 auto;
-    display:none; overflow:hidden; pointer-events:none;
-    opacity:0; isolation:isolate; background:transparent;
-    transition:opacity .3s ease;
-  }
-  #gate.show{ display:block; opacity:1; }
-
-  .gate-video{
+  #home{ overflow:hidden; }
+  #home .hero-bg-video{
     position:absolute; inset:0;
     width:100%; height:100%;
     object-fit:cover;
     display:block;
-    opacity:0;
-    filter:blur(0px);
-    transform:scale(1);
-    will-change:opacity, filter, transform;
+    z-index:0;
   }
-  #gate.entering .gate-video{
-    animation: videoBlurIn 1s cubic-bezier(.22,1,.36,1) forwards;
-  }
-  #gate.leaving .gate-video{
-    animation: videoBlurOut 1s cubic-bezier(.4,0,.2,1) forwards;
-  }
-  @keyframes videoBlurIn{
-    0%   { opacity:0; filter:blur(14px); transform:scale(1.08); }
-    100% { opacity:1; filter:blur(0px);  transform:scale(1); }
-  }
-  @keyframes videoBlurOut{
-    /* 0–45%: AWAN/ASAP diberi waktu menutup layar terlebih dahulu.
-       Video tetap utuh sehingga tidak pernah membuka background hitam. */
-    0%   { opacity:1; filter:blur(0px);  transform:scale(1); }
-    45%  { opacity:1; filter:blur(0px);  transform:scale(1); }
-    72%  { opacity:.65; filter:blur(8px); transform:scale(1.04); }
-    100% { opacity:0; filter:blur(14px); transform:scale(1.08); }
+  #home .content{
+    position:relative;
+    z-index:2;
   }
 
-  #gate-smoke{
-    position:absolute; inset:0; z-index:2;
-    pointer-events:none; overflow:hidden;
-    --smoke: rgba(255,255,255,.85);
+  /* Scroll dikunci selama video pembukaan berlangsung. */
+  html.intro-lock,
+  html.intro-lock body{
+    overflow:hidden !important;
+    height:100%;
+    overscroll-behavior:none;
   }
-  html[data-theme="night"] #gate-smoke{ --smoke: rgba(214,226,218,.5); }
-
-  #gate-smoke .puff{
-    position:absolute;
-    border-radius:50%;
-    opacity:0;
-    filter:blur(28px);
-    background:radial-gradient(circle, var(--smoke) 0%, transparent 68%);
-    will-change:transform, opacity;
+  html.intro-lock body{
+    touch-action:none;
   }
-  #gate.entering #gate-smoke .puff{
-    animation: puffCycle 1s cubic-bezier(.22,1,.36,1) forwards;
-  }
-  #gate.leaving #gate-smoke .puff{
-    animation: puffCycle 1s cubic-bezier(.4,0,.2,1) forwards;
-  }
-  @keyframes puffCycle{
-    0%   { opacity:0; transform:translate3d(0,30px,0) scale(.5); }
-    40%  { opacity:.9; }
-    100% { opacity:0; transform:translate3d(var(--dx,0),-40px,0) scale(2.2); }
-  }
-
-  #transition-cloud{
-    position:fixed; inset:0; z-index:120; max-width:var(--maxw); margin:0 auto;
-    pointer-events:none; opacity:0; overflow:hidden; visibility:hidden;
-    background:
-      radial-gradient(ellipse at 12% 52%, rgba(255,255,255,.98) 0%, rgba(255,255,255,.82) 24%, transparent 52%),
-      radial-gradient(ellipse at 50% 44%, rgba(255,255,255,.99) 0%, rgba(255,255,255,.90) 28%, transparent 62%),
-      radial-gradient(ellipse at 88% 52%, rgba(255,255,255,.98) 0%, rgba(255,255,255,.82) 24%, transparent 52%),
-      linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.98));
-    filter:blur(7px); transform:scale(1.08);
-  }
-  #transition-cloud.content-cloud{
-    visibility:visible;
-    animation: cloudContent 2.2s cubic-bezier(.35,.75,.25,1) forwards;
-  }
-  @keyframes cloudContent{
-    /* AWAN MENUTUP LAYAR terlebih dahulu.
-       Saat awan sudah penuh, video boleh menghilang tanpa flash hitam. */
-    0%{ opacity:0; transform:scale(1.14); }
-    28%{ opacity:1; transform:scale(1); }
-    62%{ opacity:1; transform:scale(1.015); }
-    100%{ opacity:0; transform:scale(1.08); visibility:hidden; }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    #gate{ transition:opacity .001ms linear !important; }
-    .gate-video{ animation:none !important; opacity:1 !important; filter:none !important; }
-    #gate-smoke .puff{ animation:none !important; opacity:0 !important; }
-    #transition-cloud{ animation:none !important; opacity:0 !important; visibility:hidden !important; }
+  html.intro-lock .stage{
+    overflow:hidden !important;
   }
 
   .ig-btn, .live-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; text-decoration:none; cursor:pointer; font-family:var(--font-body); font-size:.9rem; font-weight:500; letter-spacing:.05em; color:var(--gold-ink); border:1.5px solid var(--gold-ink); border-radius:999px; padding:.5rem 1.1rem; background:transparent; transition:background .25s ease, color .25s ease, transform .2s ease; }
@@ -449,19 +383,6 @@
 </head>
 <body>
 
-<!-- ==============================================================
-     GATE VIDEO + BLUR + ASAP
-     Ganti src video di bawah sesuai file Anda.
-     ============================================================== -->
-<div id="gate" aria-hidden="true">
-  <video id="gate-video" class="gate-video" muted playsinline preload="auto">
-    <source src="assets/gate3c.mp4" type="video/mp4">
-  </video>
-  <div id="gate-smoke" aria-hidden="true"></div>
-</div>
-
-<div id="transition-cloud" aria-hidden="true"></div>
-
 <a class="skip-link" href="#home">Lewati ke isi undangan</a>
 
 <div class="stage" id="stage">
@@ -484,7 +405,9 @@
 
   <main id="content" style="visibility:hidden;">
     <section id="home" aria-labelledby="hero-names">
-      <img class="bgimg" id="home-bg" src="" alt="" aria-hidden="true">
+      <video class="hero-bg-video" id="home-bg-video" muted playsinline preload="auto" aria-hidden="true">
+        <source src="assets/gate2c.mp4" type="video/mp4">
+      </video>
       <div class="content">
         <span class="eyebrow" id="hero-eyebrow" aria-hidden="true">Uleman Palakrama</span>
         <h1 class="names serif" id="hero-names" tabindex="-1">— &amp; —</h1>
@@ -736,13 +659,6 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-p
    GATE VIDEO TIMING — SATU SUMBER KEBENARAN
    Semua nilai dalam DETIK.
    ====================================================================== */
-const GATE_VIDEO = {
-  durasiVideo: 5.0,      /* total durasi video */
-  blurIn:      1.0,      /* durasi blur in awal */
-  welcomeHide: 1.0,      /* durasi welcome hide */
-  puffOut:     1.0,      /* durasi puff + blur out di akhir */
-};
-
 const FALLBACK_DATA = {
   judul_hero: "Uleman Palakrama", nama_panggilan_pria: "Rizky", nama_panggilan_wanita: "Rasya",
   nama_lengkap_pria: "Rizky Hanifudin, S.Kom., M.Kom.", nama_lengkap_wanita: "Rasya Agistiningtyas",
@@ -761,7 +677,7 @@ const FALLBACK_DATA = {
   cerita_2_judul: "Saling Mendewasakan", cerita_2_isi: "Kami percaya, tidak ada pertemuan yang benar-benar kebetulan. Ada doa yang diam-diam dikabulkan, ada langkah yang diarahkan tanpa kita sadari. Dan Allah SWT, dengan cara-Nya yang paling tenang, menuntun kami sampai di titik ini.",
   cerita_3_judul: "Janji Setia", cerita_3_isi: "Hingga pada waktunya, segala yang telah kami lewati bermuara pada satu keputusan yang sama. Dengan penuh syukur, kami memilih untuk saling menetap dalam ikatan yang diridhai oleh-Nya.",
   cerita_4_judul: "Awal Selamanya", cerita_4_isi: "Semoga perjalanan ini selalu diliputi ketenangan, dan dipelihara dalam kebaikan yang panjang.",
-  foto_cover_url: "assets/cover-video.webp", foto_pria_url: "assets/rizky.webp", foto_wanita_url: "assets/rasya.webp",
+  foto_cover_url: "assets/wedding.webp", foto_pria_url: "assets/rizky.webp", foto_wanita_url: "assets/rasya.webp",
   galeri_url: "assets/wedding.webp,assets/rasya.webp,assets/rizky.webp",
   musik_url: "https://raw.githubusercontent.com/rizky-rasya/rizky-rasya.github.io/d95d29873d10cf058330b4556d4e009d9afdf2c1/amplop/KUSUMA%20WIJAYA%20-%20PAWESTRI%20(OFFICIAL%20MUSIC%20VIDEO).mp3",
   bank_nama: "SeaBank", bank_rekening: "901713062941", bank_atas_nama: "Rasya Agistiningtyas",
@@ -899,7 +815,7 @@ function renderConfig(cfg){
   document.title = `Uleman Palakrama ${namaPanggilan}`;
   setText('cv-eyebrow', cfg.judul_hero); setImg('cv-photo', cfg.foto_cover_url, `Foto ${namaLengkapPasangan}`);
   setText('cv-names', namaPanggilan); setText('cv-guest', guestName);
-  setSrc('home-bg', cfg.foto_cover_url); setText('hero-eyebrow', cfg.judul_hero);
+  setText('hero-eyebrow', cfg.judul_hero);
   setText('hero-names', namaPanggilan); setText('hero-date', cfg.tanggal_tampil);
   setImg('pria-foto', cfg.foto_pria_url, `Foto ${cfg.nama_lengkap_pria}`); setText('pria-nama', cfg.nama_lengkap_pria);
   setText('pria-status', cfg.status_anak_pria); setText('pria-ortu', `${cfg.ayah_pria} & ${cfg.ibu_pria}`);
@@ -1188,29 +1104,6 @@ function startSmoothScroll(){
   requestAnimationFrame(raf);
 }
 
-/* ======================================================================
-   GATE SMOKE PUFFS — bangun 12 puff sekali saja
-   ====================================================================== */
-function buildGateSmoke(){
-  const smoke = $('gate-smoke');
-  if(!smoke || smoke.children.length) return;
-  const frag = document.createDocumentFragment();
-  for(let i = 0; i < 12; i++){
-    const p = document.createElement('div');
-    const size = 200 + Math.random() * 160;
-    const px = Math.random() * 100;
-    const py = 15 + Math.random() * 70;
-    p.className = 'puff';
-    p.style.cssText =
-      `width:${size}px;height:${size}px;` +
-      `left:calc(${px}% - ${size/2}px);` +
-      `top:calc(${py}% - ${size/2}px);` +
-      `--dx:${(Math.random() - .5) * 140}px;` +
-      `animation-delay:${(i % 5) * 0.05}s`;
-    frag.appendChild(p);
-  }
-  smoke.appendChild(frag);
-}
 
 async function init(){
   applyTema(FALLBACK_TEMA);
@@ -1223,11 +1116,13 @@ async function init(){
   toggleJumlahField();
   loadComments(true);
 
-  /* Preload video gate */
-  const gateVideo = $('gate-video');
-  if(gateVideo){
-    gateVideo.load();
-    gateVideo.pause();
+  /* Preload video pembukaan hero */
+  const heroVideo = $('home-bg-video');
+  if(heroVideo){
+    heroVideo.loop = false;
+    heroVideo.muted = true;
+    heroVideo.load();
+    heroVideo.pause();
   }
 
   $('loading').style.opacity = '0';
@@ -1243,110 +1138,107 @@ function syncThemeButton(theme){
 }
 
 /* ======================================================================
-   BUKA ULEMAN — GATE VIDEO dengan BLUR + ASAP
-   Timeline:
-     0       : klik → gate show, video play, entering
-     0–1s    : video blur 14→0 (opacity 0→1) + 12 puff asap in
-     1s      : welcome display:none
-     1–5s    : video normal (tajam)
-     5s      : video ended → gate.leaving (puff asap out + blur out + content-cloud mulai)
-     6s      : konten undangan terlihat
+   BUKA ULEMAN — HERO VIDEO INTRO
+   0s    : klik → video gate2c.mp4 mulai 1x
+   3.5s  : .content / hero-names ditampilkan
+   END   : scroll dibuka, video berhenti di frame terakhir
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
-  const welcome = $('welcome'), gate = $('gate'), gateVideo = $('gate-video');
-  const transitionCloud = $('transition-cloud');
+  const welcome = $('welcome');
+  const heroVideo = $('home-bg-video');
+  const content = $('content');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const G = GATE_VIDEO;
 
-  const WELCOME_HIDE_MS = reducedMotion ? 40 : G.welcomeHide * 1000;
-  const PUFF_MS         = reducedMotion ? 40 : G.puffOut * 1000;
+  /* Kunci scroll dari awal intro. */
+  document.documentElement.classList.add('intro-lock');
+  document.body.classList.add('intro-lock');
 
-  /* Musik latar */
+  /* Musik latar tetap dimulai dari gesture klik pengguna. */
   const audio = $('bg-music');
-  if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
+  if(audio && audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
     if(!userMuted){ audio.muted = false; updateMusicIcon(false); }
     audio.play().catch(() => {});
   }
 
-  /* Bangun puff sekali saja */
-  buildGateSmoke();
-
-  /* Tampilkan gate + mulai animasi blur-in */
-  gate.classList.add('show');
-  gate.classList.add('entering');
-  gate.classList.remove('leaving');
-
-  /* Play video */
-  if(gateVideo){
-    try{
-      gateVideo.currentTime = 0;
-      gateVideo.muted = true;               /* wajib autoplay mobile */
-      gateVideo.play().catch(() => {});
-    } catch(e){}
-  }
-
-  /* Sembunyikan welcome */
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => { welcome.classList.add('hide'); });
-  });
-  setTimeout(() => {
+  /* Tutup cover/welcome tanpa animasi gate atau fade-out. */
+  if(welcome){
+    welcome.classList.add('hide');
     welcome.style.display = 'none';
     welcome.setAttribute('aria-hidden', 'true');
-  }, WELCOME_HIDE_MS);
-
-  /* Tentukan durasi efektif */
-  let durationMs = G.durasiVideo * 1000;
-  if(gateVideo && gateVideo.duration && isFinite(gateVideo.duration) && gateVideo.duration > 0){
-    durationMs = gateVideo.duration * 1000;
   }
 
-  /* Saat video selesai:
-     VIDEO → blur → AWAN/ASAP menutup layar → HALAMAN UNDANGAN.
-     Cloud dimulai bersamaan, tetapi video ditahan tetap terlihat sampai
-     cloud sudah menutup layar sehingga tidak ada frame hitam di antaranya. */
-  const onVideoEnd = () => {
-    gate.classList.remove('entering');
-    gate.classList.add('leaving');
+  /* Video hero: hanya 1 kali putar, tidak looping. */
+  if(heroVideo){
+    heroVideo.loop = false;
+    heroVideo.currentTime = 0;
+    heroVideo.muted = true;
+    try { heroVideo.play().catch(() => {}); } catch(e){}
+  }
 
-    /* Awali awan tepat saat video selesai. */
-    transitionCloud.classList.add('content-cloud');
+  /* --------------------------------------------------------------
+     DETIK 3.5 — tampilkan .content hero-names.
+     Video masih terus berjalan sampai selesai.
+     -------------------------------------------------------------- */
+  let contentShown = false;
+  const showHeroContent = () => {
+    if(contentShown) return;
+    contentShown = true;
 
-    setTimeout(() => {
-      /* Reveal halaman ketika awan masih menutup penuh layar. */
-      $('content').style.visibility = 'visible';
-      document.documentElement.classList.add('opened');
+    content.style.visibility = 'visible';
+    document.documentElement.classList.add('opened');
+    opened = true;
+    motionStart = Date.now() + (reducedMotion ? 0 : 100);
 
-      opened = true;
-      motionStart = Date.now() + (reducedMotion ? 0 : 400);
-      revealOnScroll();
-      motionScan();
-      startSmoothScroll();
+    /* Jalankan animasi isi hero setelah .content tampil. */
+    revealOnScroll();
+    motionScan();
 
-      /* Fokus judul */
-      const heroTitle = $('hero-names');
-      if(heroTitle && typeof heroTitle.focus === 'function'){
-        heroTitle.focus({ preventScroll: true });
-      }
-
-      /* Cleanup gate + awan setelah semua selesai */
-      setTimeout(() => {
-        gate.classList.remove('show','entering','leaving');
-        gate.setAttribute('aria-hidden', 'true');
-        if(gateVideo){ try{ gateVideo.pause(); }catch(e){} }
-        transitionCloud.classList.remove('content-cloud');
-      }, 2200);
-    }, PUFF_MS);
+    const heroTitle = $('hero-names');
+    if(heroTitle && typeof heroTitle.focus === 'function'){
+      heroTitle.focus({ preventScroll: true });
+    }
   };
 
-  /* Pastikan handler hanya jalan sekali */
-  let handled = false;
-  const handleEnd = () => { if(handled) return; handled = true; onVideoEnd(); };
+  const SHOW_CONTENT_MS = 3500;
+  const contentTimer = setTimeout(showHeroContent, SHOW_CONTENT_MS);
 
-  if(gateVideo){
-    gateVideo.addEventListener('ended', handleEnd, { once: true });
-    setTimeout(handleEnd, durationMs + 200);       /* fallback */
+  /* --------------------------------------------------------------
+     VIDEO SELESAI — baru buka scroll.
+     Tidak ada fade-out, gate, asap, cloud, atau perpindahan layer.
+     Video berhenti di frame terakhir karena loop=false.
+     -------------------------------------------------------------- */
+  let ended = false;
+  const finishIntro = () => {
+    if(ended) return;
+    ended = true;
+    clearTimeout(contentTimer);
+
+    /* Jika video ternyata lebih pendek dari 3.5s, content tetap muncul. */
+    showHeroContent();
+
+    /* Sekarang video sudah selesai → scroll boleh aktif. */
+    document.documentElement.classList.remove('intro-lock');
+    document.body.classList.remove('intro-lock');
+
+    /* Smooth scroll baru dimulai setelah intro selesai. */
+    startSmoothScroll();
+  };
+
+  if(heroVideo){
+    heroVideo.addEventListener('ended', finishIntro, { once: true });
+
+    /* Fallback jika event ended gagal di browser tertentu. */
+    const fallbackDuration = () => {
+      if(isFinite(heroVideo.duration) && heroVideo.duration > 0){
+        setTimeout(finishIntro, Math.ceil(heroVideo.duration * 1000) + 150);
+      }
+    };
+
+    if(heroVideo.readyState >= 1) fallbackDuration();
+    else heroVideo.addEventListener('loadedmetadata', fallbackDuration, { once: true });
   } else {
-    setTimeout(handleEnd, durationMs);
+    /* Jika video tidak tersedia, jangan mengunci halaman selamanya. */
+    finishIntro();
   }
 });
 
