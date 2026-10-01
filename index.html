@@ -60,6 +60,17 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--font-body); font-weight:300; -webkit-font-smoothing:antialiased; transition:background .4s ease, color .4s ease; }
   @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  /* ============ SCROLL LOCK ============ */
+  html.scroll-locked, html.scroll-locked body{
+    overflow:hidden !important;
+    height:100% !important;
+    touch-action:none !important;
+    overscroll-behavior:none !important;
+    position:fixed !important;
+    width:100% !important;
+  }
+
   .sr-only{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
   .skip-link{ position:absolute; top:0; left:0; z-index:300; transform:translateY(-120%); background:var(--surface); color:var(--text); padding:.9rem 1.3rem; border:3px solid var(--gold-ink); border-radius:0 0 12px 0; font-family:var(--font-body); font-size:.9rem; font-weight:500; text-decoration:none; transition:transform .2s ease; }
   .skip-link:focus{ transform:translateY(0); }
@@ -82,6 +93,7 @@
   #loading .ring{ width:44px; height:44px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--gold-ink); animation:spin 1s linear infinite; }
   @keyframes spin{ to{ transform:rotate(360deg); } }
   #loading p{ font-family:var(--font-display); font-size:1.1rem; color:var(--muted); letter-spacing:.05em; margin:0; }
+  #loading .load-gif{ width:160px; height:160px; object-fit:contain; transform:scaleX(-1); margin-bottom:-.35rem; }
 
   #welcome{
     position:fixed; inset:0; z-index:90; max-width:var(--maxw); margin:0 auto;
@@ -113,13 +125,60 @@
   .fab-group{ position:fixed; right:1rem; bottom:1.2rem; z-index:100; display:flex; flex-direction:row; gap:.7rem; }
   .fab{ width:46px; height:46px; border-radius:50%; border:2px solid var(--gold-ink); background:var(--surface); color:var(--gold-ink); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); cursor:pointer; }
 
-  #home{ min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; }
-  #home .bgimg{ position:absolute; inset:0; opacity:1; object-fit:cover; width:100%; height:100%; }
-  #home .content{ position:relative; z-index:1; padding:0 1.6rem; }
-  #home .names{ font-size:2.6rem; margin:.8rem 0; }
-  #home .date{ font-size:1.05rem; color:var(--muted); letter-spacing:.05em; }
-  .scroll-cue{ margin-top:2.6rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; opacity:.75; }
-  .scroll-cue .line{ width:2px; height:32px; background:linear-gradient(var(--gold-ink), transparent); animation:pulse 1.8s ease-in-out infinite; }
+  /* ============ HOME (video background) ============ */
+  #home{ min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; background:#000; }
+
+  /* Video background di dalam #home */
+  #home .bgvideo{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    z-index:0;
+    opacity:0;
+    transition:opacity .35s ease;
+    pointer-events:none;
+  }
+  #home .bgvideo.ready{ opacity:1; }
+
+  /* Gambar fallback kalau video tidak bisa diputar */
+  #home .bgimg{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    display:none;  /* hanya aktif kalau video gagal */
+    z-index:0;
+    opacity:0.35;
+  }
+  #home.video-failed .bgimg{ display:block; }
+  #home.video-failed .bgvideo{ display:none; }
+  #home.video-failed{ background:var(--bg); }
+
+  /* Overlay gradient di atas video supaya teks terbaca */
+  #home::before{
+    content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,.15), transparent 55%),
+      linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.35) 60%, rgba(0,0,0,.55));
+  }
+
+  /* Konten hero — disembunyikan, muncul pada detik 3,5 */
+  #home .content{
+    position:relative; z-index:2; padding:0 1.6rem;
+    color:#F7F1E3;
+    opacity:0;
+    transform:translateY(14px);
+    transition:opacity 1s ease, transform 1s cubic-bezier(.22,1,.36,1);
+  }
+  #home .content.reveal{ opacity:1; transform:none; }
+
+  #home .content .eyebrow{ color:#E4C97A; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
+  #home .names{ font-size:2.6rem; margin:.8rem 0; text-shadow: 0 2px 12px rgba(0,0,0,.65); }
+  #home .date{ font-size:1.05rem; color: rgba(247,241,227,.9); letter-spacing:.05em; text-shadow: 0 1px 8px rgba(0,0,0,.55); }
+
+  .scroll-cue{ margin-top:2.6rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; opacity:.85; }
+  .scroll-cue .line{ width:2px; height:32px; background:linear-gradient(#E4C97A, transparent); animation:pulse 1.8s ease-in-out infinite; }
+  .scroll-cue .eyebrow{ color:#E4C97A; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
   @keyframes pulse{ 0%,100%{ opacity:.4;} 50%{ opacity:1;} }
 
   .couple-card{ margin-top:2.2rem; }
@@ -186,10 +245,10 @@
   html[data-theme="night"] .form-msg.err{ color:#EF9A9A; }
   .edit-banner{ background:var(--surface-2); border:2px solid var(--gold-ink); color:var(--gold-soft); font-size:.85rem; padding:.6rem .9rem; border-radius:12px; margin:0 0 1rem; font-weight:500; }
   .comment{ text-align:left; border-bottom:1px solid var(--line); padding:1rem 0; }
-  .comment .head{ display:flex; justify-content:space-between; align-items:baseline; gap:.6rem; flex-wrap:wrap; }
+  .comment .head{ display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; }
   .comment .name{ font-family:var(--font-display); font-size:1.15rem; font-weight:600; }
   .comment .when{ font-size:.75rem; color:var(--muted); }
-  .comment .presence{ font-size:.72rem; margin-top:.35rem; display:inline-block; padding:.2rem .65rem; border-radius:999px; font-weight:600; }
+  .comment .presence{ font-size:.72rem; margin-top:0; display:inline-block; padding:.2rem .65rem; border-radius:999px; font-weight:600; }
   .comment .presence.hadir{ background:rgba(31,107,55,.13); color:#1F6B37; }
   .comment .presence.tidak{ background:rgba(160,51,37,.13); color:#A03325; }
   .comment .presence.ragu{ background:rgba(122,90,15,.15); color:#7A5A0F; }
@@ -199,6 +258,9 @@
   .comment .text{ font-size:.9rem; color:var(--muted); margin-top:.4rem; line-height:1.6; }
   .comment .jumlah{ font-size:.8rem; color:var(--muted); margin-top:.25rem; }
   .comment .my-actions{ margin-top:.7rem; display:flex; gap:.5rem; flex-wrap:wrap; }
+  .comment .body{ margin-top:.6rem; padding:.8rem 1rem; background:var(--surface); border:1px solid var(--line); border-radius:calc(var(--radius) * .6); }
+  .comment .body > *:first-child{ margin-top:0; }
+  .comment .body .text{ margin-top:.4rem; }
   #load-more{ margin-top:1.3rem; }
   .empty-state{ font-size:.9rem; color:var(--muted); padding:1.4rem 0; }
   footer{ padding:3rem 1.6rem 2.4rem; text-align:center; }
@@ -208,10 +270,7 @@
   #imgModal{ position:fixed; inset:0; z-index:110; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; padding:1.4rem; }
   #imgModal.open{ display:flex; }
   #imgModal img{ max-height:80vh; max-width:100%; border-radius:12px; }
-  #imgModal .close{ position:absolute; top:1rem; right:1rem; color:#fff; font-size:1.8rem; line-height:1; cursor:pointer; background:rgba(0,0,0,.5); border:2px solid #fff; border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; transition: background .25s ease, transform .15s ease; }
-  #imgModal .close:hover{ background:rgba(0,0,0,.8); }
-  #imgModal .close:active{ transform:scale(.94); }
-  #imgModal .close:focus-visible{ outline:3px solid #FFD54A; outline-offset:2px; }
+  #imgModal .close{ position:absolute; top:1rem; right:1rem; color:#fff; font-size:1.8rem; line-height:1; cursor:pointer; background:rgba(0,0,0,.5); border:2px solid #fff; border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; }
   #uiModal{ position:fixed; inset:0; z-index:120; display:none; align-items:center; justify-content:center; padding:1.4rem; }
   #uiModal.open{ display:flex; }
   .ui-modal-backdrop{ position:absolute; inset:0; background:rgba(20,15,10,.55); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); animation:uiFade .25s ease; }
@@ -221,11 +280,9 @@
   @keyframes uiPop{ from{opacity:0; transform:translateY(14px) scale(.96)} to{opacity:1; transform:none} }
   .ui-modal-icon{ width:58px; height:58px; margin:0 auto .9rem; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid currentColor; background:color-mix(in srgb, currentColor 8%, transparent); }
   .ui-modal-icon svg{ width:28px; height:28px; }
-  .ui-modal-icon[data-type="info"]{ color:var(--gold-ink); }
-  .ui-modal-icon[data-type="confirm"]{ color:var(--gold-ink); }
+  .ui-modal-icon[data-type="info"], .ui-modal-icon[data-type="confirm"]{ color:var(--gold-ink); }
   .ui-modal-icon[data-type="success"]{ color:var(--success); }
-  .ui-modal-icon[data-type="error"]{ color:var(--danger); }
-  .ui-modal-icon[data-type="danger"]{ color:var(--danger); }
+  .ui-modal-icon[data-type="error"], .ui-modal-icon[data-type="danger"]{ color:var(--danger); }
   .ui-modal-title{ font-family:var(--font-display); font-size:1.4rem; font-weight:600; color:var(--gold-soft); margin:0 0 .55rem; line-height:1.3; }
   .ui-modal-message{ font-size:.92rem; color:var(--muted); line-height:1.65; margin:0 0 1.3rem; }
   .ui-modal-actions{ display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; }
@@ -236,7 +293,6 @@
   .section-flower-left, .section-flower-right{ width:108px; max-height: 10%; opacity: 1; top:1.2rem; }
   .section-flower-left{ left:1px; transform:rotate(-18deg); }
   .section-flower-right{ right: -1px; transform: rotate(14deg); }
-  #home .content{ position:relative; z-index:2; }
   #bride{ background: radial-gradient(circle at 8% 8%, rgba(255,255,255,.9), transparent 25%), radial-gradient(circle at 92% 92%, rgba(241,234,217,.55), transparent 28%), var(--bg); }
   #bride .couple-card{ position:relative; padding:.8rem .2rem 1rem; }
   #bride .couple-card::after{ content:""; display:block; width:120px; height:1px; margin:1.1rem auto 0; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
@@ -282,42 +338,6 @@
   .lenis.lenis-smooth{ scroll-behavior:auto !important; }
   html:not(.lenis){ scroll-behavior:smooth; }
 
-  /* ==============================================================
-     HERO VIDEO
-     --------------------------------------------------------------
-     Setelah Buka Uleman:
-       0s      : video gate2c.mp4 mulai diputar 1x
-       3.5s    : .content hero ditampilkan
-       selesai : scroll dibuka + Lenis/smooth scroll boleh aktif
-     ============================================================== */
-  #home{ overflow:hidden; }
-  #home .hero-bg-video{
-    position:absolute; inset:0;
-    width:100%; height:100%;
-    object-fit:cover;
-    display:block;
-    z-index:0;
-  }
-  #home .content{
-    position:relative;
-    z-index:2;
-    visibility:hidden;
-  }
-
-  /* Scroll dikunci selama video pembukaan berlangsung. */
-  html.intro-lock,
-  html.intro-lock body{
-    overflow:hidden !important;
-    height:100%;
-    overscroll-behavior:none;
-  }
-  html.intro-lock body{
-    touch-action:none;
-  }
-  html.intro-lock .stage{
-    overflow:hidden !important;
-  }
-
   .ig-btn, .live-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; text-decoration:none; cursor:pointer; font-family:var(--font-body); font-size:.9rem; font-weight:500; letter-spacing:.05em; color:var(--gold-ink); border:1.5px solid var(--gold-ink); border-radius:999px; padding:.5rem 1.1rem; background:transparent; transition:background .25s ease, color .25s ease, transform .2s ease; }
   .ig-btn svg, .live-btn svg{ width:18px; height:18px; flex:none; }
   .ig-btn:hover, .ig-btn:focus-visible, .live-btn:hover, .live-btn:focus-visible{ background:var(--gold-ink); color:var(--surface); transform:translateY(-2px); }
@@ -350,7 +370,6 @@
   html.leaf-on #story::after{ transform-origin:50% 100%; animation:sway2 6s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce){ html.leaf-on *{ animation:none !important; } }
 
-  #loading .load-gif{ width:160px; height:160px; object-fit:contain; transform:scaleX(-1); margin-bottom:-.35rem; }
   .arch-wrap{ position:relative; width:150px; margin:0 auto 1.2rem; }
   .arch-wrap .arch{ margin:0 auto; z-index:1; }
   .arch-flower{ z-index:0; opacity:.9; }
@@ -403,11 +422,15 @@
     <button class="btn solid" id="open-btn" type="button" style="margin-top:2rem;">Buka Uleman</button>
   </div>
 
-  <main id="content">
+  <main id="content" style="visibility:hidden;">
     <section id="home" aria-labelledby="hero-names">
-      <video class="hero-bg-video" id="home-bg-video" muted playsinline preload="auto" aria-hidden="true">
+      <!-- Video background (1x play, tanpa loop). Ganti src sesuai file Anda. -->
+      <video id="home-video" class="bgvideo" muted playsinline preload="auto" disablepictureinpicture>
         <source src="assets/gate2c.mp4" type="video/mp4">
       </video>
+      <!-- Gambar fallback kalau video gagal -->
+      <img class="bgimg" id="home-bg" src="" alt="" aria-hidden="true">
+
       <div class="content">
         <span class="eyebrow" id="hero-eyebrow" aria-hidden="true">Uleman Palakrama</span>
         <h1 class="names serif" id="hero-names" tabindex="-1">— &amp; —</h1>
@@ -655,10 +678,9 @@
    ====================================================================== */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNeWlN7whFRO-pGV5KTziAGxzLmHPC51AlAqSO1BvbxFb1Ec5X3rTx29p9lmrAqm-RQA/exec";
 
-/* ======================================================================
-   GATE VIDEO TIMING — SATU SUMBER KEBENARAN
-   Semua nilai dalam DETIK.
-   ====================================================================== */
+/* Detik saat #home .content mulai muncul (dihitung dari video mulai play) */
+const HERO_REVEAL_AT = 3.5;
+
 const FALLBACK_DATA = {
   judul_hero: "Uleman Palakrama", nama_panggilan_pria: "Rizky", nama_panggilan_wanita: "Rasya",
   nama_lengkap_pria: "Rizky Hanifudin, S.Kom., M.Kom.", nama_lengkap_wanita: "Rasya Agistiningtyas",
@@ -677,7 +699,7 @@ const FALLBACK_DATA = {
   cerita_2_judul: "Saling Mendewasakan", cerita_2_isi: "Kami percaya, tidak ada pertemuan yang benar-benar kebetulan. Ada doa yang diam-diam dikabulkan, ada langkah yang diarahkan tanpa kita sadari. Dan Allah SWT, dengan cara-Nya yang paling tenang, menuntun kami sampai di titik ini.",
   cerita_3_judul: "Janji Setia", cerita_3_isi: "Hingga pada waktunya, segala yang telah kami lewati bermuara pada satu keputusan yang sama. Dengan penuh syukur, kami memilih untuk saling menetap dalam ikatan yang diridhai oleh-Nya.",
   cerita_4_judul: "Awal Selamanya", cerita_4_isi: "Semoga perjalanan ini selalu diliputi ketenangan, dan dipelihara dalam kebaikan yang panjang.",
-  foto_cover_url: "assets/wedding.webp", foto_pria_url: "assets/rizky.webp", foto_wanita_url: "assets/rasya.webp",
+  foto_cover_url: "assets/cover-video.webp", foto_pria_url: "assets/rizky.webp", foto_wanita_url: "assets/rasya.webp",
   galeri_url: "assets/wedding.webp,assets/rasya.webp,assets/rizky.webp",
   musik_url: "https://raw.githubusercontent.com/rizky-rasya/rizky-rasya.github.io/d95d29873d10cf058330b4556d4e009d9afdf2c1/amplop/KUSUMA%20WIJAYA%20-%20PAWESTRI%20(OFFICIAL%20MUSIC%20VIDEO).mp3",
   bank_nama: "SeaBank", bank_rekening: "901713062941", bank_atas_nama: "Rasya Agistiningtyas",
@@ -721,6 +743,16 @@ function setSrc(id, val){ const el = $(id); if(el && val) el.src = val; }
 function setImg(id, src, alt){ const el = $(id); if(!el) return; if(src) el.src = src; if(alt !== undefined && alt !== null) el.alt = alt; }
 function escapeHtml(str){ return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
+/* ============ SCROLL LOCK HELPERS ============ */
+function lockScroll(){
+  document.documentElement.classList.add('scroll-locked');
+  window.scrollTo(0, 0);
+}
+function unlockScroll(){
+  document.documentElement.classList.remove('scroll-locked');
+  window.scrollTo(0, 0);
+}
+
 const ICONS = {
   edit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
@@ -731,17 +763,8 @@ async function apiGet(action, params){
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
   Object.entries(params || {}).forEach(([k,v]) => url.searchParams.set(k, v));
-
-  /* Jangan biarkan request API menggantung dan menahan halaman loading selamanya. */
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 7000);
-  try {
-    const res = await fetch(url.toString(), { signal: controller.signal });
-    if(!res.ok) throw new Error(`API HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timeout);
-  }
+  const res = await fetch(url.toString());
+  return res.json();
 }
 async function apiPost(payload){
   const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
@@ -808,15 +831,6 @@ $('ui-modal-ok').addEventListener('click', () => uiModalClose(true));
 $('ui-modal-cancel').addEventListener('click', () => uiModalClose(false));
 $('uiModal').querySelector('.ui-modal-backdrop').addEventListener('click', () => uiModalClose(false));
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && $('uiModal').classList.contains('open')){ e.preventDefault(); uiModalClose(false); } });
-$('uiModal').addEventListener('keydown', (e) => {
-  if(e.key !== 'Tab') return;
-  const nodes = $('uiModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  const focusables = Array.from(nodes).filter(el => el.offsetParent !== null);
-  if(focusables.length === 0) return;
-  const first = focusables[0], last = focusables[focusables.length - 1];
-  if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-  else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
-});
 
 function renderConfig(cfg){
   const namaPanggilan = `${cfg.nama_panggilan_wanita} & ${cfg.nama_panggilan_pria}`;
@@ -824,7 +838,7 @@ function renderConfig(cfg){
   document.title = `Uleman Palakrama ${namaPanggilan}`;
   setText('cv-eyebrow', cfg.judul_hero); setImg('cv-photo', cfg.foto_cover_url, `Foto ${namaLengkapPasangan}`);
   setText('cv-names', namaPanggilan); setText('cv-guest', guestName);
-  setText('hero-eyebrow', cfg.judul_hero);
+  setSrc('home-bg', cfg.foto_cover_url); setText('hero-eyebrow', cfg.judul_hero);
   setText('hero-names', namaPanggilan); setText('hero-date', cfg.tanggal_tampil);
   setImg('pria-foto', cfg.foto_pria_url, `Foto ${cfg.nama_lengkap_pria}`); setText('pria-nama', cfg.nama_lengkap_pria);
   setText('pria-status', cfg.status_anak_pria); setText('pria-ortu', `${cfg.ayah_pria} & ${cfg.ibu_pria}`);
@@ -844,22 +858,18 @@ function renderConfig(cfg){
     let embedSrc = (cfg.link_maps_embed || '').trim();
     const m = embedSrc.match(/src=["']([^"']+)["']/i); if(m) embedSrc = m[1];
     if(!embedSrc && cfg.alamat_lokasi){ embedSrc = 'https://maps.google.com/maps?q=' + encodeURIComponent(cfg.alamat_lokasi + ', ' + (cfg.nama_lokasi || '')) + '&z=16&output=embed'; }
-    if(embedSrc){ mapFrame.src = embedSrc; mapFrame.title = `Pratinjau peta lokasi ${cfg.nama_lokasi || 'acara'}`; mapWrap.style.display = ''; }
+    if(embedSrc){ mapFrame.src = embedSrc; mapWrap.style.display = ''; }
     else mapWrap.style.display = 'none';
   }
   const urls = String(cfg.galeri_url || '').split(',').map(s => s.trim()).filter(Boolean);
   $('gallery-grid').innerHTML = urls.map((u, i) => `<button type="button" class="gal-item" data-src="${escapeHtml(u)}"><img src="${escapeHtml(u)}" alt="Foto galeri ${i+1} dari ${urls.length}" loading="lazy" decoding="async"></button>`).join('');
   setBank('bank-logo', 'bank-nama', cfg.bank_logo, cfg.bank_nama); setText('bank-anama', cfg.bank_atas_nama); setText('bank-rekening', cfg.bank_rekening);
-  const copy1 = $('copy-rek-1'); if(copy1) copy1.setAttribute('aria-label', `Salin nomor rekening ${cfg.bank_nama} a.n. ${cfg.bank_atas_nama}`);
   if(cfg.bank_nama_2 || cfg.bank_rekening_2){
     $('gift-card-bank-2').style.display = '';
     setBank('bank-logo-2', 'bank-nama-2', cfg.bank_logo_2, cfg.bank_nama_2);
     setText('bank-anama-2', cfg.bank_atas_nama_2); setText('bank-rekening-2', cfg.bank_rekening_2);
-    const copy2 = $('copy-rek-2'); if(copy2) copy2.setAttribute('aria-label', `Salin nomor rekening ${cfg.bank_nama_2} a.n. ${cfg.bank_atas_nama_2}`);
   }
-  setText('gift-nama', cfg.gift_nama); setText('gift-hp', cfg.gift_hp); setText('gift-alamat', cfg.gift_alamat);
-  const copyHp = $('copy-hp'); if(copyHp) copyHp.setAttribute('aria-label', `Salin nomor telepon ${cfg.gift_nama}`);
-  const copyAlamat = $('copy-alamat'); if(copyAlamat) copyAlamat.setAttribute('aria-label', 'Salin alamat pengiriman hadiah');
+  setText('gift-nama', cfg.gift_nama); setText('gift-alamat', cfg.gift_alamat);
   renderNgunduh(cfg); renderFooter(cfg); applyMeta(cfg); renderLive(cfg); buildAcaraOptions(); setupMusic(cfg.musik_url);
   if(guestName && guestName !== 'Tamu Uleman'){ $('f-nama').value = guestName; }
   startCountdown(cfg.tanggal_acara_iso);
@@ -893,7 +903,6 @@ function setIg(id, val){
   const u = igUser(val); if(!u){ el.style.display = 'none'; return; }
   el.href = 'https://instagram.com/' + encodeURIComponent(u);
   el.innerHTML = SVG_IG + '<span>@' + escapeHtml(u) + '</span>';
-  el.setAttribute('aria-label', 'Buka Instagram @' + u + ' (tab baru)');
   el.style.display = '';
 }
 function embedSrcOf(raw, addr, name){
@@ -911,10 +920,10 @@ function renderNgunduh(cfg){
   setText('ng-tanggal', cfg.ngunduh_tanggal_tampil); setText('ng-waktu', cfg.waktu_ngunduh_mantu);
   setText('ng-lokasi', cfg.ngunduh_nama_lokasi); setText('ng-alamat', cfg.ngunduh_alamat_lokasi); setText('ng-dress', cfg.ngunduh_dress_code);
   const link = $('ng-link');
-  if(cfg.ngunduh_link_maps){ link.href = cfg.ngunduh_link_maps; link.setAttribute('aria-label', `Buka lokasi ${cfg.ngunduh_nama_lokasi || 'ngunduh mantu'} di Google Maps (tab baru)`); link.style.display = ''; } else link.style.display = 'none';
+  if(cfg.ngunduh_link_maps){ link.href = cfg.ngunduh_link_maps; link.style.display = ''; } else link.style.display = 'none';
   const wrap = $('ng-map-wrap');
   const src = String(cfg.ngunduh_embed_aktif).toLowerCase() === 'off' ? '' : embedSrcOf(cfg.ngunduh_link_maps_embed, cfg.ngunduh_alamat_lokasi, cfg.ngunduh_nama_lokasi);
-  if(src){ $('ng-map').src = src; $('ng-map').title = `Pratinjau peta lokasi ${cfg.ngunduh_nama_lokasi || 'ngunduh mantu'}`; wrap.style.display = ''; } else wrap.style.display = 'none';
+  if(src){ $('ng-map').src = src; wrap.style.display = ''; } else wrap.style.display = 'none';
   card.style.display = (has && TEMA.section_ngunduh !== 'off') ? '' : 'none';
 }
 function ngunduhAktif(){ const c = $('ngunduh-card'); return !!(c && c.dataset.hasData && TEMA.section_ngunduh !== 'off' && TEMA.section_wedding_date !== 'off'); }
@@ -1003,7 +1012,7 @@ function renderComments(items, append){
     const presenceClass = c.presensi === 'Hadir' ? 'hadir' : c.presensi === 'Tidak Hadir' ? 'tidak' : c.presensi === 'Masih Ragu' ? 'ragu' : '';
     const isMine = c.comment_id && myBank[c.comment_id];
     const jumlahLine = (c.presensi === 'Hadir' && c.jumlah_hadir) ? `<p class="jumlah">👥 ${escapeHtml(c.jumlah_hadir)} orang akan hadir</p>` : '';
-    const actions = isMine ? `<div class="my-actions"><button type="button" class="btn-mini edit-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Ubah ucapan dari ${escapeHtml(c.nama)}">${ICONS.edit}<span>Ubah</span></button><button type="button" class="btn-mini danger delete-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Hapus ucapan dari ${escapeHtml(c.nama)}">${ICONS.trash}<span>Hapus</span></button></div>` : '';
+    const actions = isMine ? `<div class="my-actions"><button type="button" class="btn-mini edit-comment-btn" data-id="${escapeHtml(c.comment_id)}">${ICONS.edit}<span>Ubah</span></button><button type="button" class="btn-mini danger delete-comment-btn" data-id="${escapeHtml(c.comment_id)}">${ICONS.trash}<span>Hapus</span></button></div>` : '';
     const acaraLine = (c.presensi === 'Hadir' && c.acara_hadir) ? `<p class="acara">🎉 ${escapeHtml(c.acara_hadir)}</p>` : '';
     const on = (k) => TEMA[k] !== 'off';
     const bodyParts = [ on('komentar_jumlah') ? jumlahLine : '', on('komentar_acara') ? acaraLine : '', on('komentar_teks') ? `<p class="text">${escapeHtml(c.ucapan_doa)}</p>` : '' ].join('');
@@ -1082,7 +1091,7 @@ function applyThemeMode(){
 }
 
 let opened = false, motionStart = 0, lenis = null;
-const MO_SEL = '#home .content > *, #bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, #ng-tanggal, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
+const MO_SEL = '#bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, #ng-tanggal, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
 const MO_STYLE = { naik: () => ({ transform: 'translateY(34px)' }), pudar: () => ({ transform: 'none' }), zoom: () => ({ transform: 'scale(.9)' }), geser: (i) => ({ transform: `translateX(${i % 2 ? 36 : -36}px)` }) };
 const MO_SPEED = { cepat: .5, normal: .85, lambat: 1.3 };
 function motionOn(){ return TEMA.anim_aktif !== 'off' && window.Motion && !window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
@@ -1113,43 +1122,19 @@ function startSmoothScroll(){
   requestAnimationFrame(raf);
 }
 
-
 async function init(){
-  /* Fail-safe: loading screen selalu dilepas meskipun API lambat/gagal. */
-  const loadingEl = $('loading');
-  const hideLoading = () => {
-    if(!loadingEl) return;
-    loadingEl.style.opacity = '0';
-    setTimeout(() => { loadingEl.style.display = 'none'; }, 350);
-  };
-  const loadingFailsafe = setTimeout(hideLoading, 8000);
-
   applyTema(FALLBACK_TEMA);
   try{
     const res = await apiGet('config');
     if(res.ok){ CFG = { ...FALLBACK_DATA, ...res.data }; if(res.tema) applyTema(res.tema); }
-  } catch(err){ console.warn('Config undangan gagal dimuat; menggunakan data fallback.', err); }
-  try {
-    renderConfig(CFG);
+  } catch(err){}
+  renderConfig(CFG);
   applySectionVisibility();
   toggleJumlahField();
   loadComments(true);
 
-  /* Preload video pembukaan hero */
-  const heroVideo = $('home-bg-video');
-  if(heroVideo){
-    heroVideo.loop = false;
-    heroVideo.muted = true;
-    heroVideo.load();
-    heroVideo.pause();
-  }
-
-  } catch(err) {
-    console.error('Inisialisasi undangan mengalami kendala:', err);
-  } finally {
-    clearTimeout(loadingFailsafe);
-    hideLoading();
-  }
+  $('loading').style.opacity = '0';
+  setTimeout(() => { $('loading').style.display = 'none'; }, 600);
 }
 function syncThemeButton(theme){
   const btn = $('theme-btn'); if(!btn) return;
@@ -1161,133 +1146,212 @@ function syncThemeButton(theme){
 }
 
 /* ======================================================================
-   BUKA ULEMAN — HERO VIDEO INTRO
-   0s    : klik → video gate2c.mp4 langsung play
-   3.5s  : .content / hero-names ditampilkan
-   4–5s  : bagian video ini di-loop terus
-   5min  : intro selesai → video pause + scroll dibuka
-   Tidak ada gate, asap, cloud, blur, atau fade-out.
+   BUKA ULEMAN — Versi tanpa asap, tanpa fade out.
+   Alur:
+     1) Klik "Buka Uleman"
+     2) welcome disembunyikan
+     3) konten dimunculkan, langsung lompat ke #home (hero-names)
+     4) video gate2c.mp4 mulai play (1x, tidak looping)
+     5) pada detik ke-3.5 video, #home .content mulai muncul (fade-in halus)
+     6) scroll DISABLE dari klik sampai video selesai + 1s
    ====================================================================== */
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome');
-  const heroVideo = $('home-bg-video');
-  const content = $('content');
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const homeVideo = $('home-video');
+  const homeContent = document.querySelector('#home .content');
+  const homeSec = $('home');
 
-  /* Kunci scroll sejak klik sampai total intro 5 menit selesai. */
-  document.documentElement.classList.add('intro-lock');
-  document.body.classList.add('intro-lock');
+  /* Kunci scroll dari awal klik */
+  lockScroll();
 
-  /* Musik latar tetap dimulai dari gesture klik pengguna. */
+  /* Musik latar */
   const audio = $('bg-music');
-  if(audio && audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
+  if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
     if(!userMuted){ audio.muted = false; updateMusicIcon(false); }
     audio.play().catch(() => {});
   }
 
-  /* Jangan lepaskan cover sebelum frame pertama video benar-benar tampil.
-     Ini mencegah blink putih/blank tepat setelah klik. */
-  if(welcome){
-    welcome.classList.remove('hide');
-    welcome.style.transition = 'none';
+  /* Sembunyikan welcome */
+  welcome.classList.add('hide');
+  setTimeout(() => {
+    welcome.style.display = 'none';
+    welcome.setAttribute('aria-hidden', 'true');
+  }, 400);
+
+  /* Tampilkan konten utama */
+  $('content').style.visibility = 'visible';
+  document.documentElement.classList.add('opened');
+  opened = true;
+
+  /* Scroll ke paling atas (supaya user lihat #home) */
+  window.scrollTo(0, 0);
+
+  /* Reset state video */
+  if(homeVideo){
+    try{
+      homeVideo.pause();
+      homeVideo.currentTime = 0;
+      homeVideo.loop = false;
+      homeVideo.muted = true;
+    } catch(e){}
+
+    /* Saat video siap diputar, tampilkan */
+    const markReady = () => homeVideo.classList.add('ready');
+    if(homeVideo.readyState >= 2){ markReady(); }
+    else { homeVideo.addEventListener('loadeddata', markReady, { once: true }); }
+
+    /* Fallback kalau video gagal */
+    homeVideo.addEventListener('error', () => {
+      homeSec.classList.add('video-failed');
+    }, { once: true });
   }
 
-  let contentShown = false;
-  let introFinished = false;
-  let loopHandler = null;
-  let finishTimer = null;
-
-  const showHeroContent = () => {
-    if(contentShown) return;
-    contentShown = true;
-
-    /* Hanya .content yang ditahan sampai 3.5 detik; video sudah terlihat
-       sejak awal sehingga tidak ada blink putih. */
-    const heroContent = content ? content.querySelector('#home .content') : null;
-    if(heroContent) heroContent.style.visibility = 'visible';
-
-    document.documentElement.classList.add('opened');
-    opened = true;
-    motionStart = Date.now() + (reducedMotion ? 0 : 100);
-
-    revealOnScroll();
-    motionScan();
-
-    const heroTitle = $('hero-names');
-    if(heroTitle && typeof heroTitle.focus === 'function'){
-      heroTitle.focus({ preventScroll: true });
-    }
+  /* Handler reveal konten hero pada detik ke-3.5 */
+  let revealTimer = null;
+  const revealContent = () => {
+    if(homeContent) homeContent.classList.add('reveal');
+    /* Setelah konten muncul, baru aktifkan scroll (dengan safety 1s) */
+    setTimeout(() => {
+      unlockScroll();
+      /* Init animasi reveal-on-scroll & smooth scroll */
+      revealOnScroll();
+      motionStart = Date.now() + 300;
+      motionScan();
+      startSmoothScroll();
+    }, 1000);
   };
 
-  /* .content muncul tepat 3.5 detik setelah tombol diklik/video mulai. */
-  const SHOW_CONTENT_MS = 3500;
-  const contentTimer = setTimeout(showHeroContent, SHOW_CONTENT_MS);
+  const startVideoAndTimer = () => {
+    if(!homeVideo){ revealContent(); return; }
 
-  const finishIntro = () => {
-    if(introFinished) return;
-    introFinished = true;
-    clearTimeout(contentTimer);
-    if(finishTimer) clearTimeout(finishTimer);
-
-    showHeroContent();
-
-    if(heroVideo && loopHandler){
-      heroVideo.removeEventListener('timeupdate', loopHandler);
+    const p = homeVideo.play();
+    if(p && typeof p.catch === 'function'){
+      p.catch(() => {
+        /* Autoplay gagal: tetap reveal konten supaya user tidak mentok */
+        revealContent();
+      });
     }
 
-    /* Setelah 5 menit, hentikan intro. Video tetap pada frame terakhir. */
-    if(heroVideo){
-      heroVideo.pause();
-    }
-
-    document.documentElement.classList.remove('intro-lock');
-    document.body.classList.remove('intro-lock');
-    startSmoothScroll();
+    /* Timer reveal konten di detik ke-3.5 */
+    revealTimer = setTimeout(revealContent, HERO_REVEAL_AT * 1000);
   };
 
-  if(heroVideo){
-    heroVideo.loop = false;
-    heroVideo.muted = true;
-    heroVideo.currentTime = 0;
+  /* Mulai play setelah klik (wajib dari user gesture → autoplay muted aman) */
+  startVideoAndTimer();
+});
 
-    /* Lepas cover hanya setelah video benar-benar mulai menampilkan frame. */
-    let welcomeReleased = false;
-    const releaseWelcome = () => {
-      if(welcomeReleased) return;
-      welcomeReleased = true;
-      if(welcome){
-        welcome.style.display = 'none';
-        welcome.setAttribute('aria-hidden', 'true');
-      }
-    };
-    heroVideo.addEventListener('playing', releaseWelcome, { once:true });
-    setTimeout(releaseWelcome, 500);
+(function bindThemeButton(){
+  const themeBtn = $('theme-btn'); if(!themeBtn) return;
+  themeBtn.addEventListener('click', () => {
+    if((TEMA.fitur_mode || 'both') !== 'both') return;
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'night' ? 'day' : 'night';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('undangan-theme', next);
+    syncThemeButton(next);
+  });
+})();
 
-    /* Main video 0→4 detik, lalu hanya rentang 4→5 detik yang diulang. */
-    loopHandler = () => {
-      if(introFinished) return;
-      if(heroVideo.currentTime >= 5){
-        heroVideo.currentTime = 4;
-        const p = heroVideo.play();
-        if(p && typeof p.catch === 'function') p.catch(() => {});
-      }
-    };
-    heroVideo.addEventListener('timeupdate', loopHandler);
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-copy-target]');
+  if(!btn) return;
+  const text = $(btn.dataset.copyTarget).textContent;
+  const labelEl = btn.querySelector('.copy-label');
+  const oldLabel = labelEl ? labelEl.textContent : btn.textContent;
+  const setLabel = (v) => { if(labelEl) labelEl.textContent = v; else btn.textContent = v; };
+  navigator.clipboard.writeText(text).then(() => {
+    setLabel('Tersalin'); btn.classList.add('copied');
+    setTimeout(() => { setLabel(oldLabel); btn.classList.remove('copied'); }, 1600);
+  }).catch(() => { setLabel('Gagal'); setTimeout(() => { setLabel(oldLabel); }, 1600); });
+});
 
-    /* Total durasi intro: 5 menit sejak klik. */
-    finishTimer = setTimeout(finishIntro, 5 * 60 * 1000);
+let lastFocusedEl = null;
+function openImgModal(src, altText, trigger){
+  lastFocusedEl = trigger || document.activeElement;
+  const pic = $('imgModalPic'); pic.src = src; pic.alt = altText || 'Pratinjau foto galeri';
+  $('imgModal').classList.add('open'); $('imgClose').focus();
+}
+function closeImgModal(){ $('imgModal').classList.remove('open'); if(lastFocusedEl && typeof lastFocusedEl.focus === 'function'){ lastFocusedEl.focus(); } }
+document.addEventListener('click', (e) => { const item = e.target.closest('.gal-item'); if(!item) return; e.preventDefault(); const img = item.querySelector('img'); openImgModal(item.dataset.src, img ? img.alt : '', item); });
+$('imgClose').addEventListener('click', closeImgModal);
+$('imgModal').addEventListener('click', (e) => { if(e.target.id === 'imgModal') closeImgModal(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && $('imgModal').classList.contains('open')){ closeImgModal(); } });
 
-    /* Play langsung dari gesture klik — tanpa fade/transition. */
-    try {
-      const playPromise = heroVideo.play();
-      if(playPromise && typeof playPromise.catch === 'function'){
-        playPromise.catch(() => {});
-      }
-    } catch(e){}
-  } else {
-    finishTimer = setTimeout(finishIntro, 100);
+$('load-more').addEventListener('click', () => loadComments(false));
+$('f-presensi').addEventListener('change', toggleJumlahField);
+
+document.addEventListener('click', async (e) => {
+  const editBtn = e.target.closest('.edit-comment-btn');
+  if(editBtn){
+    const id = editBtn.dataset.id; const c = knownComments[id]; const bank = getMyComments();
+    if(!c || !bank[id]) return;
+    editingComment = { comment_id: id, edit_token: bank[id] };
+    $('f-nama').value = c.nama; $('f-presensi').value = c.presensi || 'Hadir';
+    toggleJumlahField();
+    $('f-jumlah').value = c.jumlah_hadir ? String(Math.min(c.jumlah_hadir, 10)) : '';
+    setAcara(c.acara_hadir); $('f-ucapan').value = c.ucapan_doa;
+    $('edit-banner').style.display = ''; $('cancel-edit-btn').style.display = 'inline-block';
+    $('submit-btn').textContent = 'Simpan Perubahan'; $('form-msg').textContent = '';
+    $('f-nama').focus(); $('rsvp-form').scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  const delBtn = e.target.closest('.delete-comment-btn');
+  if(delBtn){
+    const id = delBtn.dataset.id; const bank = getMyComments(); const editToken = bank[id];
+    if(!editToken) return;
+    const lanjut = await showConfirm('Ucapan & doa ini akan dihapus permanen. Lanjutkan?',
+      { title: 'Hapus Ucapan?', type: 'danger', okLabel: 'Ya, Hapus', cancelLabel: 'Batal', danger: true });
+    if(!lanjut) return;
+    try{
+      const res = await apiPost({ action: 'delete_comment', comment_id: id, edit_token: editToken });
+      if(res.ok){ removeMyComment(id); if(editingComment && editingComment.comment_id === id) resetFormToCreateMode(); loadComments(true); showAlert('Ucapan & doa berhasil dihapus.', { title: 'Berhasil Dihapus', type: 'success', okLabel: 'Tutup' }); }
+      else { showAlert(res.error || 'Gagal menghapus.', { title: 'Gagal', type: 'error', okLabel: 'Tutup' }); }
+    } catch(err){ showAlert('Tidak dapat terhubung ke server.', { title: 'Koneksi Bermasalah', type: 'error', okLabel: 'Tutup' }); }
   }
 });
+
+$('cancel-edit-btn').addEventListener('click', resetFormToCreateMode);
+
+$('rsvp-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nama = $('f-nama').value.trim();
+  const presensi = $('f-presensi').value;
+  const jumlahHadir = presensi === 'Hadir' ? (parseInt($('f-jumlah').value, 10) || null) : null;
+  const acaraHadir = presensi === 'Hadir' ? getAcara().join(', ') : '';
+  const ucapan = $('f-ucapan').value.trim();
+  const msg = $('form-msg'), btn = $('submit-btn');
+  if(!nama || !ucapan){ msg.textContent = 'Nama dan ucapan wajib diisi.'; msg.className = 'form-msg err'; (!nama ? $('f-nama') : $('f-ucapan')).focus(); return; }
+  if(presensi === 'Hadir' && (!acaraHadir || !jumlahHadir)){ msg.textContent = !acaraHadir ? 'Pilih minimal satu acara.' : 'Pilih jumlah tamu.'; msg.className = 'form-msg err'; return; }
+  btn.disabled = true; const oldLabel = btn.textContent;
+  btn.textContent = editingComment ? 'Menyimpan…' : 'Mengirim…';
+  msg.textContent = ''; let succeeded = false;
+  try{
+    let res;
+    if(editingComment){
+      res = await apiPost({ action: 'edit_comment', comment_id: editingComment.comment_id, edit_token: editingComment.edit_token, nama, presensi, jumlah_hadir: jumlahHadir, acara_hadir: acaraHadir, ucapan_doa: ucapan });
+    } else {
+      res = await apiPost({ action: 'comment', nama, presensi, jumlah_hadir: jumlahHadir, acara_hadir: acaraHadir, ucapan_doa: ucapan, id_tamu: guestId });
+    }
+    if(res.ok){
+      if(!editingComment && res.comment_id && res.edit_token){ saveMyComment(res.comment_id, res.edit_token); }
+      msg.textContent = editingComment ? 'Ucapan berhasil diperbarui.' : 'Terima kasih atas doa & ucapannya.';
+      msg.className = 'form-msg ok';
+      resetFormToCreateMode(); loadComments(true); succeeded = true;
+    } else { msg.textContent = res.error || 'Gagal mengirim.'; msg.className = 'form-msg err'; }
+  } catch(err){ msg.textContent = 'Tidak dapat terhubung ke server.'; msg.className = 'form-msg err'; }
+  finally { btn.disabled = false; if(!succeeded) btn.textContent = oldLabel; }
+});
+
+function revealOnScroll(){
+  const els = document.querySelectorAll('.fade-up');
+  if(!('IntersectionObserver' in window)){ els.forEach(el => el.classList.add('in')); return; }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(en => { if(en.isIntersecting) en.target.classList.add('in'); });
+  }, { threshold: 0.15 });
+  els.forEach(el => io.observe(el));
+}
+
+init();
 </script>
 </body>
 </html>
