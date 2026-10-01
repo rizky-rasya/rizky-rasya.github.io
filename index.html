@@ -286,19 +286,14 @@
   /* ==============================================================
      GATE VIDEO + BLUR + ASAP
      --------------------------------------------------------------
-     Timeline:
-       0        : klik → gate show, video play, entering
-       0–1s     : video blur 14→0 (opacity 0→1) + 12 puff asap in
-       1s       : welcome display:none
-       1–5s     : video normal (tajam)
-       5s       : video ended → gate.leaving (puff asap out + blur out + content-cloud)
-       6s       : konten undangan terlihat
+     Urutan akhir:
+       VIDEO → VIDEO mulai blur → AWAN/ASAP menutup layar → HALAMAN UNDANGAN
      ============================================================== */
   #gate{
     position:fixed; inset:0; z-index:95;
     max-width:var(--maxw); margin:0 auto;
     display:none; overflow:hidden; pointer-events:none;
-    opacity:0; isolation:isolate; background:#000;
+    opacity:0; isolation:isolate; background:transparent;
     transition:opacity .3s ease;
   }
   #gate.show{ display:block; opacity:1; }
@@ -324,7 +319,11 @@
     100% { opacity:1; filter:blur(0px);  transform:scale(1); }
   }
   @keyframes videoBlurOut{
+    /* 0–45%: AWAN/ASAP diberi waktu menutup layar terlebih dahulu.
+       Video tetap utuh sehingga tidak pernah membuka background hitam. */
     0%   { opacity:1; filter:blur(0px);  transform:scale(1); }
+    45%  { opacity:1; filter:blur(0px);  transform:scale(1); }
+    72%  { opacity:.65; filter:blur(8px); transform:scale(1.04); }
     100% { opacity:0; filter:blur(14px); transform:scale(1.08); }
   }
 
@@ -367,12 +366,14 @@
   }
   #transition-cloud.content-cloud{
     visibility:visible;
-    animation: cloudContent 2s cubic-bezier(.35,.75,.25,1) forwards;
+    animation: cloudContent 2.2s cubic-bezier(.35,.75,.25,1) forwards;
   }
   @keyframes cloudContent{
-    0%{ opacity:0; transform:scale(1.08); }
-    34%{ opacity:1; transform:scale(1); }
-    58%{ opacity:1; transform:scale(1.015); }
+    /* AWAN MENUTUP LAYAR terlebih dahulu.
+       Saat awan sudah penuh, video boleh menghilang tanpa flash hitam. */
+    0%{ opacity:0; transform:scale(1.14); }
+    28%{ opacity:1; transform:scale(1); }
+    62%{ opacity:1; transform:scale(1.015); }
     100%{ opacity:0; transform:scale(1.08); visibility:hidden; }
   }
 
@@ -1299,17 +1300,19 @@ $('open-btn').addEventListener('click', () => {
     durationMs = gateVideo.duration * 1000;
   }
 
-  /* Saat video selesai → leaving phase 1s → reveal konten di 6s */
+  /* Saat video selesai:
+     VIDEO → blur → AWAN/ASAP menutup layar → HALAMAN UNDANGAN.
+     Cloud dimulai bersamaan, tetapi video ditahan tetap terlihat sampai
+     cloud sudah menutup layar sehingga tidak ada frame hitam di antaranya. */
   const onVideoEnd = () => {
     gate.classList.remove('entering');
     gate.classList.add('leaving');
 
-    /* content-cloud mulai bersamaan dengan leaving (di 5s) untuk menutup
-       mulus momen pergantian gate → konten. Cloud akan selesai di ~7s. */
+    /* Awali awan tepat saat video selesai. */
     transitionCloud.classList.add('content-cloud');
 
     setTimeout(() => {
-      /* Reveal konten di 6s (1s setelah video ended) */
+      /* Reveal halaman ketika awan masih menutup penuh layar. */
       $('content').style.visibility = 'visible';
       document.documentElement.classList.add('opened');
 
