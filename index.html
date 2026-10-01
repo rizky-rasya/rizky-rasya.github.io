@@ -236,7 +236,6 @@
   .section-flower-left, .section-flower-right{ width:108px; max-height: 10%; opacity: 1; top:1.2rem; }
   .section-flower-left{ left:1px; transform:rotate(-18deg); }
   .section-flower-right{ right: -1px; transform: rotate(14deg); }
-  #home::before{ content:""; position:absolute; inset:0; background: radial-gradient(circle at 50% 50%, rgb(255 255 255), transparent 50%), linear-gradient(to bottom, rgb(255 255 255 / 0%), rgb(250 246 236 / 0%)); z-index:1; pointer-events:none; }
   #home .content{ position:relative; z-index:2; }
   #bride{ background: radial-gradient(circle at 8% 8%, rgba(255,255,255,.9), transparent 25%), radial-gradient(circle at 92% 92%, rgba(241,234,217,.55), transparent 28%), var(--bg); }
   #bride .couple-card{ position:relative; padding:.8rem .2rem 1rem; }
@@ -1163,13 +1162,11 @@ $('open-btn').addEventListener('click', () => {
     audio.play().catch(() => {});
   }
 
-  /* Cover langsung hilang tanpa transition/fade. Video sudah berada
-     di belakang cover sehingga tidak ada frame putih saat pergantian. */
+  /* Jangan lepaskan cover sebelum frame pertama video benar-benar tampil.
+     Ini mencegah blink putih/blank tepat setelah klik. */
   if(welcome){
     welcome.classList.remove('hide');
     welcome.style.transition = 'none';
-    welcome.style.display = 'none';
-    welcome.setAttribute('aria-hidden', 'true');
   }
 
   let contentShown = false;
@@ -1230,6 +1227,19 @@ $('open-btn').addEventListener('click', () => {
     heroVideo.muted = true;
     heroVideo.currentTime = 0;
 
+    /* Lepas cover hanya setelah video benar-benar mulai menampilkan frame. */
+    let welcomeReleased = false;
+    const releaseWelcome = () => {
+      if(welcomeReleased) return;
+      welcomeReleased = true;
+      if(welcome){
+        welcome.style.display = 'none';
+        welcome.setAttribute('aria-hidden', 'true');
+      }
+    };
+    heroVideo.addEventListener('playing', releaseWelcome, { once:true });
+    setTimeout(releaseWelcome, 500);
+
     /* Main video 0→4 detik, lalu hanya rentang 4→5 detik yang diulang. */
     loopHandler = () => {
       if(introFinished) return;
@@ -1244,7 +1254,7 @@ $('open-btn').addEventListener('click', () => {
     /* Total durasi intro: 5 menit sejak klik. */
     finishTimer = setTimeout(finishIntro, 5 * 60 * 1000);
 
-    /* Play langsung dari gesture klik. */
+    /* Play langsung dari gesture klik — tanpa fade/transition. */
     try {
       const playPromise = heroVideo.play();
       if(playPromise && typeof playPromise.catch === 'function'){
