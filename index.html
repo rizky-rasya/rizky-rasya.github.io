@@ -731,8 +731,17 @@ async function apiGet(action, params){
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
   Object.entries(params || {}).forEach(([k,v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
-  return res.json();
+
+  /* Jangan biarkan request API menggantung dan menahan halaman loading selamanya. */
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+  try {
+    const res = await fetch(url.toString(), { signal: controller.signal });
+    if(!res.ok) throw new Error(`API HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 async function apiPost(payload){
   const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
@@ -1106,12 +1115,22 @@ function startSmoothScroll(){
 
 
 async function init(){
+  /* Fail-safe: loading screen selalu dilepas meskipun API lambat/gagal. */
+  const loadingEl = $('loading');
+  const hideLoading = () => {
+    if(!loadingEl) return;
+    loadingEl.style.opacity = '0';
+    setTimeout(() => { loadingEl.style.display = 'none'; }, 350);
+  };
+  const loadingFailsafe = setTimeout(hideLoading, 8000);
+
   applyTema(FALLBACK_TEMA);
   try{
     const res = await apiGet('config');
     if(res.ok){ CFG = { ...FALLBACK_DATA, ...res.data }; if(res.tema) applyTema(res.tema); }
-  } catch(err){}
-  renderConfig(CFG);
+  } catch(err){ console.warn('Config undangan gagal dimuat; menggunakan data fallback.', err); }
+  try {
+    renderConfig(CFG);
   applySectionVisibility();
   toggleJumlahField();
   loadComments(true);
@@ -1125,8 +1144,12 @@ async function init(){
     heroVideo.pause();
   }
 
-  $('loading').style.opacity = '0';
-  setTimeout(() => { $('loading').style.display = 'none'; }, 600);
+  } catch(err) {
+    console.error('Inisialisasi undangan mengalami kendala:', err);
+  } finally {
+    clearTimeout(loadingFailsafe);
+    hideLoading();
+  }
 }
 function syncThemeButton(theme){
   const btn = $('theme-btn'); if(!btn) return;
