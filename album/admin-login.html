@@ -4,32 +4,92 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 <title>Masuk Admin — Wedding Album</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; touch-action:manipulation; }
-  body {
-    font-family:'Segoe UI', sans-serif;
-    background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
-    min-height:100vh; display:flex; justify-content:center; align-items:center; padding:16px;
+  :root {
+    --bg:#F5F1EB; --surface:#FFFFFF; --surface-2:#EFE9DF;
+    --border:#E5DDD1; --border-strong:#D6CBB8;
+    --primary:#440808; --primary-hover:#5A1010; --primary-soft:#F2E4E4;
+    --accent:#C9A66B; --accent-soft:#F5ECD9;
+    --text:#1A1410; --text-2:#5A4D42; --text-3:#8A7B6E;
+    --danger:#A02828;
   }
-  .login-box { background:#fff; padding:40px 32px; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.12); width:100%; max-width:400px; }
-  .login-box h2 { text-align:center; margin-bottom:6px; color:#333; }
-  .login-box p.sub { text-align:center; color:#888; font-size:13px; margin-bottom:24px; }
-  .input-group { margin-bottom:18px; }
-  .input-group label { display:block; margin-bottom:8px; color:#555; font-weight:500; font-size:13px; }
-  .input-group input { width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; }
-  .input-group input:focus { outline:none; border-color:#667eea; }
-  button.submit { width:100%; padding:14px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; }
-  button.submit:disabled { opacity:.6; cursor:not-allowed; }
-  .error-message { color:#e74c3c; text-align:center; margin-top:14px; font-size:13px; display:none; }
-  .conn-banner {
-    display:none; margin-bottom:18px; padding:10px 14px; border-radius:8px; font-size:12px; line-height:1.5;
-    background:#fff3cd; color:#856404; border:1px solid #ffe69c;
+  *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh; display:flex; justify-content:center; align-items:center;
+    padding:16px; position:relative; overflow:hidden;
+  }
+  body::before{
+    content:''; position:fixed; top:0; left:0; width:140px; height:140px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='%23440808' stroke-width='6' stroke-linecap='square'%3E%3Cpath d='M4 136 L136 4'/%3E%3Cpath d='M28 136 L136 28'/%3E%3Cpath d='M52 136 L136 52'/%3E%3Cpath d='M76 136 L136 76'/%3E%3Cpath d='M100 136 L136 100'/%3E%3C/g%3E%3C/svg%3E") no-repeat top left;
+    opacity:0.08; pointer-events:none; z-index:0;
+  }
+  .login-box{
+    position:relative; z-index:1;
+    background:var(--surface);
+    padding:44px 36px 36px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    box-shadow:0 16px 48px rgba(68,8,8,.06);
+    width:100%; max-width:420px;
+  }
+  .login-box h2{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:700; font-size:28px; line-height:1.15;
+    letter-spacing:-0.01em; color:var(--text);
+    text-align:left; margin-bottom:6px;
+  }
+  .login-box p.sub{
+    color:var(--text-3); font-size:14px; line-height:1.55;
+    margin-bottom:28px; text-align:left;
+  }
+  .conn-banner{
+    display:none; margin-bottom:20px; padding:10px 14px;
+    border-radius:4px; font-size:12px; line-height:1.5;
+    background:var(--accent-soft); color:#8A6A1A;
+    border:1px solid #EFDFB8;
+  }
+  .input-group{ margin-bottom:18px; }
+  .input-group label{
+    display:block; margin-bottom:8px;
+    color:var(--text-2); font-weight:600; font-size:13px;
+    letter-spacing:0.01em;
+  }
+  .input-group input{
+    width:100%; padding:11px 12px;
+    background:var(--surface); color:var(--text);
+    border:1.5px solid var(--border); border-radius:4px;
+    font-size:15px; font-family:inherit;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .input-group input:focus{
+    outline:none; border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(201,166,107,.22);
+  }
+  button.submit{
+    width:100%; padding:13px 20px; margin-top:6px;
+    background:var(--primary); color:#fff;
+    border:none; border-radius:4px;
+    font-family:inherit; font-size:14px; font-weight:600;
+    letter-spacing:0.01em; cursor:pointer;
+    transition:background .15s, transform .1s;
+  }
+  button.submit:hover{ background:var(--primary-hover); }
+  button.submit:active{ transform:translateY(1px); }
+  button.submit:disabled{ opacity:.6; cursor:not-allowed; }
+  .error-message{
+    color:var(--danger); text-align:left;
+    margin-top:16px; font-size:13px; line-height:1.5; display:none;
   }
 </style>
 </head>
 <body>
   <div class="login-box">
-    <h2>🔐 Panel Mempelai</h2>
+    <h2>Panel Mempelai</h2>
     <p class="sub">Kelola momen pernikahanmu di sini</p>
 
     <div class="conn-banner" id="connBanner"></div>
@@ -57,7 +117,6 @@ if (localStorage.getItem('admin_token') && localStorage.getItem('wedding_id')) {
   window.location.href = 'admin-dashboard.html';
 }
 
-// preload wedding_id terakhir kalau ada, dan cek koneksi ke backend
 const lastWeddingId = localStorage.getItem('active_wedding_id') || localStorage.getItem('wedding_id');
 if (lastWeddingId) document.getElementById('weddingId').value = lastWeddingId;
 checkBackend();
