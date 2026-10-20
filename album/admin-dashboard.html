@@ -34,6 +34,7 @@
   .btn-approve { background:#2e7d32; color:#fff; }
   .btn-reject { background:#c62828; color:#fff; }
   .empty-state { text-align:center; color:#999; padding:40px 0; font-size:14px; }
+  .load-media { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,.6); color:#fff; border:none; padding:9px 16px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; }
 
   .form-group { margin-bottom:18px; max-width:440px; }
   .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#555; }
@@ -378,16 +379,23 @@
     <label>Maksimal Durasi Voice Note (detik)</label>
     <input type="number" id="maxVoiceSeconds" min="5" max="300">
   </div>
+  <h3 style="margin-top:22px;">Jenis Momen yang Boleh Dikirim</h3>
+  <p class="desc">Nyalakan atau matikan tiap jenis. Pengaturan ini langsung berlaku di halaman kirim momen <b>dan</b> di album — jenis yang dimatikan tidak muncul lagi di album.</p>
   <div class="toggle-row">
-    <span>Izinkan tamu upload video</span>
+    <span>📷 Foto</span>
+    <input type="checkbox" id="allowPhoto">
+  </div>
+  <div class="toggle-row">
+    <span>🎥 Video</span>
     <input type="checkbox" id="allowVideo">
   </div>
   <div class="toggle-row">
-    <span>Izinkan tamu kirim voice note</span>
+    <span>🎤 Voice note</span>
     <input type="checkbox" id="allowVoice">
   </div>
+  <p class="hint" style="margin-top:6px;">Minimal satu jenis harus aktif supaya tamu bisa mengirim momen.</p>
   <div class="toggle-row">
-    <span>Aktifkan filter kamera untuk tamu</span>
+    <span>✨ Pakai filter kamera untuk tamu</span>
     <input type="checkbox" id="allowFilter">
   </div>
   <div class="toggle-row">
@@ -581,7 +589,7 @@ function logout() {
 
 function handleAuthError(data) {
   if (data && data.message && data.message.toLowerCase().includes('sesi')) {
-    alert('Sesi berakhir, silakan login ulang.');
+    alert('Sesi kamu sudah berakhir. Silakan masuk lagi ya.');
     logout();
     return true;
   }
@@ -630,40 +638,52 @@ async function getModerationBlobUrl(fileId) {
 }
 
 async function loadPending() {
-  const data = await callApi({ action: 'getPendingMedia' }, 'GET');
-  if (handleAuthError(data)) return;
-
   const grid = document.getElementById('pendingGrid');
   const empty = document.getElementById('pendingEmpty');
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Sedang memuat…</div>';
+  let data;
+  try { data = await callApi({ action: 'getPendingMedia' }, 'GET'); }
+  catch (e) { grid.innerHTML = ''; showToast('Belum bisa memuat daftar. Periksa koneksi lalu tekan Refresh.', 'error'); return; }
+  if (handleAuthError(data)) return;
   grid.innerHTML = '';
 
   if (!data.success || !data.pending_media || data.pending_media.length === 0) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
+  const label = { photo: 'Foto', video: 'Video', voice: 'Suara' };
 
   data.pending_media.forEach(item => {
     const card = document.createElement('div');
     card.className = 'media-card';
+    card.id = 'card_' + item.media_id;
     const uid = 'p_' + item.media_id;
+    const thumb = item.thumbnail_url || '';
+    const preview = item.media_type === 'photo'
+      ? (thumb ? `<img src="${thumb}" alt="">` : '<span style="font-size:12px;color:#999;">📷 Foto</span>')
+      : item.media_type === 'video'
+        ? `${thumb ? `<img src="${thumb}" alt="">` : ''}<button class="load-media" data-uid="${uid}">▶ Putar video</button>`
+        : `<button class="load-media" data-uid="${uid}">▶ Putar suara</button>`;
     card.innerHTML = `
-      <div class="media-wrap" id="${uid}_box"><span style="font-size:12px;color:#999;">Memuat...</span></div>
-      <div class="info"><b>${escapeHtml(item.guest_name)}</b><span>${item.date} • ${item.time} • ${item.media_type}</span></div>
+      <div class="media-wrap" id="${uid}_box" style="position:relative">${preview}</div>
+      <div class="info"><b>${escapeHtml(item.guest_name)}</b><span>${escapeHtml(item.date)} • ${escapeHtml(item.time)} • ${label[item.media_type] || item.media_type}</span>${item.caption ? `<span>💬 ${escapeHtml(item.caption)}</span>` : ''}</div>
       <div class="row">
-        <button class="btn-approve" onclick="moderate('${item.media_id}','approveMedia',this)">✓ Setujui</button>
-        <button class="btn-reject" onclick="moderate('${item.media_id}','rejectMedia',this)">✕ Tolak</button>
+        <button class="btn-approve">✓ Setujui</button>
+        <button class="btn-reject">✕ Tolak</button>
       </div>`;
+    card.querySelector('.btn-approve').addEventListener('click', e => moderate(item.media_id, 'approveMedia', e.target));
+    card.querySelector('.btn-reject').addEventListener('click', e => { if (confirm('Tolak momen ini? Momen tidak akan tampil di album.')) moderate(item.media_id, 'rejectMedia', e.target); });
+    const lm = card.querySelector('.load-media');
+    if (lm) lm.addEventListener('click', () => loadModerationMedia(item, uid, lm));
     grid.appendChild(card);
-
-    getModerationBlobUrl(item.file_id).then(url => {
-      const box = document.getElementById(uid + '_box');
-      if (!box) return;
-      if (item.media_type === 'photo') box.innerHTML = `<img src="${url}" loading="lazy">`;
-      else if (item.media_type === 'video') box.innerHTML = `<video src="${url}" controls playsinline></video>`;
-      else box.innerHTML = `<audio src="${url}" controls></audio>`;
-    }).catch(() => {
-      const box = document.getElementById(uid + '_box');
-      if (box) box.innerHTML = `<span style="font-size:12px;color:#c62828;">Gagal memuat</span>`;
-    });
   });
+}
+
+async function loadModerationMedia(item, uid, btn) {
+  btn.disabled = true; btn.textContent = 'Memuat…';
+  try {
+    const url = await getModerationBlobUrl(item.file_id);
+    const box = document.getElementById(uid + '_box');
+    box.innerHTML = item.media_type === 'video' ? `<video src="${url}" controls playsinline autoplay></video>` : `<audio src="${url}" controls autoplay></audio>`;
+  } catch (e) { btn.disabled = false; btn.textContent = 'Coba lagi'; showToast('Berkasnya belum bisa dimuat. Coba lagi ya.', 'error'); }
 }
 
 async function moderate(mediaId, action, btn) {
@@ -671,10 +691,13 @@ async function moderate(mediaId, action, btn) {
   try {
     const data = await callApi({ action, media_id: mediaId });
     if (handleAuthError(data)) return;
-    if (!data.success) { showToast(data.message || 'Gagal memproses media', 'error'); btn.disabled = false; return; }
-    loadPending();
+    if (!data.success) { showToast(data.message || 'Belum berhasil diproses, coba lagi ya.', 'error'); btn.disabled = false; return; }
+    const card = document.getElementById('card_' + mediaId);
+    if (card) card.remove();
+    if (!document.querySelector('#pendingGrid .media-card')) document.getElementById('pendingEmpty').style.display = 'block';
+    showToast(data.message || 'Selesai', 'success');
   } catch (err) {
-    showToast('Gagal terhubung ke server: ' + err.message, 'error');
+    showToast('Koneksi terputus. Coba lagi ya.', 'error');
     btn.disabled = false;
   }
 }
@@ -1483,9 +1506,10 @@ async function loadSettings() {
 
   document.getElementById('groomName').value = data.groom_name || '';
   document.getElementById('brideName').value = data.bride_name || '';
-  document.getElementById('weddingDate').value = data.date ? new Date(data.date).toISOString().slice(0,10) : '';
+  document.getElementById('weddingDate').value = data.date ? String(data.date).slice(0,10) : '';
   document.getElementById('maxVideoSeconds').value = data.max_video_seconds || 60;
   document.getElementById('maxVoiceSeconds').value = data.max_voice_seconds || 60;
+  document.getElementById('allowPhoto').checked = data.allow_photo !== false;
   document.getElementById('allowVideo').checked = data.allow_video === true;
   document.getElementById('allowVoice').checked = data.allow_voice === true;
   document.getElementById('allowFilter').checked = data.allow_filter === true;
@@ -1597,6 +1621,10 @@ function buildUiConfig() {
 }
 
 async function saveSettings() {
+  if (!document.getElementById('allowPhoto').checked && !document.getElementById('allowVideo').checked && !document.getElementById('allowVoice').checked) {
+    showStatus('settingsMsg', false, 'Nyalakan minimal satu jenis momen (foto, video, atau voice note) ya, supaya tamu masih bisa mengirim.');
+    return;
+  }
   const payload = {
     action: 'updateSettings',
     groom_name: document.getElementById('groomName').value.trim(),
@@ -1604,6 +1632,7 @@ async function saveSettings() {
     date: document.getElementById('weddingDate').value.trim(),
     max_video_seconds: document.getElementById('maxVideoSeconds').value,
     max_voice_seconds: document.getElementById('maxVoiceSeconds').value,
+    allow_photo: document.getElementById('allowPhoto').checked,
     allow_video: document.getElementById('allowVideo').checked,
     allow_voice: document.getElementById('allowVoice').checked,
     allow_filter: document.getElementById('allowFilter').checked,
@@ -1613,7 +1642,7 @@ async function saveSettings() {
   try {
     const data = await callApi(payload);
     if (handleAuthError(data)) return;
-    showStatus('settingsMsg', data.success, data.message);
+    showStatus('settingsMsg', data.success, data.success ? 'Pengaturan tersimpan. Halaman kirim momen dan album ikut diperbarui. ✨' : (data.message || 'Pengaturan belum tersimpan, coba lagi ya.'));
   } catch (err) {
     showStatus('settingsMsg', false, 'Gagal terhubung ke server: ' + err.message);
   }
@@ -1650,7 +1679,7 @@ function showModal(message, type) {
   document.getElementById('modalText').textContent = message;
   box.className = 'modal-box ' + (type || 'info');
   overlay.classList.add('show');
-  modalTimer = setTimeout(closeModal, 10000);
+  modalTimer = setTimeout(closeModal, type === 'success' ? 3500 : 10000);
 }
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');

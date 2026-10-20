@@ -18,8 +18,8 @@
   .filters button { padding:8px 16px; border-radius:20px; border:1.5px solid #e6dcd2; background:#fff; cursor:pointer; font-size:13px; color:#8a7b6e; }
   .filters button.active { background:#c99b6a; color:#fff; border-color:#c99b6a; }
 
-  .grid { columns:3 280px; column-gap:16px; }
-  .item { break-inside:avoid; margin-bottom:16px; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.05); position:relative; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; align-items:start; }
+  .item { margin:0; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.05); position:relative; }
   .item .media-box { position:relative; background:#eee; min-height:120px; display:flex; align-items:center; justify-content:center; }
   .item img { width:100%; display:block; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
   .item video { width:100%; display:block; }
@@ -42,9 +42,15 @@
   .dl-btn.primary { background:#c99b6a; color:#fff; }
   .dl-btn:disabled { opacity:.5; }
 
+  #photoViewer { position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.92); display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px; }
+  #photoViewer img { max-width:96vw; max-height:84vh; object-fit:contain; border-radius:8px; }
+  #photoViewerCap { color:#eee; font-size:13px; }
+  .pv-close { position:absolute; top:14px; right:16px; background:rgba(255,255,255,.15); color:#fff; border:none; width:38px; height:38px; border-radius:50%; font-size:16px; }
+  .retry-btn { margin-top:12px; padding:10px 22px; border:none; border-radius:22px; background:#c99b6a; color:#fff; font-weight:700; }
+  .item { content-visibility:auto; contain-intrinsic-size:auto 260px; }
   .empty { text-align:center; color:#a08d7d; padding:60px 0; }
   .loader { text-align:center; padding:60px 0; color:#a08d7d; }
-  @media (max-width:640px) { .grid { columns:1 280px; } }
+  @media (max-width:640px) { .grid { grid-template-columns:repeat(2,1fr); gap:10px; } .cap .who { flex-direction:column; align-items:flex-start; gap:2px; } .dl-row { flex-direction:column; } }
 
   .toast {
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99;
@@ -68,19 +74,20 @@
 </div>
 
 <div class="container">
-  <div class="filters">
-    <button class="active" data-filter="all">Semua</button>
-    <button data-filter="photo">Foto</button>
-    <button data-filter="video">Video</button>
-    <button data-filter="voice">Suara</button>
-  </div>
+  <div class="filters" id="filters" style="display:none;"></div>
 
-  <div id="loader" class="loader">Memuat album...</div>
   <div id="grid" class="grid"></div>
-  <div id="empty" class="empty" style="display:none;">Belum ada momen yang dibagikan. Jadilah yang pertama!</div>
+  <div id="loader" class="loader">Sedang menyiapkan album…</div>
+  <div id="sentinel" style="height:1px;"></div>
+  <div id="empty" class="empty" style="display:none;">Belum ada momen di sini.<br>Yuk, jadi yang pertama berbagi! 💌</div>
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="photoViewer" onclick="closePhoto()">
+  <img id="photoViewerImg" alt="">
+  <div id="photoViewerCap"></div>
+  <button class="pv-close" aria-label="Tutup">✕</button>
+</div>
 <canvas id="hiddenCanvas"></canvas>
 
 <script>
@@ -103,179 +110,283 @@ else weddingId = localStorage.getItem('active_wedding_id');
 
 document.getElementById('backToIndex').href = weddingId ? `index.html?w=${encodeURIComponent(weddingId)}` : 'index.html';
 
-let allMedia = [];
+let items = [];            // semua momen yang sudah dimuat (halaman demi halaman)
 let currentFilter = 'all';
+let currentPage = 0, hasMore = false, isLoading = false, loadToken = 0;
 let weddingSettings = null;
+let enabledTypes = ['photo', 'video', 'voice'];
 let currentlyPlayingEl = null;
-const fullFileCache = new Map(); // file_id -> { blob, url, mimeType }
+const fullFileCache = new Map(); // file_id -> { blob, url, mimeType }  (dibatasi supaya HP RAM kecil tidak berat)
+const CACHE_LIMIT = 4;
+const TYPE_LABEL = { photo: 'Foto', video: 'Video', voice: 'Suara' };
+const TYPE_ICON = { photo: '📷', video: '🎥', voice: '🎤' };
 
 if (!weddingId) {
-  document.getElementById('loader').textContent = 'Kode undangan tidak ditemukan. Buka dari link yang dibagikan mempelai.';
+  document.getElementById('loader').textContent = 'Link album belum lengkap. Buka lewat link yang dibagikan mempelai ya.';
 } else {
   init();
 }
 
+// Permintaan ke server dengan batas waktu & coba ulang otomatis (jaringan seluler sering putus-putus)
+async function apiGet(params, tries = 3) {
+  const qs = new URLSearchParams(params).toString();
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { signal: ctrl.signal });
+      const data = await res.json();
+      clearTimeout(to);
+      if (data && data.busy && i < tries - 1) { await sleep(800 * (i + 1)); continue; }
+      return data;
+    } catch (e) { clearTimeout(to); lastErr = e; await sleep(600 * (i + 1)); }
+  }
+  throw lastErr || new Error('Koneksi bermasalah');
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 async function init() {
   try {
-    const settingsRes = await fetch(`${APPS_SCRIPT_URL}?action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
-    const settings = await settingsRes.json();
-    if (settings.success) {
-      weddingSettings = settings;
-      document.getElementById('titleText').textContent = (settings.ui_config && settings.ui_config.album_headline) || `💍 ${settings.groom_name} & ${settings.bride_name}`;
-      if (settings.date) document.getElementById('subtitleText').textContent = formatDate(settings.date);
+    const s = await apiGet({ action: 'getSettings', wedding_id: weddingId });
+    if (!s.success) {
+      document.getElementById('loader').textContent = s.message || 'Album tidak ditemukan.';
+      return;
     }
-  } catch (e) { /* biarkan judul default */ }
-  loadAlbum();
-}
-
-async function loadAlbum() {
-  try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getAlbum&wedding_id=${encodeURIComponent(weddingId)}`);
-    const data = await res.json();
-    document.getElementById('loader').style.display = 'none';
-
-    if (!data.success) { showToast(data.message || 'Gagal memuat album', 'error'); document.getElementById('empty').style.display = 'block'; return; }
-    if (!data.media || data.media.length === 0) { document.getElementById('empty').style.display = 'block'; return; }
-    allMedia = data.media;
-    render();
-  } catch (err) {
-    document.getElementById('loader').style.display = 'none';
-    showToast('Gagal terhubung ke server: ' + err.message, 'error');
-    document.getElementById('empty').style.display = 'block';
+    weddingSettings = s;
+    enabledTypes = s.types || ['photo'];
+    document.getElementById('titleText').textContent = (s.ui_config && s.ui_config.album_headline) || `💍 ${s.groom_name} & ${s.bride_name}`;
+    if (s.date) document.getElementById('subtitleText').textContent = formatDate(s.date);
+    buildFilters();
+  } catch (e) {
+    showLoadError();
+    return;
   }
+  loadPage(true);
 }
 
-// ============================================
-// AMBIL FILE UTUH SECARA CHUNKED — andal untuk file besar berkualitas
-// tinggi (menghindari batas ukuran respons Apps Script yang bisa memotong
-// file dan membuat video/voice note rusak atau kehilangan suara)
-// ============================================
-function base64ToUint8(base64) {
-  const byteChars = atob(base64);
-  const arr = new Uint8Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) arr[i] = byteChars.charCodeAt(i);
-  return arr;
-}
-
-async function fetchFileChunked(fileId, onProgress) {
-  if (fullFileCache.has(fileId)) return fullFileCache.get(fileId);
-
-  const metaRes = await fetch(`${APPS_SCRIPT_URL}?action=getMediaMeta&file_id=${encodeURIComponent(fileId)}`);
-  const meta = await metaRes.json();
-  if (!meta.success) throw new Error(meta.message || 'File tidak ditemukan');
-
-  const parts = [];
-  let offset = 0;
-  let isLast = false;
-  let totalSize = meta.size || null;
-  let guard = 0;
-
-  while (!isLast && guard < 500) {
-    guard++;
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaChunk&file_id=${encodeURIComponent(fileId)}&offset=${offset}`);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message || 'Gagal mengambil bagian file');
-
-    const bytes = base64ToUint8(data.base64);
-    parts.push(bytes);
-    offset += data.chunkLength;
-    isLast = data.isLast || data.chunkLength === 0;
-    if (data.totalSize) totalSize = data.totalSize;
-    if (onProgress && totalSize) onProgress(Math.min(99, Math.round((offset / totalSize) * 100)));
-  }
-  if (onProgress) onProgress(100);
-
-  const totalLen = parts.reduce((s, p) => s + p.length, 0);
-  const combined = new Uint8Array(totalLen);
-  let pos = 0;
-  parts.forEach(p => { combined.set(p, pos); pos += p.length; });
-
-  const blob = new Blob([combined], { type: meta.mimeType });
-  const url = URL.createObjectURL(blob);
-  const result = { blob, url, mimeType: meta.mimeType, filename: meta.filename };
-  fullFileCache.set(fileId, result);
-  return result;
-}
-
-// ============================================
-// RENDER GRID — pakai thumbnail ringan (cepat), file utuh diambil
-// belakangan hanya saat pemutaran/unduh benar-benar diminta
-// ============================================
-function render() {
-  const grid = document.getElementById('grid');
-  const empty = document.getElementById('empty');
-  grid.innerHTML = '';
-
-  const items = currentFilter === 'all' ? allMedia : allMedia.filter(m => m.media_type === currentFilter);
-  if (items.length === 0) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-
-  const uiConfig = (weddingSettings && weddingSettings.ui_config) || {};
-  const previewOn = uiConfig.allow_preview !== false;
-  const originalOn = uiConfig.allow_download_original !== false;
-  const framedOn = uiConfig.allow_download_framed !== false;
-
-  const typeLabel = { photo: '📷 Foto', video: '🎥 Video', voice: '🎤 Voice Note' };
-
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    const uid = 'm_' + item.media_id;
-    const thumb = item.thumbnail_url || '';
-
-    let mediaHtml = '';
-    if (!previewOn) {
-      // Preview dimatikan admin — hanya info dasar, tanpa pratinjau media
-      mediaHtml = `<div class="media-box" style="min-height:100px;flex-direction:column;gap:6px;color:#a08d7d;">
-        <span style="font-size:26px;">${typeLabel[item.media_type].split(' ')[0]}</span>
-        <span style="font-size:11px;">${typeLabel[item.media_type].split(' ').slice(1).join(' ')} — unduh untuk melihat</span>
-      </div>`;
-    } else if (item.media_type === 'photo') {
-      mediaHtml = thumb
-        ? `<div class="media-box"><img src="${thumb}" loading="lazy"></div>`
-        : `<div class="media-box" id="${uid}_box"><span class="spinner">Memuat foto...</span></div>`;
-    } else if (item.media_type === 'video') {
-      mediaHtml = `
-        <div class="media-box" id="${uid}_box">
-          ${thumb ? `<img src="${thumb}" loading="lazy">` : ''}
-          <button class="video-poster-btn" onclick="playFullVideo('${item.file_id}','${uid}',this)">▶</button>
-        </div>`;
-    } else {
-      mediaHtml = `
-        <div class="audio-box" id="${uid}_box">
-          <div class="wave">🎵</div>
-          <button class="play-toggle" onclick="playAudio('${item.file_id}','${uid}',this)" id="${uid}_btn">▶</button>
-        </div>`;
-    }
-
-    const dlButtons = [];
-    if (originalOn) dlButtons.push(`<button class="dl-btn" onclick="downloadOriginal('${item.file_id}','${item.media_type}','${escapeHtml(item.guest_name)}',this)">Unduh Asli</button>`);
-    if (framedOn) dlButtons.push(`<button class="dl-btn primary" onclick="downloadWithFrame('${item.media_id}','${item.file_id}','${item.media_type}','${escapeHtml(item.guest_name)}',this)">Unduh Berbingkai ✨</button>`);
-    if (dlButtons.length === 0) dlButtons.push(`<span style="font-size:11px;color:#bbb;">Unduhan dinonaktifkan admin</span>`);
-
-    div.innerHTML = `
-      ${mediaHtml}
-      <div class="cap">
-        <div class="who"><b>${escapeHtml(item.guest_name)}</b><span>${item.date}</span></div>
-        <div class="dl-row">${dlButtons.join('')}</div>
-      </div>`;
-    grid.appendChild(div);
-
-    if (previewOn && item.media_type === 'photo' && !thumb) loadPhotoFallback(item, uid);
+// Tab filter hanya menampilkan kategori yang sedang ON. Kalau cuma satu kategori ON, tab disembunyikan.
+function buildFilters() {
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  if (enabledTypes.length <= 1) { box.style.display = 'none'; currentFilter = 'all'; return; }
+  box.style.display = 'flex';
+  [['all', 'Semua']].concat(enabledTypes.map(t => [t, TYPE_LABEL[t]])).forEach(([val, label]) => {
+    const b = document.createElement('button');
+    b.dataset.filter = val; b.textContent = label;
+    if (val === currentFilter) b.classList.add('active');
+    b.addEventListener('click', () => {
+      if (currentFilter === val) return;
+      currentFilter = val;
+      box.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+      loadPage(true);
+    });
+    box.appendChild(b);
   });
 }
 
-// kalau foto lama belum punya thumbnail (diunggah sebelum fitur ini ada),
-// ambil file utuhnya sebagai fallback
-async function loadPhotoFallback(item, uid) {
+function showLoadError() {
+  const l = document.getElementById('loader');
+  l.style.display = 'block';
+  l.innerHTML = 'Koneksi sedang kurang stabil 😕<br><button class="retry-btn" onclick="location.reload()">Coba Lagi</button>';
+}
+
+// Muat halaman album. reset=true -> mulai dari awal (ganti filter / pertama kali).
+async function loadPage(reset) {
+  if (isLoading && !reset) return;
+  const myToken = ++loadToken;
+  isLoading = true;
+  const grid = document.getElementById('grid');
+  const loader = document.getElementById('loader');
+  const cacheKey = `alb_${weddingId}_${currentFilter}`;
+
+  if (reset) {
+    items = []; currentPage = 0; hasMore = false;
+    grid.innerHTML = ''; document.getElementById('empty').style.display = 'none';
+    // Tampilkan hasil tersimpan dulu supaya album terasa instan, lalu perbarui dari server
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      if (cached && cached.media && cached.media.length) { items = cached.media.slice(); renderItems(items, false); }
+      else loader.style.display = 'block';
+    } catch (e) { loader.style.display = 'block'; }
+  } else {
+    loader.style.display = 'block';
+  }
+
+  try {
+    const next = reset ? 1 : currentPage + 1;
+    const data = await apiGet({ action: 'getAlbum', wedding_id: weddingId, page: next, type: currentFilter });
+    if (myToken !== loadToken) return; // pengguna sudah ganti filter
+    loader.style.display = 'none';
+    if (!data.success) { showToast(data.message || 'Album belum bisa dimuat', 'error'); return; }
+    if (JSON.stringify(data.types) !== JSON.stringify(enabledTypes)) { // mempelai baru mengubah kategori aktif
+      enabledTypes = data.types; buildFilters();
+    }
+    currentPage = data.page; hasMore = data.has_more;
+    if (reset) {
+      items = data.media.slice();
+      grid.innerHTML = '';
+      renderItems(items, false);
+      try { sessionStorage.setItem(cacheKey, JSON.stringify({ media: data.media })); } catch (e) {}
+    } else {
+      const start = items.length;
+      items = items.concat(data.media);
+      renderItems(data.media, true, start);
+    }
+    document.getElementById('empty').style.display = items.length === 0 ? 'block' : 'none';
+    watchSentinel();
+  } catch (e) {
+    if (myToken === loadToken) { loader.style.display = 'none'; if (items.length === 0) showLoadError(); else showToast('Koneksi terputus. Gulir lagi untuk mencoba memuat.', 'error'); }
+  } finally {
+    if (myToken === loadToken) isLoading = false;
+  }
+}
+
+// Gulir tak terbatas dengan IntersectionObserver (lebih ringan daripada event scroll)
+let sentinelObserver = null;
+function watchSentinel() {
+  const s = document.getElementById('sentinel');
+  if (!('IntersectionObserver' in window)) return;
+  if (!sentinelObserver) {
+    sentinelObserver = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !isLoading) loadPage(false);
+    }, { rootMargin: '600px' });
+    sentinelObserver.observe(s);
+  } else { sentinelObserver.unobserve(s); sentinelObserver.observe(s); }
+}
+
+function renderItems(list, append, startIndex) {
+  const grid = document.getElementById('grid');
+  const ui = (weddingSettings && weddingSettings.ui_config) || {};
+  const previewOn = ui.allow_preview !== false;
+  const originalOn = ui.allow_download_original !== false;
+  const framedOn = ui.allow_download_framed !== false;
+  const frag = document.createDocumentFragment();
+  const base = append ? startIndex : 0;
+
+  list.forEach((item, k) => {
+    const idx = base + k;
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.dataset.idx = idx;
+    const uid = 'm_' + item.media_id;
+    const thumb = item.thumbnail_url || '';
+    let mediaHtml = '';
+
+    if (!previewOn) {
+      mediaHtml = `<div class="media-box" style="min-height:100px;flex-direction:column;gap:6px;color:#a08d7d;">
+        <span style="font-size:26px;">${TYPE_ICON[item.media_type]}</span>
+        <span style="font-size:11px;">${TYPE_LABEL[item.media_type]} — unduh untuk melihat</span></div>`;
+    } else if (item.media_type === 'photo') {
+      mediaHtml = thumb
+        ? `<div class="media-box" data-act="view" style="cursor:zoom-in"><img src="${thumb}" decoding="async" alt="Foto dari ${escapeAttr(item.guest_name)}"></div>`
+        : `<div class="media-box" data-act="view" style="min-height:140px;cursor:zoom-in"><span class="spinner">📷 Ketuk untuk melihat foto</span></div>`;
+    } else if (item.media_type === 'video') {
+      mediaHtml = `<div class="media-box" id="${uid}_box" style="${thumb ? '' : 'min-height:160px;background:#2a2320;'}">
+          ${thumb ? `<img src="${thumb}" decoding="async" alt="">` : ''}
+          <button class="video-poster-btn" data-act="playvideo" aria-label="Putar video">▶</button></div>`;
+    } else {
+      mediaHtml = `<div class="audio-box" id="${uid}_box"><div class="wave">🎵</div>
+          <button class="play-toggle" data-act="playaudio" id="${uid}_btn" aria-label="Putar suara">▶</button></div>`;
+    }
+
+    const dl = [];
+    if (originalOn) dl.push(`<button class="dl-btn" data-act="dlorig">Unduh Asli</button>`);
+    if (framedOn) dl.push(`<button class="dl-btn primary" data-act="dlframe">Unduh Berbingkai ✨</button>`);
+    if (!dl.length) dl.push(`<span style="font-size:11px;color:#bbb;">Unduhan sedang dinonaktifkan mempelai</span>`);
+
+    div.innerHTML = `${mediaHtml}
+      <div class="cap">
+        <div class="who"><b>${escapeHtml(item.guest_name)}</b><span>${escapeHtml(item.date || '')}</span></div>
+        ${item.caption ? `<div style="margin-bottom:8px;font-style:italic;">${escapeHtml(item.caption)}</div>` : ''}
+        <div class="dl-row">${dl.join('')}</div>
+      </div>`;
+    frag.appendChild(div);
+  });
+  grid.appendChild(frag);
+}
+
+// Satu pendengar klik untuk semua kartu (hemat memori, dan aman untuk nama tamu yang berisi tanda kutip)
+document.getElementById('grid').addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const card = el.closest('.item');
+  const item = items[Number(card.dataset.idx)];
+  if (!item) return;
+  const uid = 'm_' + item.media_id;
+  const act = el.dataset.act;
+  if (act === 'playvideo') playFullVideo(item.file_id, uid, el);
+  else if (act === 'playaudio') playAudio(item.file_id, uid, el);
+  else if (act === 'dlorig') downloadOriginal(item.file_id, item.media_type, item.guest_name, el);
+  else if (act === 'dlframe') downloadWithFrame(item.media_id, item.file_id, item.media_type, item.guest_name, el);
+  else if (act === 'view') openPhoto(item, card);
+});
+
+// Lihat foto ukuran penuh (diambil hanya saat diketuk)
+async function openPhoto(item, card) {
+  const ov = document.getElementById('photoViewer');
+  const img = document.getElementById('photoViewerImg');
+  document.getElementById('photoViewerCap').textContent = item.guest_name;
+  img.src = item.thumbnail_url || '';
+  ov.style.display = 'flex';
   try {
     const { url } = await fetchFileChunked(item.file_id);
-    const box = document.getElementById(uid + '_box');
-    if (box) box.innerHTML = `<img src="${url}" loading="lazy">`;
-  } catch (err) {
-    const box = document.getElementById(uid + '_box');
-    if (box) box.innerHTML = `<span class="spinner">Gagal memuat</span>`;
+    if (ov.style.display === 'flex') img.src = url;
+  } catch (e) { showToast('Foto ukuran penuh belum bisa dimuat. Coba lagi ya.', 'error'); }
+}
+function closePhoto() { document.getElementById('photoViewer').style.display = 'none'; document.getElementById('photoViewerImg').src = ''; }
+
+// ============================================
+// AMBIL FILE UTUH PER POTONGAN (paralel 3 potongan sekaligus -> lebih cepat)
+// ============================================
+function base64ToUint8(base64) {
+  const bin = atob(base64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+function rememberFile(fileId, entry) {
+  fullFileCache.set(fileId, entry);
+  while (fullFileCache.size > CACHE_LIMIT) {
+    const oldest = fullFileCache.keys().next().value;
+    const old = fullFileCache.get(oldest);
+    fullFileCache.delete(oldest);
+    try { URL.revokeObjectURL(old.url); } catch (e) {}
   }
+}
+
+const inflight = new Map();
+function fetchFileChunked(fileId, onProgress) {
+  if (fullFileCache.has(fileId)) return Promise.resolve(fullFileCache.get(fileId));
+  if (inflight.has(fileId)) return inflight.get(fileId);
+  const p = (async () => {
+    const meta = await apiGet({ action: 'getMediaMeta', file_id: fileId });
+    if (!meta.success) throw new Error(meta.message || 'File tidak ditemukan');
+    const size = meta.size || 0, chunk = meta.chunkSize || 3145728;
+    const count = Math.max(1, Math.ceil(size / chunk));
+    const parts = new Array(count);
+    let done = 0, next = 0;
+    async function worker() {
+      while (next < count) {
+        const i = next++;
+        const d = await apiGet({ action: 'getMediaChunk', file_id: fileId, offset: i * chunk });
+        if (!d.success) throw new Error(d.message || 'Gagal mengambil bagian file');
+        parts[i] = base64ToUint8(d.base64);
+        done++;
+        if (onProgress) onProgress(Math.min(99, Math.round(done / count * 100)));
+      }
+    }
+    await Promise.all([worker(), worker(), worker()].slice(0, Math.min(3, count)));
+    if (onProgress) onProgress(100);
+    const blob = new Blob(parts, { type: meta.mimeType });
+    const entry = { blob, url: URL.createObjectURL(blob), mimeType: meta.mimeType, filename: meta.filename };
+    rememberFile(fileId, entry);
+    return entry;
+  })();
+  inflight.set(fileId, p);
+  p.finally(() => inflight.delete(fileId)).catch(() => {});
+  return p;
 }
 
 async function playFullVideo(fileId, uid, btn) {
@@ -286,7 +397,7 @@ async function playFullVideo(fileId, uid, btn) {
     box.innerHTML = `<video id="${uid}" src="${url}" controls playsinline autoplay style="width:100%;display:block;"></video>`;
     document.getElementById(uid).play();
   } catch (err) {
-    showToast('Gagal memuat video: ' + err.message, 'error');
+    showToast('Video belum bisa diputar. Coba lagi ya.', 'error');
     btn.disabled = false; btn.textContent = '▶';
   }
 }
@@ -313,7 +424,7 @@ async function playAudio(fileId, uid, btn) {
       }
       mediaEl.onended = () => { btn.textContent = '▶'; };
     } catch (err) {
-      showToast('Gagal memuat suara: ' + err.message, 'error');
+      showToast('Suara belum bisa diputar. Coba lagi ya.', 'error');
       btn.disabled = false; btn.textContent = '▶';
       return;
     }
@@ -328,15 +439,6 @@ async function playAudio(fileId, uid, btn) {
   else { mediaEl.pause(); btn.textContent = '▶'; }
 }
 
-document.querySelectorAll('.filters button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    render();
-  });
-});
-
 // ============================================
 // UNDUH ASLI (langsung, file utuh apa adanya)
 // ============================================
@@ -345,11 +447,11 @@ async function downloadOriginal(fileId, type, guestName, btnEl) {
   btnEl.disabled = true; btnEl.textContent = '0%';
   try {
     const { blob, mimeType } = await fetchFileChunked(fileId, pct => { btnEl.textContent = pct + '%'; });
-    const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('webm') ? 'webm' : mimeType.includes('jpeg') ? 'jpg' : 'bin';
+    const ext = mimeType.startsWith('audio/mp4') ? 'm4a' : mimeType.includes('mp4') ? 'mp4' : mimeType.includes('webm') ? 'webm' : mimeType.includes('jpeg') ? 'jpg' : 'bin';
     triggerDownload(blob, `wedding-${guestName}-${Date.now()}.${ext}`);
     showToast('Unduhan siap! 🎉', 'success');
   } catch (err) {
-    showToast('Gagal mengunduh: ' + err.message, 'error');
+    showToast('Unduhan belum berhasil. Periksa koneksi lalu coba lagi.', 'error');
   } finally {
     btnEl.disabled = false; btnEl.textContent = originalText;
   }
@@ -470,11 +572,11 @@ async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
   if (autoInclude[type]) {
     try {
       const { blob, mimeType } = await fetchFileChunked(fileId, pct => { btnEl.textContent = pct + '%'; });
-      const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('webm') ? 'webm' : mimeType.includes('jpeg') ? 'jpg' : 'bin';
+      const ext = mimeType.startsWith('audio/mp4') ? 'm4a' : mimeType.includes('mp4') ? 'mp4' : mimeType.includes('webm') ? 'webm' : mimeType.includes('jpeg') ? 'jpg' : 'bin';
       triggerDownload(blob, `wedding-${guestName}-${Date.now()}.${ext}`);
       showToast('Unduhan siap! 🎉 (bingkai sudah include sejak rekam)', 'success');
     } catch (err) {
-      showToast('Gagal mengunduh: ' + err.message, 'error');
+      showToast('Unduhan belum berhasil. Periksa koneksi lalu coba lagi.', 'error');
     } finally {
       btnEl.disabled = false; btnEl.textContent = originalText;
     }
@@ -496,9 +598,9 @@ async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
       btnEl.textContent = '0%';
       await downloadAudioAsVideo(url, cfg, guestName, pct => { btnEl.textContent = pct + '%'; }, customImg);
     }
-    showToast('Unduhan siap! 🎉', 'success');
+    showToast('Selesai! Berkasnya sudah tersimpan 🎉', 'success');
   } catch (err) {
-    showToast('Gagal menyiapkan unduhan: ' + err.message, 'error');
+    showToast('Unduhan belum berhasil. Coba lagi sebentar lagi ya.', 'error');
   } finally {
     btnEl.disabled = false; btnEl.textContent = originalText;
   }
@@ -721,7 +823,8 @@ function triggerDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
 
-function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function escapeAttr(str) { return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(str) { return escapeAttr(str); }
 function formatDate(d) { try { return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }); } catch (e) { return d; } }
 function showToast(text, type) {
   const t = document.getElementById('toast');

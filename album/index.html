@@ -125,11 +125,35 @@
   .toast.success { background:#2e7d32; }
   .toast.error { background:#c62828; }
 
-  .progress-overlay {
-    position:absolute; inset:0; background:rgba(0,0,0,.75); z-index:70; display:none;
-    flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  .upload-pill {
+    position:absolute; top:max(64px, calc(env(safe-area-inset-top) + 56px)); left:50%; transform:translateX(-50%); z-index:55; display:none;
+    align-items:center; gap:10px; min-width:200px; max-width:92%; padding:10px 16px 14px; border-radius:16px;
+    background:rgba(20,20,20,.82); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); font-size:13px; overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
   }
-  .progress-overlay span { font-size:14px; }
+  .upload-pill .bar { position:absolute; left:0; bottom:0; height:3px; width:0; background:#c99b6a; transition:width .25s; }
+  .upload-pill.ok .bar { background:#4caf50; } .upload-pill.warn .bar { background:#ff9800; }
+  .upload-pill button { border:none; background:#c99b6a; color:#fff; border-radius:14px; padding:6px 12px; font-weight:700; font-size:12px; }
+
+  .result-overlay { position:absolute; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:24px;
+    background:rgba(10,8,6,.62); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .result-overlay.show { display:flex; animation:fadeInBg .2s ease-out; }
+  @keyframes fadeInBg { from { opacity:0; } to { opacity:1; } }
+  .result-card { width:100%; max-width:340px; background:#fffaf5; color:#3a2e28; border-radius:24px; padding:30px 24px 22px; text-align:center;
+    box-shadow:0 24px 70px rgba(0,0,0,.45); animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes cardIn { from { transform:translateY(24px) scale(.94); opacity:0; } to { transform:none; opacity:1; } }
+  .result-icon { width:68px; height:68px; margin:0 auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#f3e4d2; }
+  .result-icon svg { width:34px; height:34px; stroke:#a97c4f; fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; }
+  .result-card.success .result-icon { background:#e3f2e5; } .result-card.success .result-icon svg { stroke:#2e7d32; }
+  .result-card.success .result-icon path { stroke-dasharray:40; stroke-dashoffset:40; animation:drawCheck .5s .15s ease-out forwards; }
+  @keyframes drawCheck { to { stroke-dashoffset:0; } }
+  .result-card.error .result-icon { background:#fdeaea; } .result-card.error .result-icon svg { stroke:#c62828; }
+  .result-card.warn .result-icon { background:#fff1dc; } .result-card.warn .result-icon svg { stroke:#e08a00; }
+  .result-card h3 { font-size:19px; margin-bottom:8px; }
+  .result-card p { font-size:14px; line-height:1.55; color:#7a6a5d; white-space:pre-line; margin-bottom:20px; }
+  .result-card button { display:block; width:100%; padding:13px; border-radius:14px; border:none; font-size:14px; font-weight:700; }
+  #resultPrimary { background:#c99b6a; color:#fff; margin-bottom:8px; }
+  #resultSecondary { background:transparent; color:#8a7b6e; }
 </style>
 </head>
 <body>
@@ -137,8 +161,8 @@
 
   <div id="statusScreen">
     <div class="icon">💍</div>
-    <h2 id="statusTitle">Menyiapkan kamera...</h2>
-    <p id="statusText">Mohon tunggu sebentar</p>
+    <h2 id="statusTitle">Menyiapkan kamera…</h2>
+    <p id="statusText">Sebentar ya, kami siapkan semuanya untukmu</p>
     <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
   </div>
 
@@ -158,16 +182,26 @@
   <div id="voiceWrap">
     <div class="vn-orb" id="vnOrb">🎤</div>
     <div id="vnTimer">00:00</div>
-    <p id="vnHint">Tekan tombol merah untuk mulai merekam ucapanmu</p>
+    <p id="vnHint">Ketuk tombol merah, lalu ucapkan doa & harapanmu</p>
     <audio id="vnPlayer" controls></audio>
     <video id="vnVideoPlayer" playsinline controls style="display:none;width:85%;border-radius:14px;"></video>
   </div>
 
   <div class="toast" id="toast"></div>
 
-  <div class="progress-overlay" id="progressOverlay">
-    <div class="icon" style="font-size:32px;">📤</div>
-    <span id="progressText">Mengirim...</span>
+  <div class="upload-pill" id="uploadPill" role="status" aria-live="polite">
+    <span id="pillText">Mengirim…</span><button id="pillBtn" style="display:none;" onclick="retryFailed()">Kirim ulang</button>
+    <div class="bar" id="pillBar"></div>
+  </div>
+
+  <div class="result-overlay" id="resultOverlay">
+    <div class="result-card success" id="resultCard" role="dialog" aria-modal="true">
+      <div class="result-icon"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h3 id="resultTitle"></h3>
+      <p id="resultText"></p>
+      <button id="resultPrimary"></button>
+      <button id="resultSecondary"></button>
+    </div>
   </div>
 
   <div id="bottomOverlay">
@@ -175,7 +209,7 @@
 
     <div id="controls">
     <div class="name-field">
-      <input type="text" id="guestName" placeholder="Nama kamu" maxlength="40">
+      <input type="text" id="guestName" placeholder="Tulis namamu di sini" maxlength="40" autocomplete="name" enterkeyhint="done">
     </div>
 
     <div class="mode-switch" id="modeSwitch">
@@ -191,7 +225,7 @@
     </div>
 
     <div class="finish-row" id="finishRow">
-      <button id="finishBtn">Selesai & Kirim ✓</button>
+      <button id="finishBtn">Kirim Foto ✓</button>
     </div>
 
     <div class="vn-controls" id="vnControlsIdle">
@@ -200,12 +234,12 @@
     <div class="vn-controls" id="vnControlsReview">
       <button id="vnRedoBtn">↺ Ulang</button>
       <button id="vnPlayBtn">▶ Putar</button>
-      <button id="vnSendBtn">Kirim ✓</button>
+      <button id="vnSendBtn">Kirim Suara ✓</button>
     </div>
 
     <div class="review-row" id="reviewRow">
       <button id="retakeBtn">↺ Ambil Ulang</button>
-      <button id="sendMediaBtn">Kirim ✓</button>
+      <button id="sendMediaBtn">Kirim Video ✓</button>
     </div>
   </div>
   </div>
@@ -213,7 +247,7 @@
 
 <script>
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec';
-const MAX_SHOTS = 5;
+let MAX_SHOTS = 5;
 
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive:false });
@@ -232,7 +266,7 @@ else weddingId = localStorage.getItem('active_wedding_id');
 document.getElementById('toAlbumLink').href = weddingId ? `album.html?w=${encodeURIComponent(weddingId)}` : '#';
 
 if (!weddingId) {
-  showStatus('Tautan Tidak Lengkap', 'Link ini belum berisi kode undangan. Minta mempelai untuk mengirimkan ulang link undangan yang benar.', false);
+  showStatus('Link Belum Lengkap', 'Link ini belum berisi kode undangan. Minta mempelai mengirimkan ulang link yang benar ya.', false);
   throw new Error('no wedding id');
 }
 
@@ -283,11 +317,30 @@ function getQuality(type) {
   const uiConfig = (weddingSettings && weddingSettings.ui_config) || {};
   const q = uiConfig.quality || {};
   const level = q[type] || 'high';
+  let out;
   if (level === 'custom') {
     const custom = (uiConfig.quality_custom && uiConfig.quality_custom[type]) || {};
-    return Object.assign({}, QUALITY_PRESETS[type].high, custom);
+    out = Object.assign({}, QUALITY_PRESETS[type].high, custom);
+  } else {
+    out = Object.assign({}, QUALITY_PRESETS[type][level] || QUALITY_PRESETS[type].high);
   }
-  return QUALITY_PRESETS[type][level] || QUALITY_PRESETS[type].high;
+  // Pengaman: HP RAM kecil atau sinyal lambat otomatis memakai ukuran lebih hemat
+  const ct = (navigator.connection && navigator.connection.effectiveType) || '';
+  const slow = /(^|-)2g|3g/.test(ct);
+  if (type === 'photo') {
+    out.width = Math.min(out.width, IS_LOW_END ? 1280 : 2560);
+    out.height = Math.min(out.height, IS_LOW_END ? 720 : 1440);
+    if (IS_LOW_END || slow) out.jpegQuality = Math.min(out.jpegQuality, 0.82);
+  } else if (type === 'video') {
+    out.width = Math.min(out.width, IS_LOW_END ? 1280 : 1920);
+    out.height = Math.min(out.height, IS_LOW_END ? 720 : 1080);
+    const cap = slow ? 1200000 : (IS_LOW_END ? 1800000 : 8000000);
+    out.videoBitsPerSecond = Math.min(out.videoBitsPerSecond, cap);
+    out.audioBitsPerSecond = Math.min(out.audioBitsPerSecond, slow ? 64000 : 128000);
+  } else if (type === 'voice') {
+    out.audioBitsPerSecond = Math.min(out.audioBitsPerSecond, slow ? 48000 : 96000);
+  }
+  return out;
 }
 let activeFilterCss = 'none';
 let activeFilterParams = null; // diisi kalau filter aktif adalah Filter Pro (JSON 15 parameter)
@@ -590,6 +643,230 @@ function drawCheapVignette(ctx, w, h, amount) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 }
+// ============================================
+// MODUL UPLOAD — antrean di latar belakang, ringan di HP RAM kecil
+// - Foto kecil: 1x kirim (cepat). Video/VN besar: kirim LANGSUNG ke Google Drive
+//   (tanpa base64, tanpa lewat Apps Script) lalu dicatat. Kalau jalur langsung
+//   gagal, otomatis pindah ke jalur biasa.
+// - Tamu tidak perlu menunggu: bisa lanjut memotret sementara file terkirim.
+// ============================================
+const SMALL_UPLOAD_BYTES = 1500000;           // di bawah ini -> sekali kirim saja
+const IS_LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+const MAX_PARALLEL_UPLOADS = IS_LOW_END ? 1 : 2;
+const MAX_TRIES = 4;
+
+const uploadJobs = [];                        // semua job pada sesi ini
+let activeUploads = 0;
+let sessionStats = { ok: 0, fail: 0, pending: 0, live: 0, types: {}, lastMessage: '' };
+let modalShownFor = 0;
+
+function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Kirim HTTP lewat XHR supaya progres unggah bisa dibaca
+function xhrSend(method, url, body, headers, onProgress, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open(method, url);
+    Object.keys(headers || {}).forEach(k => x.setRequestHeader(k, headers[k]));
+    x.timeout = timeoutMs || 90000;
+    if (onProgress && x.upload) x.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    x.onload = () => resolve({ status: x.status, text: x.responseText });
+    x.onerror = () => reject(new Error('network'));
+    x.ontimeout = () => reject(new Error('timeout'));
+    x.send(body);
+  });
+}
+
+async function callServer(payload, onProgress) {
+  const r = await xhrSend('POST', APPS_SCRIPT_URL, JSON.stringify(payload), { 'Content-Type': 'text/plain;charset=utf-8' }, onProgress, 120000);
+  let data; try { data = JSON.parse(r.text); } catch (e) { throw new Error('bad_response'); }
+  return data;
+}
+
+function enqueueUpload(job) {
+  job.state = 'queued'; job.tries = 0; job.progress = 0; job.id = Date.now() + Math.random();
+  uploadJobs.push(job);
+  sessionStats.pending++;
+  renderPill();
+  pumpUploads();
+}
+
+function pumpUploads() {
+  while (activeUploads < MAX_PARALLEL_UPLOADS) {
+    const job = uploadJobs.find(j => j.state === 'queued');
+    if (!job) break;
+    activeUploads++;
+    job.state = 'uploading';
+    runJob(job).finally(() => { activeUploads--; pumpUploads(); renderPill(); maybeShowResult(); });
+  }
+}
+
+async function runJob(job) {
+  while (job.tries < MAX_TRIES) {
+    job.tries++;
+    try {
+      if (!navigator.onLine) await waitOnline();
+      const res = await uploadOnce(job);
+      job.state = 'done'; job.progress = 1;
+      sessionStats.ok++; sessionStats.pending--;
+      sessionStats.types[job.type] = (sessionStats.types[job.type] || 0) + 1;
+      if (res && res.status === 'approved') sessionStats.live++;
+      if (res && res.message) sessionStats.lastMessage = res.message;
+      job.blob = null; job.thumb = null; // lepas memori segera
+      return;
+    } catch (e) {
+      if (e.fatal) { job.state = 'failed'; job.error = e.message; sessionStats.fail++; sessionStats.pending--; return; }
+      if (job.tries >= MAX_TRIES) break;
+      job.state = 'retrying'; renderPill();
+      await sleepMs(1200 * job.tries);
+      job.state = 'uploading';
+    }
+  }
+  job.state = 'failed'; job.error = job.error || 'network';
+  sessionStats.fail++; sessionStats.pending--;
+}
+
+function waitOnline() {
+  return new Promise(res => { const f = () => { window.removeEventListener('online', f); res(); }; window.addEventListener('online', f); });
+}
+
+function fatalError(msg) { const e = new Error(msg); e.fatal = true; return e; }
+
+async function uploadOnce(job) {
+  const base = { wedding_id: weddingId, guest_name: job.guest, media_type: job.type, caption: job.caption || '' };
+  const setP = p => { job.progress = p; renderPill(); };
+
+  if (job.blob.size > SMALL_UPLOAD_BYTES && !job.noDirect) {
+    try {
+      const init = await callServer(Object.assign({}, base, { action: 'initUpload', mime_type: job.mime, size: job.blob.size, origin: location.origin }));
+      if (!init.success) {
+        if (init.code === 'type_off') throw fatalError(init.message);
+        if (!init.fallback && init.busy !== true) throw fatalError(init.message || 'Gagal menyiapkan pengiriman');
+        throw new Error('direct_unavailable');
+      }
+      const put = await xhrSend('PUT', init.upload_url, job.blob, { 'Content-Type': job.mime }, p => setP(p * 0.9), 300000);
+      if (put.status < 200 || put.status > 299) throw new Error('direct_failed');
+      const fileId = JSON.parse(put.text).id;
+      const fin = await callServer(Object.assign({}, base, { action: 'finalizeUpload', file_id: fileId, thumb_data: job.thumb || '' }));
+      if (!fin.success) { if (fin.code === 'type_off') throw fatalError(fin.message); throw new Error(fin.message || 'finalize_failed'); }
+      return fin;
+    } catch (e) {
+      if (e.fatal) throw e;
+      job.noDirect = true; // jalur langsung bermasalah -> pakai jalur biasa untuk percobaan berikutnya
+      job.progress = 0;
+    }
+  }
+
+  const b64 = await blobToBase64(job.blob);
+  const res = await callServer(Object.assign({}, base, {
+    action: 'uploadMedia', filename: 'capture.' + job.ext, mime_type: job.mime, data: b64, thumb_data: job.thumb || ''
+  }), p => setP(p * 0.95));
+  if (!res.success) { if (res.code === 'type_off') throw fatalError(res.message); throw new Error(res.message || 'upload_failed'); }
+  return res;
+}
+
+// ---------- Indikator kecil (tidak menghalangi kamera) ----------
+function renderPill() {
+  const pill = document.getElementById('uploadPill');
+  const total = uploadJobs.length;
+  if (total === 0) { pill.style.display = 'none'; return; }
+  const active = uploadJobs.filter(j => j.state === 'queued' || j.state === 'uploading' || j.state === 'retrying');
+  const failed = uploadJobs.filter(j => j.state === 'failed');
+  const done = uploadJobs.filter(j => j.state === 'done').length;
+  const prog = uploadJobs.reduce((s, j) => s + (j.state === 'done' ? 1 : (j.state === 'failed' ? 1 : j.progress || 0)), 0) / total;
+  pill.style.display = 'flex';
+  const txt = document.getElementById('pillText');
+  const bar = document.getElementById('pillBar');
+  const btn = document.getElementById('pillBtn');
+  bar.style.width = Math.round(prog * 100) + '%';
+  btn.style.display = 'none';
+  if (active.length > 0) {
+    const retrying = active.some(j => j.state === 'retrying');
+    txt.textContent = retrying ? 'Sinyal kurang stabil, mencoba lagi…' : `Mengirim ${done + 1} dari ${total} · ${Math.round(prog * 100)}%`;
+    pill.className = 'upload-pill';
+  } else if (failed.length > 0) {
+    txt.textContent = `${failed.length} momen belum terkirim`;
+    btn.style.display = 'inline-block'; btn.textContent = 'Kirim ulang';
+    pill.className = 'upload-pill warn';
+  } else {
+    txt.textContent = 'Semua momen sudah terkirim ✓';
+    pill.className = 'upload-pill ok';
+    setTimeout(() => { if (!uploadJobs.some(j => j.state !== 'done')) pill.style.display = 'none'; }, 3500);
+  }
+}
+
+function retryFailed() {
+  uploadJobs.filter(j => j.state === 'failed').forEach(j => { j.state = 'queued'; j.tries = 0; j.noDirect = false; j.progress = 0; sessionStats.fail--; sessionStats.pending++; });
+  closeResultModal();
+  renderPill(); pumpUploads();
+}
+
+window.addEventListener('beforeunload', e => {
+  if (uploadJobs.some(j => j.state !== 'done' && j.state !== 'failed')) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ---------- Popup hasil (muncul saat antrean selesai) ----------
+function maybeShowResult() {
+  const busy = uploadJobs.some(j => j.state === 'queued' || j.state === 'uploading' || j.state === 'retrying');
+  if (busy || uploadJobs.length === 0) return;
+  if (modalShownFor === uploadJobs.length) return;
+  modalShownFor = uploadJobs.length;
+  const ok = uploadJobs.filter(j => j.state === 'done').length;
+  const failed = uploadJobs.filter(j => j.state === 'failed');
+  const fatalMsg = failed.find(j => j.error && j.error !== 'network' && j.error !== 'upload_failed');
+  const labels = { photo: 'foto', video: 'video', voice: 'voice note' };
+  const parts = Object.keys(sessionStats.types).map(t => `${sessionStats.types[t]} ${labels[t]}`);
+
+  if (failed.length === 0) {
+    const live = sessionStats.live >= ok;
+    openResultModal({
+      kind: 'success',
+      title: 'Terkirim! 🎉',
+      text: `Terima kasih sudah ikut mengabadikan momen.\n${parts.join(' & ')} kamu ` + (live ? 'sudah tampil di album.' : 'sedang menunggu persetujuan mempelai. Setelah disetujui, otomatis tampil di album.'),
+      primary: { label: 'Lihat Album', href: document.getElementById('toAlbumLink').href },
+      secondary: { label: 'Kirim Lagi', fn: closeResultModal }
+    });
+  } else if (ok > 0) {
+    openResultModal({
+      kind: 'warn', title: 'Sebagian sudah terkirim',
+      text: `${ok} berhasil, ${failed.length} belum.\nYang belum terkirim masih aman di HP-mu — coba kirim lagi ya.`,
+      primary: { label: 'Kirim Ulang', fn: retryFailed }, secondary: { label: 'Nanti Saja', fn: closeResultModal }
+    });
+  } else {
+    openResultModal({
+      kind: 'error', title: fatalMsg ? 'Pengiriman ditutup' : 'Belum berhasil terkirim',
+      text: fatalMsg ? fatalMsg.error : 'Sinyal sepertinya kurang stabil.\nMomenmu masih aman di HP — coba kirim lagi sebentar lagi.',
+      primary: fatalMsg ? { label: 'Mengerti', fn: closeResultModal } : { label: 'Coba Lagi', fn: retryFailed },
+      secondary: fatalMsg ? null : { label: 'Nanti Saja', fn: closeResultModal }
+    });
+  }
+}
+
+function openResultModal(o) {
+  const ov = document.getElementById('resultOverlay');
+  const card = document.getElementById('resultCard');
+  card.className = 'result-card ' + o.kind;
+  document.getElementById('resultTitle').textContent = o.title;
+  document.getElementById('resultText').textContent = o.text;
+  const p = document.getElementById('resultPrimary'), s = document.getElementById('resultSecondary');
+  p.textContent = o.primary.label; p.onclick = o.primary.fn || (() => { location.href = o.primary.href; });
+  if (o.secondary) { s.style.display = 'block'; s.textContent = o.secondary.label; s.onclick = o.secondary.fn; } else s.style.display = 'none';
+  ov.classList.add('show');
+}
+function closeResultModal() { document.getElementById('resultOverlay').classList.remove('show'); }
+
+// ---------- Pembuat thumbnail kecil (≤ ~40KB) ----------
+function makeThumbDataUri(source, sw, sh) {
+  const scale = Math.min(1, 360 / Math.max(sw, 1));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
+  c.getContext('2d').drawImage(source, 0, 0, c.width, c.height);
+  let q = 0.62, uri = c.toDataURL('image/jpeg', q);
+  while (uri.length > 42000 && q > 0.2) { q -= 0.1; uri = c.toDataURL('image/jpeg', q); }
+  c.width = c.height = 1; // bebaskan memori kanvas
+  return uri.length <= 42000 ? uri : '';
+}
+
 let currentMode = 'photo';
 let currentFacing = 'environment';
 let liveStream = null;
@@ -608,38 +885,61 @@ const recordedVideo = document.getElementById('recordedVideo');
 
 init();
 
+async function fetchJson(qs, tries = 3) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 15000);
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { signal: ctrl.signal });
+      const d = await res.json(); clearTimeout(to);
+      if (d && d.busy && i < tries - 1) { await sleepMs(700 * (i + 1)); continue; }
+      return d;
+    } catch (e) { clearTimeout(to); last = e; await sleepMs(500 * (i + 1)); }
+  }
+  throw last || new Error('offline');
+}
+
 async function init() {
+  const nameInput = document.getElementById('guestName');
+  try { nameInput.value = localStorage.getItem('guest_name') || ''; } catch (e) {}
+  nameInput.addEventListener('input', () => { try { localStorage.setItem('guest_name', nameInput.value.trim()); } catch (e) {} });
   try {
-    const settingsRes = await fetch(`${APPS_SCRIPT_URL}?action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
-    const settings = await settingsRes.json();
-    if (!settings.success) { showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid.', false); return; }
+    const w = encodeURIComponent(weddingId);
+    const [settings, filterData] = await Promise.all([
+      fetchJson(`action=getSettings&wedding_id=${w}`),
+      fetchJson(`action=getFilters&wedding_id=${w}`).catch(() => null)
+    ]);
+    if (!settings.success) { showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid. Minta link terbaru ke mempelai ya.', false); return; }
     weddingSettings = settings;
+    MAX_SHOTS = settings.max_photo || 5;
     document.getElementById('brandName').textContent = (settings.ui_config && settings.ui_config.index_headline) || `${settings.groom_name} & ${settings.bride_name}`;
     if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
 
-    if (settings.allow_filter !== false) {
-      const filterRes = await fetch(`${APPS_SCRIPT_URL}?action=getFilters&wedding_id=${encodeURIComponent(weddingId)}`);
-      const filterData = await filterRes.json();
-      if (filterData.success && filterData.active_filter_id) {
-        const match = filterData.filters.find(f => String(f.filter_id) === String(filterData.active_filter_id));
-        if (match) {
-          activeFilterCss = match.css_filter || 'none';
-          try {
-            const raw = match.params ? JSON.parse(match.params) : null;
-            if (!raw) activeFilterParams = null;
-            else if (raw.photo || raw.video) activeFilterParams = { photo: raw.photo || {}, video: raw.video || {} };
-            else activeFilterParams = { photo: raw, video: raw }; // format lama (flat), dipakai untuk keduanya
-          } catch (e) { activeFilterParams = null; }
-        }
+    const types = settings.types || ['photo'];
+    if (types.length === 0) {
+      showStatus('Pengiriman Sedang Ditutup', 'Mempelai sedang menutup pengiriman momen. Kamu tetap bisa melihat album ya.', { label: 'Lihat Album', href: document.getElementById('toAlbumLink').href });
+      return;
+    }
+
+    if (settings.allow_filter !== false && filterData && filterData.success && filterData.active_filter_id) {
+      const match = filterData.filters.find(f => String(f.filter_id) === String(filterData.active_filter_id));
+      if (match) {
+        activeFilterCss = match.css_filter || 'none';
+        try {
+          const raw = match.params ? JSON.parse(match.params) : null;
+          if (!raw) activeFilterParams = null;
+          else if (raw.photo || raw.video) activeFilterParams = { photo: raw.photo || {}, video: raw.video || {} };
+          else activeFilterParams = { photo: raw, video: raw };
+        } catch (e) { activeFilterParams = null; }
       }
     }
 
-    setupModeSwitch(settings);
-    await preloadFrameAssets(settings);
-    await startCamera();
+    setupModeSwitch(types);
+    await Promise.all([preloadFrameAssets(settings), currentMode === 'voice' ? Promise.resolve() : startCamera()]);
     hideStatus();
   } catch (err) {
-    showStatus('Gagal Memuat', 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu lalu coba lagi.', true);
+    showStatus('Belum Bisa Terhubung', 'Koneksi internet kamu sepertinya sedang kurang stabil. Coba lagi ya.', true);
   }
 }
 
@@ -822,33 +1122,39 @@ function drawFrameBar(ctx, w, h, cfg) {
   ctx.fillText(cfg.date, w/2, centerY + barH*0.28);
 }
 
-function setupModeSwitch(settings) {
-  document.querySelectorAll('#modeSwitch button').forEach(btn => {
+function setupModeSwitch(types) {
+  const buttons = document.querySelectorAll('#modeSwitch button');
+  buttons.forEach(btn => {
     const mode = btn.dataset.mode;
-    if (mode === 'video' && settings.allow_video !== true) { btn.style.display = 'none'; return; }
-    if (mode === 'voice' && settings.allow_voice !== true) { btn.style.display = 'none'; return; }
+    if (types.indexOf(mode) === -1) { btn.style.display = 'none'; return; }
     btn.addEventListener('click', () => switchMode(mode));
   });
+  if (types.length <= 1) document.getElementById('modeSwitch').style.display = 'none';
+  applyModeUI(types[0]);
 }
 
-function switchMode(mode) {
-  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+function applyModeUI(mode) {
   currentMode = mode;
-  resetCapture();
-  clearFilmstrip();
   document.querySelectorAll('#modeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-
   document.getElementById('cameraWrap').style.display = mode === 'voice' ? 'none' : 'block';
   document.getElementById('voiceWrap').style.display = mode === 'voice' ? 'flex' : 'none';
   document.getElementById('captureRow').style.display = mode === 'voice' ? 'none' : 'flex';
   document.getElementById('vnControlsIdle').style.display = mode === 'voice' ? 'flex' : 'none';
   document.getElementById('finishRow').style.display = 'none';
-
+  document.getElementById('reviewRow').style.display = 'none';
   const shutter = document.getElementById('shutterBtn');
   shutter.classList.toggle('video-mode', mode === 'video');
   shutter.disabled = false;
+}
 
-  if (mode === 'voice') { stopCameraStream(); }
+function switchMode(mode) {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  if (vnRecorder && vnRecorder.state === 'recording') return;
+  resetCapture();
+  clearFilmstrip();
+  liveVideo.style.display = 'block'; recordedVideo.style.display = 'none'; photoCanvas.style.display = 'none';
+  applyModeUI(mode);
+  if (mode === 'voice') { stopCameraStream(); resetVoice(); }
   else { startCamera(); }
 }
 
@@ -870,7 +1176,7 @@ async function startCamera() {
     liveVideo.style.filter = activeFilterParams ? approximateCssFromParams(currentMode === 'video' ? activeFilterParams.video : activeFilterParams.photo) : activeFilterCss;
     liveVideo.classList.toggle('mirrored', currentFacing === 'user');
   } catch (err) {
-    showStatus('Izin Kamera Diperlukan', 'Kami butuh akses kamera (dan mikrofon untuk mode video) untuk membantumu mengambil momen. Aktifkan izin di pengaturan browser, lalu muat ulang halaman.', true);
+    showStatus('Kamera Belum Diizinkan', 'Kami perlu akses kamera (dan mikrofon untuk video) supaya kamu bisa mengabadikan momen. Aktifkan izinnya di pengaturan browser, lalu muat ulang halaman.', true);
   }
 }
 
@@ -892,9 +1198,15 @@ shutterBtn.addEventListener('click', () => {
   }
 });
 
+let shotsInFlight = 0;
 function takePhoto() {
-  if (photoShots.length >= MAX_SHOTS) return;
-  const vw = liveVideo.videoWidth, vh = liveVideo.videoHeight;
+  if (photoShots.length + shotsInFlight >= MAX_SHOTS) return;
+  const vw0 = liveVideo.videoWidth, vh0 = liveVideo.videoHeight;
+  if (!vw0) { showToast('Kamera belum siap, tunggu sebentar ya', 'error'); return; }
+  const q = getQuality('photo');
+  const sc = Math.min(1, Math.max(q.width, q.height) / Math.max(vw0, vh0));
+  const vw = Math.round(vw0 * sc), vh = Math.round(vh0 * sc);
+  shotsInFlight++;
   photoCanvas.width = vw; photoCanvas.height = vh;
   const ctx = photoCanvas.getContext('2d');
   drawWithGuaranteedFilter(ctx, () => {
@@ -905,28 +1217,20 @@ function takePhoto() {
 
   if (autoIncludeFrame.photo) drawCaptureFrameOverlay(ctx, vw, vh, 'photo');
 
+  const thumb = makeThumbDataUri(photoCanvas, vw, vh); // thumbnail kecil, sekaligus dipakai sebagai pratinjau (hemat RAM)
   photoCanvas.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
-
-    // thumbnail ringan (dibuat dari kanvas yang sama, sebelum jepretan
-    // berikutnya menimpanya) — supaya galeri album tetap cepat dimuat
-    // meskipun foto aslinya disimpan tanpa kompresi kuat
-    const thumbCanvas = document.createElement('canvas');
-    const scale = Math.min(1, 480 / vw);
-    thumbCanvas.width = Math.round(vw * scale);
-    thumbCanvas.height = Math.round(vh * scale);
-    thumbCanvas.getContext('2d').drawImage(photoCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
-    thumbCanvas.toBlob(thumbBlob => {
-      photoShots.push({ blob, url, thumbBlob });
-      renderFilmstrip();
-
-      if (photoShots.length >= MAX_SHOTS) {
-        shutterBtn.disabled = true;
-        showToast(`Maksimal ${MAX_SHOTS} foto tercapai. Tekan Selesai & Kirim untuk mengirim.`, 'success');
-      }
-      document.getElementById('finishRow').style.display = 'flex';
-    }, 'image/jpeg', 0.8);
-  }, 'image/jpeg', getQuality('photo').jpegQuality);
+    shotsInFlight--;
+    photoCanvas.width = 1; photoCanvas.height = 1; // lepas memori kanvas besar
+    if (!blob) { showToast('Foto belum berhasil diambil, coba lagi ya', 'error'); return; }
+    photoShots.push({ blob, url: thumb, thumb });
+    renderFilmstrip();
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+    if (photoShots.length >= MAX_SHOTS) {
+      shutterBtn.disabled = true;
+      showToast(`Sudah ${MAX_SHOTS} foto, batas maksimal. Tekan "Kirim Foto" ya.`, 'success');
+    }
+    document.getElementById('finishRow').style.display = 'flex';
+  }, 'image/jpeg', q.jpegQuality);
 }
 
 function renderFilmstrip() {
@@ -965,114 +1269,110 @@ function clearFilmstrip() {
 
 document.getElementById('finishBtn').addEventListener('click', sendAllPhotos);
 
-async function sendAllPhotos() {
-  const guestName = document.getElementById('guestName').value.trim();
-  if (!guestName) { showToast('Isi nama kamu dulu ya', 'error'); return; }
-  if (photoShots.length === 0) { showToast('Ambil minimal 1 foto dulu', 'error'); return; }
-
-  showProgress(`Mengirim foto 1/${photoShots.length}...`);
-  let successCount = 0;
-
-  for (let i = 0; i < photoShots.length; i++) {
-    showProgress(`Mengirim foto ${i + 1}/${photoShots.length}...`);
-    try {
-      const base64 = await blobToBase64(photoShots[i].blob);
-      const thumbBase64 = photoShots[i].thumbBlob ? await blobToBase64(photoShots[i].thumbBlob) : null;
-      const payload = {
-        action: 'uploadMedia', wedding_id: weddingId, guest_name: guestName, media_type: 'photo',
-        filename: `photo_${i}.jpg`, mime_type: 'image/jpeg', data: base64,
-        thumb_data: thumbBase64, thumb_mime: 'image/jpeg'
-      };
-      const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
-      const result = await res.json();
-      if (result.success) successCount++;
-    } catch (err) { /* lanjut ke foto berikutnya */ }
+function ensureGuestName() {
+  const input = document.getElementById('guestName');
+  const name = input.value.trim();
+  if (!name) {
+    showToast('Tulis namamu dulu ya, supaya mempelai tahu siapa pengirimnya', 'error');
+    input.focus();
+    return '';
   }
+  try { localStorage.setItem('guest_name', name); } catch (e) {}
+  return name;
+}
 
-  hideProgress();
-  if (successCount === photoShots.length) showToast(`${successCount} foto berhasil dikirim! 🎉`, 'success');
-  else if (successCount > 0) showToast(`${successCount} dari ${photoShots.length} foto berhasil dikirim.`, 'success');
-  else showToast('Gagal mengirim foto. Periksa koneksi internet kamu.', 'error');
-
-  clearFilmstrip();
+function sendAllPhotos() {
+  const guestName = ensureGuestName();
+  if (!guestName) return;
+  if (photoShots.length === 0) { showToast('Ambil minimal 1 foto dulu ya', 'error'); return; }
+  const shots = photoShots.slice();
+  shots.forEach(sh => enqueueUpload({ type: 'photo', blob: sh.blob, mime: 'image/jpeg', ext: 'jpg', thumb: sh.thumb, guest: guestName }));
+  photoShots = [];
+  renderFilmstrip();
+  shutterBtn.disabled = false;
   document.getElementById('finishRow').style.display = 'none';
+  showToast(`${shots.length} foto sedang dikirim. Kamu boleh lanjut memotret 😊`, 'success');
 }
 
 function captureVideoThumbnail() {
   return new Promise(resolve => {
-    const vw = liveVideo.videoWidth || 640, vh = liveVideo.videoHeight || 480;
-    const scale = Math.min(1, 480 / vw);
-    const tCanvas = document.createElement('canvas');
-    tCanvas.width = Math.round(vw * scale); tCanvas.height = Math.round(vh * scale);
-    const tctx = tCanvas.getContext('2d');
-    drawWithGuaranteedFilter(tctx, () => {
-      if (currentFacing === 'user') {
-        tctx.save(); tctx.translate(tCanvas.width, 0); tctx.scale(-1, 1);
-        tctx.drawImage(liveVideo, 0, 0, tCanvas.width, tCanvas.height);
-        tctx.restore();
-      } else {
-        tctx.drawImage(liveVideo, 0, 0, tCanvas.width, tCanvas.height);
-      }
-    }, tCanvas.width, tCanvas.height, false);
-    tCanvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.8);
+    try {
+      const vw = liveVideo.videoWidth || 640, vh = liveVideo.videoHeight || 480;
+      const scale = Math.min(1, 360 / vw);
+      const tCanvas = document.createElement('canvas');
+      tCanvas.width = Math.round(vw * scale); tCanvas.height = Math.round(vh * scale);
+      const tctx = tCanvas.getContext('2d');
+      tctx.save();
+      if (currentFacing === 'user') { tctx.translate(tCanvas.width, 0); tctx.scale(-1, 1); }
+      if (canvasFilterSupported && activeFilterCss && activeFilterCss !== 'none') tctx.filter = activeFilterCss;
+      tctx.drawImage(liveVideo, 0, 0, tCanvas.width, tCanvas.height);
+      tctx.restore();
+      let q = 0.62, uri = tCanvas.toDataURL('image/jpeg', q);
+      while (uri.length > 42000 && q > 0.2) { q -= 0.1; uri = tCanvas.toDataURL('image/jpeg', q); }
+      resolve(uri.length <= 42000 ? uri : '');
+    } catch (e) { resolve(''); }
   });
 }
 
 async function startVideoRecording() {
   if (!streamHasAudio) {
-    showToast('Mikrofon tidak terdeteksi, video akan direkam tanpa suara.', 'error');
+    showToast('Mikrofon tidak terdeteksi, jadi videonya akan tanpa suara.', 'error');
   }
   if (activeFilterParams) {
     // (Sudah dioptimalkan) — perekaman video dengan Filter Pro sekarang
     // memakai jalur cepat, tidak lagi memproses piksel manual per-frame.
   } else if (!canvasFilterSupported && activeFilterCss !== 'none') {
-    showToast('Filter tidak didukung penuh di browser ini, video akan direkam tanpa filter.', 'success');
+    showToast('Browser ini belum mendukung filter untuk video, jadi videonya direkam tanpa filter.', 'success');
   }
   videoThumbBlob = await captureVideoThumbnail();
   recordedChunks = [];
   const maxSeconds = Number(weddingSettings.max_video_seconds) || 60;
   const recordFps = (activeFilterParams && activeFilterParams.video && activeFilterParams.video.fps) || 30;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = liveVideo.videoWidth || 1280;
-  canvas.height = liveVideo.videoHeight || 720;
-  const ctx = canvas.getContext('2d');
-  let drawing = true;
-
-  function drawFrame() {
-    if (!drawing) return;
-    drawWithGuaranteedFilter(ctx, () => {
-      if (currentFacing === 'user') {
-        ctx.save(); ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-        ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
-        ctx.restore();
-      } else {
-        ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
-      }
-    }, canvas.width, canvas.height, true);
-
-    // Vignette ringan untuk video (bukan olah piksel per-titik seperti di
-    // foto — cuma satu gradient sederhana, jadi tetap murah untuk 30fps)
-    if (activeFilterParams && activeFilterParams.video && activeFilterParams.video.vignette) {
-      drawCheapVignette(ctx, canvas.width, canvas.height, activeFilterParams.video.vignette);
-    }
-
-    // Bingkai otomatis (kalau admin aktifkan) — cuma gambar rect+teks atau
-    // satu drawImage PNG, jadi tetap murah untuk dijalankan tiap frame
-    if (autoIncludeFrame.video) drawCaptureFrameOverlay(ctx, canvas.width, canvas.height, 'video');
-
-    requestAnimationFrame(drawFrame);
-  }
-  drawFrame();
-
-  const canvasStream = canvas.captureStream(recordFps);
+  const vq = getQuality('video');
   const audioTracks = liveStream.getAudioTracks();
-  const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+  const needsCanvas = currentFacing === 'user' || autoIncludeFrame.video || !!activeFilterParams || (activeFilterCss && activeFilterCss !== 'none');
+  let drawing = false;
+  let combined;
+
+  if (needsCanvas) {
+    // Perlu olah gambar (filter / bingkai / kamera depan) -> gambar ulang per frame ke kanvas
+    const vw0 = liveVideo.videoWidth || 1280, vh0 = liveVideo.videoHeight || 720;
+    const sc = Math.min(1, Math.max(vq.width, vq.height) / Math.max(vw0, vh0));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(vw0 * sc); canvas.height = Math.round(vh0 * sc);
+    const ctx = canvas.getContext('2d');
+    drawing = true;
+
+    const drawFrame = () => {
+      if (!drawing) return;
+      drawWithGuaranteedFilter(ctx, () => {
+        if (currentFacing === 'user') {
+          ctx.save(); ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+          ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+          ctx.restore();
+        } else {
+          ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+        }
+      }, canvas.width, canvas.height, true);
+      if (activeFilterParams && activeFilterParams.video && activeFilterParams.video.vignette) {
+        drawCheapVignette(ctx, canvas.width, canvas.height, activeFilterParams.video.vignette);
+      }
+      if (autoIncludeFrame.video) drawCaptureFrameOverlay(ctx, canvas.width, canvas.height, 'video');
+      requestAnimationFrame(drawFrame);
+    };
+    drawFrame();
+    const fps = IS_LOW_END ? Math.min(24, recordFps) : recordFps;
+    combined = new MediaStream([...canvas.captureStream(fps).getVideoTracks(), ...audioTracks]);
+  } else {
+    // Jalur ringan: rekam langsung dari kamera, tanpa gambar ulang (hemat CPU & baterai)
+    combined = liveStream;
+  }
 
   mediaRecorder = new MediaRecorder(combined, {
     mimeType: VIDEO_MIME.mime,
-    videoBitsPerSecond: getQuality('video').videoBitsPerSecond,
-    audioBitsPerSecond: getQuality('video').audioBitsPerSecond
+    videoBitsPerSecond: vq.videoBitsPerSecond,
+    audioBitsPerSecond: vq.audioBitsPerSecond
   });
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.onstop = () => {
@@ -1080,6 +1380,7 @@ async function startVideoRecording() {
     capturedBlob = new Blob(recordedChunks, { type: VIDEO_MIME.mime });
     capturedMime = VIDEO_MIME.mime; capturedExt = VIDEO_MIME.ext;
     recordedVideo.src = URL.createObjectURL(capturedBlob);
+    if (IS_LOW_END) stopCameraStream(); // lepas kamera saat meninjau (hemat RAM & baterai)
     liveVideo.style.display = 'none';
     recordedVideo.style.display = 'block';
     showReview();
@@ -1123,7 +1424,11 @@ document.getElementById('retakeBtn').addEventListener('click', () => {
 
 document.getElementById('sendMediaBtn').addEventListener('click', () => sendSingleMedia(currentMode));
 
-function resetCapture() { capturedBlob = null; capturedMime = null; capturedExt = null; recordedChunks = []; videoThumbBlob = null; }
+function resetCapture() {
+  capturedBlob = null; capturedMime = null; capturedExt = null; recordedChunks = []; videoThumbBlob = null;
+  try { if (recordedVideo.src && recordedVideo.src.indexOf('blob:') === 0) URL.revokeObjectURL(recordedVideo.src); } catch (e) {}
+  recordedVideo.removeAttribute('src');
+}
 
 const vnOrb = document.getElementById('vnOrb');
 const vnRecordBtn = document.getElementById('vnRecordBtn');
@@ -1152,12 +1457,12 @@ async function startVoiceRecording() {
       vnOrb.classList.remove('recording');
       document.getElementById('vnControlsIdle').style.display = 'none';
       document.getElementById('vnControlsReview').style.display = 'flex';
-      document.getElementById('vnHint').textContent = 'Dengarkan dulu sebelum mengirim';
+      document.getElementById('vnHint').textContent = 'Dengarkan dulu sebelum dikirim ya';
       stream.getTracks().forEach(t => t.stop());
     };
     vnRecorder.start();
     vnOrb.classList.add('recording');
-    document.getElementById('vnHint').textContent = 'Sedang merekam...';
+    document.getElementById('vnHint').textContent = 'Sedang merekam… ketuk ■ kalau sudah selesai';
 
     const maxSeconds = Number(weddingSettings.max_voice_seconds) || 60;
     vnSeconds = 0;
@@ -1171,7 +1476,7 @@ async function startVoiceRecording() {
     vnRecordBtn.textContent = '■';
     vnRecordBtn.onclick = stopVoiceRecording;
   } catch (err) {
-    showToast('Tidak bisa mengakses mikrofon. Periksa izin mikrofon di browser kamu.', 'error');
+    showToast('Mikrofon belum bisa dipakai. Cek izin mikrofon di browser kamu ya.', 'error');
   }
 }
 vnRecordBtn.onclick = startVoiceRecording;
@@ -1239,7 +1544,7 @@ async function startVoiceRecordingWithFrame() {
       vnOrb.classList.remove('recording');
       document.getElementById('vnControlsIdle').style.display = 'none';
       document.getElementById('vnControlsReview').style.display = 'flex';
-      document.getElementById('vnHint').textContent = 'Tonton dulu sebelum mengirim';
+      document.getElementById('vnHint').textContent = 'Tonton dulu sebelum dikirim ya';
       stream.getTracks().forEach(t => t.stop());
       if (vnFrameAudioCtx) { vnFrameAudioCtx.close().catch(()=>{}); vnFrameAudioCtx = null; }
     };
@@ -1271,7 +1576,7 @@ function stopVoiceRecording() {
 function updateVnTimer() { document.getElementById('vnTimer').textContent = formatSeconds(vnSeconds); }
 
 function resetVoice() {
-  capturedBlob = null;
+  capturedBlob = null; vnBlob = null; vnChunks = [];
   const vnPlayer = document.getElementById('vnPlayer');
   vnPlayer.style.display = 'none';
   vnPlayer.src = '';
@@ -1280,57 +1585,34 @@ function resetVoice() {
   vnVideoPlayer.src = '';
   document.getElementById('vnControlsReview').style.display = 'none';
   document.getElementById('vnControlsIdle').style.display = 'flex';
-  document.getElementById('vnHint').textContent = autoIncludeFrame.voice ? 'Tekan tombol merah untuk mulai merekam dengan bingkai' : 'Tekan tombol merah untuk mulai merekam ucapanmu';
+  document.getElementById('vnHint').textContent = autoIncludeFrame.voice ? 'Ketuk tombol merah, lalu ucapkan doa & harapanmu (sudah berbingkai)' : 'Ketuk tombol merah, lalu ucapkan doa & harapanmu';
   vnRecordBtn.textContent = '●';
   vnRecordBtn.onclick = startVoiceRecording;
   vnSeconds = 0;
   updateVnTimer();
 }
 
-async function sendSingleMedia(type) {
-  const guestName = document.getElementById('guestName').value.trim();
-  if (!guestName) { showToast('Isi nama kamu dulu ya', 'error'); return; }
-  if (!capturedBlob) { showToast('Ambil video/suara dulu', 'error'); return; }
+function sendSingleMedia(type) {
+  const guestName = ensureGuestName();
+  if (!guestName) return;
+  if (!capturedBlob) { showToast(type === 'voice' ? 'Rekam suaramu dulu ya' : 'Rekam videonya dulu ya', 'error'); return; }
 
-  const sendBtn = type === 'voice' ? document.getElementById('vnSendBtn') : document.getElementById('sendMediaBtn');
-  sendBtn.disabled = true;
-  const originalText = sendBtn.textContent;
-  sendBtn.textContent = 'Mengirim...';
-  showProgress(type === 'voice' ? 'Mengirim voice note...' : 'Mengirim video...');
+  enqueueUpload({
+    type, blob: capturedBlob, mime: String(capturedMime || '').split(';')[0] || (type === 'video' ? 'video/webm' : 'audio/webm'),
+    ext: capturedExt, thumb: type === 'video' ? (videoThumbBlob || '') : '', guest: guestName
+  });
 
-  try {
-    const base64 = await blobToBase64(capturedBlob);
-    const thumbBase64 = (type === 'video' && videoThumbBlob) ? await blobToBase64(videoThumbBlob) : null;
-    const payload = {
-      action: 'uploadMedia', wedding_id: weddingId, guest_name: guestName, media_type: type,
-      filename: `capture.${capturedExt}`, mime_type: capturedMime, data: base64,
-      thumb_data: thumbBase64, thumb_mime: 'image/jpeg'
-    };
-    const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
-    const result = await res.json();
-
-    if (result.success) {
-      showToast(result.message || 'Berhasil dikirim! 🎉', 'success');
-      if (type === 'voice') { resetVoice(); }
-      else {
-        resetCapture();
-        document.getElementById('captureRow').style.display = 'flex';
-        document.getElementById('reviewRow').style.display = 'none';
-        liveVideo.style.display = 'block';
-        photoCanvas.style.display = 'none';
-        recordedVideo.style.display = 'none';
-        if (!liveStream) startCamera();
-      }
-    } else {
-      showToast(result.message || 'Gagal mengirim', 'error');
-    }
-  } catch (err) {
-    showToast('Gagal terhubung ke server: ' + err.message, 'error');
-  } finally {
-    sendBtn.disabled = false;
-    sendBtn.textContent = originalText;
-    hideProgress();
+  if (type === 'voice') { resetVoice(); }
+  else {
+    resetCapture();
+    document.getElementById('captureRow').style.display = 'flex';
+    document.getElementById('reviewRow').style.display = 'none';
+    liveVideo.style.display = 'block';
+    photoCanvas.style.display = 'none';
+    recordedVideo.style.display = 'none';
+    if (!liveStream) startCamera();
   }
+  showToast(type === 'voice' ? 'Suaramu sedang dikirim. Kamu boleh lanjut 😊' : 'Videomu sedang dikirim. Kamu boleh lanjut 😊', 'success');
 }
 
 function blobToBase64(blob) {
@@ -1342,11 +1624,18 @@ function blobToBase64(blob) {
   });
 }
 
-function showStatus(title, text, showRetry) {
+function showStatus(title, text, action) {
   document.getElementById('statusScreen').style.display = 'flex';
   document.getElementById('statusTitle').textContent = title;
   document.getElementById('statusText').textContent = text;
-  document.getElementById('statusBtn').style.display = showRetry ? 'inline-block' : 'none';
+  const btn = document.getElementById('statusBtn');
+  if (action && typeof action === 'object') {
+    btn.style.display = 'inline-block'; btn.textContent = action.label;
+    btn.onclick = () => { location.href = action.href; };
+  } else {
+    btn.style.display = action ? 'inline-block' : 'none'; btn.textContent = 'Coba Lagi';
+    btn.onclick = () => location.reload();
+  }
 }
 function hideStatus() { document.getElementById('statusScreen').style.display = 'none'; }
 
@@ -1356,11 +1645,8 @@ function showToast(text, type) {
   setTimeout(() => { t.style.display = 'none'; }, 4000);
 }
 
-function showProgress(text) {
-  document.getElementById('progressText').textContent = text;
-  document.getElementById('progressOverlay').style.display = 'flex';
-}
-function hideProgress() { document.getElementById('progressOverlay').style.display = 'none'; }
+function showProgress() {}
+function hideProgress() {}
 
 function formatSeconds(s) {
   const m = String(Math.floor(s / 60)).padStart(2, '0');
