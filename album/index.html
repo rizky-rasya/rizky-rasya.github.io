@@ -4,163 +4,267 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Bagikan Momen — Wedding Album</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-  html, body { height:100%; height:100dvh; background:#111; overflow:hidden; overscroll-behavior:none; }
-  body { font-family:'Segoe UI', sans-serif; color:#fff; touch-action:pan-y; }
-
-  #app { position:relative; width:100%; height:100%; display:flex; flex-direction:column; }
-
-  #statusScreen {
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding:30px; background:#1a1a1a; z-index:50; gap:14px;
+  :root{
+    --primary:#440808; --primary-hover:#5A1010;
+    --accent:#C9A66B; --accent-soft:#F5ECD9;
+    --surface:#FFFFFF; --surface-2:#EFE9DF;
+    --text:#1A1410; --text-2:#5A4D42; --text-3:#8A7B6E;
+    --danger:#A02828; --success:#2F6B3F;
+    --dark:#1A1410; --dark-2:#2A2320;
   }
-  #statusScreen .icon { font-size:44px; }
-  #statusScreen h2 { font-size:18px; }
-  #statusScreen p { font-size:14px; color:#bbb; max-width:320px; line-height:1.5; }
-  #statusScreen button { margin-top:10px; padding:12px 28px; border-radius:30px; border:none; background:#c99b6a; color:#fff; font-weight:700; font-size:14px; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  html,body{height:100%;height:100dvh;background:var(--dark);overflow:hidden;overscroll-behavior:none;}
+  body{
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:#F5F1EB; touch-action:pan-y;
+  }
 
-  header {
-    position:absolute; top:0; left:0; right:0; z-index:20; padding:16px 18px;
+  #app{position:relative; width:100%; height:100%; display:flex; flex-direction:column;}
+
+  #statusScreen{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    padding:30px; background:var(--dark); z-index:50; gap:16px;
+  }
+  #statusScreen .icon{font-size:40px;color:var(--accent);}
+  #statusScreen h2{font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:#F5F1EB; letter-spacing:-0.01em;}
+  #statusScreen p{font-size:14px; color:#A99F94; max-width:320px; line-height:1.6;}
+  #statusScreen button{
+    margin-top:12px; padding:12px 28px; border-radius:4px; border:none;
+    background:var(--accent); color:var(--dark); font-weight:700;
+    font-family:inherit; font-size:14px; letter-spacing:0.01em; cursor:pointer;
+  }
+
+  header{
+    position:absolute; top:0; left:0; right:0; z-index:20;
+    padding:18px 20px;
     display:flex; justify-content:space-between; align-items:center;
-    background:linear-gradient(180deg, rgba(0,0,0,.55), transparent);
+    background:linear-gradient(180deg, rgba(26,20,16,.72), transparent);
   }
-  header .brand { font-size:15px; font-weight:700; }
-  header .brand small { display:block; font-size:11px; font-weight:400; opacity:.8; }
-  header a.nav-link { color:#fff; text-decoration:none; font-size:12px; background:rgba(255,255,255,.15); padding:8px 14px; border-radius:20px; }
+  header .brand{
+    font-family:'Fraunces',serif; font-weight:700;
+    font-size:15px; color:#F5F1EB; letter-spacing:-0.01em;
+  }
+  header .brand small{
+    display:block; font-family:'JetBrains Mono',monospace;
+    font-size:10px; font-weight:400; opacity:.75;
+    letter-spacing:0.06em; text-transform:uppercase; margin-top:2px;
+  }
+  header a.nav-link{
+    color:#F5F1EB; text-decoration:none; font-size:12px;
+    background:rgba(245,241,235,.14);
+    padding:8px 14px; border-radius:4px; letter-spacing:0.01em;
+    border:1px solid rgba(245,241,235,.14);
+  }
 
-  #cameraWrap { position:relative; flex:1; background:#000; overflow:hidden; }
-  #liveVideo, #recordedVideo { width:100%; height:100%; object-fit:cover; display:block; }
-  #liveVideo.mirrored { transform:scaleX(-1); }
-  #photoCanvasPreview { width:100%; height:100%; object-fit:cover; display:none; }
-  #recordedVideo { display:none; }
+  #cameraWrap{position:relative; flex:1; background:var(--dark); overflow:hidden;}
+  #liveVideo,#recordedVideo{width:100%; height:100%; object-fit:cover; display:block;}
+  #liveVideo.mirrored{transform:scaleX(-1);}
+  #photoCanvasPreview{width:100%; height:100%; object-fit:cover; display:none;}
+  #recordedVideo{display:none;}
 
-  .rec-badge {
+  .rec-badge{
     position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:15;
-    background:rgba(224,82,82,.9); padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700;
+    background:rgba(160,40,40,.92); padding:6px 14px; border-radius:20px;
+    font-size:13px; font-family:'JetBrains Mono',monospace; font-weight:500;
     display:none; align-items:center; gap:6px;
   }
-  .rec-badge .dot { width:8px; height:8px; border-radius:50%; background:#fff; animation:blink 1s infinite; }
-  @keyframes blink { 50% { opacity:.2; } }
+  .rec-badge .dot{width:8px; height:8px; border-radius:50%; background:#fff; animation:blink 1s infinite;}
+  @keyframes blink{50%{opacity:.2;}}
 
-  #voiceWrap {
-    display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:20px;
-    background:radial-gradient(circle at center, #2a2320, #111);
+  #voiceWrap{
+    display:none; flex:1; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px; padding:20px;
+    background:radial-gradient(circle at center, var(--dark-2), var(--dark));
   }
-  .vn-orb {
+  .vn-orb{
     width:150px; height:150px; border-radius:50%;
-    background:linear-gradient(135deg,#c99b6a,#8a6a45);
-    display:flex; align-items:center; justify-content:center; font-size:50px;
-    box-shadow:0 0 0 8px rgba(201,155,106,.15);
+    background:linear-gradient(135deg,var(--accent),#A8874E);
+    display:flex; align-items:center; justify-content:center;
+    font-size:48px; color:var(--dark);
+    box-shadow:0 0 0 8px rgba(201,166,107,.15);
   }
-  .vn-orb.recording { animation:pulse 1.4s infinite; }
-  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(224,82,82,.4);} 70%{box-shadow:0 0 0 26px rgba(224,82,82,0);} 100%{box-shadow:0 0 0 0 rgba(224,82,82,0);} }
-  #vnTimer { font-size:22px; font-weight:700; letter-spacing:1px; }
-  #vnHint { font-size:13px; color:#bbb; text-align:center; }
-  #vnPlayer { width:85%; display:none; }
+  .vn-orb.recording{animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(160,40,40,.4);}70%{box-shadow:0 0 0 26px rgba(160,40,40,0);}100%{box-shadow:0 0 0 0 rgba(160,40,40,0);}}
+  #vnTimer{
+    font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:500;
+    letter-spacing:0.04em; color:#F5F1EB;
+  }
+  #vnHint{font-size:13px; color:#A99F94; text-align:center; line-height:1.55; max-width:320px;}
+  #vnPlayer{width:85%; display:none;}
 
-  /* Bar kontrol bawah (filmstrip + tombol) MENGAMBANG di atas kamera —
-     bukan mengambil ruang layout sendiri — supaya area kamera benar-benar
-     full-screen seperti aplikasi kamera native, tidak terkotak kecil. */
-  #bottomOverlay {
-    position:absolute; left:0; right:0; bottom:0; z-index:20;
-    display:flex; flex-direction:column;
+  #bottomOverlay{position:absolute; left:0; right:0; bottom:0; z-index:20; display:flex; flex-direction:column;}
+
+  #filmstrip{
+    display:none; gap:8px; padding:12px 16px; overflow-x:auto;
+    background:rgba(26,20,16,.55);
+  }
+  .shot-thumb{
+    position:relative; flex:0 0 auto; width:56px; height:56px;
+    border-radius:2px; overflow:hidden;
+    border:1px solid rgba(245,241,235,.3);
+  }
+  .shot-thumb img{width:100%; height:100%; object-fit:cover;}
+  .shot-thumb .remove-shot{
+    position:absolute; top:-2px; right:-2px; width:18px; height:18px;
+    border-radius:50%; background:var(--danger); color:#fff; font-size:11px;
+    display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
+  }
+  .shot-counter{
+    align-self:center; font-size:12px; color:#F5F1EB;
+    font-family:'JetBrains Mono',monospace;
+    white-space:nowrap; padding:0 6px;
   }
 
-  #filmstrip {
-    display:none; gap:8px; padding:10px 14px; overflow-x:auto;
-    background:rgba(0,0,0,.4);
+  #controls{
+    padding:16px 20px max(24px, env(safe-area-inset-bottom));
+    background:linear-gradient(0deg, rgba(26,20,16,.88) 30%, transparent);
   }
-  .shot-thumb { position:relative; flex:0 0 auto; width:56px; height:56px; border-radius:10px; overflow:hidden; border:2px solid rgba(255,255,255,.3); }
-  .shot-thumb img { width:100%; height:100%; object-fit:cover; }
-  .shot-thumb .remove-shot {
-    position:absolute; top:-2px; right:-2px; width:18px; height:18px; border-radius:50%; background:#c62828;
-    color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; border:none;
+  .mode-switch{display:flex; justify-content:center; gap:26px; margin-bottom:18px;}
+  .mode-switch button{
+    background:none; border:none; color:rgba(245,241,235,.5);
+    font-family:inherit; font-size:12px; font-weight:600;
+    letter-spacing:0.08em; padding:6px 4px;
+    border-bottom:2px solid transparent; cursor:pointer;
   }
-  .shot-counter { align-self:center; font-size:12px; color:#ddd; white-space:nowrap; padding:0 6px; }
+  .mode-switch button.active{color:#F5F1EB; border-color:var(--accent);}
 
-  #controls {
-    padding:14px 18px max(24px, env(safe-area-inset-bottom)); background:linear-gradient(0deg, rgba(0,0,0,.75) 30%, transparent);
+  .capture-row{display:flex; align-items:center; justify-content:center; gap:36px;}
+  .side-btn{
+    width:44px; height:44px; border-radius:50%;
+    background:rgba(245,241,235,.15); border:1px solid rgba(245,241,235,.15);
+    color:#F5F1EB; font-size:18px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
   }
-  .mode-switch { display:flex; justify-content:center; gap:22px; margin-bottom:16px; }
-  .mode-switch button {
-    background:none; border:none; color:rgba(255,255,255,.55); font-size:13px; font-weight:700; padding:6px 4px; border-bottom:2px solid transparent;
+
+  #shutterBtn{
+    width:74px; height:74px; border-radius:50%;
+    background:#F5F1EB; border:5px solid rgba(245,241,235,.4);
+    cursor:pointer; transition:transform .1s;
   }
-  .mode-switch button.active { color:#fff; border-color:#c99b6a; }
+  #shutterBtn:active{transform:scale(.96);}
+  #shutterBtn.video-mode{background:var(--danger);}
+  #shutterBtn.recording{border-radius:4px; width:34px; height:34px;}
+  #shutterBtn:disabled{opacity:.4;}
 
-  .capture-row { display:flex; align-items:center; justify-content:center; gap:36px; }
-  .side-btn { width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.15); border:none; color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; }
-
-  #shutterBtn { width:74px; height:74px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,.4); }
-  #shutterBtn.video-mode { background:#e05252; }
-  #shutterBtn.recording { border-radius:14px; width:34px; height:34px; }
-  #shutterBtn:disabled { opacity:.4; }
-
-  .finish-row { display:none; gap:14px; justify-content:center; align-items:center; margin-top:14px; }
-  .finish-row button { padding:14px 24px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
-  #finishBtn { background:#c99b6a; color:#fff; }
-
-  .vn-controls { display:none; gap:16px; justify-content:center; align-items:center; }
-  #vnRecordBtn { background:#e05252; color:#fff; width:64px; height:64px; border-radius:50%; font-size:22px; padding:0; border:none; }
-  #vnRedoBtn { background:rgba(255,255,255,.15); color:#fff; padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
-  #vnPlayBtn { background:rgba(255,255,255,.15); color:#fff; padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
-  #vnSendBtn { background:#c99b6a; color:#fff; padding:14px 20px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
-
-  .review-row { display:none; gap:14px; justify-content:center; align-items:center; }
-  .review-row button { padding:14px 24px; border-radius:30px; border:none; font-weight:700; font-size:14px; }
-  #retakeBtn { background:rgba(255,255,255,.15); color:#fff; }
-  #sendMediaBtn { background:#c99b6a; color:#fff; }
-
-  .name-field { max-width:400px; margin:0 auto 12px; }
-  .name-field input {
-    width:100%; padding:12px 14px; border-radius:10px; border:1.5px solid rgba(255,255,255,.25);
-    background:rgba(255,255,255,.08); color:#fff; font-size:16px;
+  .finish-row{display:none; gap:14px; justify-content:center; align-items:center; margin-top:16px;}
+  .finish-row button{
+    padding:14px 26px; border-radius:4px; border:none;
+    font-family:inherit; font-weight:700; font-size:14px; letter-spacing:0.01em;
+    cursor:pointer;
   }
-  .name-field input::placeholder { color:rgba(255,255,255,.5); }
+  #finishBtn{background:var(--accent); color:var(--dark);}
 
-  .toast {
+  .vn-controls{display:none; gap:16px; justify-content:center; align-items:center;}
+  #vnRecordBtn{
+    background:var(--danger); color:#fff; width:64px; height:64px;
+    border-radius:50%; font-size:22px; padding:0; border:none; cursor:pointer;
+  }
+  #vnRedoBtn,#vnPlayBtn{
+    background:rgba(245,241,235,.15); color:#F5F1EB;
+    padding:14px 22px; border-radius:4px; border:1px solid rgba(245,241,235,.15);
+    font-family:inherit; font-weight:600; font-size:13px; cursor:pointer;
+  }
+  #vnSendBtn{
+    background:var(--accent); color:var(--dark);
+    padding:14px 22px; border-radius:4px; border:none;
+    font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
+  }
+
+  .review-row{display:none; gap:14px; justify-content:center; align-items:center;}
+  .review-row button{
+    padding:14px 26px; border-radius:4px; border:none;
+    font-family:inherit; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  #retakeBtn{
+    background:rgba(245,241,235,.15); color:#F5F1EB;
+    border:1px solid rgba(245,241,235,.15);
+  }
+  #sendMediaBtn{background:var(--accent); color:var(--dark);}
+
+  .name-field{max-width:400px; margin:0 auto 14px;}
+  .name-field input{
+    width:100%; padding:13px 14px; border-radius:4px;
+    border:1.5px solid rgba(245,241,235,.22);
+    background:rgba(245,241,235,.06); color:#F5F1EB;
+    font-family:inherit; font-size:16px;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .name-field input:focus{
+    outline:none; border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(201,166,107,.22);
+  }
+  .name-field input::placeholder{color:rgba(245,241,235,.45);}
+
+  .toast{
     position:absolute; bottom:110px; left:50%; transform:translateX(-50%); z-index:60;
-    background:#222; padding:12px 20px; border-radius:10px; font-size:13px; max-width:85%; text-align:center; display:none;
+    background:var(--dark); padding:12px 20px; border-radius:4px;
+    font-size:13px; max-width:85%; text-align:center; display:none;
+    border:1px solid rgba(245,241,235,.12); color:#F5F1EB;
   }
-  .toast.success { background:#2e7d32; }
-  .toast.error { background:#c62828; }
+  .toast.success{background:var(--success);} .toast.error{background:var(--danger);}
 
-  .upload-pill {
-    position:absolute; top:max(64px, calc(env(safe-area-inset-top) + 56px)); left:50%; transform:translateX(-50%); z-index:55; display:none;
-    align-items:center; gap:10px; min-width:200px; max-width:92%; padding:10px 16px 14px; border-radius:16px;
-    background:rgba(20,20,20,.82); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); font-size:13px; overflow:hidden;
-    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  .upload-pill{
+    position:absolute; top:max(64px, calc(env(safe-area-inset-top) + 56px));
+    left:50%; transform:translateX(-50%); z-index:55; display:none;
+    align-items:center; gap:12px; min-width:200px; max-width:92%;
+    padding:12px 16px 14px; border-radius:4px;
+    background:rgba(26,20,16,.86); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    font-size:13px; overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+    border:1px solid rgba(245,241,235,.1); color:#F5F1EB;
   }
-  .upload-pill .bar { position:absolute; left:0; bottom:0; height:3px; width:0; background:#c99b6a; transition:width .25s; }
-  .upload-pill.ok .bar { background:#4caf50; } .upload-pill.warn .bar { background:#ff9800; }
-  .upload-pill button { border:none; background:#c99b6a; color:#fff; border-radius:14px; padding:6px 12px; font-weight:700; font-size:12px; }
+  .upload-pill .bar{position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--accent); transition:width .25s;}
+  .upload-pill.ok .bar{background:var(--success);} .upload-pill.warn .bar{background:#D8A24A;}
+  .upload-pill button{border:none; background:var(--accent); color:var(--dark); border-radius:4px; padding:7px 12px; font-weight:700; font-size:12px; font-family:inherit; cursor:pointer;}
 
-  .result-overlay { position:absolute; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:24px;
-    background:rgba(10,8,6,.62); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
-  .result-overlay.show { display:flex; animation:fadeInBg .2s ease-out; }
-  @keyframes fadeInBg { from { opacity:0; } to { opacity:1; } }
-  .result-card { width:100%; max-width:340px; background:#fffaf5; color:#3a2e28; border-radius:24px; padding:30px 24px 22px; text-align:center;
-    box-shadow:0 24px 70px rgba(0,0,0,.45); animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2); }
-  @keyframes cardIn { from { transform:translateY(24px) scale(.94); opacity:0; } to { transform:none; opacity:1; } }
-  .result-icon { width:68px; height:68px; margin:0 auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#f3e4d2; }
-  .result-icon svg { width:34px; height:34px; stroke:#a97c4f; fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; }
-  .result-card.success .result-icon { background:#e3f2e5; } .result-card.success .result-icon svg { stroke:#2e7d32; }
-  .result-card.success .result-icon path { stroke-dasharray:40; stroke-dashoffset:40; animation:drawCheck .5s .15s ease-out forwards; }
-  @keyframes drawCheck { to { stroke-dashoffset:0; } }
-  .result-card.error .result-icon { background:#fdeaea; } .result-card.error .result-icon svg { stroke:#c62828; }
-  .result-card.warn .result-icon { background:#fff1dc; } .result-card.warn .result-icon svg { stroke:#e08a00; }
-  .result-card h3 { font-size:19px; margin-bottom:8px; }
-  .result-card p { font-size:14px; line-height:1.55; color:#7a6a5d; white-space:pre-line; margin-bottom:20px; }
-  .result-card button { display:block; width:100%; padding:13px; border-radius:14px; border:none; font-size:14px; font-weight:700; }
-  #resultPrimary { background:#c99b6a; color:#fff; margin-bottom:8px; }
-  #resultSecondary { background:transparent; color:#8a7b6e; }
+  .result-overlay{
+    position:absolute; inset:0; z-index:90; display:none;
+    align-items:center; justify-content:center; padding:24px;
+    background:rgba(26,20,16,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  .result-overlay.show{display:flex; animation:fadeInBg .2s ease-out;}
+  @keyframes fadeInBg{from{opacity:0;}to{opacity:1;}}
+  .result-card{
+    width:100%; max-width:360px;
+    background:#F5F1EB; color:var(--text);
+    border-radius:8px; padding:32px 28px 24px; text-align:center;
+    box-shadow:0 16px 48px rgba(68,8,8,.24);
+    animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2);
+    border:1px solid #E5DDD1;
+  }
+  @keyframes cardIn{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
+  .result-icon{
+    width:68px; height:68px; margin:0 auto 16px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent-soft);
+  }
+  .result-icon svg{width:34px; height:34px; stroke:var(--accent); fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round;}
+  .result-card.success .result-icon{background:#E4F0E6;} .result-card.success .result-icon svg{stroke:var(--success);}
+  .result-card.success .result-icon path{stroke-dasharray:40; stroke-dashoffset:40; animation:drawCheck .5s .15s ease-out forwards;}
+  @keyframes drawCheck{to{stroke-dashoffset:0;}}
+  .result-card.error .result-icon{background:#F7E4E2;} .result-card.error .result-icon svg{stroke:var(--danger);}
+  .result-card.warn .result-icon{background:var(--accent-soft);} .result-card.warn .result-icon svg{stroke:#8A6A1A;}
+  .result-card h3{font-family:'Fraunces',serif; font-size:20px; font-weight:700; margin-bottom:10px; color:var(--text); letter-spacing:-0.01em;}
+  .result-card p{font-size:14px; line-height:1.6; color:var(--text-2); white-space:pre-line; margin-bottom:22px;}
+  .result-card button{
+    display:block; width:100%; padding:13px; border-radius:4px; border:none;
+    font-family:inherit; font-size:14px; font-weight:700; letter-spacing:0.01em; cursor:pointer;
+  }
+  #resultPrimary{background:var(--primary); color:#fff; margin-bottom:8px;}
+  #resultPrimary:hover{background:var(--primary-hover);}
+  #resultSecondary{background:transparent; color:var(--text-3); font-weight:600;}
 </style>
 </head>
 <body>
 <div id="app">
 
   <div id="statusScreen">
-    <div class="icon">💍</div>
+    <div class="icon">◈</div>
     <h2 id="statusTitle">Menyiapkan kamera…</h2>
     <p id="statusText">Sebentar ya, kami siapkan semuanya untukmu</p>
     <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
@@ -184,7 +288,7 @@
     <div id="vnTimer">00:00</div>
     <p id="vnHint">Ketuk tombol merah, lalu ucapkan doa & harapanmu</p>
     <audio id="vnPlayer" controls></audio>
-    <video id="vnVideoPlayer" playsinline controls style="display:none;width:85%;border-radius:14px;"></video>
+    <video id="vnVideoPlayer" playsinline controls style="display:none;width:85%;border-radius:4px;"></video>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -225,21 +329,21 @@
     </div>
 
     <div class="finish-row" id="finishRow">
-      <button id="finishBtn">Kirim Foto ✓</button>
+      <button id="finishBtn">Kirim Foto</button>
     </div>
 
     <div class="vn-controls" id="vnControlsIdle">
       <button id="vnRecordBtn">●</button>
     </div>
     <div class="vn-controls" id="vnControlsReview">
-      <button id="vnRedoBtn">↺ Ulang</button>
-      <button id="vnPlayBtn">▶ Putar</button>
-      <button id="vnSendBtn">Kirim Suara ✓</button>
+      <button id="vnRedoBtn">Ulang</button>
+      <button id="vnPlayBtn">Putar</button>
+      <button id="vnSendBtn">Kirim Suara</button>
     </div>
 
     <div class="review-row" id="reviewRow">
-      <button id="retakeBtn">↺ Ambil Ulang</button>
-      <button id="sendMediaBtn">Kirim Video ✓</button>
+      <button id="retakeBtn">Ambil Ulang</button>
+      <button id="sendMediaBtn">Kirim Video</button>
     </div>
   </div>
   </div>
@@ -292,10 +396,6 @@ const AUDIO_MIME = pickSupportedMime([
 
 let weddingSettings = null;
 
-// ============================================
-// PRESET KUALITAS — diatur admin dari dashboard (ui_config.quality),
-// default 'high' kalau admin belum pernah mengaturnya
-// ============================================
 const QUALITY_PRESETS = {
   photo: {
     standard: { width: 1280, height: 720, jpegQuality: 0.85 },
@@ -324,7 +424,6 @@ function getQuality(type) {
   } else {
     out = Object.assign({}, QUALITY_PRESETS[type][level] || QUALITY_PRESETS[type].high);
   }
-  // Pengaman: HP RAM kecil atau sinyal lambat otomatis memakai ukuran lebih hemat
   const ct = (navigator.connection && navigator.connection.effectiveType) || '';
   const slow = /(^|-)2g|3g/.test(ct);
   if (type === 'photo') {
@@ -343,14 +442,8 @@ function getQuality(type) {
   return out;
 }
 let activeFilterCss = 'none';
-let activeFilterParams = null; // diisi kalau filter aktif adalah Filter Pro (JSON 15 parameter)
+let activeFilterParams = null;
 
-// ============================================
-// MESIN FILTER MANUAL — jaminan filter benar-benar terbakar ke hasil
-// foto/video, bukan cuma tampil di preview. Beberapa browser lama (Safari
-// versi tertentu) tidak mendukung ctx.filter di Canvas 2D, jadi kita
-// deteksi dulu dan sediakan fallback pemrosesan piksel manual.
-// ============================================
 let canvasFilterSupported = (function testCanvasFilterSupport() {
   try {
     const c = document.createElement('canvas');
@@ -360,7 +453,7 @@ let canvasFilterSupported = (function testCanvasFilterSupport() {
     cx.filter = 'invert(1)';
     cx.fillRect(0, 0, 2, 2);
     const px = cx.getImageData(0, 0, 1, 1).data;
-    return px[0] > 200; // kalau invert bekerja, piksel hitam jadi putih
+    return px[0] > 200;
   } catch (e) { return false; }
 })();
 
@@ -372,7 +465,7 @@ function parseFilterString(filterStr) {
   while ((m = re.exec(filterStr)) !== null) {
     const name = m[1];
     let val = parseFloat(m[2]);
-    if (name === 'hue-rotate') val = parseFloat(m[2]); // derajat
+    if (name === 'hue-rotate') val = parseFloat(m[2]);
     ops.push({ name, val });
   }
   return ops;
@@ -419,13 +512,6 @@ function applyManualFilter(ctx, w, h, filterStr) {
   ctx.putImageData(imgData, 0, 0);
 }
 
-// Menggambar frame video/foto dengan filter TERJAMIN terbakar.
-// - FOTO (isRealtime=false): satu frame saja, aman diproses penuh presisi
-//   lewat mesin piksel manual (termasuk sharpness/definition/noise/vignette).
-// - VIDEO (isRealtime=true): HARUS lewat jalur cepat (ctx.filter, dipercepat
-//   GPU) supaya tidak patah-patah. Memproses piksel manual di setiap frame
-//   video (30x per detik) sebelumnya jadi penyebab video patah-patah di HP
-//   yang kurang kuat — sekarang dihindari sepenuhnya untuk video.
 function drawWithGuaranteedFilter(ctx, drawFn, w, h, isRealtime) {
   const p = activeFilterParams ? (isRealtime ? activeFilterParams.video : activeFilterParams.photo) : null;
   if (p && Object.keys(p).length > 0) {
@@ -435,13 +521,10 @@ function drawWithGuaranteedFilter(ctx, drawFn, w, h, isRealtime) {
         drawFn();
         ctx.filter = 'none';
       } else {
-        // Browser tak dukung ctx.filter sama sekali — demi mencegah video
-        // patah-patah, filter dilewati untuk video (foto tetap dapat filter penuh)
         drawFn();
       }
       return;
     }
-    // Foto — proses presisi penuh, termasuk detail pass (sharpness dst.)
     drawFn();
     const imgData = ctx.getImageData(0, 0, w, h);
     applyToneColorPass(imgData, p);
@@ -452,7 +535,6 @@ function drawWithGuaranteedFilter(ctx, drawFn, w, h, isRealtime) {
     drawFn();
     ctx.filter = 'none';
   } else if (isRealtime) {
-    // realtime + tidak ada dukungan filter native -> lewati demi mencegah patah-patah
     drawFn();
   } else {
     drawFn();
@@ -460,12 +542,6 @@ function drawWithGuaranteedFilter(ctx, drawFn, w, h, isRealtime) {
   }
 }
 
-// ============================================
-// MESIN FILTER PRO (gaya iPhone) — 15 parameter, rentang -100..100.
-// Dipakai kalau admin membuat filter custom lewat dashboard. Terbagi 2
-// tahap: tahap murah (aman untuk video real-time) dan tahap detail (berat,
-// perlu piksel tetangga, HANYA dipakai untuk foto supaya video tidak patah).
-// ============================================
 function clamp255_(v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
 
 function applyToneColorPass(imageData, p) {
@@ -618,10 +694,6 @@ function localContrastPass_(imageData, amount) {
   return new ImageData(out, w, h);
 }
 
-// Perkiraan kasar CSS filter dari parameter Pro — HANYA dipakai untuk
-// preview kamera live (elemen <video>), karena CSS tidak sanggup
-// merepresentasikan semua 15 parameter secara presis. Hasil jepretan/
-// rekaman final tetap memakai mesin piksel presisi di atas.
 function approximateCssFromParams(p) {
   const brightness = 1 + ((p.exposure||0) + (p.brightness||0)*0.5) / 150;
   const contrast = 1 + (p.contrast||0) / 130;
@@ -630,9 +702,6 @@ function approximateCssFromParams(p) {
   return `brightness(${brightness}) contrast(${contrast}) saturate(${saturate}) hue-rotate(${hue}deg)`;
 }
 
-// Vignette murah untuk video real-time — gradient radial biasa, BUKAN
-// olah piksel per-titik seperti versi presisi di foto, supaya tetap
-// ringan dijalankan 30x/detik tanpa bikin patah-patah.
 function drawCheapVignette(ctx, w, h, amount) {
   const amt = Math.max(0, Math.min(100, amount)) / 100;
   if (amt <= 0) return;
@@ -643,26 +712,19 @@ function drawCheapVignette(ctx, w, h, amount) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 }
-// ============================================
-// MODUL UPLOAD — antrean di latar belakang, ringan di HP RAM kecil
-// - Foto kecil: 1x kirim (cepat). Video/VN besar: kirim LANGSUNG ke Google Drive
-//   (tanpa base64, tanpa lewat Apps Script) lalu dicatat. Kalau jalur langsung
-//   gagal, otomatis pindah ke jalur biasa.
-// - Tamu tidak perlu menunggu: bisa lanjut memotret sementara file terkirim.
-// ============================================
-const SMALL_UPLOAD_BYTES = 1500000;           // di bawah ini -> sekali kirim saja
+
+const SMALL_UPLOAD_BYTES = 1500000;
 const IS_LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
 const MAX_PARALLEL_UPLOADS = IS_LOW_END ? 1 : 2;
 const MAX_TRIES = 4;
 
-const uploadJobs = [];                        // semua job pada sesi ini
+const uploadJobs = [];
 let activeUploads = 0;
 let sessionStats = { ok: 0, fail: 0, pending: 0, live: 0, types: {}, lastMessage: '' };
 let modalShownFor = 0;
 
 function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// Kirim HTTP lewat XHR supaya progres unggah bisa dibaca
 function xhrSend(method, url, body, headers, onProgress, timeoutMs) {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest();
@@ -712,7 +774,7 @@ async function runJob(job) {
       sessionStats.types[job.type] = (sessionStats.types[job.type] || 0) + 1;
       if (res && res.status === 'approved') sessionStats.live++;
       if (res && res.message) sessionStats.lastMessage = res.message;
-      job.blob = null; job.thumb = null; // lepas memori segera
+      job.blob = null; job.thumb = null;
       return;
     } catch (e) {
       if (e.fatal) { job.state = 'failed'; job.error = e.message; sessionStats.fail++; sessionStats.pending--; return; }
@@ -752,7 +814,7 @@ async function uploadOnce(job) {
       return fin;
     } catch (e) {
       if (e.fatal) throw e;
-      job.noDirect = true; // jalur langsung bermasalah -> pakai jalur biasa untuk percobaan berikutnya
+      job.noDirect = true;
       job.progress = 0;
     }
   }
@@ -765,7 +827,6 @@ async function uploadOnce(job) {
   return res;
 }
 
-// ---------- Indikator kecil (tidak menghalangi kamera) ----------
 function renderPill() {
   const pill = document.getElementById('uploadPill');
   const total = uploadJobs.length;
@@ -789,7 +850,7 @@ function renderPill() {
     btn.style.display = 'inline-block'; btn.textContent = 'Kirim ulang';
     pill.className = 'upload-pill warn';
   } else {
-    txt.textContent = 'Semua momen sudah terkirim ✓';
+    txt.textContent = 'Semua momen sudah terkirim';
     pill.className = 'upload-pill ok';
     setTimeout(() => { if (!uploadJobs.some(j => j.state !== 'done')) pill.style.display = 'none'; }, 3500);
   }
@@ -805,7 +866,6 @@ window.addEventListener('beforeunload', e => {
   if (uploadJobs.some(j => j.state !== 'done' && j.state !== 'failed')) { e.preventDefault(); e.returnValue = ''; }
 });
 
-// ---------- Popup hasil (muncul saat antrean selesai) ----------
 function maybeShowResult() {
   const busy = uploadJobs.some(j => j.state === 'queued' || j.state === 'uploading' || j.state === 'retrying');
   if (busy || uploadJobs.length === 0) return;
@@ -821,7 +881,7 @@ function maybeShowResult() {
     const live = sessionStats.live >= ok;
     openResultModal({
       kind: 'success',
-      title: 'Terkirim! 🎉',
+      title: 'Terkirim',
       text: `Terima kasih sudah ikut mengabadikan momen.\n${parts.join(' & ')} kamu ` + (live ? 'sudah tampil di album.' : 'sedang menunggu persetujuan mempelai. Setelah disetujui, otomatis tampil di album.'),
       primary: { label: 'Lihat Album', href: document.getElementById('toAlbumLink').href },
       secondary: { label: 'Kirim Lagi', fn: closeResultModal }
@@ -855,7 +915,6 @@ function openResultModal(o) {
 }
 function closeResultModal() { document.getElementById('resultOverlay').classList.remove('show'); }
 
-// ---------- Pembuat thumbnail kecil (≤ ~40KB) ----------
 function makeThumbDataUri(source, sw, sh) {
   const scale = Math.min(1, 360 / Math.max(sw, 1));
   const c = document.createElement('canvas');
@@ -863,7 +922,7 @@ function makeThumbDataUri(source, sw, sh) {
   c.getContext('2d').drawImage(source, 0, 0, c.width, c.height);
   let q = 0.62, uri = c.toDataURL('image/jpeg', q);
   while (uri.length > 42000 && q > 0.2) { q -= 0.1; uri = c.toDataURL('image/jpeg', q); }
-  c.width = c.height = 1; // bebaskan memori kanvas
+  c.width = c.height = 1;
   return uri.length <= 42000 ? uri : '';
 }
 
@@ -900,6 +959,12 @@ async function fetchJson(qs, tries = 3) {
   throw last || new Error('offline');
 }
 
+function applyThemeColors(s) {
+  if (!s) return;
+  if (s.primary_color)   document.documentElement.style.setProperty('--primary', s.primary_color);
+  if (s.secondary_color) document.documentElement.style.setProperty('--accent',  s.secondary_color);
+}
+
 async function init() {
   const nameInput = document.getElementById('guestName');
   try { nameInput.value = localStorage.getItem('guest_name') || ''; } catch (e) {}
@@ -912,6 +977,7 @@ async function init() {
     ]);
     if (!settings.success) { showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid. Minta link terbaru ke mempelai ya.', false); return; }
     weddingSettings = settings;
+    applyThemeColors(settings);
     MAX_SHOTS = settings.max_photo || 5;
     document.getElementById('brandName').textContent = (settings.ui_config && settings.ui_config.index_headline) || `${settings.groom_name} & ${settings.bride_name}`;
     if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
@@ -943,10 +1009,6 @@ async function init() {
   }
 }
 
-// ============================================
-// FRAME OTOMATIS INCLUDE — kalau admin aktifkan, bingkai "dibakar"
-// langsung sejak proses rekam/jepret di HP tamu (bukan pas download).
-// ============================================
 let autoIncludeFrame = { photo: false, video: false, voice: false };
 let frameConfigCache = {};
 let customFrameImgCache = {};
@@ -958,16 +1020,16 @@ function getFrameConfig(type) {
   const customFrame = type ? frames[type] : null;
   const voiceCfg = frames.voice || {};
   return {
-    style: w.frame_style || 'elegant', primary: w.primary_color || '#8B7355', secondary: w.secondary_color || '#D4C4A8',
+    style: w.frame_style || 'elegant', primary: w.primary_color || '#440808', secondary: w.secondary_color || '#C9A66B',
     groom: w.groom_name || '', bride: w.bride_name || '', date: w.date ? formatDate(w.date) : '',
     customFrame: (customFrame && customFrame.type === 'custom' && customFrame.file_id) ? customFrame : null,
-    voiceLabel: voiceCfg.label || '🎤 Voice Note',
+    voiceLabel: voiceCfg.label || 'Ucapan & Doa',
     voiceCenterColor: voiceCfg.centerColor || '#ffffff',
-    voiceBarColor: voiceCfg.barColor || w.primary_color || '#8B7355',
+    voiceBarColor: voiceCfg.barColor || w.primary_color || '#C9A66B',
     voiceShape: voiceCfg.shape || 'radial',
     voiceCenterShape: voiceCfg.centerShape || 'circle',
     voiceCenterRound: voiceCfg.centerRound != null ? voiceCfg.centerRound : 20,
-    voiceFont: voiceCfg.font || 'Segoe UI'
+    voiceFont: voiceCfg.font || 'Plus Jakarta Sans'
   };
 }
 
@@ -1041,7 +1103,7 @@ function fillCenterShape(ctx, cx, cy, radius, cfg) {
 function drawAudiogramLive(ctx, w, h, dataArray, cfg, guestName) {
   const cx = w / 2, cy = h / 2;
   const shape = cfg.voiceShape || 'radial';
-  const font = cfg.voiceFont || 'Segoe UI';
+  const font = cfg.voiceFont || 'Plus Jakarta Sans';
   const scale = Math.min(w, h) / 720;
 
   if (shape === 'bars') {
@@ -1075,14 +1137,14 @@ function drawAudiogramLive(ctx, w, h, dataArray, cfg, guestName) {
     fillCenterShape(ctx, cx, cy, radius - 10 * scale, cfg);
   }
 
-  ctx.fillStyle = cfg.voiceBarColor; ctx.font = `600 ${Math.round(26*scale)}px ${font}, sans-serif`; ctx.textAlign = 'center';
-  ctx.fillText(cfg.voiceLabel, cx, cy - 6 * scale);
-  ctx.font = `400 ${Math.round(15*scale)}px ${font}, sans-serif`; ctx.fillText(guestName, cx, cy + 20 * scale);
+  ctx.fillStyle = cfg.voiceBarColor;
+  ctx.font = `600 ${Math.round(24*scale)}px "${font}", "Plus Jakarta Sans", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(cfg.voiceLabel, cx, cy - 8 * scale);
+  ctx.font = `400 ${Math.round(14*scale)}px "JetBrains Mono", monospace`;
+  ctx.fillText(guestName, cx, cy + 20 * scale);
 }
 
-// Menimpakan bingkai (custom PNG atau bar bawaan) ke atas foto/video yang
-// sedang di-capture — dipanggil HANYA kalau admin aktifkan "frame otomatis
-// include" untuk jenis media itu.
 function drawCaptureFrameOverlay(ctx, w, h, type) {
   const cfg = frameConfigCache[type];
   if (!cfg) return;
@@ -1091,33 +1153,38 @@ function drawCaptureFrameOverlay(ctx, w, h, type) {
   drawFrameBar(ctx, w, h, cfg);
 }
 
-// Bar nama mempelai + tanggal gaya bawaan (Elegant/Modern/Floral/Minimalist)
-// — dipisah jadi fungsi sendiri supaya bisa dipanggil langsung dengan cfg
-// (dipakai overlay foto/video, maupun latar VN yang tidak pakai PNG custom).
 function drawFrameBar(ctx, w, h, cfg) {
-  const barH = Math.round(h * 0.12);
+  const barH = Math.round(h * 0.10);
   if (cfg.style === 'minimalist') {
-    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, h - barH, w, barH);
+    ctx.fillStyle = 'rgba(26,20,16,0.55)'; ctx.fillRect(0, h - barH, w, barH);
   } else if (cfg.style === 'modern') {
     ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
     ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(4, w * 0.006);
     ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
   } else if (cfg.style === 'floral-simple') {
     ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
-    ctx.fillStyle = cfg.secondary;
-    const r = Math.max(4, w*0.006);
-    [[16,16],[w-16,16],[16,h-barH-16],[w-16,h-barH-16]].forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
+    ctx.strokeStyle = cfg.secondary; ctx.globalAlpha = 0.6; ctx.lineWidth = Math.max(3, w*0.005);
+    const step = Math.max(10, w*0.03);
+    [[10,10,1,1],[w-10,10,-1,1],[10,h-barH-10,1,-1],[w-10,h-barH-10,-1,-1]].forEach(([x,y,sx,sy])=>{
+      for (let k=1;k<=4;k++){
+        ctx.beginPath();
+        ctx.moveTo(x + sx*step*(k-1), y + sy*step*k);
+        ctx.lineTo(x + sx*step*k, y + sy*step*(k-1));
+        ctx.stroke();
+      }
+    });
+    ctx.globalAlpha = 1;
   } else {
     ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
-    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.003);
-    const pad = w*0.015;
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.0025);
+    const pad = w*0.02;
     ctx.strokeRect(pad, pad, w-pad*2, h-pad*2-barH*0.15);
   }
   const centerY = h - barH/2;
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
-  ctx.font = `700 ${Math.round(barH*0.3)}px Georgia, serif`;
+  ctx.font = `700 ${Math.round(barH*0.32)}px Fraunces, Georgia, serif`;
   ctx.fillText(`${cfg.groom} & ${cfg.bride}`, w/2, centerY - barH*0.08);
-  ctx.font = `400 ${Math.round(barH*0.2)}px Segoe UI, sans-serif`;
+  ctx.font = `400 ${Math.round(barH*0.18)}px "Plus Jakarta Sans", sans-serif`;
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.fillText(cfg.date, w/2, centerY + barH*0.28);
 }
@@ -1217,10 +1284,10 @@ function takePhoto() {
 
   if (autoIncludeFrame.photo) drawCaptureFrameOverlay(ctx, vw, vh, 'photo');
 
-  const thumb = makeThumbDataUri(photoCanvas, vw, vh); // thumbnail kecil, sekaligus dipakai sebagai pratinjau (hemat RAM)
+  const thumb = makeThumbDataUri(photoCanvas, vw, vh);
   photoCanvas.toBlob(blob => {
     shotsInFlight--;
-    photoCanvas.width = 1; photoCanvas.height = 1; // lepas memori kanvas besar
+    photoCanvas.width = 1; photoCanvas.height = 1;
     if (!blob) { showToast('Foto belum berhasil diambil, coba lagi ya', 'error'); return; }
     photoShots.push({ blob, url: thumb, thumb });
     renderFilmstrip();
@@ -1291,7 +1358,7 @@ function sendAllPhotos() {
   renderFilmstrip();
   shutterBtn.disabled = false;
   document.getElementById('finishRow').style.display = 'none';
-  showToast(`${shots.length} foto sedang dikirim. Kamu boleh lanjut memotret 😊`, 'success');
+  showToast(`${shots.length} foto sedang dikirim. Kamu boleh lanjut memotret`, 'success');
 }
 
 function captureVideoThumbnail() {
@@ -1318,12 +1385,6 @@ async function startVideoRecording() {
   if (!streamHasAudio) {
     showToast('Mikrofon tidak terdeteksi, jadi videonya akan tanpa suara.', 'error');
   }
-  if (activeFilterParams) {
-    // (Sudah dioptimalkan) — perekaman video dengan Filter Pro sekarang
-    // memakai jalur cepat, tidak lagi memproses piksel manual per-frame.
-  } else if (!canvasFilterSupported && activeFilterCss !== 'none') {
-    showToast('Browser ini belum mendukung filter untuk video, jadi videonya direkam tanpa filter.', 'success');
-  }
   videoThumbBlob = await captureVideoThumbnail();
   recordedChunks = [];
   const maxSeconds = Number(weddingSettings.max_video_seconds) || 60;
@@ -1336,7 +1397,6 @@ async function startVideoRecording() {
   let combined;
 
   if (needsCanvas) {
-    // Perlu olah gambar (filter / bingkai / kamera depan) -> gambar ulang per frame ke kanvas
     const vw0 = liveVideo.videoWidth || 1280, vh0 = liveVideo.videoHeight || 720;
     const sc = Math.min(1, Math.max(vq.width, vq.height) / Math.max(vw0, vh0));
     const canvas = document.createElement('canvas');
@@ -1365,7 +1425,6 @@ async function startVideoRecording() {
     const fps = IS_LOW_END ? Math.min(24, recordFps) : recordFps;
     combined = new MediaStream([...canvas.captureStream(fps).getVideoTracks(), ...audioTracks]);
   } else {
-    // Jalur ringan: rekam langsung dari kamera, tanpa gambar ulang (hemat CPU & baterai)
     combined = liveStream;
   }
 
@@ -1380,7 +1439,7 @@ async function startVideoRecording() {
     capturedBlob = new Blob(recordedChunks, { type: VIDEO_MIME.mime });
     capturedMime = VIDEO_MIME.mime; capturedExt = VIDEO_MIME.ext;
     recordedVideo.src = URL.createObjectURL(capturedBlob);
-    if (IS_LOW_END) stopCameraStream(); // lepas kamera saat meninjau (hemat RAM & baterai)
+    if (IS_LOW_END) stopCameraStream();
     liveVideo.style.display = 'none';
     recordedVideo.style.display = 'block';
     showReview();
@@ -1462,7 +1521,7 @@ async function startVoiceRecording() {
     };
     vnRecorder.start();
     vnOrb.classList.add('recording');
-    document.getElementById('vnHint').textContent = 'Sedang merekam… ketuk ■ kalau sudah selesai';
+    document.getElementById('vnHint').textContent = 'Sedang merekam… ketuk tombol untuk berhenti';
 
     const maxSeconds = Number(weddingSettings.max_voice_seconds) || 60;
     vnSeconds = 0;
@@ -1481,12 +1540,6 @@ async function startVoiceRecording() {
 }
 vnRecordBtn.onclick = startVoiceRecording;
 
-// ============================================
-// VN dengan "frame otomatis include" — rekam mikrofon SAMBIL menggambar
-// audiogram+bingkai live ke kanvas, direkam bareng jadi satu file video
-// (bukan audio polos). Preview hasil rekam pun langsung berbentuk video
-// dengan bingkai yang sudah include, sama seperti yang dilihat saat rekam.
-// ============================================
 let vnFrameAudioCtx = null;
 
 async function startVoiceRecordingWithFrame() {
@@ -1612,7 +1665,7 @@ function sendSingleMedia(type) {
     recordedVideo.style.display = 'none';
     if (!liveStream) startCamera();
   }
-  showToast(type === 'voice' ? 'Suaramu sedang dikirim. Kamu boleh lanjut 😊' : 'Videomu sedang dikirim. Kamu boleh lanjut 😊', 'success');
+  showToast(type === 'voice' ? 'Suaramu sedang dikirim. Kamu boleh lanjut.' : 'Videomu sedang dikirim. Kamu boleh lanjut.', 'success');
 }
 
 function blobToBase64(blob) {
