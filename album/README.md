@@ -1,179 +1,131 @@
-# Wedding Album v6 — Panduan Setup & Perbaikan
+# Wedding Album v9 — Panduan Lengkap
 
-## 🆕 Fitur Baru (Round 5)
-
-**Pengaturan kualitas foto/video/VN dari dashboard admin**
-Tab **Pengaturan Umum** sekarang punya bagian **Kualitas Media** — admin bisa atur langsung tanpa perlu sentuh kode:
-- **Kualitas Foto**: Standar / Tinggi / Maksimal (mengatur kualitas JPEG dan resolusi kamera yang diminta ke HP tamu)
-- **Kualitas Video**: Standar / Tinggi / Maksimal (mengatur bitrate video+audio dan resolusi)
-- **Kualitas Voice Note**: Standar / Tinggi (mengatur bitrate audio)
-
-Pengaturan ini otomatis diambil `index.html` setiap tamu membuka halaman kirim momen, jadi berlaku langsung tanpa perlu deploy ulang apa pun. Opsi **Maksimal** menghasilkan file lebih besar dan lebih lambat diunggah di koneksi lemah — cocok kalau prioritas utama adalah kualitas cetak; **Standar** lebih hemat kuota dan cepat, cocok untuk acara dengan banyak tamu sekaligus.
-
-**1. Template bingkai custom (upload PNG sendiri)**
-Di tab **Tema & Frame** dashboard admin, sekarang ada kartu terpisah untuk **Foto**, **Video**, dan **Voice Note** — masing-masing bisa pakai **Gaya Bawaan** (4 pilihan) atau **unggah PNG sendiri** sebagai bingkai custom. Begitu PNG diunggah, sistem otomatis menyesuaikan ukurannya mengikuti dimensi asli tiap foto/video/voice note tamu saat proses unduh berbingkai. Klik "Pakai Bawaan" kapan saja untuk kembali tanpa kehilangan file PNG yang sudah diunggah.
-
-**2. Filter kamera dijamin terbakar ke hasil, bukan cuma preview**
-Sistem mendeteksi otomatis dukungan browser terhadap `ctx.filter`: kalau didukung, filter diproses cepat lewat jalur bawaan; kalau tidak (Safari versi lama), sistem otomatis beralih ke pemrosesan piksel manual supaya hasil akhir **selalu** sesuai filter aktif — berlaku untuk foto, thumbnail foto, dan video.
-
-**3. Pemisahan file thumbnail vs master (konfirmasi)**
-Thumbnail ringan (kualitas rendah, dibuat di HP tamu) dipakai untuk tampilan cepat di grid album, sedangkan tombol **⬇ Asli** dan **✨ Berbingkai** selalu memproses file master penuh tanpa kompresi tambahan.
-
-## 🆕 Perbaikan Round 3
-
-**1. Thumbnail tidak muncul + VN/video tanpa suara**
-Akar masalahnya: file berkualitas tinggi (sekarang tanpa kompresi kuat) sering melebihi batas ukuran respons Apps Script kalau diambil sekaligus dalam satu response — hasilnya file terpotong, sehingga video/audio jadi rusak (tidak ada suara) atau gagal ditampilkan. Diperbaiki dengan dua cara:
-- **Thumbnail ringan otomatis**: setiap foto/video yang diunggah sekarang menyertakan thumbnail kecil (dibuat di HP tamu sebelum upload), disimpan terpisah di folder `THUMBS`. Galeri album memuat thumbnail ini dulu (cepat), bukan file aslinya — file asli hanya diambil saat tombol Play atau Unduh ditekan.
-- **Pengambilan file utuh secara chunked**: saat video/voice note benar-benar diputar atau diunduh, file diambil bertahap per-potongan (2MB per potongan) lewat `getMediaMeta` + `getMediaChunk`, lalu disatukan di browser — jadi file besar tidak pernah terpotong walau tanpa kompresi.
-
-**2. Zoom tidak sengaja saat isi nama**
-Ditambahkan `user-scalable=no` di viewport, `touch-action: manipulation`, serta pemblokiran gesture pinch-zoom dan double-tap zoom lewat JavaScript — di `index.html`, `album.html`, `admin-dashboard.html`, dan `admin-login.html`.
-
-**3. Video tidak ada suara**
-Ditemukan bug nyata: saat tamu pindah dari mode Foto ke mode Video, sistem memakai ulang stream kamera lama yang direkam tanpa audio (karena mode Foto tidak minta izin mikrofon). Sekarang kamera selalu di-restart dengan permintaan audio yang benar setiap ganti mode.
-
-**4. Format video/VN — mp4/mp3**
-Browser (Web `MediaRecorder` API) tidak bisa merekam mp3 secara native, dan mp4 hanya didukung penuh oleh Safari/iOS — Chrome Android tetap merekam WebM walau diminta mp4 (ini keterbatasan platform, bukan keterbatasan sistem ini). Solusinya: sistem sekarang **otomatis mendeteksi format terbaik yang didukung tiap perangkat** — kalau tamu pakai iPhone, hasilnya otomatis mp4/m4a asli; kalau pakai Android, otomatis WebM (yang paling stabil di Android). Format ini konsisten dipakai untuk rekaman maupun unduhan berbingkai.
-
-**5. Multi-jepret foto**
-Mode Foto sekarang bisa mengambil hingga 5 foto berturut-turut tanpa menutup kamera — hasil tiap jepretan muncul sebagai filmstrip kecil di atas tombol, bisa dihapus satu-satu, dan dikirim sekaligus lewat tombol **Selesai & Kirim** (bisa juga cuma kirim 1 foto).
-
-**6. Kamera depan tidak mirror**
-Preview kamera depan sekarang diberi efek cermin (`scaleX(-1)`) supaya terasa alami saat swafoto, dan hasil jepretan/rekamannya dibuat konsisten dengan apa yang dilihat tamu di preview.
-
-**7. Kualitas dinaikkan**
-Resolusi kamera diminta ideal 1920×1080 (sebelumnya browser bebas pilih, sering jatuh ke resolusi rendah), kualitas JPEG foto dinaikkan ke 0.96, dan bitrate video/audio dinaikkan (6 Mbps video, 128 kbps audio). Catatan jujur: JPEG/H.264/AAC tetap format terkompresi secara teknis (tidak ada kamera HP yang benar-benar "tanpa kompresi" karena file mentah/RAW akan terlalu besar untuk diunggah lewat jaringan seluler) — pengaturan di atas sudah mendekati kualitas maksimal yang wajar untuk dipakai di HP.
-
-**8. Download lambat**
-Ditambahkan tombol **⬇ Asli** (unduh cepat, file apa adanya, ada indikator persen) terpisah dari **✨ Berbingkai** (proses re-render dengan bingkai — untuk video/voice note ini secara teknis butuh waktu kira-kira sama dengan durasi aslinya karena diproses ulang real-time di browser, sekarang dengan indikator persentase supaya jelas bukan macet).
-
-## 🔴 Kenapa Drive terisi tapi album & sheet MEDIA kosong? (Round 2, sudah diperbaiki)
-
-Ini bug yang sudah diperbaiki. Penyebabnya: kode lama memanggil `file.setSharing(...)` (supaya file bisa diakses publik) **sebelum** menyimpan baris ke sheet `MEDIA`. Kalau akun Google Workspace/organisasi kamu punya kebijakan yang memblokir sharing "Anyone with the link" — perintah itu melempar error `Akses ditolak: DriveApp`, dan seluruh proses berhenti di situ. File-nya sudah kepalang naik ke Drive, tapi baris sheet-nya tidak pernah sempat ditulis.
-
-**Perbaikan di `Code.gs` versi ini:**
-1. File sekarang dilayani lewat **proxy Apps Script sendiri** (`?action=serveFile&file_id=...`), bukan link Drive langsung — jadi sama sekali tidak butuh izin "Anyone with the link". Ini otomatis membuat file bisa ditampilkan di album meskipun domain kamu membatasi sharing publik.
-2. Baris di sheet `MEDIA` sekarang **selalu ditulis lebih dulu**, sebelum mencoba hal lain — jadi datanya tidak akan pernah hilang lagi meskipun ada langkah lanjutan yang gagal.
-3. Percobaan `setSharing` tetap dijalankan tapi sekarang **best-effort** (dibungkus try/catch) — kalau gagal, tidak akan menggagalkan upload, hanya menambahkan catatan peringatan di respons.
-
-**Yang perlu kamu lakukan:** ganti isi `Code.gs` dengan versi baru ini, deploy ulang (New version), lalu upload akan langsung bekerja normal. Upload foto/video/VN yang sudah lanjur ada di Drive tapi tidak tercatat di sheet MEDIA perlu ditambahkan manual ke sheet kalau kamu ingin menampilkannya (isi baris sesuai kolom, `file_id` bisa diambil dari URL file di Drive, `file_url` isi dengan `WEB_APP_URL?action=serveFile&file_id=ID_FILE_TERSEBUT`, `status` isi `approved`).
-
-## 🆕 Notifikasi Status Sistem
-
-Dashboard admin sekarang otomatis menjalankan pemeriksaan kesehatan (`healthCheck`) setiap dibuka — mengecek akses ke sheet `WEDDINGS`, `MEDIA`, folder Drive, dan kemampuan sharing. Kalau ada masalah, muncul banner kuning di atas dashboard dengan penjelasan yang bisa dibaca (bukan pesan teknis mentah). Notifikasi galat jaringan/API juga sudah ditambahkan sebagai toast di `index.html`, `album.html`, dan `admin-dashboard.html` — jadi kalau ada yang gagal, akan selalu ada pemberitahuan, bukan diam saja.
-
-
-## 🔴 Kenapa kamu dapat error "Parameter action diperlukan"?
-
-Pesan error yang kamu screenshot: `{success: false, error: "Parameter action diperlukan"}`
-
-Perhatikan key-nya **`error`**. Kode yang saya berikan tidak pernah memakai key `error` — selalu `message`. Ini artinya **script yang benar-benar berjalan di balik Web App URL kamu bukan `Code.gs` yang saya berikan**, atau ada isi lama yang masih tercampur di project Apps Script kamu (dua fungsi `doPost`/`doGet` terdefinisi, dan Apps Script memakai salah satu tanpa peringatan).
-
-**Solusi — bersih-bersih total (wajib, sekali saja):**
-
-1. Buka spreadsheet → **Extensions → Apps Script**.
-2. Di panel kiri, **hapus semua file `.gs` yang ada** kecuali satu file kosong.
-3. Pastikan file itu **kosong total** (select all → delete), lalu paste **seluruh isi `Code.gs`** yang saya berikan di sini. Jangan ditambahkan ke isi lama — harus menggantikan semuanya.
-4. Simpan (ikon disket).
-5. Jalankan fungsi `setupSecretKey` sekali (lihat Langkah 3 di bawah).
-6. Klik **Deploy → Manage deployments** → ikon pensil pada deployment aktif → Version: **New version** → **Deploy**.
-7. Uji lewat browser, buka:
-   `https://script.google.com/macros/s/AKfycbwEdQ_sM7Uh3nGXuMWtDSByiMvbbkL8Z2SlmM1elMbeiJkLbfVrbfiHAt4s5x9KioIt/exec?action=ping`
-   Kalau muncul `{"success":true,"version":"v2-2026-08-09",...}` — deployment kamu sudah bersih dan versi terbaru. Kalau muncul error lain, ulangi langkah 2–4 dengan teliti.
-
-`admin-login.html` versi baru otomatis memanggil `?action=ping` saat halaman dibuka, dan akan menampilkan peringatan kuning kalau backend belum merespons dengan benar — jadi kamu tidak perlu menebak-nebak lagi.
-
-## 🔴 Kenapa upload gagal terus?
-
-Kemungkinan besar penyebabnya **sama seperti di atas** (script lama yang berjalan tidak punya endpoint `uploadMedia` versi baru, atau strukturnya beda). Setelah bersih-bersih di atas, upload akan mengembalikan pesan error yang jelas kalau memang masih gagal (bukan lagi "Parameter action diperlukan"), misalnya soal folder Drive atau format data — jadi lebih mudah dilacak.
-
-Dua hal lain yang tetap perlu dicek:
-- **"Who has access"** pada deployment harus **Anyone**, dan **"Execute as"** harus **Me** — supaya tamu tanpa akun Google tetap bisa mengunggah, dan script berjalan pakai izin Drive kamu (folder tidak perlu dibagikan ke publik, cukup akun kamu yang punya akses).
-- Setelah bersih-bersih, jalankan `setupSheets()` sekali (Langkah 4 di bawah) supaya kolom-kolom baru yang dipakai v2 (`active_filter_id`, `frame_style`, `ui_config`) otomatis ditambahkan ke sheet `WEDDINGS`.
+Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
+Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman HTML statis.
 
 ---
 
-## Struktur Spreadsheet (sudah disesuaikan dengan Excel kamu)
+## 1. Berkas
 
-Sistem ini sekarang memakai persis nama kolom dari `Album-RasyaRizky.xlsx` yang kamu kirim:
-
-**Sheet `WEDDINGS`:** `wedding_id, groom_name, bride_name, date, admin_username, admin_password, theme, primary_color, secondary_color, max_photo, max_video_seconds, max_voice_seconds, allow_video, allow_voice, allow_filter, moderation, created_date`
-— ditambah 3 kolom baru otomatis oleh `setupSheets()`: `active_filter_id, frame_style, ui_config`
-
-**Sheet `MEDIA`:** `wedding_id, media_id, guest_name, media_type, file_id, file_url, thumbnail_url, date, time, status, moderated_by, moderated_date, caption`
-
-**Sheet `FILTERS`:** `filter_id, name, css_filter, active, wedding_id` — kamu sudah punya 7 filter bawaan, tidak perlu diubah.
-
-`admin_password` kamu **sudah dalam bentuk hash** (`1dd79e8c...`) — itu sudah benar sesuai sistem ini, jangan diganti ke plaintext.
-
-Di dalam folder Drive tiap wedding, sekarang akan otomatis muncul subfolder tambahan **`THUMBS`** berisi thumbnail kecil — ini normal dan diperlukan supaya galeri cepat dimuat, jangan dihapus.
-
-## Langkah Setup dari Awal
-
-### 1. Pasang Code.gs
-Ikuti "bersih-bersih total" di atas.
-
-### 2. Jalankan setupSecretKey (wajib, sekali)
-Di Apps Script Editor, pilih fungsi `setupSecretKey` di dropdown atas → Run. Ini membuat kunci rahasia untuk menandatangani token login (disimpan di Script Properties, bukan di spreadsheet).
-
-### 3. Password admin
-Kalau mau ganti password, pakai fungsi `hashPasswordForSheet()`: ubah nilai `PASSWORD_MENTAH`, Run, copy hasil di Logger, paste ke kolom `admin_password`. **Jangan pernah simpan password mentah di sheet.**
-
-### 4. Jalankan setupSheets (wajib, sekali)
-Pilih fungsi `setupSheets` → Run. Ini otomatis menambahkan kolom `active_filter_id`, `frame_style`, `ui_config` ke sheet `WEDDINGS` tanpa menghapus data yang sudah ada, dan mengisi filter bawaan kalau sheet `FILTERS` masih kosong.
-
-### 5. Deploy ulang
-Deploy → Manage deployments → edit → New version → Deploy. Cek dengan `?action=ping` seperti dijelaskan di atas.
-
-### 6. Upload 5 file HTML
-Upload `index.html`, `admin-login.html`, `admin-dashboard.html`, `album.html` ke hosting statis yang sama (Netlify/Vercel/GitHub Pages/Firebase Hosting), dalam satu folder.
-
----
-
-## Apa yang Berubah dari Revisi Kamu
-
-### Kamera langsung terbuka (bukan pilih file)
-`index.html` sekarang langsung meminta izin kamera dan menampilkan live preview begitu halaman dibuka. Ada 3 mode (Foto / Video / Suara) yang bisa digeser tamu, masing-masing dengan tombolnya sendiri — termasuk voice note dengan alur **Rekam → Putar → Ulang → Kirim** sesuai permintaan kamu.
-
-### Kode Undangan otomatis, tidak bisa diisi manual
-Field input Wedding ID **sudah dihapus total**. Begitu tamu membuka `index.html?w=rizky-amanda`, sistem membaca `w` dari URL dan menyimpannya di `localStorage`. Selama tamu tetap di browser yang sama:
-- Pindah ke `album.html` lewat tombol "Lihat Album" → ID ikut terbawa.
-- Balik lagi ke `index.html` lewat tombol "Kirim Momen" → ID tetap terbaca, tidak perlu buka link asli lagi.
-- Kalau memang belum pernah membuka link manapun, halaman akan menampilkan pesan "Tautan Tidak Lengkap" — bukan kolom isian.
-
-### Filter seragam, ditentukan admin
-Tab **Filter Kamera** di dashboard menampilkan semua filter dari sheet `FILTERS`, admin pilih **satu** sebagai filter aktif. Filter ini otomatis diterapkan ke live preview kamera tamu maupun hasil foto/video — semua tamu memakai filter yang sama persis, tidak bisa pilih sendiri.
-
-### Bingkai aesthetic saat download + audiogram untuk voice note
-Tab **Tema & Frame** di dashboard: atur warna utama/sekunder dan pilih 1 dari 4 gaya bingkai (Elegant, Modern, Floral, Minimalist), dengan pratinjau langsung di kanvas. Saat tamu menekan tombol **Unduh** di album:
-- **Foto** → dibingkai dengan nama mempelai & tanggal, diunduh sebagai JPG.
-- **Video** → direkam ulang di browser dengan bingkai yang sama terbakar ke videonya, diunduh sebagai WebM.
-- **Voice note** → dikonversi otomatis menjadi **video** berisi animasi audiogram melingkar yang bereaksi ke suara, dengan bingkai yang sama, diunduh sebagai WebM. Prosesnya berjalan real-time mengikuti durasi rekaman (voice note 30 detik = proses ±30 detik), jadi akan ada indikator "Memproses..." saat tombol ditekan.
-
-Album juga sudah punya tombol **Play/Pause** khusus untuk video dan voice note (tidak perlu pakai kontrol bawaan browser).
-
-### Pengaturan tema tersimpan di Google Sheets
-Semua pengaturan tema (warna, gaya bingkai, judul halaman) disimpan di sheet `WEDDINGS` — warna di kolom `primary_color`/`secondary_color` yang sudah ada, gaya bingkai di kolom baru `frame_style`, dan judul halaman index/album di kolom baru `ui_config` (berbentuk JSON supaya fleksibel untuk pengembangan lanjutan tanpa perlu menambah kolom terus-menerus).
-
-### Moderasi bisa dimatikan
-Toggle **"Moderasi manual sebelum tampil di album"** di tab Pengaturan Umum. Kalau dimatikan, upload tamu langsung `approved` dan tampil di album tanpa menunggu persetujuan — sesuai kolom `moderation` yang sudah ada di Excel kamu.
-
----
-
-## Catatan Teknis Penting
-
-- **Kompatibilitas browser:** fitur kamera, MediaRecorder, dan konversi audiogram butuh browser modern (Chrome/Safari/Edge versi baru). Safari iOS versi lama kadang membatasi `captureStream()` — kalau ada laporan gagal dari iPhone lama, itu penyebabnya.
-- **Ukuran file:** batas upload tetap 15MB (`MAX_FILE_MB` di `Code.gs`), sudah cukup untuk foto dan video pendek 30–60 detik.
-- **Unduhan dengan bingkai** memakai fitur `getMediaFile` di `Code.gs` yang mengambil file dari Drive lewat server (menghindari masalah CORS yang lazim terjadi kalau canvas menggambar gambar/video dari Google Drive langsung).
-- **Preview kamera terbalik (mirror) di kamera depan** sudah ditangani otomatis saat difoto/direkam, supaya hasilnya tidak terbalik seperti cermin.
-
-## Troubleshooting Cepat
-
-| Masalah | Kemungkinan Penyebab |
+| Berkas | Fungsi |
 |---|---|
-| `{"error":"Parameter action diperlukan"}` | Script lama masih tercampur — lakukan "bersih-bersih total" di atas |
-| Login gagal terus padahal hash sudah benar | Sama seperti di atas, atau `SECRET_KEY` belum dibuat — jalankan `setupSecretKey()` |
-| Upload gagal, pesan tidak jelas | Pastikan sudah redeploy versi terbaru dan cek `?action=ping` |
-| Kolom `active_filter_id`/`frame_style` tidak ada | Jalankan `setupSheets()` di editor |
-| Kamera tidak muncul / diminta izin terus | Pastikan situs diakses lewat **https** (kamera diblokir di http biasa), dan izin kamera browser diaktifkan |
-| Unduhan voice note lama sekali | Wajar — proses konversi ke video butuh waktu sama dengan durasi rekamannya |
+| `Code.gs` | Backend (tempel di Apps Script) |
+| `index.html` | Halaman tamu: kamera & kirim momen |
+| `album.html` | Album publik |
+| `admin-login.html` | Masuk mempelai |
+| `admin-dashboard.html` | Dashboard mempelai |
+
+**Hapus dari hosting (sisa versi lama, tidak dipakai, memanggil fungsi yang sudah tidak ada):**
+`admin.js`, `album.js`, `api.js`, `camera.html`, `camera.js`, `config.js`, `preview.html`, `style.css`, `login.html`.
+
+---
+
+## 2. Pasang (±5 menit)
+
+1. Buka spreadsheet → **Extensions → Apps Script**. Hapus semua isi lama, tempel seluruh `Code.gs`, simpan.
+2. Pilih fungsi **`setupSecretKey`** → Run (sekali saja; lewati jika sudah pernah).
+3. Pilih fungsi **`setupSheets`** → Run (sekali). Menambah kolom baru `allow_photo` tanpa menghapus data; wedding lama otomatis aktif untuk foto. Aman diulang.
+4. **Deploy → Manage deployments → ikon pensil → Version: New version → Deploy.** Pengaturan: *Execute as* **Me**, *Who has access* **Anyone**. Izinkan akses jika diminta.
+5. Upload keempat file HTML ke hosting statis (Netlify / Vercel / GitHub Pages / Firebase), satu folder, timpa yang lama.
+6. Cek: buka `…/exec?action=ping` → harus muncul `"version":"v9-2026-10-20-fast"`.
+7. Uji cepat: buka `index.html?w=KODE-UNDANGAN`, kirim satu foto, lalu cek sheet `MEDIA` dan folder Drive.
+
+Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
+
+---
+
+## 3. Yang baru di v9
+
+### Saklar Foto / Video / Voice note
+Dashboard → **Pengaturan Umum → Jenis Momen yang Boleh Dikirim**. Berlaku di tiga tempat sekaligus:
+- **Halaman kirim:** tombol mode hanya untuk jenis yang ON. Satu jenis ON → tombol mode disembunyikan. Semua OFF → layar "Pengiriman Sedang Ditutup" + tombol Lihat Album.
+- **Server:** upload jenis yang OFF ditolak, meski ada yang mencoba lewat jalur lain.
+- **Album:** tab dan isi hanya jenis yang ON. Satu jenis ON → tab disembunyikan.
+
+Minimal satu jenis harus aktif (dashboard menolak menyimpan jika semuanya mati).
+
+### Upload cepat & ringan
+- Tamu **tidak menunggu**: setelah menekan Kirim, kamera langsung bisa dipakai lagi; file terkirim di latar belakang dengan indikator progres kecil.
+- **Foto kecil** (≤1,5 MB): sekali kirim. **Video / VN besar:** dikirim **langsung ke Google Drive** (tanpa base64, tanpa lewat Apps Script), lalu dicatat. Jika jalur langsung gagal, otomatis pakai jalur biasa.
+- Coba ulang otomatis 4× saat sinyal putus; lanjut sendiri saat online kembali; tombol **Kirim ulang** jika tetap gagal.
+- **Popup hasil** setelah semua selesai: berhasil (dengan info langsung tampil atau menunggu persetujuan), sebagian berhasil, atau gagal.
+- Peringatan jika tamu menutup halaman saat file masih terkirim.
+
+### HP RAM kecil & sinyal lambat (otomatis)
+- HP RAM ≤2 GB / ≤4 core atau sinyal 2G/3G: resolusi foto & video dibatasi, bitrate lebih rendah, 24 fps, kamera dilepas saat meninjau video, hanya satu upload berjalan sekaligus.
+- Pratinjau foto memakai thumbnail kecil (bukan foto penuh); kanvas besar dilepas setelah jepret.
+- Video tanpa filter/bingkai dari kamera belakang direkam **langsung dari kamera** (tanpa digambar ulang per frame) → jauh lebih hemat CPU dan baterai.
+- Preset kualitas "Maksimal" dibatasi (foto 2560 px, video 1080p) agar tidak membuat HP kehabisan memori. Pengaturan kualitas admin tetap berlaku di bawah batas itu.
+
+### Album cepat
+- 12 item per halaman, gulir tak terbatas, hasil halaman pertama langsung tampil dari penyimpanan sementara lalu diperbarui.
+- Thumbnail disimpan di sheet (≤45.000 karakter per sel), dikirim bersama daftar album.
+- Tap foto → lihat ukuran penuh. Video/VN dimuat hanya saat diputar. Unduhan penuh diambil paralel 3 potongan.
+- Maksimal 4 berkas penuh disimpan di memori sekaligus.
+
+### Backend
+- **Cache** (CacheService): pengaturan 5 menit, album 10 menit; otomatis dibuang saat ada upload disetujui / moderasi / ubah pengaturan.
+- **Kunci antrean** (LockService): tulis ke sheet dilakukan satu per satu → tidak ada baris tertimpa saat banyak tamu bersamaan. Jika sangat ramai, tamu melihat pesan ramah dan sistem mencoba lagi sendiri.
+- Update pengaturan ditulis sekali (bukan per kolom). Folder Drive di-cache (tidak dicari ulang tiap upload). Tidak lagi memanggil `setSharing` tiap upload.
+- Health check ringan (tidak membuat file uji di Drive).
+
+### Perbaikan bug
+- Thumbnail album tidak tampil (Apps Script tidak bisa menyajikan file mentah lewat `serveFile`).
+- Tanggal pernikahan bergeser mundur sehari tiap disimpan dari dashboard.
+- Nama tamu berisi tanda kutip merusak tombol di album.
+- Moderasi memuat semua video penuh sekaligus; kini thumbnail dulu, video/suara dimuat saat diketuk.
+- Dua tamu mengunggah bersamaan bisa menimpa baris sheet.
+
+---
+
+## 4. Struktur Spreadsheet
+
+**WEDDINGS:** `wedding_id, groom_name, bride_name, date, admin_username, admin_password, theme, primary_color, secondary_color, max_photo, max_video_seconds, max_voice_seconds, allow_video, allow_voice, allow_filter, moderation, created_date, active_filter_id, frame_style, ui_config, allow_photo`
+- `allow_photo` ditambah otomatis oleh `setupSheets()`.
+- `max_photo` harus **angka 1–20** (jumlah foto per kiriman). Isi lain (mis. `TRUE`) dianggap 5.
+- `admin_password` berbentuk hash. Buat dengan `hashPasswordForSheet()` (ubah `PASSWORD_MENTAH`, Run, salin hasil di Logger). Jangan simpan password mentah.
+
+**MEDIA:** `wedding_id, media_id, guest_name, media_type, file_id, file_url, thumbnail_url, date, time, status, moderated_by, moderated_date, caption`
+- `thumbnail_url` kini berisi data gambar kecil (bukan tautan). Jangan diedit manual.
+
+**FILTERS:** `filter_id, name, css_filter, active, wedding_id, params`
+
+Di Drive, tiap wedding punya subfolder `PHOTO`, `VIDEO`, `VOICE`, `FRAMES`.
+
+---
+
+## 5. Fitur lain (tetap)
+
+- **Kode undangan otomatis:** tamu membuka `index.html?w=kode-undangan`; kode tersimpan di browser dan terbawa ke album.
+- **Filter seragam:** admin memilih satu filter aktif (bawaan atau Filter Custom 15 parameter) yang terbakar ke foto & video tamu.
+- **Bingkai & tema:** 4 gaya bawaan atau PNG custom per jenis media; opsi "bakar bingkai otomatis saat rekam"; audiogram VN bisa diatur bentuk, warna, dan fontnya.
+- **Unduhan:** "Unduh Asli" (cepat) dan "Unduh Berbingkai ✨" (diproses ulang di browser; VN/video butuh waktu setara durasinya).
+- **Moderasi bisa dimatikan:** jika OFF, momen langsung tampil di album.
+- **Kualitas media** (Standar / Tinggi / Maksimal / Custom) diatur dari dashboard.
+- Kontrol album: tampil/sembunyikan pratinjau, izinkan/larang unduhan.
+- Zoom tidak sengaja dicegah (viewport + blokir pinch & double-tap).
+
+---
+
+## 6. Troubleshooting
+
+| Masalah | Penyebab / solusi |
+|---|---|
+| `{"error":"Parameter action diperlukan"}` | Script lama masih tercampur. Hapus semua isi editor Apps Script, tempel `Code.gs` baru saja, deploy **New version**. |
+| Login gagal terus padahal password benar | `SECRET_KEY` belum dibuat → jalankan `setupSecretKey()`. |
+| Dashboard menampilkan "Kolom allow_photo belum ada" | Jalankan `setupSheets()` sekali. |
+| Tombol Foto/Video/Suara tidak berubah setelah disimpan | Pastikan sudah deploy **New version**; muat ulang halaman tamu. Perubahan pengaturan berlaku maksimal beberapa detik. |
+| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v9). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
+| Video besar terasa lambat dikirim | Kemungkinan jalur langsung ke Drive ditolak dan sistem memakai jalur biasa (tetap berhasil, hanya lebih lambat). Turunkan Kualitas Video ke Standar di dashboard. |
+| Pesan "Server sedang ramai" | Terlalu banyak tulis bersamaan; sistem mencoba lagi otomatis, tamu cukup menunggu. |
+| Album kosong padahal ada kiriman | Moderasi ON → setujui dulu di tab Moderasi. Atau jenis media itu sedang OFF di Pengaturan Umum. |
+| Foto lama tidak punya thumbnail | Dibuat otomatis saat album pertama dibuka (maksimal 4 per muat). |
+| Kamera tidak muncul / izin terus diminta | Situs harus **https**; aktifkan izin kamera & mikrofon di browser. |
+| Unduhan VN berbingkai lama | Wajar: prosesnya real-time seukuran durasi rekaman. Aktifkan "Bakar bingkai otomatis" agar unduhan instan. |
+| iPhone lama gagal merekam video berbingkai | `captureStream()` terbatas di Safari lama; perbarui iOS atau matikan bingkai otomatis. |
+
+## 7. Catatan teknis
+
+- Batas ukuran file: 25 MB (`MAX_FILE_MB` di `Code.gs`).
+- Format rekaman dipilih otomatis sesuai perangkat (iPhone: mp4/m4a, Android: WebM).
+- Kuota Apps Script gratis terbatas; cache dan unggah langsung ke Drive dirancang agar ratusan tamu bersamaan tetap ringan. Untuk acara sangat besar, pertimbangkan akun Google Workspace (kuota lebih tinggi).
