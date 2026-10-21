@@ -154,6 +154,71 @@
   }
   .toast.success{background:var(--success);} .toast.error{background:var(--danger);}
   #hiddenCanvas{display:none;}
+
+
+  /* ---- Toolbar & pagination ---- */
+  .toolbar{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:-12px 0 20px;}
+  .toolbar .count{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-3); letter-spacing:.02em;}
+  .size-pick{display:flex; align-items:center; gap:6px;}
+  .size-pick .lbl{font-size:12px; color:var(--text-3); margin-right:2px;}
+  .size-pick button{
+    min-width:44px; padding:7px 12px; border:1px solid var(--border); background:var(--surface);
+    border-radius:4px; font-family:inherit; font-size:12px; font-weight:600; color:var(--text-2); cursor:pointer;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .size-pick button:hover{background:var(--surface-2); border-color:var(--border-strong);}
+  .size-pick button.active{background:var(--primary); border-color:var(--primary); color:#fff;}
+  .pager{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:32px; padding-top:20px; border-top:1px solid var(--border);}
+  .pager button{
+    display:inline-flex; align-items:center; gap:8px; padding:11px 18px; min-height:44px;
+    border:1px solid var(--border); background:var(--surface); border-radius:4px;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--primary); cursor:pointer;
+    transition:background .15s,border-color .15s;
+  }
+  .pager button:hover:not(:disabled){background:var(--surface-2); border-color:var(--border-strong);}
+  .pager button:disabled{opacity:.4; cursor:not-allowed; color:var(--text-3);}
+  .pager button svg{width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
+  .pager .info{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-2); text-align:center;}
+  .grid.busy{opacity:.45; transition:opacity .15s; pointer-events:none;}
+
+  /* ---- Penampil foto: tombol kiri/kanan ---- */
+  .pv-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(245,241,235,.14); color:#F5F1EB;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s, opacity .15s;
+  }
+  .pv-nav:hover:not(:disabled){background:rgba(245,241,235,.28);}
+  .pv-nav:disabled{opacity:0; pointer-events:none;}
+  .pv-nav svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
+  .pv-nav.prev{left:12px;} .pv-nav.next{right:12px;}
+  #photoViewerCap{display:flex; align-items:baseline; gap:10px;}
+  #photoViewerCap .pv-count{font-family:'JetBrains Mono',monospace; font-style:normal; font-size:11px; color:rgba(245,241,235,.65);}
+  #photoViewerImg{transition:opacity .15s;} #photoViewerImg.loading{opacity:.7;}
+  @media (max-width:640px){
+    .toolbar{margin-top:-8px;}
+    .pager{gap:8px;} .pager button{padding:11px 12px;} .pager button .t{display:inline;}
+    .pv-nav{width:42px; height:42px;} .pv-nav.prev{left:6px;} .pv-nav.next{right:6px;}
+  }
+
+  /* ---- Footer ---- */
+  .site-footer{max-width:1080px; margin:0 auto; padding:48px 24px 56px; border-top:1px solid var(--border); text-align:left;}
+  .site-footer .thanks{font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:clamp(20px,3.4vw,26px); line-height:1.25; letter-spacing:-0.01em; color:var(--text); max-width:520px;}
+  .site-footer .thanks-sub{font-size:14px; line-height:1.65; color:var(--text-2); margin-top:10px; max-width:520px;}
+  .site-footer .lattice{color:var(--accent); width:96px; margin:22px 0 18px; opacity:.9;}
+  .site-footer .lattice svg{display:block; width:100%; height:auto;}
+  .site-footer .ft-ig{
+    display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+    font-size:13px; font-weight:600; color:var(--primary);
+    border:1px solid var(--border); background:var(--surface); border-radius:4px; padding:9px 14px;
+    transition:background .15s,border-color .15s;
+  }
+  .site-footer .ft-ig:hover{background:var(--surface-2); border-color:var(--border-strong);}
+  .site-footer .ft-ig svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .site-footer .ft-ig span{font-family:'JetBrains Mono',monospace; font-weight:500; font-size:12px; color:var(--text-2);}
+  .site-footer .sig{display:block; margin-top:22px; font-size:12px; color:var(--text-3);}
+  @media (max-width:640px){ .site-footer{padding:36px 20px 48px;} }
 </style>
 </head>
 <body>
@@ -170,17 +235,47 @@
 <div class="container">
   <div class="filters" id="filters" style="display:none;"></div>
 
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <div class="size-pick" id="sizePick" role="group" aria-label="Jumlah momen per halaman">
+      <span class="lbl">Tampilkan</span>
+      <button type="button" data-size="25">25</button>
+      <button type="button" data-size="50">50</button>
+      <button type="button" data-size="all">Semua</button>
+    </div>
+    <div class="count" id="countText"></div>
+  </div>
+
   <div id="grid" class="grid"></div>
   <div id="loader" class="loader">Sedang menyiapkan album…</div>
   <div id="sentinel" style="height:1px;"></div>
+  <nav class="pager" id="pager" style="display:none;" aria-label="Halaman album">
+    <button type="button" id="prevPage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span class="t">Sebelumnya</span></button>
+    <span class="info" id="pageInfo"></span>
+    <button type="button" id="nextPage"><span class="t">Selanjutnya</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  </nav>
   <div id="empty" class="empty" style="display:none;">Belum ada momen di sini.<br>Yuk, jadi yang pertama berbagi.</div>
 </div>
 
+<footer class="site-footer">
+  <p class="thanks">Makasih ya, udah ikut abadiin momennya!</p>
+  <p class="thanks-sub">Tiap jepretan dari kamu bikin hari ini makin berkesan. Masih ada momen yang belum masuk? Gas kirim lewat tombol "Kirim Momen" di atas.</p>
+  <div class="lattice" aria-hidden="true">
+    <svg viewBox="0 0 100 12" fill="none" focusable="false" aria-hidden="true"><path d="M0 6 L15 0 L30 6 L45 0 L60 6 L75 0 L90 6 L100 3" stroke="currentColor" stroke-width="1"/></svg>
+  </div>
+  <a class="ft-ig" id="ft-ig" href="https://instagram.com/rizky.hanifudin" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.8"/></svg>
+    Kepo yang bikin? Mampir ke IG <span>@rizky.hanifudin</span>
+  </a>
+  <small class="sig" id="ft-dev">Dibuat dengan &hearts; oleh Rasya dan Rizky</small>
+</footer>
+
 <div class="toast" id="toast"></div>
-<div id="photoViewer" onclick="closePhoto()">
+<div id="photoViewer" onclick="if(event.target===this)closePhoto()">
+  <button class="pv-nav prev" id="pvPrev" aria-label="Foto sebelumnya" onclick="stepPhoto(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
   <img id="photoViewerImg" alt="">
-  <div id="photoViewerCap"></div>
-  <button class="pv-close" aria-label="Tutup">✕</button>
+  <div id="photoViewerCap"><span id="pvName"></span><span class="pv-count" id="pvCount"></span></div>
+  <button class="pv-nav next" id="pvNext" aria-label="Foto berikutnya" onclick="stepPhoto(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="pv-close" aria-label="Tutup" onclick="closePhoto()">✕</button>
 </div>
 <canvas id="hiddenCanvas"></canvas>
 
@@ -289,15 +384,41 @@ function showLoadError() {
   l.innerHTML = 'Koneksi sedang kurang stabil.<br><button class="retry-btn" onclick="location.reload()">Coba Lagi</button>';
 }
 
-async function loadPage(reset) {
-  if (isLoading && !reset) return;
+const SIZE_KEY = 'album_page_size';
+let pageSize = 25;                       // 25 | 50 | 'all'
+try { const v = localStorage.getItem(SIZE_KEY); pageSize = v === '50' ? 50 : (v === 'all' ? 'all' : 25); } catch (e) {}
+let totalPages = 1, totalItems = 0, firstLoadDone = false;
+const reqSize = () => pageSize === 'all' ? 50 : pageSize;   // mode "Semua" = gulir terus, ambil 50 per kali
+const LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+const pageMem = new Map();               // simpan beberapa halaman terakhir agar tombol Sebelumnya/Selanjutnya terasa instan
+
+function memKey(page) { return `${currentFilter}|${reqSize()}|${page}`; }
+async function fetchPage(page) {
+  const k = memKey(page);
+  if (pageMem.has(k)) return pageMem.get(k);
+  const data = await apiGet({ action: 'getAlbum', wedding_id: weddingId, page, type: currentFilter, size: reqSize() });
+  if (data && data.success) {
+    pageMem.set(k, data);
+    while (pageMem.size > (LOW_END ? 2 : 4)) pageMem.delete(pageMem.keys().next().value);
+  }
+  return data;
+}
+
+// reset=true -> mulai dari halaman `page` (bawaan 1). reset=false: mode Semua = tambah halaman berikutnya; mode halaman = pindah ke `page`.
+async function loadPage(reset, page, opts) {
+  opts = opts || {};
+  const paged = pageSize !== 'all';
+  if (isLoading && !reset && !opts.force) return;
   const myToken = ++loadToken;
   isLoading = true;
   const grid = document.getElementById('grid');
   const loader = document.getElementById('loader');
-  const cacheKey = `alb_${weddingId}_${currentFilter}`;
+  const target = reset ? (page || 1) : (paged ? (page || currentPage + 1) : currentPage + 1);
+  const replace = reset || paged;
+  const cacheKey = `alb_${weddingId}_${currentFilter}_${reqSize()}`;
+  setPagerBusy(true);
 
-  if (reset) {
+  if (reset && target === 1) {
     items = []; currentPage = 0; hasMore = false;
     grid.innerHTML = ''; document.getElementById('empty').style.display = 'none';
     try {
@@ -305,38 +426,96 @@ async function loadPage(reset) {
       if (cached && cached.media && cached.media.length) { items = cached.media.slice(); renderItems(items, false); }
       else loader.style.display = 'block';
     } catch (e) { loader.style.display = 'block'; }
+  } else if (replace) {
+    grid.classList.add('busy');          // pindah halaman: isi lama diredupkan sampai data baru datang
   } else {
     loader.style.display = 'block';
   }
 
   try {
-    const next = reset ? 1 : currentPage + 1;
-    const data = await apiGet({ action: 'getAlbum', wedding_id: weddingId, page: next, type: currentFilter });
+    const data = await fetchPage(target);
     if (myToken !== loadToken) return;
     loader.style.display = 'none';
     if (!data.success) { showToast(data.message || 'Album belum bisa dimuat', 'error'); return; }
-    if (JSON.stringify(data.types) !== JSON.stringify(enabledTypes)) {
-      enabledTypes = data.types; buildFilters();
-    }
+    if (JSON.stringify(data.types) !== JSON.stringify(enabledTypes)) { enabledTypes = data.types; buildFilters(); }
     currentPage = data.page; hasMore = data.has_more;
-    if (reset) {
+    totalPages = data.total_pages || 1; totalItems = data.total || 0;
+    if (replace) {
       items = data.media.slice();
       grid.innerHTML = '';
       renderItems(items, false);
-      try { sessionStorage.setItem(cacheKey, JSON.stringify({ media: data.media })); } catch (e) {}
+      if (reset && target === 1) { try { sessionStorage.setItem(cacheKey, JSON.stringify({ media: data.media })); } catch (e) {} }
+      if (!opts.keepScroll && firstLoadDone && paged) scrollToTop();
     } else {
       const start = items.length;
       items = items.concat(data.media);
       renderItems(data.media, true, start);
     }
+    firstLoadDone = true;
     document.getElementById('empty').style.display = items.length === 0 ? 'block' : 'none';
+    updateToolbar(); updatePager();
     watchSentinel();
+    prefetchNext();
   } catch (e) {
-    if (myToken === loadToken) { loader.style.display = 'none'; if (items.length === 0) showLoadError(); else showToast('Koneksi terputus. Gulir lagi untuk mencoba memuat.', 'error'); }
+    if (myToken === loadToken) { loader.style.display = 'none'; if (items.length === 0) showLoadError(); else showToast('Koneksi terputus. Coba lagi ya.', 'error'); }
   } finally {
-    if (myToken === loadToken) isLoading = false;
+    if (myToken === loadToken) { isLoading = false; grid.classList.remove('busy'); setPagerBusy(false); }
   }
 }
+
+function scrollToTop() {
+  const el = document.getElementById('toolbar').style.display !== 'none' ? document.getElementById('toolbar') : document.getElementById('grid');
+  const y = el.getBoundingClientRect().top + window.pageYOffset - 12;
+  window.scrollTo({ top: Math.max(0, y), behavior: LOW_END ? 'auto' : 'smooth' });
+}
+
+function updateToolbar() {
+  const tb = document.getElementById('toolbar');
+  if (totalItems === 0) { tb.style.display = 'none'; return; }
+  tb.style.display = 'flex';
+  document.getElementById('sizePick').style.display = totalItems > 25 ? 'flex' : 'none';   // kurang dari 25 momen: pilihan tidak perlu
+  document.querySelectorAll('#sizePick button').forEach(b => b.classList.toggle('active', b.dataset.size === String(pageSize)));
+  const size = reqSize();
+  if (pageSize === 'all') document.getElementById('countText').textContent = `${items.length} dari ${totalItems} momen`;
+  else {
+    const from = (currentPage - 1) * size + 1, to = Math.min(totalItems, from + items.length - 1);
+    document.getElementById('countText').textContent = totalItems <= size ? `${totalItems} momen` : `${from}–${to} dari ${totalItems} momen`;
+  }
+}
+
+function updatePager() {
+  const pg = document.getElementById('pager');
+  if (pageSize === 'all' || totalPages <= 1) { pg.style.display = 'none'; return; }
+  pg.style.display = 'flex';
+  document.getElementById('pageInfo').textContent = `Halaman ${currentPage} dari ${totalPages}`;
+  document.getElementById('prevPage').disabled = currentPage <= 1;
+  document.getElementById('nextPage').disabled = currentPage >= totalPages;
+}
+function setPagerBusy(b) {
+  if (b) { document.getElementById('prevPage').disabled = true; document.getElementById('nextPage').disabled = true; }
+  else updatePager();
+}
+
+// Siapkan halaman berikutnya diam-diam (hemat kuota di HP irit data / RAM kecil: dilewati)
+function prefetchNext() {
+  if (pageSize === 'all' || LOW_END || currentPage >= totalPages) return;
+  if (navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || ''))) return;
+  const nextNo = currentPage + 1, tok = loadToken;
+  setTimeout(() => { if (tok === loadToken && !isLoading) fetchPage(nextNo).catch(() => {}); }, 900);
+}
+
+document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) loadPage(false, currentPage - 1); });
+document.getElementById('nextPage').addEventListener('click', () => { if (currentPage < totalPages) loadPage(false, currentPage + 1); });
+document.getElementById('sizePick').addEventListener('click', e => {
+  const b = e.target.closest('button[data-size]');
+  if (!b) return;
+  const v = b.dataset.size === 'all' ? 'all' : Number(b.dataset.size);
+  if (v === pageSize) return;
+  pageSize = v;
+  try { localStorage.setItem(SIZE_KEY, String(v)); } catch (err) {}
+  pageMem.clear();
+  loadPage(true, 1);
+});
 
 let sentinelObserver = null;
 function watchSentinel() {
@@ -344,7 +523,7 @@ function watchSentinel() {
   if (!('IntersectionObserver' in window)) return;
   if (!sentinelObserver) {
     sentinelObserver = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && !isLoading) loadPage(false);
+      if (entries[0].isIntersecting && pageSize === 'all' && hasMore && !isLoading) loadPage(false);   // hanya mode Semua
     }, { rootMargin: '600px' });
     sentinelObserver.observe(s);
   } else { sentinelObserver.unobserve(s); sentinelObserver.observe(s); }
@@ -416,18 +595,89 @@ document.getElementById('grid').addEventListener('click', e => {
   else if (act === 'view') openPhoto(item, card);
 });
 
-async function openPhoto(item, card) {
-  const ov = document.getElementById('photoViewer');
-  const img = document.getElementById('photoViewerImg');
-  document.getElementById('photoViewerCap').textContent = item.guest_name;
-  img.src = item.thumbnail_url || '';
-  ov.style.display = 'flex';
-  try {
-    const { url } = await fetchFileChunked(item.file_id);
-    if (ov.style.display === 'flex') img.src = url;
-  } catch (e) { showToast('Foto ukuran penuh belum bisa dimuat. Coba lagi ya.', 'error'); }
+let viewIdx = -1, viewTok = 0, viewTimer = null, viewBusy = false;
+function viewerOpen() { return document.getElementById('photoViewer').style.display === 'flex'; }
+function photoAfter(from, dir) {
+  for (let i = from + dir; i >= 0 && i < items.length; i += dir) if (items[i].media_type === 'photo') return i;
+  return -1;
 }
-function closePhoto() { document.getElementById('photoViewer').style.display = 'none'; document.getElementById('photoViewerImg').src = ''; }
+function canStepMore(dir) {
+  if (photoAfter(viewIdx, dir) !== -1) return true;
+  if (pageSize === 'all') return dir > 0 && hasMore;
+  return dir > 0 ? currentPage < totalPages : currentPage > 1;
+}
+function openPhoto(item, card) {
+  viewIdx = Number(card.dataset.idx);
+  document.getElementById('photoViewer').style.display = 'flex';
+  showViewer();
+}
+function showViewer() {
+  const item = items[viewIdx];
+  if (!item) return;
+  const img = document.getElementById('photoViewerImg');
+  const tok = ++viewTok;
+  clearTimeout(viewTimer);
+  document.getElementById('pvName').textContent = item.guest_name;
+  const photos = items.filter(x => x.media_type === 'photo');
+  document.getElementById('pvCount').textContent = photos.length > 1 ? `${photos.indexOf(item) + 1} / ${photos.length}` : '';
+  img.src = item.thumbnail_url || '';       // thumbnail langsung tampil
+  img.classList.add('loading');
+  document.getElementById('pvPrev').disabled = !canStepMore(-1);
+  document.getElementById('pvNext').disabled = !canStepMore(1);
+  // Foto ukuran penuh baru diambil kalau tamu berhenti sebentar -> geser cepat tidak membebani server
+  viewTimer = setTimeout(async () => {
+    try {
+      const { url } = await fetchFileChunked(item.file_id);
+      if (tok === viewTok && viewerOpen()) { img.src = url; img.classList.remove('loading'); }
+    } catch (e) {
+      if (tok === viewTok) { img.classList.remove('loading'); showToast('Foto ukuran penuh belum bisa dimuat. Coba lagi ya.', 'error'); }
+    }
+  }, 350);
+}
+async function stepPhoto(dir) {
+  if (viewBusy || viewIdx < 0) return;
+  let nxt = photoAfter(viewIdx, dir);
+  if (nxt === -1) {                          // ujung halaman: ambil halaman sebelah lalu lanjut
+    if (!canStepMore(dir)) return;
+    viewBusy = true;
+    document.getElementById('pvCount').textContent = 'Memuat…';
+    try {
+      while (nxt === -1 && canStepMore(dir)) {
+        const oldLen = items.length;
+        if (pageSize === 'all') { await loadPage(false, null, { force: true }); nxt = photoAfter(oldLen - 1, 1); }
+        else {
+          await loadPage(false, currentPage + dir, { force: true, keepScroll: true });
+          nxt = dir > 0 ? photoAfter(-1, 1) : photoAfter(items.length, -1);
+        }
+        if (items.length === oldLen && pageSize === 'all') break;
+      }
+    } finally { viewBusy = false; }
+    if (nxt === -1) { showToast('Sudah di foto terakhir.', 'success'); showViewer(); return; }
+  }
+  viewIdx = nxt;
+  showViewer();
+}
+function closePhoto() {
+  clearTimeout(viewTimer); viewTok++;
+  document.getElementById('photoViewer').style.display = 'none';
+  document.getElementById('photoViewerImg').src = '';
+  viewIdx = -1;
+}
+document.addEventListener('keydown', e => {
+  if (!viewerOpen()) return;
+  if (e.key === 'ArrowLeft') stepPhoto(-1);
+  else if (e.key === 'ArrowRight') stepPhoto(1);
+  else if (e.key === 'Escape') closePhoto();
+});
+(function () {                              // geser jari kiri/kanan
+  const v = document.getElementById('photoViewer'); let x0 = 0, y0 = 0;
+  v.addEventListener('touchstart', e => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive: true });
+  v.addEventListener('touchend', e => {
+    const t = e.changedTouches[0]; if (!t) return;
+    const dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) > 55 && Math.abs(dy) < 70) stepPhoto(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
 
 function base64ToUint8(base64) {
   const bin = atob(base64);

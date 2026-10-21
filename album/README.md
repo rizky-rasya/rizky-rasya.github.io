@@ -1,4 +1,4 @@
-# Wedding Album v9 — Panduan Lengkap
+# Wedding Album v11 — Panduan Lengkap
 
 Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
 Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman HTML statis.
@@ -15,7 +15,7 @@ Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman 
 | `admin-login.html` | Masuk mempelai |
 | `admin-dashboard.html` | Dashboard mempelai |
 
-**Hapus dari hosting (sisa versi lama, tidak dipakai, memanggil fungsi yang sudah tidak ada):**
+**Hapus dari hosting (sisa versi lama, tidak dipakai, memanggil fungsi yang sudah tidak ada). Sejak v9 tidak ada file CSS/JS terpisah: semua gaya dan skrip sudah ada di dalam keempat HTML:**
 `admin.js`, `album.js`, `api.js`, `camera.html`, `camera.js`, `config.js`, `preview.html`, `style.css`, `login.html`.
 
 ---
@@ -27,14 +27,56 @@ Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman 
 3. Pilih fungsi **`setupSheets`** → Run (sekali). Menambah kolom baru `allow_photo` tanpa menghapus data; wedding lama otomatis aktif untuk foto. Aman diulang.
 4. **Deploy → Manage deployments → ikon pensil → Version: New version → Deploy.** Pengaturan: *Execute as* **Me**, *Who has access* **Anyone**. Izinkan akses jika diminta.
 5. Upload keempat file HTML ke hosting statis (Netlify / Vercel / GitHub Pages / Firebase), satu folder, timpa yang lama.
-6. Cek: buka `…/exec?action=ping` → harus muncul `"version":"v9-2026-10-20-fast"`.
+6. Cek: buka `…/exec?action=ping` → harus muncul `"version":"v11-2026-10-21-paged"`.
 7. Uji cepat: buka `index.html?w=KODE-UNDANGAN`, kirim satu foto, lalu cek sheet `MEDIA` dan folder Drive.
 
 Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
 
 ---
 
-## 3. Yang baru di v9
+## 3. Yang baru di v11
+
+### Album: halaman & penampil foto
+- **Tampilkan 25 / 50 / Semua** (pilihan diingat di HP tamu). Bawaan 25.
+- **Sebelumnya / Selanjutnya** + info "Halaman 2 dari 5" dan "26–50 dari 120 momen". Pindah halaman otomatis kembali ke atas. Pilihan ukuran disembunyikan kalau momen ≤ 25.
+- **Semua** = gulir terus, dimuat 50 per kali (bukan sekaligus, supaya HP RAM kecil tidak berat).
+- **Penampil foto**: tombol kiri/kanan, geser jari, atau tombol panah keyboard. Di ujung halaman otomatis lanjut ke halaman sebelah. Foto ukuran penuh baru diambil kalau tamu berhenti sekitar 0,35 detik, jadi geser cepat tidak membebani server.
+- Halaman berikutnya disiapkan diam-diam (dilewati di HP RAM kecil / hemat data).
+
+### Lebih kuat saat banyak tamu
+- Server menahan kunci tulis lebih singkat (cek duplikat 400 baris hanya untuk kiriman ulang).
+- Album membaca thumbnail sekali jalan, bukan per foto.
+- Saat server antre, HP menunggu lebih lama dengan jeda acak (tidak menyerbu bersamaan) dan tamu melihat "Lagi ramai nih, antre sebentar ya…". Percobaan ulang otomatis naik jadi 5×.
+
+### Batas yang perlu dipahami
+- Apps Script maksimal sekitar 30 permintaan berjalan bersamaan per akun. Di atas itu sebagian permintaan ditolak sementara; HP mencoba lagi sendiri, jadi tamu hanya menunggu, bukan kehilangan foto.
+- Ada kuota harian Google (panggilan URL Fetch, dll). Kalau habis, kiriman gagal sampai kuota di-reset. Untuk acara besar, pakai akun Google khusus acara (atau Workspace).
+- Video/VN besar masuk langsung ke Drive (tidak lewat Apps Script), jadi tidak membebani batas di atas. Pastikan ruang Drive cukup (gratis 15 GB, maks 25 MB per file).
+- Uji dulu sebelum hari-H: kirim dari 5–10 HP sekaligus dan pantau menu **Executions** di Apps Script.
+
+## 3a. Yang baru di v10
+
+### Tidak ada lagi foto dobel / "gagal kirim" palsu
+Masalah lama: foto sebenarnya sudah masuk album, tapi balasan server tidak sampai ke HP (sinyal putus, server ramai). HP mengira gagal lalu mengirim ulang, jadi foto tercatat dua kali atau lebih.
+- Setiap foto/video/VN punya **ID unik** yang ikut di semua percobaan. Server mengenali ID yang sama dan **hanya menyimpan sekali**, lalu membalas "sudah tercatat". Berlaku juga kalau dua kiriman ulang datang bersamaan (cek dan simpan dilakukan dalam satu kunci).
+- Kalau file sudah sampai di Drive tapi pencatatan gagal, percobaan berikutnya **hanya mencatat ulang**, tidak mengunggah file lagi. Salinan file kembar otomatis dibuang.
+- Ketukan ganda pada tombol Kirim diabaikan.
+- Popup hasil kini muncul lagi setelah "Kirim Ulang" selesai (sebelumnya tidak).
+- Pesan "Server sedang ramai" kini benar-benar tampil saat antrean penuh (dulu berubah jadi error umum).
+
+### Bingkai custom: semua format gambar
+Dashboard → Tema → **Unggah Bingkai** menerima **JPG, JPEG, PNG, WebP, AVIF, SVG, GIF, BMP** dan format gambar lain yang bisa dibuka browser. Apa pun formatnya otomatis diubah jadi PNG ringan (≤250 KB, transparansi tetap). HEIC (foto iPhone) belum bisa dibaca browser: simpan dulu sebagai JPG/PNG. Catatan: JPG tidak punya bagian transparan, jadi untuk bingkai berlubang pakai PNG/WebP/AVIF/SVG.
+
+### Footer album
+Ucapan terima kasih bernada santai + tombol Instagram `@rizky.hanifudin`. Teks ada di bagian `<footer class="site-footer">` di `album.html`.
+
+### Popup admin
+Gaya popup dashboard disamakan dengan popup hasil di halaman tamu (kartu krem, ikon bulat, tombol "Oke").
+
+### Tampilan (DESIGN.md)
+Font Fraunces (judul), Plus Jakarta Sans (isi), JetBrains Mono (data). Warna krem, marun, emas; sudut kartu 4 px; bayangan hangat; tanpa emoji di judul/menu. Label suara default "Ucapan & Doa". Font dimuat dari Google Fonts (perlu internet).
+
+## 3b. Yang ada sejak v9
 
 ### Saklar Foto / Video / Voice note
 Dashboard → **Pengaturan Umum → Jenis Momen yang Boleh Dikirim**. Berlaku di tiga tempat sekaligus:
@@ -58,7 +100,7 @@ Minimal satu jenis harus aktif (dashboard menolak menyimpan jika semuanya mati).
 - Preset kualitas "Maksimal" dibatasi (foto 2560 px, video 1080p) agar tidak membuat HP kehabisan memori. Pengaturan kualitas admin tetap berlaku di bawah batas itu.
 
 ### Album cepat
-- 12 item per halaman, gulir tak terbatas, hasil halaman pertama langsung tampil dari penyimpanan sementara lalu diperbarui.
+- Halaman pertama langsung tampil dari penyimpanan sementara lalu diperbarui (lihat v11 untuk pilihan 25/50/Semua).
 - Thumbnail disimpan di sheet (≤45.000 karakter per sel), dikirim bersama daftar album.
 - Tap foto → lihat ukuran penuh. Video/VN dimuat hanya saat diputar. Unduhan penuh diambil paralel 3 potongan.
 - Maksimal 4 berkas penuh disimpan di memori sekaligus.
@@ -115,7 +157,8 @@ Di Drive, tiap wedding punya subfolder `PHOTO`, `VIDEO`, `VOICE`, `FRAMES`.
 | Login gagal terus padahal password benar | `SECRET_KEY` belum dibuat → jalankan `setupSecretKey()`. |
 | Dashboard menampilkan "Kolom allow_photo belum ada" | Jalankan `setupSheets()` sekali. |
 | Tombol Foto/Video/Suara tidak berubah setelah disimpan | Pastikan sudah deploy **New version**; muat ulang halaman tamu. Perubahan pengaturan berlaku maksimal beberapa detik. |
-| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v9). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
+| Foto muncul dobel di album | Pastikan `Code.gs` v10 sudah di-deploy (**New version**) dan keempat HTML terbaru sudah di hosting. Foto dobel lama dihapus manual dari sheet `MEDIA` (baris) dan Drive. |
+| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v11). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
 | Video besar terasa lambat dikirim | Kemungkinan jalur langsung ke Drive ditolak dan sistem memakai jalur biasa (tetap berhasil, hanya lebih lambat). Turunkan Kualitas Video ke Standar di dashboard. |
 | Pesan "Server sedang ramai" | Terlalu banyak tulis bersamaan; sistem mencoba lagi otomatis, tamu cukup menunggu. |
 | Album kosong padahal ada kiriman | Moderasi ON → setujui dulu di tab Moderasi. Atau jenis media itu sedang OFF di Pengaturan Umum. |

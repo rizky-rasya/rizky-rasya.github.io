@@ -717,7 +717,7 @@ function drawCheapVignette(ctx, w, h, amount) {
 const SMALL_UPLOAD_BYTES = 1500000;
 const IS_LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
 const MAX_PARALLEL_UPLOADS = IS_LOW_END ? 1 : 2;
-const MAX_TRIES = 4;
+const MAX_TRIES = 5;
 
 const uploadJobs = [];
 let activeUploads = 0;
@@ -743,11 +743,22 @@ function xhrSend(method, url, body, headers, onProgress, timeoutMs) {
 async function callServer(payload, onProgress) {
   const r = await xhrSend('POST', APPS_SCRIPT_URL, JSON.stringify(payload), { 'Content-Type': 'text/plain;charset=utf-8' }, onProgress, 120000);
   let data; try { data = JSON.parse(r.text); } catch (e) { throw new Error('bad_response'); }
+  if (data && data.busy) { const er = new Error(data.message || 'busy'); er.busy = true; throw er; }   // server antre -> tunggu lebih lama
   return data;
+}
+
+// ID unik per foto/video/VN. Dikirim di setiap percobaan, jadi kalau balasan server hilang
+// lalu dikirim ulang, server tahu ini momen yang sama dan tidak menyimpannya dua kali.
+function newClientId() {
+  let hex = '';
+  try { const a = new Uint8Array(8); crypto.getRandomValues(a); hex = Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
+  catch (e) { hex = (Date.now().toString(16) + Math.random().toString(16).slice(2)).slice(0, 16); }
+  return 'm' + hex.slice(0, 14);
 }
 
 function enqueueUpload(job) {
   job.state = 'queued'; job.tries = 0; job.progress = 0; job.id = Date.now() + Math.random();
+  job.cid = newClientId(); job.fileId = null; job.finTries = 0;
   uploadJobs.push(job);
   sessionStats.pending++;
   renderPill();
@@ -780,8 +791,9 @@ async function runJob(job) {
     } catch (e) {
       if (e.fatal) { job.state = 'failed'; job.error = e.message; sessionStats.fail++; sessionStats.pending--; return; }
       if (job.tries >= MAX_TRIES) break;
+      job.suspect = true; job.busy = !!e.busy;
       job.state = 'retrying'; renderPill();
-      await sleepMs(1200 * job.tries);
+      await sleepMs(1200 * job.tries + Math.floor(Math.random() * 600) + (e.busy ? 2000 + Math.floor(Math.random() * 3000) : 0));
       job.state = 'uploading';
     }
   }
@@ -796,27 +808,32 @@ function waitOnline() {
 function fatalError(msg) { const e = new Error(msg); e.fatal = true; return e; }
 
 async function uploadOnce(job) {
-  const base = { wedding_id: weddingId, guest_name: job.guest, media_type: job.type, caption: job.caption || '' };
+  const base = { wedding_id: weddingId, guest_name: job.guest, media_type: job.type, caption: job.caption || '', client_id: job.cid, attempt: (job.tries > 1 || job.suspect) ? 2 : 1 };
   const setP = p => { job.progress = p; renderPill(); };
 
   if (job.blob.size > SMALL_UPLOAD_BYTES && !job.noDirect) {
     try {
-      const init = await callServer(Object.assign({}, base, { action: 'initUpload', mime_type: job.mime, size: job.blob.size, origin: location.origin }));
-      if (!init.success) {
-        if (init.code === 'type_off') throw fatalError(init.message);
-        if (!init.fallback && init.busy !== true) throw fatalError(init.message || 'Gagal menyiapkan pengiriman');
-        throw new Error('direct_unavailable');
+      if (!job.fileId) {
+        const init = await callServer(Object.assign({}, base, { action: 'initUpload', mime_type: job.mime, size: job.blob.size, origin: location.origin }));
+        if (!init.success) {
+          if (init.code === 'type_off') throw fatalError(init.message);
+          if (!init.fallback && init.busy !== true) throw fatalError(init.message || 'Gagal menyiapkan pengiriman');
+          throw new Error('direct_unavailable');
+        }
+        const put = await xhrSend('PUT', init.upload_url, job.blob, { 'Content-Type': job.mime }, p => setP(p * 0.9), 300000);
+        if (put.status < 200 || put.status > 299) throw new Error('direct_failed');
+        job.fileId = JSON.parse(put.text).id;   // file sudah ada di Drive: percobaan berikutnya tinggal mencatat, tanpa kirim ulang file
       }
-      const put = await xhrSend('PUT', init.upload_url, job.blob, { 'Content-Type': job.mime }, p => setP(p * 0.9), 300000);
-      if (put.status < 200 || put.status > 299) throw new Error('direct_failed');
-      const fileId = JSON.parse(put.text).id;
-      const fin = await callServer(Object.assign({}, base, { action: 'finalizeUpload', file_id: fileId, thumb_data: job.thumb || '' }));
+      setP(0.92);
+      const fin = await callServer(Object.assign({}, base, { action: 'finalizeUpload', file_id: job.fileId, thumb_data: job.thumb || '' }));
       if (!fin.success) { if (fin.code === 'type_off') throw fatalError(fin.message); throw new Error(fin.message || 'finalize_failed'); }
       return fin;
     } catch (e) {
-      if (e.fatal) throw e;
-      job.noDirect = true;
-      job.progress = 0;
+      if (e.fatal || e.busy) throw e;
+      job.suspect = true;
+      base.attempt = 2;
+      if (job.fileId && ++job.finTries < 3) throw e;   // file aman di Drive -> coba catat lagi, jangan unggah ulang
+      job.fileId = null; job.noDirect = true; job.progress = 0;   // jalur langsung bermasalah -> jalur biasa (server tetap menolak duplikat)
     }
   }
 
@@ -844,7 +861,7 @@ function renderPill() {
   btn.style.display = 'none';
   if (active.length > 0) {
     const retrying = active.some(j => j.state === 'retrying');
-    txt.textContent = retrying ? 'Sinyal kurang stabil, mencoba lagi…' : `Mengirim ${done + 1} dari ${total} · ${Math.round(prog * 100)}%`;
+    txt.textContent = retrying ? (active.some(j => j.busy) ? 'Lagi ramai nih, antre sebentar ya…' : 'Sinyal kurang stabil, mencoba lagi…') : `Mengirim ${done + 1} dari ${total} · ${Math.round(prog * 100)}%`;
     pill.className = 'upload-pill';
   } else if (failed.length > 0) {
     txt.textContent = `${failed.length} momen belum terkirim`;
@@ -858,8 +875,9 @@ function renderPill() {
 }
 
 function retryFailed() {
-  uploadJobs.filter(j => j.state === 'failed').forEach(j => { j.state = 'queued'; j.tries = 0; j.noDirect = false; j.progress = 0; sessionStats.fail--; sessionStats.pending++; });
+  uploadJobs.filter(j => j.state === 'failed').forEach(j => { j.state = 'queued'; j.tries = 0; j.finTries = 0; j.noDirect = false; j.progress = 0; sessionStats.fail--; sessionStats.pending++; });
   closeResultModal();
+  modalShownFor = 0;   // supaya popup hasil muncul lagi setelah kirim ulang selesai
   renderPill(); pumpUploads();
 }
 
@@ -1349,9 +1367,13 @@ function ensureGuestName() {
   return name;
 }
 
+let lastSendAt = 0;
+function tooSoon_() { const n = Date.now(); if (n - lastSendAt < 1500) return true; lastSendAt = n; return false; }
+
 function sendAllPhotos() {
+  if (tooSoon_()) return;               // abaikan ketukan ganda
   const guestName = ensureGuestName();
-  if (!guestName) return;
+  if (!guestName) { lastSendAt = 0; return; }
   if (photoShots.length === 0) { showToast('Ambil minimal 1 foto dulu ya', 'error'); return; }
   const shots = photoShots.slice();
   shots.forEach(sh => enqueueUpload({ type: 'photo', blob: sh.blob, mime: 'image/jpeg', ext: 'jpg', thumb: sh.thumb, guest: guestName }));
@@ -1647,8 +1669,9 @@ function resetVoice() {
 }
 
 function sendSingleMedia(type) {
+  if (tooSoon_()) return;               // abaikan ketukan ganda
   const guestName = ensureGuestName();
-  if (!guestName) return;
+  if (!guestName) { lastSendAt = 0; return; }
   if (!capturedBlob) { showToast(type === 'voice' ? 'Rekam suaramu dulu ya' : 'Rekam videonya dulu ya', 'error'); return; }
 
   enqueueUpload({

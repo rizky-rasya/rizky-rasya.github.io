@@ -179,21 +179,31 @@
   .quality-custom-panel{display:none;max-width:440px;padding:14px 16px;background:var(--surface-2);border-radius:4px;margin:-8px 0 16px;border:1px solid var(--border);}
   .quality-custom-panel.active{display:block;}
 
-  .modal-overlay{position:fixed;inset:0;background:rgba(26,20,16,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
-  .modal-overlay.show{display:flex;}
+  /* Popup: gaya sama dengan popup hasil di halaman tamu */
+  .modal-overlay{position:fixed;inset:0;background:rgba(26,20,16,.72);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  .modal-overlay.show{display:flex;animation:fadeInBg .2s ease-out;}
+  @keyframes fadeInBg{from{opacity:0;}to{opacity:1;}}
   .modal-box{
-    background:var(--surface);border-radius:8px;padding:32px 28px 26px;max-width:380px;width:100%;
-    box-shadow:0 16px 48px rgba(68,8,8,.14);position:relative;text-align:center;
-    animation:modalIn .32s cubic-bezier(.2,.9,.3,1.2);
-    border:1px solid var(--border);
+    width:100%;max-width:360px;background:#F5F1EB;color:var(--text);
+    border-radius:8px;padding:32px 28px 24px;text-align:center;position:relative;
+    box-shadow:0 16px 48px rgba(68,8,8,.24);border:1px solid #E5DDD1;
+    animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2);
   }
-  @keyframes modalIn{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
-  .modal-box .modal-icon{font-size:34px;margin-bottom:12px;}
-  .modal-box .modal-text{font-size:14px;color:var(--text-2);line-height:1.6;white-space:pre-line;}
-  .modal-box .modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:18px;color:var(--text-3);cursor:pointer;line-height:1;}
-  .modal-box.success .modal-icon::before{content:'✅';}
-  .modal-box.error .modal-icon::before{content:'⚠️';}
-  .modal-box.info .modal-icon::before{content:'ℹ️';}
+  @keyframes cardIn{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
+  .modal-icon{width:68px;height:68px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);}
+  .modal-icon svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;}
+  .modal-icon svg path{display:none;}
+  .modal-box.success .modal-icon{background:#E4F0E6;} .modal-box.success .modal-icon svg{stroke:var(--success);}
+  .modal-box.success .modal-icon .p-ok{display:block;stroke-dasharray:40;stroke-dashoffset:40;animation:drawCheck .5s .15s ease-out forwards;}
+  @keyframes drawCheck{to{stroke-dashoffset:0;}}
+  .modal-box.error .modal-icon{background:#F7E4E2;} .modal-box.error .modal-icon svg{stroke:var(--danger);}
+  .modal-box.error .modal-icon .p-err{display:block;}
+  .modal-box.info .modal-icon{background:var(--accent-soft);} .modal-box.info .modal-icon svg{stroke:#8A6A1A;}
+  .modal-box.info .modal-icon .p-info{display:block;}
+  .modal-box h3{font-family:'Fraunces',Georgia,serif;font-size:20px;font-weight:700;margin-bottom:10px;color:var(--text);letter-spacing:-0.01em;}
+  .modal-box .modal-text{font-size:14px;color:var(--text-2);line-height:1.6;white-space:pre-line;margin-bottom:22px;}
+  .modal-box .modal-ok{display:block;width:100%;padding:13px;border-radius:4px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;}
+  .modal-box .modal-ok:hover{background:var(--primary-hover);}
 </style>
 </head>
 <body>
@@ -576,10 +586,11 @@
 <div class="toast" id="toast"></div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
-  <div class="modal-box" id="modalBox">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-icon"></div>
+  <div class="modal-box success" id="modalBox" role="dialog" aria-modal="true">
+    <div class="modal-icon"><svg viewBox="0 0 24 24"><path class="p-ok" d="M5 12.5l4.5 4.5L19 7.5"/><path class="p-err" d="M12 7v6M12 17v.01"/><path class="p-info" d="M12 11v6M12 7v.01"/></svg></div>
+    <h3 id="modalTitle"></h3>
     <div class="modal-text" id="modalText"></div>
+    <button class="modal-ok" id="modalOk" onclick="closeModal()">Oke</button>
   </div>
 </div>
 
@@ -1409,8 +1420,8 @@ function renderFrameTemplateList() {
       </div>
       <div class="actions">
         <label class="upload-btn" style="padding:6px 10px;border-radius:4px;border:1px solid var(--border);background:#fff;font-size:11px;cursor:pointer;color:var(--text-2);">
-          Unggah PNG
-          <input type="file" accept="image/png" onchange="handleFrameUpload('${mediaType}', this)">
+          Unggah Bingkai
+          <input type="file" accept="image/*,.svg,.avif,.webp,.jpg,.jpeg,.png,.gif,.bmp" onchange="handleFrameUpload('${mediaType}', this)">
         </label>
         ${tpl.type === 'custom' ? `<button class="reset" onclick="resetFrameTemplate('${mediaType}')">Pakai Bawaan</button>` : ''}
       </div>`;
@@ -1431,24 +1442,28 @@ function renderFrameTemplateList() {
 async function handleFrameUpload(mediaType, inputEl) {
   const file = inputEl.files[0];
   if (!file) return;
-  if (file.type !== 'image/png') { showToast('Template bingkai harus format PNG', 'error'); inputEl.value = ''; return; }
-  if (file.size > 5 * 1024 * 1024) { showToast('Ukuran PNG maksimal 5MB', 'error'); inputEl.value = ''; return; }
+  const nm = String(file.name || '').toLowerCase();
+  const looksImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|avif|svg|gif|bmp|ico|tiff?)$/.test(nm);
+  if (!looksImage) { showToast('Berkas ini bukan gambar. Pilih JPG, PNG, WebP, AVIF, SVG, atau GIF ya.', 'error'); inputEl.value = ''; return; }
+  if (/\.(heic|heif)$/.test(nm) || /heic|heif/.test(file.type)) { showToast('Format HEIC belum bisa dibaca browser. Simpan dulu sebagai JPG atau PNG, lalu unggah lagi.', 'error'); inputEl.value = ''; return; }
+  if (file.size > 12 * 1024 * 1024) { showToast('Ukuran gambar maksimal 12 MB.', 'error'); inputEl.value = ''; return; }
 
-  showToast(`Menyiapkan template ${FRAME_TYPE_LABELS[mediaType]}...`, 'success');
+  showToast(`Menyiapkan bingkai ${FRAME_TYPE_LABELS[mediaType]}...`, 'info');
   try {
-    const compressedBlob = await compressPngTo250KB(file);
+    const compressedBlob = await compressPngTo250KB(file);   // apa pun formatnya -> PNG ringan (transparansi tetap)
     const base64 = await blobToBase64Admin(compressedBlob);
     const data = await callApi({ action: 'uploadFrameTemplate', media_type: mediaType, data: base64, mime_type: 'image/png' });
     if (handleAuthError(data)) return;
-    if (!data.success) { showToast(data.message || 'Gagal mengunggah template', 'error'); return; }
+    if (!data.success) { showToast(data.message || 'Gagal mengunggah bingkai', 'error'); return; }
 
     frameTemplates[mediaType] = Object.assign({}, frameTemplates[mediaType], { type: 'custom', file_id: data.file_id, url: data.url });
     renderFrameTemplateList();
     drawPreview();
     const sizeKb = Math.round(compressedBlob.size / 1024);
-    showToast(`Template bingkai ${FRAME_TYPE_LABELS[mediaType]} tersimpan (${sizeKb}KB). Jangan lupa klik Simpan Tema.`, 'success');
+    const opaque = /jpe?g|bmp/.test(nm) || /jpe?g|bmp/.test(file.type);
+    showToast(`Bingkai ${FRAME_TYPE_LABELS[mediaType]} tersimpan (${sizeKb} KB). Klik Simpan Tema supaya berlaku.` + (opaque ? '\n\nCatatan: JPG tidak punya bagian transparan, jadi bisa menutupi foto. Untuk bingkai berlubang, pakai PNG, WebP, AVIF, atau SVG.' : ''), opaque ? 'info' : 'success');
   } catch (err) {
-    showToast('Gagal mengunggah: ' + err.message, 'error');
+    showToast('Gambar ini belum bisa dibaca browser. Coba format lain (PNG atau JPG).', 'error');
   } finally {
     inputEl.value = '';
   }
@@ -1457,27 +1472,35 @@ async function handleFrameUpload(mediaType, inputEl) {
 const MAX_FRAME_KB = 250;
 function compressPngTo250KB(file) {
   return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = async () => {
-      let scale = 1;
-      let blob = await canvasToPngBlob(img, scale);
-      let attempts = 0;
-      while (blob.size > MAX_FRAME_KB * 1024 && attempts < 10) {
-        scale *= 0.85;
-        blob = await canvasToPngBlob(img, scale);
-        attempts++;
-      }
-      resolve(blob);
+      try {
+        // SVG tanpa ukuran bawaan -> pakai 1080 px. Gambar raksasa dibatasi 2000 px sisi terpanjang.
+        let nw = img.naturalWidth, nh = img.naturalHeight;
+        if (!nw || !nh) { nw = 1080; nh = 1080; }
+        const cap = Math.min(1, 2000 / Math.max(nw, nh));
+        let scale = cap * (img.naturalWidth ? 1 : 1);
+        let blob = await canvasToPngBlob(img, nw, nh, scale);
+        let attempts = 0;
+        while (blob && blob.size > MAX_FRAME_KB * 1024 && attempts < 12) {
+          scale *= 0.85;
+          blob = await canvasToPngBlob(img, nw, nh, scale);
+          attempts++;
+        }
+        URL.revokeObjectURL(url);
+        blob ? resolve(blob) : reject(new Error('empty'));
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
     };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
   });
 }
-function canvasToPngBlob(img, scale) {
+function canvasToPngBlob(img, nw, nh, scale) {
   return new Promise(resolve => {
     const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    canvas.width = Math.max(1, Math.round(nw * scale));
+    canvas.height = Math.max(1, Math.round(nh * scale));
     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(blob => resolve(blob), 'image/png');
   });
@@ -1694,8 +1717,10 @@ function showModal(message, type) {
   clearTimeout(modalTimer);
   const overlay = document.getElementById('modalOverlay');
   const box = document.getElementById('modalBox');
+  const kind = type === 'success' ? 'success' : (type === 'error' ? 'error' : 'info');
+  document.getElementById('modalTitle').textContent = kind === 'success' ? 'Berhasil' : (kind === 'error' ? 'Belum berhasil' : 'Info');
   document.getElementById('modalText').textContent = message;
-  box.className = 'modal-box ' + (type || 'info');
+  box.className = 'modal-box ' + kind;
   overlay.classList.add('show');
   modalTimer = setTimeout(closeModal, type === 'success' ? 3500 : 10000);
 }
