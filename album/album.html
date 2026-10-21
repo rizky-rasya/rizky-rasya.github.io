@@ -62,11 +62,14 @@
     max-width:1080px; margin:0 auto;
     border-bottom:1px solid var(--border);
   }
+  /* Logo mempelai di kanan: tingginya mengikuti tinggi judul + tanggal (top/bottom = padding hero) */
+  .hero{--crest-w:116px;}
   .hero::before{
-    content:''; position:absolute; top:0; right:0; width:140px; height:140px;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='%23440808' stroke-width='6' stroke-linecap='square'%3E%3Cpath d='M4 136 L136 4'/%3E%3Cpath d='M28 136 L136 28'/%3E%3Cpath d='M52 136 L136 52'/%3E%3Cpath d='M76 136 L136 76'/%3E%3Cpath d='M100 136 L136 100'/%3E%3C/g%3E%3C/svg%3E") no-repeat top right;
-    opacity:0.06; pointer-events:none;
+    content:''; position:absolute; top:64px; bottom:40px; right:24px; width:var(--crest-w);
+    background:url("https://rasya-rizky.online/album/crest-red.png") right center / contain no-repeat;
+    pointer-events:none;
   }
+  .hero h1,.hero p{padding-right:calc(var(--crest-w) + 16px);}
   .hero h1{
     font-family:'Fraunces',Georgia,serif;
     font-weight:800; font-size:clamp(32px,6vw,56px);
@@ -176,7 +179,8 @@
     .grid{grid-template-columns:repeat(2,1fr); gap:10px;}
     .cap .who{flex-direction:column; align-items:flex-start; gap:2px;}
     .dl-row{flex-direction:column;}
-    .hero{padding:48px 20px 32px;}
+    .hero{padding:48px 20px 32px; --crest-w:76px;}
+    .hero::before{top:48px; bottom:32px; right:20px;}
     .container{padding:16px 20px 64px;}
   }
 

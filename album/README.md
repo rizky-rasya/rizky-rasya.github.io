@@ -1,4 +1,4 @@
-# Wedding Album v15 — Panduan Lengkap
+# Wedding Album v16 — Panduan Lengkap
 
 Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
 Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman HTML statis.
@@ -34,7 +34,16 @@ Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
 
 ---
 
-## 3. Yang baru di v15
+## 3. Yang baru di v16
+
+Hanya `index.html` dan `album.html` yang berubah. `Code.gs` tetap v15 (`ping` tetap menampilkan `v15-2026-10-21-direct-all`, tidak perlu deploy ulang).
+
+- **Bar hijau "selesai" kini penuh 100%.** Sebelumnya lebar sisa dari progres terakhir menimpa gaya CSS.
+- **Logo di header album.** `https://rasya-rizky.online/album/crest-red.png` tampil di kanan; tingginya otomatis sama dengan judul + tanggal (di HP lebih kecil). Ganti ukuran lewat variabel `--crest-w` di `.hero`.
+- **Layar Voice note rapi.** Petunjuk naik dan tidak menabrak kolom nama; pemutar video tidak terpotong (mengikuti tinggi header & panel bawah, termasuk di HP layar pendek).
+- **Bug kontrol voice bocor ke menu lain diperbaiki.** Tombol Ulang/Putar/Kirim Suara tidak lagi muncul di menu Foto/Video. Saat sedang merekam, atau rekaman voice/video belum dikirim, pindah menu ditahan dengan pesan singkat, jadi rekaman tidak hilang dan tidak ada dua set kontrol.
+
+## 3-1. Yang baru di v15
 
 ### Foto & voice note kini lewat jalur yang sama dengan video
 **Masalah lama (v14):** video lancar, tapi **foto dan voice note sering gagal**. Penyebab: video (>1,5 MB) dikirim **langsung ke Google Drive** (tanpa lewat Apps Script), sedangkan foto & voice note kecil dikirim **base64 lewat Apps Script**. Jalur base64 rawan:

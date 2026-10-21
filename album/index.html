@@ -106,7 +106,9 @@
 
   #voiceWrap{
     display:none; flex:1; flex-direction:column; align-items:center; justify-content:center;
-    gap:28px; padding:20px;
+    gap:18px; min-height:0; overflow:hidden;
+    /* ruang untuk header di atas & panel nama/menu/tombol di bawah (diukur otomatis lewat JS) */
+    padding:calc(var(--hdr-h, 76px) + 8px) 20px calc(var(--ovl-h, 270px) + 8px);
     background:radial-gradient(circle at center, var(--dark-2), var(--dark));
   }
   .vn-orb{
@@ -122,7 +124,11 @@
     font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:500;
     letter-spacing:0.04em; color:#F5F1EB;
   }
-  #vnHint{font-size:13px; color:#A99F94; text-align:center; line-height:1.55; max-width:320px;}
+  #vnHint{font-size:13px; color:#A99F94; text-align:center; line-height:1.55; max-width:320px; margin:0;}
+  #voiceWrap.has-player .vn-orb{display:none;}                       /* saat meninjau video-suara, pemutar diberi ruang penuh */
+  #vnVideoPlayer{flex:1 1 0; min-height:0; width:auto; max-width:min(88%, 440px); object-fit:contain; align-self:center; background:#000;}
+  #vnPlayer{flex:none; max-width:min(88%, 360px);}
+  @media (max-height:720px){ .vn-orb{width:104px; height:104px; font-size:34px;} #voiceWrap{gap:12px;} }
   #vnPlayer{width:85%; display:none;}
 
   #bottomOverlay{position:absolute; left:0; right:0; bottom:0; z-index:20; display:flex; flex-direction:column;}
@@ -1086,7 +1092,7 @@ function paintQueue() {
     else { st = 'Mengirim…'; by = fmtPair(loaded, size); }
     if (r.el.className !== cls) r.el.className = cls;
     r.state.textContent = st; r.bytes.textContent = by;
-    if (j.state !== 'done') r.bar.style.width = (size ? Math.round(loaded / size * 100) : 0) + '%';
+    r.bar.style.width = (j.state === 'done' ? 100 : (size ? Math.round(loaded / size * 100) : 0)) + '%';   // selesai = bar hijau penuh
   });
   const done = uploadJobs.filter(j => j.state === 'done').length, failed = uploadJobs.filter(j => j.state === 'failed').length, total = uploadJobs.length;
   document.getElementById('queueSub').textContent =
@@ -1431,6 +1437,23 @@ function drawFrameBar(ctx, w, h, cfg) {
   ctx.fillText(cfg.date, w/2, centerY + barH*0.28);
 }
 
+(function trackOverlayHeights() {
+  const root = document.documentElement;
+  const set = () => {
+    const b = document.getElementById('bottomOverlay'), h = document.querySelector('header');
+    if (b) root.style.setProperty('--ovl-h', b.offsetHeight + 'px');
+    if (h) root.style.setProperty('--hdr-h', h.offsetHeight + 'px');
+  };
+  set();
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(set);
+    ['bottomOverlay'].forEach(id => { const el = document.getElementById(id); if (el) ro.observe(el); });
+    const h = document.querySelector('header'); if (h) ro.observe(h);
+  }
+  window.addEventListener('resize', set);
+  window.addEventListener('orientationchange', set);
+})();
+
 function setupModeSwitch(types) {
   const buttons = document.querySelectorAll('#modeSwitch button');
   buttons.forEach(btn => {
@@ -1449,6 +1472,7 @@ function applyModeUI(mode) {
   document.getElementById('voiceWrap').style.display = mode === 'voice' ? 'flex' : 'none';
   document.getElementById('captureRow').style.display = mode === 'voice' ? 'none' : 'flex';
   document.getElementById('vnControlsIdle').style.display = mode === 'voice' ? 'flex' : 'none';
+  document.getElementById('vnControlsReview').style.display = 'none';   // tombol Ulang/Putar/Kirim Suara tidak boleh muncul di menu lain
   document.getElementById('finishRow').style.display = 'none';
   document.getElementById('reviewRow').style.display = 'none';
   const shutter = document.getElementById('shutterBtn');
@@ -1457,8 +1481,14 @@ function applyModeUI(mode) {
 }
 
 function switchMode(mode) {
-  if (mediaRecorder && mediaRecorder.state === 'recording') return;
-  if (vnRecorder && vnRecorder.state === 'recording') return;
+  if (mode === currentMode) return;
+  // Sedang merekam / ada rekaman yang belum dikirim -> jangan pindah menu (kontrol & file akan bercampur/hilang)
+  if ((mediaRecorder && mediaRecorder.state === 'recording') || (vnRecorder && vnRecorder.state === 'recording')) {
+    showToast('Selesaikan rekamanmu dulu ya, baru pindah menu', 'error'); return;
+  }
+  if (capturedBlob) {
+    showToast(currentMode === 'voice' ? 'Kirim atau ulang dulu rekaman suaramu ya, baru pindah menu' : 'Kirim atau ulang dulu rekamanmu ya, baru pindah menu', 'error'); return;
+  }
   resetCapture();
   clearFilmstrip();
   liveVideo.style.display = 'block'; recordedVideo.style.display = 'none'; photoCanvas.style.display = 'none';
@@ -1840,6 +1870,7 @@ async function startVoiceRecordingWithFrame() {
       const vnVideoPlayer = document.getElementById('vnVideoPlayer');
       vnVideoPlayer.src = URL.createObjectURL(vnBlob);
       vnVideoPlayer.style.display = 'block';
+      document.getElementById('voiceWrap').classList.add('has-player');
       vnOrb.classList.remove('recording');
       document.getElementById('vnControlsIdle').style.display = 'none';
       document.getElementById('vnControlsReview').style.display = 'flex';
@@ -1882,6 +1913,7 @@ function resetVoice() {
   const vnVideoPlayer = document.getElementById('vnVideoPlayer');
   vnVideoPlayer.style.display = 'none';
   vnVideoPlayer.src = '';
+  document.getElementById('voiceWrap').classList.remove('has-player');
   document.getElementById('vnControlsReview').style.display = 'none';
   document.getElementById('vnControlsIdle').style.display = 'flex';
   document.getElementById('vnHint').textContent = autoIncludeFrame.voice ? 'Ketuk tombol merah, lalu ucapkan doa & harapanmu (sudah berbingkai)' : 'Ketuk tombol merah, lalu ucapkan doa & harapanmu';
