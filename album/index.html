@@ -18,7 +18,7 @@
 <meta property="og:image" content="https://rasya-rizky.online/album/CoverAlbum.webp">
 <meta property="og:image:secure_url" content="https://rasya-rizky.online/album/CoverAlbum.webp">
 <meta property="og:image:width" content="1080">
-<meta property="og:image:height" content="1920">
+<meta property="og:image:height" content="1620">
 <meta property="og:image:alt" content="Kirim Momen Rasya &amp; Rizky">
 <meta property="og:image:type" content="image/webp">
 <meta name="twitter:card" content="summary_large_image">
@@ -185,7 +185,6 @@
     font-family:inherit; font-weight:700; font-size:14px; letter-spacing:0.01em;
     cursor:pointer;
   }
-  /* #finishBtn{background:var(--accent); color:var(--dark);} */
    #finishBtn{background:var(--accent); color:#ffffff;}
   .vn-controls{display:none; gap:16px; justify-content:center; align-items:center;}
   #vnRecordBtn{
@@ -198,8 +197,7 @@
     font-family:inherit; font-weight:600; font-size:13px; cursor:pointer;
   }
   #vnSendBtn{
-    /* background:var(--accent); color:var(--dark); */
-    background:var(--accent); color:#ffffff;
+    background:var(--accent); color:var(--dark);
     padding:14px 22px; border-radius:4px; border:none;
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
   }
@@ -213,8 +211,7 @@
     background:rgba(245,241,235,.15); color:#F5F1EB;
     border:1px solid rgba(245,241,235,.15);
   }
-  /* #sendMediaBtn{background:var(--accent); color:var(--dark);} */
-  #sendMediaBtn{background:var(--accent); color:#ffffff;}
+  #sendMediaBtn{background:var(--accent); color:var(--dark);}
 
   .name-field{max-width:400px; margin:0 auto 14px;}
   .name-field input{
@@ -272,7 +269,6 @@
     font-family:inherit; font-size:14px; font-weight:700; letter-spacing:0.01em; cursor:pointer;
   }
 
-  /* Tombol progres kirim (di kanan tombol kamera) */
   .up-btn{position:relative; visibility:hidden; padding:0; flex:none;}
   .up-btn.show{visibility:visible;}
   .up-btn svg.ring{position:absolute; inset:-1px; width:46px; height:46px; transform:rotate(-90deg); pointer-events:none;}
@@ -288,7 +284,6 @@
   .up-btn.warn .badge{background:#D8A24A; color:#1A1410;}
   .side-spacer{width:44px; flex:none;}
 
-  /* Popup daftar kiriman */
   .queue-card{max-width:380px; padding:26px 22px 20px; text-align:left; position:relative;}
   .queue-card h3{margin:0 40px 4px 0; text-align:left;}
   .queue-card .q-sub{margin:0 0 14px; font-size:13px; text-align:left; white-space:normal; color:var(--text-2); line-height:1.5;}
@@ -412,7 +407,6 @@
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
         <span class="badge"></span>
       </button>
-
     </div>
     <div class="vn-controls" id="vnControlsReview">
       <button id="vnRedoBtn">Ulang</button>
@@ -429,9 +423,7 @@
 </div>
 
 <script>
-// const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec';
-
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec';
 let MAX_SHOTS = 5;
 
 document.addEventListener('gesturestart', e => e.preventDefault());
@@ -794,7 +786,7 @@ function drawCheapVignette(ctx, w, h, amount) {
   ctx.fillRect(0, 0, w, h);
 }
 
-const SMALL_UPLOAD_BYTES = 1500000;
+// ============ v15: SEMUA media lewat jalur Direct Drive (bukan hanya file besar) ============
 const IS_LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
 const MAX_PARALLEL_UPLOADS = IS_LOW_END ? 1 : 2;
 const MAX_TRIES = 5;
@@ -806,11 +798,17 @@ let modalShownFor = 0;
 
 function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// v15: XHR tidak menyetel Content-Type untuk Apps Script (hindari preflight).
+// Untuk PUT ke Drive, Content-Type tetap dikirim (Drive butuh itu & CORS-nya aman).
 function xhrSend(method, url, body, headers, onProgress, timeoutMs, hooks) {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest();
     x.open(method, url);
-    Object.keys(headers || {}).forEach(k => x.setRequestHeader(k, headers[k]));
+    const toAppsScript = url.indexOf('script.google.com') !== -1;
+    Object.keys(headers || {}).forEach(k => {
+      if (toAppsScript && k.toLowerCase() === 'content-type') return;
+      x.setRequestHeader(k, headers[k]);
+    });
     x.timeout = timeoutMs || 90000;
     if (onProgress && x.upload) x.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
     x.onload = () => resolve({ status: x.status, text: x.responseText });
@@ -819,21 +817,20 @@ function xhrSend(method, url, body, headers, onProgress, timeoutMs, hooks) {
     x.onabort = () => reject(new Error('aborted'));
     if (hooks) {
       hooks.abort = () => { try { x.abort(); } catch (e) {} };
-      if (hooks.onSent && x.upload) x.upload.onload = hooks.onSent;   // seluruh isi sudah sampai ke server
+      if (hooks.onSent && x.upload) x.upload.onload = hooks.onSent;
     }
     x.send(body);
   });
 }
 
+// v15: tanpa header sama sekali ke Apps Script — body string otomatis jadi text/plain (simple request).
 async function callServer(payload, onProgress, hooks) {
-  const r = await xhrSend('POST', APPS_SCRIPT_URL, JSON.stringify(payload), { 'Content-Type': 'text/plain;charset=utf-8' }, onProgress, 120000, hooks);
+  const r = await xhrSend('POST', APPS_SCRIPT_URL, JSON.stringify(payload), null, onProgress, 120000, hooks);
   let data; try { data = JSON.parse(r.text); } catch (e) { throw new Error('bad_response'); }
-  if (data && data.busy) { const er = new Error(data.message || 'busy'); er.busy = true; throw er; }   // server antre -> tunggu lebih lama
+  if (data && data.busy) { const er = new Error(data.message || 'busy'); er.busy = true; throw er; }
   return data;
 }
 
-// ID unik per foto/video/VN. Dikirim di setiap percobaan, jadi kalau balasan server hilang
-// lalu dikirim ulang, server tahu ini momen yang sama dan tidak menyimpannya dua kali.
 const typeSeq = {};
 function newClientId() {
   let hex = '';
@@ -842,10 +839,6 @@ function newClientId() {
   return 'm' + hex.slice(0, 14);
 }
 
-
-// ---------- Konfirmasi ke server (kunci mengatasi "macet di 95%") ----------
-// Di sinyal lemah, file sering sudah sampai & tersimpan tapi balasan server tidak kembali.
-// Jadi setelah seluruh isi terkirim, kita tidak menunggu balasan saja: kita TANYA server apakah momen ini sudah tercatat.
 const PEND_KEY = 'pending_uploads';
 function pendingAdd(job) {
   try {
@@ -873,13 +866,13 @@ function startConfirmPolling(job, onFound) {
     const f = (await checkIds([job.cid], false))[job.cid];
     if (stopped) return;
     if (f) { stopped = true; onFound(f); return; }
-    delay = Math.min(15000, Math.round(delay * 1.4));   // makin jarang supaya server tidak dibanjiri
+    delay = Math.min(15000, Math.round(delay * 1.4));
     setTimeout(tick, delay);
   };
   setTimeout(tick, 5000);
   return () => { stopped = true; };
 }
-function markRecovered(job, info) {   // job yang sempat dianggap gagal ternyata sudah masuk
+function markRecovered(job, info) {
   if (job.state !== 'failed') return;
   job.state = 'done'; job.progress = 1; job.blob = null; job.thumb = null;
   sessionStats.fail--; sessionStats.ok++;
@@ -898,13 +891,13 @@ async function recoverFailed() {
 setInterval(recoverFailed, 10000);
 window.addEventListener('online', () => setTimeout(recoverFailed, 800));
 document.addEventListener('visibilitychange', () => { if (!document.hidden) recoverFailed(); });
-setInterval(() => { if (uploadJobs.some(j => j.state === 'uploading' || j.state === 'retrying')) renderPill(); }, 2000);   // segarkan teks "sinyal lemah"
+setInterval(() => { if (uploadJobs.some(j => j.state === 'uploading' || j.state === 'retrying')) renderPill(); }, 2000);
 
 function enqueueUpload(job) {
   job.state = 'queued'; job.tries = 0; job.progress = 0; job.id = Date.now() + Math.random();
   job.cid = newClientId(); job.fileId = null; job.finTries = 0;
-  job.size = job.blob ? job.blob.size : 0;                       // disimpan karena blob dilepas setelah terkirim
-  job.seq = (typeSeq[job.type] = (typeSeq[job.type] || 0) + 1);   // Foto 1, Foto 2, ...
+  job.size = job.blob ? job.blob.size : 0;
+  job.seq = (typeSeq[job.type] = (typeSeq[job.type] || 0) + 1);
   pendingAdd(job);
   job.preview = (typeof job.thumb === 'string' && job.thumb.indexOf('data:image') === 0) ? job.thumb : '';
   uploadJobs.push(job);
@@ -960,13 +953,15 @@ async function uploadOnce(job) {
   const setP = p => { if (p !== job.progress) job.lastProgAt = Date.now(); job.progress = p; renderPill(); };
   job.phase = 'sending'; job.lastProgAt = Date.now();
 
-  // Percobaan ulang: tanya dulu, jangan-jangan kiriman sebelumnya sebenarnya sudah masuk
   if (job.tries > 1 || job.suspect) {
     const f = (await checkIds([job.cid], true))[job.cid];
     if (f) return { success: true, status: f.status, duplicate: true, message: '' };
   }
 
-  if (job.blob.size > SMALL_UPLOAD_BYTES && !job.noDirect) {
+  // v15: SEMUA media (foto, voice, video) lewat Direct Drive.
+  // File ditransfer langsung ke CDN Google, bukan lewat Apps Script → tidak ada timeout base64,
+  // tidak ada decode base64 di server, tidak ada lock contention saat banyak tamu upload.
+  if (!job.noDirect) {
     try {
       if (!job.fileId) {
         const init = await callServer(Object.assign({}, base, { action: 'initUpload', mime_type: job.mime, size: job.blob.size, origin: location.origin }));
@@ -977,7 +972,7 @@ async function uploadOnce(job) {
         }
         const put = await xhrSend('PUT', init.upload_url, job.blob, { 'Content-Type': job.mime }, p => setP(p * 0.9), 300000);
         if (put.status < 200 || put.status > 299) throw new Error('direct_failed');
-        job.fileId = JSON.parse(put.text).id;   // file sudah ada di Drive: percobaan berikutnya tinggal mencatat, tanpa kirim ulang file
+        job.fileId = JSON.parse(put.text).id;
       }
       setP(0.92);
       const fin = await callServer(Object.assign({}, base, { action: 'finalizeUpload', file_id: job.fileId, thumb_data: job.thumb || '' }));
@@ -987,17 +982,18 @@ async function uploadOnce(job) {
       if (e.fatal || e.busy) throw e;
       job.suspect = true;
       base.attempt = 2;
-      if (job.fileId && ++job.finTries < 3) throw e;   // file aman di Drive -> coba catat lagi, jangan unggah ulang
-      job.fileId = null; job.noDirect = true; job.progress = 0;   // jalur langsung bermasalah -> jalur biasa (server tetap menolak duplikat)
+      if (job.fileId && ++job.finTries < 3) throw e;
+      job.fileId = null; job.noDirect = true; job.progress = 0;
     }
   }
 
+  // Jalur cadangan: base64 satu kali (hanya kalau direct gagal — server tetap tolak duplikat)
   const b64 = await blobToBase64(job.blob);
   let found = null, stopPoll = () => {};
   const hooks = {
-    onSent: () => {                    // isi file sudah sampai: tinggal menunggu server mencatat
+    onSent: () => {
       job.phase = 'saving'; setP(0.99);
-      if (!job.slotFreed) { job.slotFreed = true; activeUploads--; pumpUploads(); }   // isi sudah terkirim: foto berikutnya boleh mulai tanpa menunggu konfirmasi
+      if (!job.slotFreed) { job.slotFreed = true; activeUploads--; pumpUploads(); }
       stopPoll = startConfirmPolling(job, f => { found = f; if (hooks.abort) hooks.abort(); });
     }
   };
@@ -1008,7 +1004,7 @@ async function uploadOnce(job) {
     }), p => { if (job.phase === 'sending') setP(p * 0.99); }, hooks);
   } catch (e) {
     stopPoll();
-    if (found) return { success: true, status: found.status, duplicate: true, message: '' };   // balasan hilang, tapi server sudah mencatat
+    if (found) return { success: true, status: found.status, duplicate: true, message: '' };
     throw e;
   }
   stopPoll();
@@ -1016,9 +1012,8 @@ async function uploadOnce(job) {
   return res;
 }
 
-// ---------- Tombol progres (kanan kamera) + popup daftar kiriman ----------
 let paintQueued = false;
-function renderPill() {            // dipanggil sering (tiap progres) -> digabung per frame supaya ringan
+function renderPill() {
   if (paintQueued) return;
   paintQueued = true;
   requestAnimationFrame(() => { paintQueued = false; paintUpload(); });
@@ -1040,7 +1035,7 @@ function paintUpload() {
   const frac = Math.max(0, Math.min(1, loadB / totalB));
   const warn = active.length === 0 && failed > 0;
   document.querySelectorAll('.up-btn').forEach(b => {
-    b.classList.toggle('show', pending.length > 0);            // hilang sendiri kalau semua sudah terkirim
+    b.classList.toggle('show', pending.length > 0);
     b.classList.toggle('warn', warn);
     b.querySelector('.ring-fg').style.strokeDashoffset = warn ? 0 : String(125.66 * (1 - frac));
     b.querySelector('.badge').textContent = warn ? '!' : String(active.length);
@@ -1058,7 +1053,7 @@ function queueOpen() { return document.getElementById('queueOverlay').classList.
 function openQueue() { document.getElementById('queueOverlay').classList.add('show'); paintQueue(); }
 function closeQueue() { document.getElementById('queueOverlay').classList.remove('show'); }
 document.getElementById('queueClose').addEventListener('click', closeQueue);
-document.getElementById('queueOverlay').addEventListener('click', e => { if (e.target.id === 'queueOverlay') closeQueue(); });   // ketuk di luar = tutup
+document.getElementById('queueOverlay').addEventListener('click', e => { if (e.target.id === 'queueOverlay') closeQueue(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && queueOpen()) closeQueue(); });
 
 function paintQueue() {
@@ -1101,7 +1096,7 @@ function paintQueue() {
 function retryFailed() {
   uploadJobs.filter(j => j.state === 'failed').forEach(j => { j.state = 'queued'; j.tries = 0; j.finTries = 0; j.noDirect = false; j.progress = 0; sessionStats.fail--; sessionStats.pending++; });
   closeResultModal();
-  modalShownFor = 0;   // supaya popup hasil muncul lagi setelah kirim ulang selesai
+  modalShownFor = 0;
   renderPill(); pumpUploads();
 }
 
@@ -1596,7 +1591,7 @@ let lastSendAt = 0;
 function tooSoon_() { const n = Date.now(); if (n - lastSendAt < 1500) return true; lastSendAt = n; return false; }
 
 function sendAllPhotos() {
-  if (tooSoon_()) return;               // abaikan ketukan ganda
+  if (tooSoon_()) return;
   const guestName = ensureGuestName();
   if (!guestName) { lastSendAt = 0; return; }
   if (photoShots.length === 0) { showToast('Ambil minimal 1 foto dulu ya', 'error'); return; }
@@ -1894,7 +1889,7 @@ function resetVoice() {
 }
 
 function sendSingleMedia(type) {
-  if (tooSoon_()) return;               // abaikan ketukan ganda
+  if (tooSoon_()) return;
   const guestName = ensureGuestName();
   if (!guestName) { lastSendAt = 0; return; }
   if (!capturedBlob) { showToast(type === 'voice' ? 'Rekam suaramu dulu ya' : 'Rekam videonya dulu ya', 'error'); return; }
