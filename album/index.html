@@ -208,21 +208,6 @@
   }
   .toast.success{background:var(--success);} .toast.error{background:var(--danger);}
 
-  .upload-pill{
-    position:absolute; top:max(64px, calc(env(safe-area-inset-top) + 56px));
-    left:50%; transform:translateX(-50%); z-index:55; display:none;
-    align-items:center; gap:12px; min-width:200px; max-width:92%;
-    padding:12px 16px 14px; border-radius:4px;
-    background:rgba(26,20,16,.86); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    font-size:13px; overflow:hidden;
-    box-shadow:0 8px 24px rgba(0,0,0,.4);
-    border:1px solid rgba(245,241,235,.1); color:#F5F1EB;
-  }
-  .upload-pill .bar{position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--accent); transition:width .25s;}
-  .upload-pill.ok .bar{background:var(--success);} .upload-pill.warn .bar{background:#D8A24A;}
-  /* .upload-pill button{border:none; background:var(--accent); color:var(--dark); border-radius:4px; padding:7px 12px; font-weight:700; font-size:12px; font-family:inherit; cursor:pointer;} */
-  .upload-pill button{border:none; background:var(--accent); color:#ffffff; border-radius:4px; padding:7px 12px; font-weight:700; font-size:12px; font-family:inherit; cursor:pointer;}
-
   .result-overlay{
     position:absolute; inset:0; z-index:90; display:none;
     align-items:center; justify-content:center; padding:24px;
@@ -256,6 +241,52 @@
     display:block; width:100%; padding:13px; border-radius:4px; border:none;
     font-family:inherit; font-size:14px; font-weight:700; letter-spacing:0.01em; cursor:pointer;
   }
+
+  /* Tombol progres kirim (di kanan tombol kamera) */
+  .up-btn{position:relative; visibility:hidden; padding:0; flex:none;}
+  .up-btn.show{visibility:visible;}
+  .up-btn svg.ring{position:absolute; inset:-1px; width:46px; height:46px; transform:rotate(-90deg); pointer-events:none;}
+  .up-btn .ring-bg{fill:none; stroke:rgba(245,241,235,.18); stroke-width:3;}
+  .up-btn .ring-fg{fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-dasharray:125.66; stroke-dashoffset:125.66; transition:stroke-dashoffset .25s;}
+  .up-btn.warn .ring-fg{stroke:#D8A24A; stroke-dashoffset:0;}
+  .up-btn .ico{width:18px; height:18px; stroke:#F5F1EB; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; position:relative;}
+  .up-btn .badge{
+    position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px;
+    background:var(--accent); color:#fff; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500;
+    display:flex; align-items:center; justify-content:center; border:2px solid #1A1410; box-sizing:content-box;
+  }
+  .up-btn.warn .badge{background:#D8A24A; color:#1A1410;}
+  .side-spacer{width:44px; flex:none;}
+
+  /* Popup daftar kiriman */
+  .queue-card{max-width:380px; padding:26px 22px 20px; text-align:left; position:relative;}
+  .queue-card h3{margin:0 40px 4px 0; text-align:left;}
+  .queue-card .q-sub{margin:0 0 14px; font-size:13px; text-align:left; white-space:normal; color:var(--text-2); line-height:1.5;}
+  .result-card .q-close{
+    position:absolute; top:12px; right:12px; width:34px; height:34px; padding:0; border-radius:50%;
+    background:transparent; color:var(--text-3); font-size:16px; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .result-card .q-close:hover{background:rgba(68,8,8,.08); color:var(--primary);}
+  .q-list{max-height:min(52vh,360px); overflow-y:auto; margin:0 -6px; padding:0 6px; -webkit-overflow-scrolling:touch;}
+  .q-row{display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid #E5DDD1;}
+  .q-row:first-child{border-top:none;}
+  .q-thumb{width:44px; height:44px; flex:none; border-radius:2px; background:#EFE9DF; overflow:hidden; display:flex; align-items:center; justify-content:center;}
+  .q-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .q-thumb svg{width:20px; height:20px; stroke:var(--primary); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .q-main{flex:1; min-width:0;}
+  .q-top{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .q-top b{font-size:13px; font-weight:600; color:var(--text);}
+  .q-state{font-size:11px; color:var(--text-3);}
+  .q-bar{height:4px; border-radius:2px; background:#E5DDD1; overflow:hidden; margin:7px 0 5px;}
+  .q-bar i{display:block; height:100%; width:0; background:var(--accent); transition:width .25s;}
+  .q-bytes{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-2);}
+  .q-check{width:24px; height:24px; flex:none; border-radius:50%; background:var(--success); display:none; align-items:center; justify-content:center;}
+  .q-check svg{width:14px; height:14px; stroke:#fff; fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round;}
+  .q-row.done .q-check{display:flex;} .q-row.done .q-bar i{background:var(--success); width:100%;} .q-row.done .q-state{color:var(--success); font-weight:600;}
+  .q-row.failed .q-bar i{background:#D8A24A;} .q-row.failed .q-state{color:var(--danger); font-weight:600;}
+  .q-row.retrying .q-state{color:#8A6A1A;}
+  #queueRetry{margin-top:16px; background:var(--primary); color:#fff; display:none;}
+  #queueRetry:hover{background:var(--primary-hover);}
   #resultPrimary{background:var(--primary); color:#fff; margin-bottom:8px;}
   #resultPrimary:hover{background:var(--primary-hover);}
   #resultSecondary{background:transparent; color:var(--text-3); font-weight:600;}
@@ -294,9 +325,15 @@
 
   <div class="toast" id="toast"></div>
 
-  <div class="upload-pill" id="uploadPill" role="status" aria-live="polite">
-    <span id="pillText">Mengirim…</span><button id="pillBtn" style="display:none;" onclick="retryFailed()">Kirim ulang</button>
-    <div class="bar" id="pillBar"></div>
+
+  <div class="result-overlay" id="queueOverlay">
+    <div class="result-card queue-card" id="queueCard" role="dialog" aria-modal="true" aria-labelledby="queueTitle">
+      <button class="q-close" id="queueClose" aria-label="Tutup">✕</button>
+      <h3 id="queueTitle">Pengiriman Momen</h3>
+      <p class="q-sub" id="queueSub"></p>
+      <div class="q-list" id="queueList"></div>
+      <button id="queueRetry" onclick="retryFailed()">Kirim Ulang yang Belum Terkirim</button>
+    </div>
   </div>
 
   <div class="result-overlay" id="resultOverlay">
@@ -326,7 +363,11 @@
     <div class="capture-row" id="captureRow">
       <button class="side-btn" id="flipBtn" title="Ganti kamera">🔄</button>
       <button id="shutterBtn"></button>
-      <div style="width:44px;"></div>
+      <button class="side-btn up-btn" id="upBtn" aria-label="Lihat progres pengiriman" title="Progres pengiriman" onclick="openQueue()">
+        <svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="ring-bg" cx="23" cy="23" r="20"/><circle class="ring-fg" cx="23" cy="23" r="20"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
+        <span class="badge"></span>
+      </button>
     </div>
 
     <div class="finish-row" id="finishRow">
@@ -334,7 +375,14 @@
     </div>
 
     <div class="vn-controls" id="vnControlsIdle">
+      <div class="side-spacer"></div>
       <button id="vnRecordBtn">●</button>
+      <button class="side-btn up-btn" id="upBtn2" aria-label="Lihat progres pengiriman" title="Progres pengiriman" onclick="openQueue()">
+        <svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="ring-bg" cx="23" cy="23" r="20"/><circle class="ring-fg" cx="23" cy="23" r="20"/></svg>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
+        <span class="badge"></span>
+      </button>
+
     </div>
     <div class="vn-controls" id="vnControlsReview">
       <button id="vnRedoBtn">Ulang</button>
@@ -749,6 +797,7 @@ async function callServer(payload, onProgress) {
 
 // ID unik per foto/video/VN. Dikirim di setiap percobaan, jadi kalau balasan server hilang
 // lalu dikirim ulang, server tahu ini momen yang sama dan tidak menyimpannya dua kali.
+const typeSeq = {};
 function newClientId() {
   let hex = '';
   try { const a = new Uint8Array(8); crypto.getRandomValues(a); hex = Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
@@ -759,6 +808,9 @@ function newClientId() {
 function enqueueUpload(job) {
   job.state = 'queued'; job.tries = 0; job.progress = 0; job.id = Date.now() + Math.random();
   job.cid = newClientId(); job.fileId = null; job.finTries = 0;
+  job.size = job.blob ? job.blob.size : 0;                       // disimpan karena blob dilepas setelah terkirim
+  job.seq = (typeSeq[job.type] = (typeSeq[job.type] || 0) + 1);   // Foto 1, Foto 2, ...
+  job.preview = (typeof job.thumb === 'string' && job.thumb.indexOf('data:image') === 0) ? job.thumb : '';
   uploadJobs.push(job);
   sessionStats.pending++;
   renderPill();
@@ -845,33 +897,84 @@ async function uploadOnce(job) {
   return res;
 }
 
-function renderPill() {
-  const pill = document.getElementById('uploadPill');
-  const total = uploadJobs.length;
-  if (total === 0) { pill.style.display = 'none'; return; }
-  const active = uploadJobs.filter(j => j.state === 'queued' || j.state === 'uploading' || j.state === 'retrying');
-  const failed = uploadJobs.filter(j => j.state === 'failed');
-  const done = uploadJobs.filter(j => j.state === 'done').length;
-  const prog = uploadJobs.reduce((s, j) => s + (j.state === 'done' ? 1 : (j.state === 'failed' ? 1 : j.progress || 0)), 0) / total;
-  pill.style.display = 'flex';
-  const txt = document.getElementById('pillText');
-  const bar = document.getElementById('pillBar');
-  const btn = document.getElementById('pillBtn');
-  bar.style.width = Math.round(prog * 100) + '%';
-  btn.style.display = 'none';
-  if (active.length > 0) {
-    const retrying = active.some(j => j.state === 'retrying');
-    txt.textContent = retrying ? (active.some(j => j.busy) ? 'Lagi ramai nih, antre sebentar ya…' : 'Sinyal kurang stabil, mencoba lagi…') : `Mengirim ${done + 1} dari ${total} · ${Math.round(prog * 100)}%`;
-    pill.className = 'upload-pill';
-  } else if (failed.length > 0) {
-    txt.textContent = `${failed.length} momen belum terkirim`;
-    btn.style.display = 'inline-block'; btn.textContent = 'Kirim ulang';
-    pill.className = 'upload-pill warn';
-  } else {
-    txt.textContent = 'Semua momen sudah terkirim';
-    pill.className = 'upload-pill ok';
-    setTimeout(() => { if (!uploadJobs.some(j => j.state !== 'done')) pill.style.display = 'none'; }, 3500);
-  }
+// ---------- Tombol progres (kanan kamera) + popup daftar kiriman ----------
+let paintQueued = false;
+function renderPill() {            // dipanggil sering (tiap progres) -> digabung per frame supaya ringan
+  if (paintQueued) return;
+  paintQueued = true;
+  requestAnimationFrame(() => { paintQueued = false; paintUpload(); });
+}
+
+function fmtPair(loaded, total) {
+  if (total >= 1048576) { const f = n => (n / 1048576).toFixed(1).replace('.', ','); return `${f(loaded)} / ${f(total)} MB`; }
+  const k = n => Math.round(n / 1024);
+  return `${Math.min(k(loaded), k(total))} / ${Math.max(1, k(total))} KB`;
+}
+function fmtSize(n) { return n >= 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+
+function paintUpload() {
+  const pending = uploadJobs.filter(j => j.state !== 'done');
+  const active = pending.filter(j => j.state !== 'failed');
+  const failed = pending.length - active.length;
+  const totalB = uploadJobs.reduce((s, j) => s + (j.size || 1), 0) || 1;
+  const loadB = uploadJobs.reduce((s, j) => s + (j.state === 'done' ? (j.size || 1) : (j.state === 'failed' ? 0 : (j.progress || 0) * (j.size || 1))), 0);
+  const frac = Math.max(0, Math.min(1, loadB / totalB));
+  const warn = active.length === 0 && failed > 0;
+  document.querySelectorAll('.up-btn').forEach(b => {
+    b.classList.toggle('show', pending.length > 0);            // hilang sendiri kalau semua sudah terkirim
+    b.classList.toggle('warn', warn);
+    b.querySelector('.ring-fg').style.strokeDashoffset = warn ? 0 : String(125.66 * (1 - frac));
+    b.querySelector('.badge').textContent = warn ? '!' : String(active.length);
+    b.setAttribute('aria-label', warn ? `${failed} momen belum terkirim. Ketuk untuk melihat` : `Mengirim ${active.length} momen. Ketuk untuk melihat progres`);
+  });
+  if (queueOpen()) paintQueue();
+}
+
+const LABEL = { photo: 'Foto', video: 'Video', voice: 'Suara' };
+const rowEls = new Map();
+const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const MIC_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+
+function queueOpen() { return document.getElementById('queueOverlay').classList.contains('show'); }
+function openQueue() { document.getElementById('queueOverlay').classList.add('show'); paintQueue(); }
+function closeQueue() { document.getElementById('queueOverlay').classList.remove('show'); }
+document.getElementById('queueClose').addEventListener('click', closeQueue);
+document.getElementById('queueOverlay').addEventListener('click', e => { if (e.target.id === 'queueOverlay') closeQueue(); });   // ketuk di luar = tutup
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && queueOpen()) closeQueue(); });
+
+function paintQueue() {
+  const list = document.getElementById('queueList');
+  uploadJobs.forEach(j => {
+    let r = rowEls.get(j.id);
+    if (!r) {
+      const el = document.createElement('div');
+      el.className = 'q-row';
+      el.innerHTML = '<div class="q-thumb"></div><div class="q-main"><div class="q-top"><b></b><span class="q-state"></span></div><div class="q-bar"><i></i></div><div class="q-bytes"></div></div><div class="q-check">' + CHECK_SVG + '</div>';
+      const th = el.querySelector('.q-thumb');
+      if (j.preview) { const im = document.createElement('img'); im.alt = ''; im.src = j.preview; th.appendChild(im); }
+      else th.innerHTML = MIC_SVG;
+      el.querySelector('b').textContent = `${LABEL[j.type] || 'Momen'} ${j.seq}`;
+      list.appendChild(el);
+      r = { el, bar: el.querySelector('.q-bar i'), state: el.querySelector('.q-state'), bytes: el.querySelector('.q-bytes') };
+      rowEls.set(j.id, r);
+    }
+    const size = j.size || 0, loaded = j.state === 'done' ? size : Math.round((j.progress || 0) * size);
+    let cls = 'q-row', st = '', by = '';
+    if (j.state === 'done') { cls += ' done'; st = 'Terkirim'; by = fmtSize(size); }
+    else if (j.state === 'failed') { cls += ' failed'; st = 'Belum terkirim'; by = `${fmtSize(size)} · aman di HP, bisa dikirim ulang`; }
+    else if (j.state === 'retrying') { cls += ' retrying'; st = j.busy ? 'Antre, coba lagi…' : 'Sinyal lemah, coba lagi…'; by = fmtPair(loaded, size); }
+    else if (j.state === 'queued') { st = 'Menunggu giliran'; by = `0 / ${fmtSize(size)}`.replace(/ (KB|MB)$/, ' $1'); }
+    else { st = 'Mengirim…'; by = fmtPair(loaded, size); }
+    if (r.el.className !== cls) r.el.className = cls;
+    r.state.textContent = st; r.bytes.textContent = by;
+    if (j.state !== 'done') r.bar.style.width = (size ? Math.round(loaded / size * 100) : 0) + '%';
+  });
+  const done = uploadJobs.filter(j => j.state === 'done').length, failed = uploadJobs.filter(j => j.state === 'failed').length, total = uploadJobs.length;
+  document.getElementById('queueSub').textContent =
+    done === total ? `Semua ${total} momen sudah terkirim. Terima kasih!` :
+    failed && done + failed === total ? `${done} terkirim, ${failed} belum. Sinyal sepertinya kurang bagus.` :
+    `${done} dari ${total} terkirim. Kamu boleh lanjut memotret, pengiriman jalan terus.`;
+  document.getElementById('queueRetry').style.display = failed ? 'block' : 'none';
 }
 
 function retryFailed() {
@@ -922,6 +1025,7 @@ function maybeShowResult() {
 }
 
 function openResultModal(o) {
+  closeQueue();
   const ov = document.getElementById('resultOverlay');
   const card = document.getElementById('resultCard');
   card.className = 'result-card ' + o.kind;
@@ -1381,7 +1485,7 @@ function sendAllPhotos() {
   renderFilmstrip();
   shutterBtn.disabled = false;
   document.getElementById('finishRow').style.display = 'none';
-  showToast(`${shots.length} foto sedang dikirim. Kamu boleh lanjut memotret`, 'success');
+  showToast(`${shots.length} foto sedang dikirim. Pantau progresnya di tombol sebelah kanan kamera`, 'success');
 }
 
 function captureVideoThumbnail() {
@@ -1689,7 +1793,7 @@ function sendSingleMedia(type) {
     recordedVideo.style.display = 'none';
     if (!liveStream) startCamera();
   }
-  showToast(type === 'voice' ? 'Suaramu sedang dikirim. Kamu boleh lanjut.' : 'Videomu sedang dikirim. Kamu boleh lanjut.', 'success');
+  showToast(type === 'voice' ? 'Suaramu sedang dikirim. Pantau progresnya di tombol sebelah kanan.' : 'Videomu sedang dikirim. Pantau progresnya di tombol sebelah kanan kamera.', 'success');
 }
 
 function blobToBase64(blob) {

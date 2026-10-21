@@ -1,4 +1,4 @@
-# Wedding Album v11 — Panduan Lengkap
+# Wedding Album v12 — Panduan Lengkap
 
 Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
 Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman HTML statis.
@@ -34,7 +34,19 @@ Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
 
 ---
 
-## 3. Yang baru di v11
+## 3. Yang baru di v12
+
+### Progres kirim lebih jelas (halaman tamu)
+- Bar di atas layar dihapus. Sebagai gantinya ada **tombol progres di sebelah kanan tombol kamera** (di mode Suara: di sebelah kanan tombol rekam). Tombol ini **hanya muncul setelah tamu menekan Kirim** dan **hilang sendiri** setelah semuanya terkirim.
+- Cincin di tombol menunjukkan kemajuan total, angka kecil menunjukkan jumlah yang sedang dikirim. Kalau ada yang gagal, cincin berubah kuning dengan tanda "!".
+- Ketuk tombol → **popup daftar kiriman**: Foto 1, Foto 2, dst. lengkap dengan thumbnail, ukuran, dan progres dalam ukuran file (contoh `120 / 480 KB`, atau `0,6 / 1,4 MB`), bukan persen. Foto yang selesai ditandai **centang hijau**, lalu lanjut ke foto berikutnya. Status per foto: Menunggu giliran, Mengirim, Sinyal lemah/antre (mencoba lagi), Terkirim, Belum terkirim (ada tombol Kirim Ulang).
+- Popup ditutup lewat tombol ✕ kanan atas, ketuk di luar popup, atau tombol Esc. Pengiriman tetap jalan di latar belakang.
+
+### Album
+- Tombol **Kirim Momen** kini di tengah.
+- Nama mempelai, footer, dan semua teks yang tadinya hitam kini memakai **warna utama tema** (sama dengan tombol). Warna diatur di Dashboard → Tema. Kalau warna yang dipilih terlalu terang, sistem menggelapkannya otomatis agar teks tetap terbaca.
+
+## 3. Yang baru di v11 (sebelumnya)
 
 ### Album: halaman & penampil foto
 - **Tampilkan 25 / 50 / Semua** (pilihan diingat di HP tamu). Bawaan 25.
@@ -158,7 +170,7 @@ Di Drive, tiap wedding punya subfolder `PHOTO`, `VIDEO`, `VOICE`, `FRAMES`.
 | Dashboard menampilkan "Kolom allow_photo belum ada" | Jalankan `setupSheets()` sekali. |
 | Tombol Foto/Video/Suara tidak berubah setelah disimpan | Pastikan sudah deploy **New version**; muat ulang halaman tamu. Perubahan pengaturan berlaku maksimal beberapa detik. |
 | Foto muncul dobel di album | Pastikan `Code.gs` v10 sudah di-deploy (**New version**) dan keempat HTML terbaru sudah di hosting. Foto dobel lama dihapus manual dari sheet `MEDIA` (baris) dan Drive. |
-| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v11). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
+| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v11 atau lebih baru; v12 tidak mengubah Code.gs). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
 | Video besar terasa lambat dikirim | Kemungkinan jalur langsung ke Drive ditolak dan sistem memakai jalur biasa (tetap berhasil, hanya lebih lambat). Turunkan Kualitas Video ke Standar di dashboard. |
 | Pesan "Server sedang ramai" | Terlalu banyak tulis bersamaan; sistem mencoba lagi otomatis, tamu cukup menunggu. |
 | Album kosong padahal ada kiriman | Moderasi ON → setujui dulu di tab Moderasi. Atau jenis media itu sedang OFF di Pengaturan Umum. |

@@ -16,6 +16,11 @@
     --text:#1A1410; --text-2:#5A4D42; --text-3:#8A7B6E;
     --danger:#A02828; --success:#2F6B3F;
   }
+  /* Semua teks mengikuti warna tombol (marun/primary dari pengaturan mempelai), bukan hitam */
+  :root{ --text:var(--primary); --text-2:#6B3A3A; --text-3:#9A6E6E; }
+  @supports (color: color-mix(in srgb, red, blue)) {
+    :root{ --text-2:color-mix(in srgb, var(--primary) 82%, white); --text-3:color-mix(in srgb, var(--primary) 58%, white); }
+  }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
   body{
     font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
@@ -46,8 +51,7 @@
     color:var(--text-3); font-size:12px; line-height:1.6;
     letter-spacing:0.04em; text-transform:uppercase;
   }
-  /* .topnav{max-width:1080px; margin:0 auto; padding:20px 24px 8px;} */
-  .topnav{max-width:1080px; margin:0 auto; padding:20px 24px 20px;}
+  .topnav{max-width:1080px; margin:0 auto; padding:20px 24px 8px; text-align:center;}
   .topnav a{
     display:inline-block; text-decoration:none; font-size:13px; font-weight:600;
     color:var(--primary); background:var(--surface);
@@ -57,7 +61,7 @@
   }
   .topnav a:hover{background:var(--surface-2);border-color:var(--border-strong);}
 
-  .container{max-width:1080px; margin:0 auto; padding:0 24px 96px;}
+  .container{max-width:1080px; margin:0 auto; padding:16px 24px 96px;}
   .filters{display:flex; gap:2px; margin-bottom:28px; flex-wrap:wrap; border-bottom:1px solid var(--border);}
   .filters button{
     padding:10px 16px; border:none; background:transparent;
@@ -145,7 +149,7 @@
     .cap .who{flex-direction:column; align-items:flex-start; gap:2px;}
     .dl-row{flex-direction:column;}
     .hero{padding:48px 20px 32px;}
-    .container{padding:0 20px 64px;}
+    .container{padding:16px 20px 64px;}
   }
 
   .toast{
@@ -334,10 +338,27 @@ async function apiGet(params, tries = 3) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+function mixHex_(x, y, t) {
+  const px = parseInt(x.slice(1), 16), py = parseInt(y.slice(1), 16);
+  const ch = sh => Math.round(((px >> sh) & 255) * (1 - t) + ((py >> sh) & 255) * t);
+  return '#' + [16, 8, 0].map(sh => ch(sh).toString(16).padStart(2, '0')).join('');
+}
+function lum_(hex) {
+  const c = [16, 8, 0].map(sh => { const v = ((parseInt(hex.slice(1), 16) >> sh) & 255) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
 function applyThemeColors(s) {
   if (!s) return;
-  if (s.primary_color)   document.documentElement.style.setProperty('--primary', s.primary_color);
-  if (s.secondary_color) document.documentElement.style.setProperty('--accent',  s.secondary_color);
+  const ok = h => /^#[0-9a-fA-F]{6}$/.test(h || '');
+  const root = document.documentElement;
+  if (ok(s.primary_color)) {
+    let p = s.primary_color, guard = 0;
+    // teks & tombol memakai warna ini -> pastikan tetap terbaca di latar krem (kontras minimal 4.5:1)
+    while (1.05 / (lum_(p) + 0.05) < 4.5 && guard++ < 12) p = mixHex_(p, '#1A1410', 0.15);
+    root.style.setProperty('--primary', p);
+    root.style.setProperty('--primary-hover', mixHex_(p, '#1A1410', 0.15));
+  }
+  if (ok(s.secondary_color)) root.style.setProperty('--accent', s.secondary_color);
 }
 
 async function init() {
