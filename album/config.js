@@ -4,9 +4,9 @@
 
 const CONFIG = {
   // Google Apps Script URL (GANTI DENGAN URL DEPLOYMENT ANDA)
-  API_URL: 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec',
-  
-  // Default wedding ID (bisa di-override via URL parameter)
+  // API_URL: 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec',
+    // Default wedding ID (bisa di-override via URL parameter)
   DEFAULT_WEDDING_ID: 'demo',
   
   // Versi aplikasi
