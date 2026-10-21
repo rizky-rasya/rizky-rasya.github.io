@@ -1,4 +1,4 @@
-# Wedding Album v13 — Panduan Lengkap
+# Wedding Album v14 — Panduan Lengkap
 
 Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
 Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman HTML statis.
@@ -34,7 +34,12 @@ Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
 
 ---
 
-## 3. Yang baru di v13
+## 3. Yang baru di v14
+
+### Metadata halaman (tampilan saat link dibagikan)
+`index.html` dan `album.html` kini punya blok `<!-- META:START --> … <!-- META:END -->` di bagian atas: judul, deskripsi, Open Graph (WhatsApp, Facebook, dll.), Twitter Card, ikon tab, dan `noindex` supaya tidak muncul di Google. Gambar pratinjau memakai `https://rasya-rizky.online/album/CoverAlbum.webp` (1080×1620). **Ganti teks, `og:url`, dan gambar langsung di blok itu** kalau alamat atau naskahnya berubah. Catatan: pratinjau di WhatsApp dibaca dari HTML statis, jadi isinya tidak mengikuti nama dari dashboard.
+
+## 3a. Yang baru di v13
 
 ### Tidak lagi "macet di 95%" saat sinyal lemah
 Masalah lama: file sudah sampai dan tersimpan di server, tapi balasan "sukses" tidak kembali ke HP karena sinyal lemah. Progres jadi berhenti (mis. 166 / 174 KB), lalu ditandai gagal, padahal fotonya sudah ada di album.
