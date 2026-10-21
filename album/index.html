@@ -774,7 +774,7 @@ let modalShownFor = 0;
 
 function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function xhrSend(method, url, body, headers, onProgress, timeoutMs) {
+function xhrSend(method, url, body, headers, onProgress, timeoutMs, hooks) {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest();
     x.open(method, url);
@@ -784,12 +784,17 @@ function xhrSend(method, url, body, headers, onProgress, timeoutMs) {
     x.onload = () => resolve({ status: x.status, text: x.responseText });
     x.onerror = () => reject(new Error('network'));
     x.ontimeout = () => reject(new Error('timeout'));
+    x.onabort = () => reject(new Error('aborted'));
+    if (hooks) {
+      hooks.abort = () => { try { x.abort(); } catch (e) {} };
+      if (hooks.onSent && x.upload) x.upload.onload = hooks.onSent;   // seluruh isi sudah sampai ke server
+    }
     x.send(body);
   });
 }
 
-async function callServer(payload, onProgress) {
-  const r = await xhrSend('POST', APPS_SCRIPT_URL, JSON.stringify(payload), { 'Content-Type': 'text/plain;charset=utf-8' }, onProgress, 120000);
+async function callServer(payload, onProgress, hooks) {
+  const r = await xhrSend('POST', APPS_SCRIPT_URL, JSON.stringify(payload), { 'Content-Type': 'text/plain;charset=utf-8' }, onProgress, 120000, hooks);
   let data; try { data = JSON.parse(r.text); } catch (e) { throw new Error('bad_response'); }
   if (data && data.busy) { const er = new Error(data.message || 'busy'); er.busy = true; throw er; }   // server antre -> tunggu lebih lama
   return data;
@@ -805,11 +810,70 @@ function newClientId() {
   return 'm' + hex.slice(0, 14);
 }
 
+
+// ---------- Konfirmasi ke server (kunci mengatasi "macet di 95%") ----------
+// Di sinyal lemah, file sering sudah sampai & tersimpan tapi balasan server tidak kembali.
+// Jadi setelah seluruh isi terkirim, kita tidak menunggu balasan saja: kita TANYA server apakah momen ini sudah tercatat.
+const PEND_KEY = 'pending_uploads';
+function pendingAdd(job) {
+  try {
+    const a = JSON.parse(localStorage.getItem(PEND_KEY) || '[]').filter(x => x && Date.now() - x.ts < 30 * 60 * 1000);
+    a.push({ c: job.cid, w: weddingId, t: job.type, z: job.size, ts: Date.now() });
+    localStorage.setItem(PEND_KEY, JSON.stringify(a.slice(-60)));
+  } catch (e) {}
+}
+function pendingRemove(cid) {
+  try { localStorage.setItem(PEND_KEY, JSON.stringify(JSON.parse(localStorage.getItem(PEND_KEY) || '[]').filter(x => x && x.c !== cid))); } catch (e) {}
+}
+async function checkIds(ids, deep) {
+  try {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 9000);
+    const r = await fetch(`${APPS_SCRIPT_URL}?action=checkUpload&wedding_id=${encodeURIComponent(weddingId)}&client_ids=${ids.join(',')}${deep ? '&deep=1' : ''}`, { signal: ctrl.signal });
+    clearTimeout(to);
+    const d = await r.json();
+    return d && d.success ? (d.found || {}) : {};
+  } catch (e) { return {}; }
+}
+function startConfirmPolling(job, onFound) {
+  let stopped = false, delay = 5000;
+  const tick = async () => {
+    if (stopped) return;
+    const f = (await checkIds([job.cid], false))[job.cid];
+    if (stopped) return;
+    if (f) { stopped = true; onFound(f); return; }
+    delay = Math.min(15000, Math.round(delay * 1.4));   // makin jarang supaya server tidak dibanjiri
+    setTimeout(tick, delay);
+  };
+  setTimeout(tick, 5000);
+  return () => { stopped = true; };
+}
+function markRecovered(job, info) {   // job yang sempat dianggap gagal ternyata sudah masuk
+  if (job.state !== 'failed') return;
+  job.state = 'done'; job.progress = 1; job.blob = null; job.thumb = null;
+  sessionStats.fail--; sessionStats.ok++;
+  sessionStats.types[job.type] = (sessionStats.types[job.type] || 0) + 1;
+  if (info && info.status === 'approved') sessionStats.live++;
+  pendingRemove(job.cid);
+}
+async function recoverFailed() {
+  const fl = uploadJobs.filter(j => j.state === 'failed' && j.cid);
+  if (!fl.length) return;
+  const found = await checkIds(fl.map(j => j.cid), true);
+  let any = false;
+  fl.forEach(j => { if (found[j.cid]) { markRecovered(j, found[j.cid]); any = true; } });
+  if (any) { modalShownFor = 0; renderPill(); maybeShowResult(); }
+}
+setInterval(recoverFailed, 10000);
+window.addEventListener('online', () => setTimeout(recoverFailed, 800));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) recoverFailed(); });
+setInterval(() => { if (uploadJobs.some(j => j.state === 'uploading' || j.state === 'retrying')) renderPill(); }, 2000);   // segarkan teks "sinyal lemah"
+
 function enqueueUpload(job) {
   job.state = 'queued'; job.tries = 0; job.progress = 0; job.id = Date.now() + Math.random();
   job.cid = newClientId(); job.fileId = null; job.finTries = 0;
   job.size = job.blob ? job.blob.size : 0;                       // disimpan karena blob dilepas setelah terkirim
   job.seq = (typeSeq[job.type] = (typeSeq[job.type] || 0) + 1);   // Foto 1, Foto 2, ...
+  pendingAdd(job);
   job.preview = (typeof job.thumb === 'string' && job.thumb.indexOf('data:image') === 0) ? job.thumb : '';
   uploadJobs.push(job);
   sessionStats.pending++;
@@ -823,7 +887,7 @@ function pumpUploads() {
     if (!job) break;
     activeUploads++;
     job.state = 'uploading';
-    runJob(job).finally(() => { activeUploads--; pumpUploads(); renderPill(); maybeShowResult(); });
+    runJob(job).finally(() => { if (!job.slotFreed) activeUploads--; job.slotFreed = false; pumpUploads(); renderPill(); maybeShowResult(); });
   }
 }
 
@@ -838,10 +902,10 @@ async function runJob(job) {
       sessionStats.types[job.type] = (sessionStats.types[job.type] || 0) + 1;
       if (res && res.status === 'approved') sessionStats.live++;
       if (res && res.message) sessionStats.lastMessage = res.message;
-      job.blob = null; job.thumb = null;
+      job.blob = null; job.thumb = null; pendingRemove(job.cid);
       return;
     } catch (e) {
-      if (e.fatal) { job.state = 'failed'; job.error = e.message; sessionStats.fail++; sessionStats.pending--; return; }
+      if (e.fatal) { job.state = 'failed'; job.error = e.message; sessionStats.fail++; sessionStats.pending--; pendingRemove(job.cid); return; }
       if (job.tries >= MAX_TRIES) break;
       job.suspect = true; job.busy = !!e.busy;
       job.state = 'retrying'; renderPill();
@@ -861,7 +925,14 @@ function fatalError(msg) { const e = new Error(msg); e.fatal = true; return e; }
 
 async function uploadOnce(job) {
   const base = { wedding_id: weddingId, guest_name: job.guest, media_type: job.type, caption: job.caption || '', client_id: job.cid, attempt: (job.tries > 1 || job.suspect) ? 2 : 1 };
-  const setP = p => { job.progress = p; renderPill(); };
+  const setP = p => { if (p !== job.progress) job.lastProgAt = Date.now(); job.progress = p; renderPill(); };
+  job.phase = 'sending'; job.lastProgAt = Date.now();
+
+  // Percobaan ulang: tanya dulu, jangan-jangan kiriman sebelumnya sebenarnya sudah masuk
+  if (job.tries > 1 || job.suspect) {
+    const f = (await checkIds([job.cid], true))[job.cid];
+    if (f) return { success: true, status: f.status, duplicate: true, message: '' };
+  }
 
   if (job.blob.size > SMALL_UPLOAD_BYTES && !job.noDirect) {
     try {
@@ -890,9 +961,25 @@ async function uploadOnce(job) {
   }
 
   const b64 = await blobToBase64(job.blob);
-  const res = await callServer(Object.assign({}, base, {
-    action: 'uploadMedia', filename: 'capture.' + job.ext, mime_type: job.mime, data: b64, thumb_data: job.thumb || ''
-  }), p => setP(p * 0.95));
+  let found = null, stopPoll = () => {};
+  const hooks = {
+    onSent: () => {                    // isi file sudah sampai: tinggal menunggu server mencatat
+      job.phase = 'saving'; setP(0.99);
+      if (!job.slotFreed) { job.slotFreed = true; activeUploads--; pumpUploads(); }   // isi sudah terkirim: foto berikutnya boleh mulai tanpa menunggu konfirmasi
+      stopPoll = startConfirmPolling(job, f => { found = f; if (hooks.abort) hooks.abort(); });
+    }
+  };
+  let res;
+  try {
+    res = await callServer(Object.assign({}, base, {
+      action: 'uploadMedia', filename: 'capture.' + job.ext, mime_type: job.mime, data: b64, thumb_data: job.thumb || ''
+    }), p => { if (job.phase === 'sending') setP(p * 0.99); }, hooks);
+  } catch (e) {
+    stopPoll();
+    if (found) return { success: true, status: found.status, duplicate: true, message: '' };   // balasan hilang, tapi server sudah mencatat
+    throw e;
+  }
+  stopPoll();
   if (!res.success) { if (res.code === 'type_off') throw fatalError(res.message); throw new Error(res.message || 'upload_failed'); }
   return res;
 }
@@ -964,6 +1051,8 @@ function paintQueue() {
     else if (j.state === 'failed') { cls += ' failed'; st = 'Belum terkirim'; by = `${fmtSize(size)} · aman di HP, bisa dikirim ulang`; }
     else if (j.state === 'retrying') { cls += ' retrying'; st = j.busy ? 'Antre, coba lagi…' : 'Sinyal lemah, coba lagi…'; by = fmtPair(loaded, size); }
     else if (j.state === 'queued') { st = 'Menunggu giliran'; by = `0 / ${fmtSize(size)}`.replace(/ (KB|MB)$/, ' $1'); }
+    else if (j.phase === 'saving') { st = 'Menyimpan di album…'; by = fmtPair(size, size); }
+    else if (Date.now() - (j.lastProgAt || 0) > 10000) { cls += ' retrying'; st = 'Sinyal lemah, masih mencoba…'; by = fmtPair(loaded, size); }
     else { st = 'Mengirim…'; by = fmtPair(loaded, size); }
     if (r.el.className !== cls) r.el.className = cls;
     r.state.textContent = st; r.bytes.textContent = by;
@@ -1017,7 +1106,7 @@ function maybeShowResult() {
   } else {
     openResultModal({
       kind: 'error', title: fatalMsg ? 'Pengiriman ditutup' : 'Belum berhasil terkirim',
-      text: fatalMsg ? fatalMsg.error : 'Sinyal sepertinya kurang stabil.\nMomenmu masih aman di HP — coba kirim lagi sebentar lagi.',
+      text: fatalMsg ? fatalMsg.error : 'Sinyal sepertinya kurang stabil.\nMomenmu masih aman di HP. Kami tetap mengecek otomatis; kalau ternyata sudah masuk, kamu akan dikabari.',
       primary: fatalMsg ? { label: 'Mengerti', fn: closeResultModal } : { label: 'Coba Lagi', fn: retryFailed },
       secondary: fatalMsg ? null : { label: 'Nanti Saja', fn: closeResultModal }
     });

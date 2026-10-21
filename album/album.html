@@ -207,6 +207,23 @@
     .pv-nav{width:42px; height:42px;} .pv-nav.prev{left:6px;} .pv-nav.next{right:6px;}
   }
 
+
+  /* ---- Popup info (gaya sama dengan popup halaman kirim) ---- */
+  .info-overlay{position:fixed; inset:0; z-index:120; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(26,20,16,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);}
+  .info-overlay.show{display:flex; animation:fadeInBg .2s ease-out;}
+  @keyframes fadeInBg{from{opacity:0;}to{opacity:1;}}
+  .info-card{width:100%; max-width:360px; background:#F5F1EB; color:var(--text); border-radius:8px; padding:32px 28px 24px; text-align:center; position:relative; border:1px solid #E5DDD1; box-shadow:0 16px 48px rgba(68,8,8,.24); animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2);}
+  @keyframes cardIn{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
+  .info-icon{width:68px; height:68px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#E4F0E6;}
+  .info-icon svg{width:34px; height:34px; stroke:var(--success); fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round;}
+  .info-card.warn .info-icon{background:var(--accent-soft);} .info-card.warn .info-icon svg{stroke:#8A6A1A;}
+  .info-card h3{font-family:'Fraunces',Georgia,serif; font-size:20px; font-weight:700; margin-bottom:10px; letter-spacing:-0.01em; color:var(--text);}
+  .info-card p{font-size:14px; line-height:1.6; color:var(--text-2); white-space:pre-line; margin-bottom:22px;}
+  .info-card .i-primary,.info-card .i-secondary{display:block; width:100%; padding:13px; border-radius:4px; border:none; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; text-decoration:none; text-align:center;}
+  .info-card .i-primary{background:var(--primary); color:#fff; margin-bottom:8px;} .info-card .i-primary:hover{background:var(--primary-hover);}
+  .info-card .i-secondary{background:transparent; color:var(--text-3); font-weight:600;}
+  .info-card .i-x{position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; border:none; background:transparent; color:var(--text-3); font-size:16px; cursor:pointer;}
+
   /* ---- Footer ---- */
   .site-footer{max-width:1080px; margin:0 auto; padding:48px 24px 56px; border-top:1px solid var(--border); text-align:left;}
   .site-footer .thanks{font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:clamp(20px,3.4vw,26px); line-height:1.25; letter-spacing:-0.01em; color:var(--text); max-width:520px;}
@@ -273,6 +290,17 @@
   </a>
   <small class="sig" id="ft-dev">Dibuat dengan &hearts; oleh Rasya dan Rizky</small>
 </footer>
+
+<div class="info-overlay" id="infoOverlay">
+  <div class="info-card" id="infoCard" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+    <button class="i-x" id="infoX" aria-label="Tutup">✕</button>
+    <div class="info-icon"><svg viewBox="0 0 24 24" id="infoSvg"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h3 id="infoTitle"></h3>
+    <p id="infoText"></p>
+    <a class="i-primary" id="infoPrimary" href="#"></a>
+    <button class="i-secondary" id="infoSecondary" type="button">Tutup</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 <div id="photoViewer" onclick="if(event.target===this)closePhoto()">
@@ -700,6 +728,80 @@ document.addEventListener('keydown', e => {
     if (Math.abs(dx) > 55 && Math.abs(dy) < 70) stepPhoto(dx < 0 ? 1 : -1);
   }, { passive: true });
 })();
+
+
+// ============================================
+// KIRIMAN TERTUNDA — kalau tamu pindah ke album saat file masih dikirim, kita cek ke server
+// dan beri tahu lewat popup begitu semuanya sudah masuk.
+// ============================================
+const PEND_KEY = 'pending_uploads';
+function readPending() {
+  try { return JSON.parse(localStorage.getItem(PEND_KEY) || '[]').filter(x => x && x.w === weddingId && Date.now() - x.ts < 30 * 60 * 1000); }
+  catch (e) { return []; }
+}
+function removePending(cids) {
+  try {
+    const gone = new Set(cids);
+    localStorage.setItem(PEND_KEY, JSON.stringify(JSON.parse(localStorage.getItem(PEND_KEY) || '[]').filter(x => x && !gone.has(x.c))));
+  } catch (e) {}
+}
+function openInfo(o) {
+  const card = document.getElementById('infoCard');
+  card.className = 'info-card ' + (o.kind || '');
+  document.getElementById('infoSvg').innerHTML = o.kind === 'warn' ? '<path d="M12 7v6M12 17v.01"/>' : '<path d="M5 12.5l4.5 4.5L19 7.5"/>';
+  document.getElementById('infoTitle').textContent = o.title;
+  document.getElementById('infoText').textContent = o.text;
+  const p = document.getElementById('infoPrimary');
+  p.textContent = o.primary.label; p.href = o.primary.href || '#';
+  p.onclick = o.primary.fn ? (e => { e.preventDefault(); o.primary.fn(); }) : null;
+  document.getElementById('infoSecondary').style.display = o.secondary === false ? 'none' : 'block';
+  document.getElementById('infoOverlay').classList.add('show');
+}
+function closeInfo() { document.getElementById('infoOverlay').classList.remove('show'); }
+document.getElementById('infoX').addEventListener('click', closeInfo);
+document.getElementById('infoSecondary').addEventListener('click', closeInfo);
+document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') closeInfo(); });
+
+function watchPending() {
+  const mine = readPending();
+  if (!mine.length || !weddingId) return;
+  const left = new Set(mine.map(x => x.c)), total = mine.length, got = {};
+  const t0 = Date.now();
+  let n = 0;
+  showToast('Mengecek kiriman kamu…', 'info');
+  async function tick() {
+    n++;
+    const ids = Array.from(left).slice(0, 30);
+    const deep = n === 1 || Date.now() - t0 > 150000;
+    try {
+      const d = await apiGet({ action: 'checkUpload', wedding_id: weddingId, client_ids: ids.join(','), deep: deep ? 1 : 0 }, 2);
+      if (d && d.success) Object.keys(d.found || {}).forEach(id => { got[id] = d.found[id]; left.delete(id); });
+    } catch (e) { /* coba lagi di putaran berikut */ }
+    removePending(Object.keys(got));
+    if (left.size === 0) {
+      const approved = Object.keys(got).every(id => got[id].status === 'approved');
+      pageMem.clear(); loadPage(true, 1, { keepScroll: true });     // muat ulang album supaya foto baru langsung terlihat
+      openInfo({
+        kind: 'ok', title: total > 1 ? 'Semua momen sudah terupload' : 'Momenmu sudah terupload',
+        text: `Terima kasih sudah ikut mengabadikan momen.\n` + (approved ? `${total} momen kamu sudah tampil di album.` : `${total} momen kamu sudah masuk dan menunggu persetujuan mempelai. Setelah disetujui, otomatis tampil di album.`),
+        primary: { label: 'Lihat Album', fn: closeInfo }, secondary: false
+      });
+      return;
+    }
+    if (Date.now() - t0 > 240000) {                     // 4 menit belum ada kabar -> jujur ke tamu
+      const sent = total - left.size;
+      removePending(Array.from(left));
+      openInfo({
+        kind: 'warn', title: 'Belum semua terupload',
+        text: `${sent} dari ${total} momen sudah masuk.\nSisanya belum sampai, sepertinya terputus saat pindah halaman. Coba kirim lagi ya.`,
+        primary: { label: 'Kirim Lagi', href: document.getElementById('backToIndex').href }
+      });
+      return;
+    }
+    setTimeout(tick, n < 5 ? 3000 : 6000);
+  }
+  tick();
+}
 
 function base64ToUint8(base64) {
   const bin = atob(base64);
@@ -1176,6 +1278,8 @@ function showToast(text, type) {
   t.textContent = text; t.className = 'toast ' + type; t.style.display = 'block';
   setTimeout(() => { t.style.display = 'none'; }, 4500);
 }
+
+if (weddingId) watchPending();   // di akhir skrip supaya semua konstanta sudah siap
 </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# Wedding Album v12 — Panduan Lengkap
+# Wedding Album v13 — Panduan Lengkap
 
 Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
 Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman HTML statis.
@@ -27,14 +27,30 @@ Backend: Google Apps Script + Google Sheets + Google Drive. Frontend: 4 halaman 
 3. Pilih fungsi **`setupSheets`** → Run (sekali). Menambah kolom baru `allow_photo` tanpa menghapus data; wedding lama otomatis aktif untuk foto. Aman diulang.
 4. **Deploy → Manage deployments → ikon pensil → Version: New version → Deploy.** Pengaturan: *Execute as* **Me**, *Who has access* **Anyone**. Izinkan akses jika diminta.
 5. Upload keempat file HTML ke hosting statis (Netlify / Vercel / GitHub Pages / Firebase), satu folder, timpa yang lama.
-6. Cek: buka `…/exec?action=ping` → harus muncul `"version":"v11-2026-10-21-paged"`.
+6. Cek: buka `…/exec?action=ping` → harus muncul `"version":"v13-2026-10-21-confirm"`.
 7. Uji cepat: buka `index.html?w=KODE-UNDANGAN`, kirim satu foto, lalu cek sheet `MEDIA` dan folder Drive.
 
 Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
 
 ---
 
-## 3. Yang baru di v12
+## 3. Yang baru di v13
+
+### Tidak lagi "macet di 95%" saat sinyal lemah
+Masalah lama: file sudah sampai dan tersimpan di server, tapi balasan "sukses" tidak kembali ke HP karena sinyal lemah. Progres jadi berhenti (mis. 166 / 174 KB), lalu ditandai gagal, padahal fotonya sudah ada di album.
+- Setelah seluruh isi file terkirim, HP **tidak hanya menunggu balasan**. Ia **bertanya ke server** ("momen ini sudah tercatat?") dengan jeda makin jarang. Begitu server menjawab sudah, status langsung jadi **Terkirim**.
+- Selama menunggu, baris di popup menampilkan **Menyimpan di album…** (bukan angka yang menggantung). Kalau tidak ada kemajuan 10 detik, tertulis **Sinyal lemah, masih mencoba…**.
+- Foto berikutnya langsung mulai dikirim begitu isi foto sebelumnya sampai, tidak menunggu konfirmasi.
+- **Kirim ulang** kini selalu cek dulu ke server. Kalau ternyata sudah masuk, tidak ada unggah ulang (tidak dobel, tidak macet).
+- Kiriman yang sempat ditandai gagal dicek otomatis tiap 10 detik, saat sinyal kembali, dan saat tamu kembali ke halaman. Kalau ternyata sudah masuk, status berubah jadi Terkirim dan popup "Terkirim" muncul.
+
+### Pindah ke album saat masih mengirim
+Daftar kiriman yang belum selesai disimpan di HP tamu (hanya ID, bukan fotonya). Di halaman album muncul pesan "Mengecek kiriman kamu…", lalu popup **"Semua momen sudah terupload"** begitu semuanya terkonfirmasi, dan album dimuat ulang otomatis. Kalau 4 menit belum ada kabar, tamu diberi tahu jujur berapa yang sudah masuk dan ada tombol **Kirim Lagi**. Catatan: foto yang belum sempat terkirim penuh saat halaman ditinggalkan memang tidak bisa dilanjutkan dari album, jadi sebaiknya tamu menunggu sampai tombol progres hilang.
+
+### Catatan teknis
+- Aksi baru `checkUpload` di `Code.gs` (jalur cepat hanya membaca cache, jadi ringan walau banyak tamu). **Wajib deploy New version.**
+
+## 3a. Yang baru di v12
 
 ### Progres kirim lebih jelas (halaman tamu)
 - Bar di atas layar dihapus. Sebagai gantinya ada **tombol progres di sebelah kanan tombol kamera** (di mode Suara: di sebelah kanan tombol rekam). Tombol ini **hanya muncul setelah tamu menekan Kirim** dan **hilang sendiri** setelah semuanya terkirim.
@@ -170,7 +186,7 @@ Di Drive, tiap wedding punya subfolder `PHOTO`, `VIDEO`, `VOICE`, `FRAMES`.
 | Dashboard menampilkan "Kolom allow_photo belum ada" | Jalankan `setupSheets()` sekali. |
 | Tombol Foto/Video/Suara tidak berubah setelah disimpan | Pastikan sudah deploy **New version**; muat ulang halaman tamu. Perubahan pengaturan berlaku maksimal beberapa detik. |
 | Foto muncul dobel di album | Pastikan `Code.gs` v10 sudah di-deploy (**New version**) dan keempat HTML terbaru sudah di hosting. Foto dobel lama dihapus manual dari sheet `MEDIA` (baris) dan Drive. |
-| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v11 atau lebih baru; v12 tidak mengubah Code.gs). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
+| Upload gagal / tidak masuk sheet | Cek `…/exec?action=ping` (versi harus v13). Cek *Execute as: Me* dan *Anyone*. Buka `…/exec?action=diagnoseDrive` untuk uji akses Drive. |
 | Video besar terasa lambat dikirim | Kemungkinan jalur langsung ke Drive ditolak dan sistem memakai jalur biasa (tetap berhasil, hanya lebih lambat). Turunkan Kualitas Video ke Standar di dashboard. |
 | Pesan "Server sedang ramai" | Terlalu banyak tulis bersamaan; sistem mencoba lagi otomatis, tamu cukup menunggu. |
 | Album kosong padahal ada kiriman | Moderasi ON → setujui dulu di tab Moderasi. Atau jenis media itu sedang OFF di Pengaturan Umum. |
