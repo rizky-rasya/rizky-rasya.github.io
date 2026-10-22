@@ -1113,6 +1113,63 @@ function writeSettingsCache(settings, filters) {
 
 init();
 
+/* ================================================================
+   BFCACHE / RETURN-FROM-OTHER-PAGE HANDLER
+   Kamera dilepas saat pindah halaman; di-restart saat kembali.
+   Ini mengatasi "stuck di Menyiapkan kamera…" saat user pindah
+   index → album → index (BFCache restore, kamera mati tapi init
+   tidak dijalankan ulang).
+   ================================================================ */
+window.addEventListener('pagehide', () => {
+  // Lepas kamera supaya HP tidak "sibuk" saat halaman baru mengambil alih.
+  try { stopCameraStream(); } catch (e) {}
+});
+
+window.addEventListener('pageshow', (event) => {
+  // Hanya untuk BFCache restore (bukan fresh load).
+  if (!event.persisted) return;
+  handleReturnToPage();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) handleReturnToPage();
+});
+
+async function handleReturnToPage() {
+  // Jangan ganggu user yang sedang review video/suara.
+  if (capturedBlob) return;
+  if (currentMode === 'voice') return;
+
+  const statusEl = document.getElementById('statusScreen');
+  const statusVisible = statusEl.style.display !== 'none';
+  const statusTitle = (document.getElementById('statusTitle').textContent || '');
+  const stillLoading = statusVisible && (statusTitle.indexOf('Menyiapkan') !== -1 || statusTitle.indexOf('Memuat') !== -1);
+
+  if (stillLoading) {
+    // init() sebelumnya tidak selesai (BFCache); selesaikan sekarang.
+    const ok = await startCamera();
+    if (ok) hideStatus();
+    return;
+  }
+
+  // UI terlihat tapi kamera mungkin sudah mati karena OS melepasnya.
+  const tracks = liveStream ? liveStream.getVideoTracks() : [];
+  const alive = tracks.some(t => t.readyState === 'live');
+  if (!alive) {
+    startCamera();
+  }
+}
+
+/* Watchdog: kalau loading screen masih "Menyiapkan…" setelah 10 dtk,
+   tampilkan tombol Coba Lagi supaya user tidak bingung. */
+setTimeout(() => {
+  const visible = document.getElementById('statusScreen').style.display !== 'none';
+  const title = (document.getElementById('statusTitle').textContent || '');
+  if (visible && (title.indexOf('Menyiapkan') !== -1 || title.indexOf('Memuat') !== -1)) {
+    showStatus('Kamera Lama Dimuat', 'Kamera butuh waktu lebih lama dari biasanya. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi.', true);
+  }
+}, 10000);
+
 async function fetchJson(qs, tries = 2, timeoutMs = 10000) {
   let last;
   for (let i = 0; i < tries; i++) {
@@ -1209,8 +1266,18 @@ async function init() {
   if (currentMode === 'voice') {
     hideStatus();
   } else {
-    const ok = await startCamera();
-    if (ok) hideStatus();
+    // Race startCamera dengan timeout 10 dtk, supaya layar loading tidak
+    // pernah menggantung tanpa akhir kalau getUserMedia hang di HP.
+    const result = await Promise.race([
+      startCamera(),
+      new Promise(resolve => setTimeout(() => resolve('timeout'), 10000))
+    ]);
+    if (result === true) {
+      hideStatus();
+    } else if (result === 'timeout') {
+      showStatus('Kamera Lama Dimuat', 'Kamera butuh waktu lebih lama dari biasanya. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi.', true);
+    }
+    // result === false → startCamera sudah menampilkan status error sendiri
   }
 
   const w = encodeURIComponent(weddingId);
@@ -1516,7 +1583,12 @@ function switchMode(mode) {
 async function queryPermState(name) {
   try {
     if (!navigator.permissions || !navigator.permissions.query) return null;
-    const s = await navigator.permissions.query({ name });
+    // v18: timeout 1 dtk — navigator.permissions.query bisa menggantung
+    // di sebagian WebView/browser lama, membuat seluruh alur izin macet.
+    const s = await Promise.race([
+      navigator.permissions.query({ name }),
+      new Promise(resolve => setTimeout(() => resolve({ state: null }), 1000))
+    ]);
     return s.state;
   } catch (e) { return null; }
 }
@@ -1588,6 +1660,9 @@ function showConfirmDialog(opts, onConfirm) {
 /* ================================================================
    KAMERA — panggil getUserMedia langsung. Prompt browser = 1-satunya popup.
    Kalau ditolak → tampilkan help modal.
+   v18: getUserMedia diberi timeout 12 dtk + retry otomatis pada
+   NotReadable/timeout — mengatasi kamera hitam saat kembali dari
+   halaman lain (kamera OS masih dipegang tab sebelumnya).
    ================================================================ */
 let cameraToken = 0;
 
@@ -1615,17 +1690,36 @@ async function startCamera(isRetry) {
     const wIdeal = isRetry ? Math.min(640, q.width) : q.width;
     const hIdeal = isRetry ? Math.min(480, q.height) : q.height;
 
+    // v18: getUserMedia dengan timeout 12 dtk. iOS/Android kadang hang
+    // kalau kamera masih dipegang halaman sebelumnya (NotReadableError
+    // yang tertahan). Timeout memaksa jatuh ke jalur retry.
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: currentFacing }, width: { ideal: wIdeal }, height: { ideal: hIdeal } },
-        audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
-      });
+      stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: currentFacing }, width: { ideal: wIdeal }, height: { ideal: hIdeal } },
+          audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('__gum_timeout__')), 12000))
+      ]);
     } catch (permErr) {
+      if (myToken !== cameraToken) return false;
       const msg = String(permErr && permErr.message || '');
+      if (msg === '__gum_timeout__') {
+        if (!isRetry) {
+          await sleepMs(1200);
+          return startCamera(true);
+        }
+        showStatus('Kamera Tidak Merespon', 'Kamera tidak merespon. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi.', true);
+        return false;
+      }
       if (/NotAllowed|Permission|denied/i.test(msg)) {
         showPermissionHelp(needsAudio ? 'both' : 'camera');
         return false;
+      }
+      if (/NotReadable|Could not start|TrackStart|In use/i.test(msg) && !isRetry) {
+        await sleepMs(1500);
+        return startCamera(true);
       }
       throw permErr;
     }
@@ -1646,14 +1740,20 @@ async function startCamera(isRetry) {
       liveVideo.classList.toggle('mirrored', currentFacing === 'user');
     } catch (e) {}
 
+    // v18: play() diberi timeout 1,5 dtk. Promise play() kadang tidak
+    // resolve di iOS saat autoplay diblokir; tanpa timeout, seluruh alur
+    // kamera menunggu selamanya.
     try {
-      const p = liveVideo.play();
-      if (p && p.then) {
-        await p.catch(() => {
-          const retryPlay = () => { try { liveVideo.play().catch(() => {}); } catch (e) {} };
-          document.addEventListener('click', retryPlay, { once: true, passive: true });
-          document.addEventListener('touchstart', retryPlay, { once: true, passive: true });
-        });
+      const playP = liveVideo.play();
+      if (playP && playP.then) {
+        await Promise.race([
+          playP.catch(() => {
+            const retryPlay = () => { try { liveVideo.play().catch(() => {}); } catch (e) {} };
+            document.addEventListener('click', retryPlay, { once: true, passive: true });
+            document.addEventListener('touchstart', retryPlay, { once: true, passive: true });
+          }),
+          new Promise(resolve => setTimeout(resolve, 1500))
+        ]);
       }
     } catch (e) {}
 
@@ -1667,7 +1767,7 @@ async function startCamera(isRetry) {
     }
 
     if (!liveVideo.videoWidth && !isRetry && myToken === cameraToken) {
-      await sleepMs(200);
+      await sleepMs(400);
       return startCamera(true);
     }
 
