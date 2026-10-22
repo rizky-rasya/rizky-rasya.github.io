@@ -1,9 +1,9 @@
 /* Service Worker — cache aset statis untuk kunjungan berikutnya */
-const CACHE_NAME = 'uleman-v1';
+const CACHE_NAME = 'uleman-v2';   // ← REVISI: bump versi untuk paksa refresh
 const ASSETS = [
   './',
   './index.html',
-  './assets/wedding.webp',
+  './assets/cover-v3fiks.webp',
   './assets/divider.png',
   './assets/flower.png',
   './assets/branch.png',
@@ -13,8 +13,9 @@ const ASSETS = [
   './assets/floral-right.png',
   './assets/floral-left1.png',
   './assets/floral-right1.png',
-  './assets/gif-loading-v2-compress.webp',
-  './assets/gate.mp4'
+  './assets/loading-art.webp',
+  './assets/gatekiriv4.webp',
+  './assets/gatekananv4.webp'
 ];
 
 self.addEventListener('install', (e) => {
@@ -29,15 +30,15 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if(e.request.method !== 'GET') return;
+  if (e.request.method !== 'GET') return;
   // Jangan cache Apps Script / maps
-  if(url.hostname.includes('script.google.com')) return;
-  if(url.hostname.includes('google.com/maps')) return;
+  if (url.hostname.includes('script.google.com')) return;
+  if (url.hostname.includes('google.com/maps')) return;
   // Stale-while-revalidate
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchPromise = fetch(e.request).then(res => {
-        if(res && res.status === 200 && res.type === 'basic'){
+        if (res && res.status === 200 && res.type === 'basic') {
           const clone = res.clone();
           caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
         }

@@ -146,8 +146,6 @@
   #loading{
      position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
   flex-direction:column; gap:.25rem; background:var(--bg); transition:opacity .6s ease;
-    /* position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
-    flex-direction:column; gap:1rem; background:var(--bg); transition:opacity .6s ease; */
   }
   #loading .ring{
     width:44px; height:44px; border-radius:50%;
@@ -155,13 +153,12 @@
     animation:spin 1s linear infinite;
   }
   @keyframes spin{ to{ transform:rotate(360deg); } }
-  /* #loading p{ font-family:var(--font-display); font-size:1.1rem; color:var(--muted); letter-spacing:.05em; } */
   #loading p{
   font-family:var(--font-display);
   font-size:1.1rem;
   color:var(--muted);
   letter-spacing:.05em;
-  margin:0;                    /* hilangkan margin default <p> */
+  margin:0;
 }
 
   /* ============ WELCOME / COVER ============ */
@@ -407,23 +404,6 @@
   .fade-up{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
   .fade-up.in{ opacity:1; transform:none; }
 
-  /* ============ MODAL IMAGE ============ */
-  #imgModal{
-    position:fixed; inset:0; z-index:110; background:rgba(0,0,0,.88);
-    display:none; align-items:center; justify-content:center; padding:1.4rem;
-  }
-  #imgModal.open{ display:flex; }
-  #imgModal img{ max-height:80vh; max-width:100%; border-radius:12px; }
-  #imgModal .close{
-    position:absolute; top:1rem; right:1rem; color:#fff; font-size:1.8rem; line-height:1;
-    cursor:pointer; background:rgba(0,0,0,.5); border:2px solid #fff; border-radius:50%;
-    width:48px; height:48px; display:flex; align-items:center; justify-content:center;
-    transition: background .25s ease, transform .15s ease;
-  }
-  #imgModal .close:hover{ background:rgba(0,0,0,.8); }
-  #imgModal .close:active{ transform:scale(.94); }
-  #imgModal .close:focus-visible{ outline:3px solid #FFD54A; outline-offset:2px; }
-
   /* ============ UI MODAL (Pengganti alert/confirm) ============ */
   #uiModal{
     position:fixed; inset:0; z-index:120;
@@ -552,7 +532,6 @@
     opacity: 1;
     top:1.2rem;
   }
-  /* ===== REVISI DARI HTML 1: posisi section flower ===== */
   .section-flower-left{ left:1px; transform:rotate(-18deg); }
   .section-flower-right{ right: -1px; transform: rotate(14deg);  }
 
@@ -634,7 +613,6 @@
   #wedding-date{
     overflow:hidden;
   }
-  /* ===== REVISI DARI HTML 1: posisi floral wedding-date ===== */
   #wedding-date::before{
     content: "";
     position: absolute;
@@ -866,30 +844,19 @@
   @media (prefers-reduced-motion: reduce){ html.leaf-on *{ animation:none !important; } }
 
   /* ============ REVISI 2 ============ */
-  /* #loading .load-gif{ width:96px; height:96px; object-fit:contain; } */
   #loading .load-gif{
   width:160px;
   height:160px;
   object-fit:contain;
-  transform:scaleX(-1);        /* flip horizontal */
-  margin-bottom:-.35rem;       /* rapatkan ke teks */
+  transform:scaleX(-1);
+  margin-bottom:-.35rem;
 }
-/* 
-Kalau mau lebih besar / kecil
-Tinggal ubah 160px:
-
-Ukuran icon	Kesan
-120px	Kecil
-160px	Sedang (rekomendasi)
-200px	Besar
-240px	Sangat besar (memenuhi layar HP) */
 
   .arch-wrap{ position:relative; width:150px; margin:0 auto 1.2rem; }
   .arch-wrap .arch{ margin:0 auto; z-index:1; }
   .arch-flower{ z-index:0; opacity:.9; }
   .arch-flower.tl{ width:96px; left:-52px; top:-30px; transform-origin:100% 100%; }
   .arch-flower.tr{ width:96px; right:-52px; top:-30px; transform-origin:0 100%; }
-  /* ===== REVISI DARI HTML 1: posisi arch-flower bawah ===== */
   .arch-flower.br{ width:62px; right:-50px; bottom:-30px; transform-origin:0 0; }
   .arch-flower.bl{ width:62px; left:-50px; bottom:-30px; transform-origin:100% 0; }
   #ngunduh-card{ margin-top:.4rem; }
@@ -914,13 +881,94 @@ Ukuran icon	Kesan
   .ft-ico svg{ width:13px; height:13px; }
 
   html:not(.opened) #theme-btn{ display:none !important; }
+
+  /* ============ REVISI: FOTO BUSANA (DRESS CODE) ============ */
+  .dresscode-photos{
+    display:flex; gap:.5rem; margin:.75rem 0 .85rem; flex-wrap:wrap; justify-content:center;
+  }
+  .dresscode-photo{
+    width:76px; height:76px; padding:0; border-radius:10px; overflow:hidden;
+    border:2px solid var(--line); background:var(--surface-2); cursor:pointer;
+    transition:transform .2s ease, border-color .2s ease;
+  }
+  .dresscode-photo:hover, .dresscode-photo:focus-visible{
+    transform:scale(1.06); border-color:var(--gold-ink);
+  }
+  .dresscode-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* ============ REVISI: WEDDING ALBUM ============ */
+  #wedding-album{ overflow:hidden; }
+  #wedding-album::before{
+    content:""; display:block; width:250px; height:64px;
+    margin:-1.2rem auto 1rem;
+    background:url('assets/divider.png') center/contain no-repeat;
+    opacity:.9;
+  }
+  .album-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; margin:1.3rem 0 1rem;
+  }
+  .album-media-item{
+    position:relative; width:100%; padding:0; border:1px solid rgba(168,122,31,.22);
+    border-radius:14px; overflow:hidden; cursor:pointer; background:var(--surface-2);
+    aspect-ratio:1; display:block;
+    box-shadow:0 8px 20px rgba(43,38,32,.10);
+    transition:transform .3s ease;
+  }
+  .album-media-item:hover, .album-media-item:focus-visible{ transform:scale(1.02); }
+  .album-media-item img, .album-media-item video{
+    width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;
+  }
+  .album-media-item .play-icon{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.35); color:#fff; font-size:1.8rem;
+    pointer-events:none; text-shadow:0 2px 8px rgba(0,0,0,.55);
+  }
+  .album-link-wrap{ margin-top:1.1rem; }
+  .album-countdown-msg{
+    font-size:.82rem; color:var(--muted); margin-top:.55rem; line-height:1.6;
+  }
+  .album-countdown-msg small{ font-size:.72rem; opacity:.9; }
+  #wa-link.coming-soon{ opacity:.55; }
+
+  /* ============ REVISI: MEDIA MODAL (foto + video, slider) ============ */
+  #mediaModal{
+    position:fixed; inset:0; z-index:110; background:rgba(0,0,0,.92);
+    display:none; align-items:center; justify-content:center; padding:1rem;
+  }
+  #mediaModal.open{ display:flex; }
+  .media-modal-content{
+    position:relative; z-index:1; max-width:100%; max-height:100%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .media-modal-content img, .media-modal-content video{
+    max-height:85vh; max-width:100%; border-radius:10px; display:block;
+    user-select:none; -webkit-user-drag:none; box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .media-modal-close, .media-modal-nav{
+    position:absolute; z-index:3; width:46px; height:46px; border-radius:50%;
+    background:rgba(0,0,0,.6); color:#fff; border:2px solid rgba(255,255,255,.8);
+    font-size:1.5rem; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s ease, transform .15s ease;
+  }
+  .media-modal-close:hover, .media-modal-nav:hover{ background:rgba(0,0,0,.85); }
+  .media-modal-close:active, .media-modal-nav:active{ transform:scale(.94); }
+  .media-modal-close{ top:1rem; right:1rem; }
+  .media-modal-nav{ top:50%; transform:translateY(-50%); }
+  .media-modal-nav.prev{ left:1rem; }
+  .media-modal-nav.next{ right:1rem; }
+  .media-modal-nav:disabled{ opacity:.25; cursor:default; }
+  .media-modal-counter{
+    position:absolute; z-index:3; bottom:1rem; left:50%; transform:translateX(-50%);
+    color:#fff; background:rgba(0,0,0,.65); padding:.35rem .9rem;
+    border-radius:999px; font-size:.78rem; letter-spacing:.04em;
+  }
 </style>
 </head>
 <body>
 
 <div id="gate" aria-hidden="true">
   <div class="gate-bg"></div>
-  <!-- <img class="gate-door" src="assets/gate.mp4" alt=""> -->
   <img class="gate-door l" src="assets/gatekiriv4.webp" alt="">
   <img class="gate-door r" src="assets/gatekananv4.webp" alt="">
   <div id="smoke"></div>
@@ -932,14 +980,12 @@ Ukuran icon	Kesan
 
   <!-- LOADING -->
   <div id="loading" role="status" aria-live="polite">
-    <!-- ===== REVISI DARI HTML 1: load-gif pakai webp ===== -->
     <img class="load-gif" src="assets/loading-art.webp" alt="loading" aria-hidden="true" width="96" height="96">
     <p>Menyiapkan uleman…</p>
   </div>
 
   <!-- WELCOME COVER -->
   <div id="welcome" role="dialog" aria-modal="true" aria-labelledby="cv-names">
-    <!-- ===== REVISI DARI HTML 1: posisi welcome floral kiri ===== -->
     <img class="asset-deco" style="width: 100px;left: 100px;bottom: 5rem;opacity: 1;transform: rotate(267deg);" src="assets/floral-left1.png" alt="" aria-hidden="true">
     <img class="asset-deco" style="width: 100px;right: 30px;top: 1rem;opacity: 1;transform: rotate(348deg);" src="assets/floral-right1.png" alt="" aria-hidden="true">
     <span class="eyebrow" id="cv-eyebrow" aria-hidden="true">Uleman Palakrama</span>
@@ -1045,8 +1091,10 @@ Ukuran icon	Kesan
         <div class="item"><h3 class="serif">Resepsi</h3><p id="waktu-resepsi">—</p></div>
       </div>
 
+      <!-- REVISI: foto busana wedding + deskripsi dress code -->
       <div class="dresscode">
         <span class="lbl eyebrow no-margin">Dress Code</span>
+        <div class="dresscode-photos" id="dresscode-photos"></div>
         <p id="dresscode-text" style="margin-top:.4rem;">—</p>
       </div>
 
@@ -1079,8 +1127,10 @@ Ukuran icon	Kesan
           <div class="item"><h3 class="serif">Ngunduh Mantu</h3><p id="ng-waktu">—</p></div>
         </div>
 
+        <!-- REVISI: foto busana ngunduh mantu + deskripsi dress code -->
         <div class="dresscode" id="ng-dress-wrap">
           <span class="lbl eyebrow no-margin">Dress Code</span>
+          <div class="dresscode-photos" id="ng-dress-photos"></div>
           <p id="ng-dress" style="margin-top:.4rem;">—</p>
         </div>
 
@@ -1113,6 +1163,21 @@ Ukuran icon	Kesan
       <h2 class="serif" id="gallery-title" style="font-size:1.9rem; margin:.5rem 0 0;">Momen Kami</h2>
       <img class="section-ornament" style="width:180px;margin:.3rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
       <div class="gallery-grid" id="gallery-grid"></div>
+    </section>
+
+    <!-- REVISI: WEDDING ALBUM -->
+    <section class="center fade-up" id="wedding-album" aria-labelledby="wa-title">
+      <span class="eyebrow" aria-hidden="true">Wedding Album</span>
+      <h2 class="serif" id="wa-title" style="font-size:1.9rem; margin:.5rem 0 0;">Momen Bahagia</h2>
+      <img class="section-ornament" style="width:180px;margin:.3rem auto 0;" src="assets/divider.png" alt="" aria-hidden="true">
+      <p id="wa-deskripsi" style="font-size:.9rem;color:var(--muted);margin-top:.6rem;"></p>
+
+      <div class="album-grid" id="wa-grid"></div>
+
+      <div class="album-link-wrap" id="wa-link-wrap" style="display:none;">
+        <a class="btn" id="wa-link" href="#" target="_blank" rel="noopener">Buka Album</a>
+        <p class="album-countdown-msg" id="wa-countdown-msg" aria-live="polite"></p>
+      </div>
     </section>
 
     <!-- GIFT -->
@@ -1242,9 +1307,13 @@ Ukuran icon	Kesan
 
 <audio id="bg-music" loop preload="none" aria-hidden="true"></audio>
 
-<div id="imgModal" role="dialog" aria-modal="true" aria-label="Pratinjau foto galeri">
-  <button class="close" type="button" id="imgClose" aria-label="Tutup pratinjau foto">&times;</button>
-  <img id="imgModalPic" src="" alt="">
+<!-- ============ REVISI: MEDIA MODAL (foto & video, slider) ============ -->
+<div id="mediaModal" role="dialog" aria-modal="true" aria-label="Pratinjau media">
+  <div class="media-modal-content" id="mediaContent"></div>
+  <button class="media-modal-close" type="button" id="mediaClose" aria-label="Tutup pratinjau">&times;</button>
+  <button class="media-modal-nav prev" type="button" id="mediaPrev" aria-label="Media sebelumnya">&#10094;</button>
+  <button class="media-modal-nav next" type="button" id="mediaNext" aria-label="Media berikutnya">&#10095;</button>
+  <div class="media-modal-counter" id="mediaCounter"></div>
 </div>
 
 <!-- ============ UI MODAL (pengganti alert/confirm) ============ -->
@@ -1310,6 +1379,17 @@ const FALLBACK_DATA = {
   gift_alamat: "Dusun Pranggongan RT 03/ RW 04, Desa Morobongo, Kec. Jumo, Kabupaten Temanggung, Jawa Tengah 56256",
   instagram_pria: "", instagram_wanita: "",
   link_maps_embed_aktif: "on",
+  /* ===== REVISI: field baru ===== */
+  dress_code_foto_url: "",
+  ngunduh_dress_code_foto_url: "",
+  wedding_album_judul: "Momen Bahagia",
+  wedding_album_deskripsi: "",
+  wedding_album_url: "",
+  wedding_album_link: "",
+  wedding_album_link_aktif_dari: "",
+  wedding_album_link_label: "Buka Album",
+  wedding_album_link_teks_cooming_soon: "Album akan dibuka pada $tanggal",
+  /* ============================== */
   ngunduh_tanggal_tampil: "", waktu_ngunduh_mantu: "", ngunduh_nama_lokasi: "", ngunduh_alamat_lokasi: "",
   ngunduh_link_maps: "", ngunduh_link_maps_embed: "", ngunduh_embed_aktif: "on", ngunduh_dress_code: "",
   live_channels: "", live_instagram: "", live_youtube: "", live_zoom: "",
@@ -1331,7 +1411,7 @@ const FALLBACK_TEMA = {
   gaya_font: 'elegant',
   section_bride: 'on', section_quotes: 'on', section_story: 'on', section_wedding_date: 'on',
   section_gallery: 'on', section_gift: 'on', section_comment: 'on',
-  section_livestream: 'on', section_ngunduh: 'on',
+  section_livestream: 'on', section_ngunduh: 'on', section_wedding_album: 'on',
   fitur_musik: 'on', fitur_mode: 'both',
   komentar_nama: 'on', komentar_presensi: 'on', komentar_jumlah: 'on', komentar_acara: 'on', komentar_teks: 'on', komentar_aksi: 'on',
   anim_aktif: 'on', anim_gaya: 'naik', anim_kecepatan: 'normal', anim_daun: 'on', anim_smooth: 'on'
@@ -1585,6 +1665,7 @@ function renderConfig(cfg){
   setText('cd-tanggal', cfg.tanggal_tampil);
   setText('waktu-akad', cfg.waktu_akad);
   setText('waktu-resepsi', cfg.waktu_resepsi);
+  renderDressPhotos(cfg);                              /* REVISI: foto busana wedding & ngunduh */
   setText('dresscode-text', cfg.dress_code);
   setText('lokasi-nama', cfg.nama_lokasi);
   setText('lokasi-alamat', cfg.alamat_lokasi);
@@ -1620,8 +1701,9 @@ function renderConfig(cfg){
   }
 
   const urls = String(cfg.galeri_url || '').split(',').map(s => s.trim()).filter(Boolean);
+  /* REVISI: tambah data-gallery-idx untuk modal media */
   $('gallery-grid').innerHTML = urls.map((u, i) => `
-    <button type="button" class="gal-item" data-src="${escapeHtml(u)}">
+    <button type="button" class="gal-item" data-gallery-idx="${i}" aria-label="Buka foto ${i+1} dari ${urls.length}">
       <img src="${escapeHtml(u)}" alt="Foto galeri ${i+1} dari ${urls.length}" loading="lazy" decoding="async">
     </button>`).join('');
 
@@ -1649,6 +1731,7 @@ function renderConfig(cfg){
   if(copyAlamat) copyAlamat.setAttribute('aria-label', 'Salin alamat pengiriman hadiah');
 
   renderNgunduh(cfg);
+  renderAlbum(cfg);                                    /* REVISI: wedding album */
   renderFooter(cfg);
   applyMeta(cfg);
   renderLive(cfg);
@@ -1718,7 +1801,9 @@ function renderNgunduh(cfg){
   const card = $('ngunduh-card'); if(!card) return;
   const has = cfg.ngunduh_tanggal_tampil || cfg.waktu_ngunduh_mantu || cfg.ngunduh_nama_lokasi;
   card.dataset.hasData = has ? '1' : '';
-  $('ng-dress-wrap').style.display = cfg.ngunduh_dress_code ? '' : 'none';
+  /* REVISI: sembunyikan wrap dress code ngunduh jika tidak ada foto & tidak ada teks */
+  const nPhotos = String(cfg.ngunduh_dress_code_foto_url || '').split(',').filter(s => s.trim()).length;
+  $('ng-dress-wrap').style.display = (cfg.ngunduh_dress_code || nPhotos) ? '' : 'none';
   document.querySelector('#ngunduh-card .agenda').style.display = cfg.waktu_ngunduh_mantu ? '' : 'none';
   setText('ng-tanggal', cfg.ngunduh_tanggal_tampil);
   setText('ng-waktu', cfg.waktu_ngunduh_mantu);
@@ -1763,26 +1848,303 @@ const getAcara = () => Array.from(document.querySelectorAll('#acara-grid input:c
 const setAcara = (str) => { const v = String(str || '').split(',').map(x => x.trim()); document.querySelectorAll('#acara-grid input').forEach(i => { i.checked = v.includes(i.value); }); };
 
 /* ======================================================================
+   REVISI: FOTO BUSANA, WEDDING ALBUM, MEDIA MODAL
+   ====================================================================== */
+function mediaTypeOf(url){
+  const u = String(url || '').toLowerCase().split('?')[0].split('#')[0];
+  return /\.(mp4|webm|ogg|ogv|mov|m4v)$/.test(u) ? 'video' : 'image';
+}
+
+function renderDressPhotos(cfg){
+  const wPhotos = String(cfg.dress_code_foto_url || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  $('dresscode-photos').innerHTML = wPhotos.map((u, i) => `
+    <button type="button" class="dresscode-photo" data-dc-group="wedding" data-dc-idx="${i}"
+            aria-label="Perbesar foto busana wedding ${i+1}">
+      <img src="${escapeHtml(u)}" alt="Busana pengantin ${i+1}" loading="lazy" decoding="async">
+    </button>`).join('');
+
+  const nPhotos = String(cfg.ngunduh_dress_code_foto_url || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  $('ng-dress-photos').innerHTML = nPhotos.map((u, i) => `
+    <button type="button" class="dresscode-photo" data-dc-group="ngunduh" data-dc-idx="${i}"
+            aria-label="Perbesar foto busana ngunduh mantu ${i+1}">
+      <img src="${escapeHtml(u)}" alt="Busana ngunduh mantu ${i+1}" loading="lazy" decoding="async">
+    </button>`).join('');
+
+  const wrap = $('ng-dress-wrap');
+  if(wrap) wrap.style.display = (cfg.ngunduh_dress_code || nPhotos.length) ? '' : 'none';
+}
+
+let albumTimer = null;
+function renderAlbum(cfg){
+  const section = $('wedding-album');
+  if(!section) return;
+
+  const urls = String(cfg.wedding_album_url || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  const judul = String(cfg.wedding_album_judul || '').trim() || 'Momen Bahagia';
+  $('wa-title').textContent = judul;
+
+  const desk = String(cfg.wedding_album_deskripsi || '').trim();
+  $('wa-deskripsi').textContent = desk;
+  $('wa-deskripsi').style.display = desk ? '' : 'none';
+
+  if(urls.length === 0){
+    $('wa-grid').innerHTML = '';
+    $('wa-grid').style.display = 'none';
+  } else {
+    $('wa-grid').style.display = '';
+    $('wa-grid').innerHTML = urls.map((u, i) => {
+      const isVid = mediaTypeOf(u) === 'video';
+      return `<button type="button" class="album-media-item" data-album-idx="${i}"
+              aria-label="Buka ${isVid ? 'video' : 'foto'} album ${i+1} dari ${urls.length}">
+        ${isVid
+          ? `<video src="${escapeHtml(u)}" preload="metadata" muted playsinline aria-hidden="true"></video><div class="play-icon">▶</div>`
+          : `<img src="${escapeHtml(u)}" alt="Album ${i+1}" loading="lazy" decoding="async">`}
+      </button>`;
+    }).join('');
+  }
+
+  setupAlbumLink(cfg);
+
+  const hasContent = urls.length > 0 || cfg.wedding_album_link || desk;
+  section.dataset.hasData = hasContent ? '1' : '';
+  section.style.display = (hasContent && TEMA.section_wedding_album !== 'off') ? '' : 'none';
+  applySectionTones();
+}
+
+function setupAlbumLink(cfg){
+  const wrap   = $('wa-link-wrap');
+  const link   = $('wa-link');
+  const msgEl  = $('wa-countdown-msg');
+  const url    = String(cfg.wedding_album_link || '').trim();
+  const label  = String(cfg.wedding_album_link_label || 'Buka Album').trim() || 'Buka Album';
+
+  if(!url){ wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  link.href = url;
+  link.textContent = label;
+  link.classList.remove('coming-soon');
+
+  const aktifDari = String(cfg.wedding_album_link_aktif_dari || '').trim();
+  if(albumTimer){ clearInterval(albumTimer); albumTimer = null; }
+  if(!aktifDari){ msgEl.textContent = ''; return; }
+
+  const target = new Date(aktifDari.replace(' ', 'T'));
+  if(isNaN(target.getTime())){ msgEl.textContent = ''; return; }
+
+  const tick = () => {
+    const diff = target.getTime() - Date.now();
+    if(diff <= 0){
+      link.classList.remove('coming-soon');
+      link.textContent = label;
+      msgEl.textContent = '';
+      if(albumTimer){ clearInterval(albumTimer); albumTimer = null; }
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    const tgl = target.toLocaleString('id-ID', {
+      day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+    link.classList.add('coming-soon');
+    link.textContent = '🔒 Coming Soon';
+    const tmpl = String(cfg.wedding_album_link_teks_cooming_soon || 'Album akan dibuka pada $tanggal');
+    msgEl.innerHTML = escapeHtml(tmpl.replace(/\$tanggal/g, tgl))
+      + `<br><small>${d} hari ${h} jam ${m} menit ${s} detik lagi</small>`;
+  };
+  tick();
+  albumTimer = setInterval(tick, 1000);
+}
+
+let mediaList = [];
+let mediaIndex = 0;
+let mediaTouchStartX = 0;
+let mediaLastFocus = null;
+let mediaBound = false;
+
+function openMediaModal(items, startIdx){
+  if(!items || items.length === 0) return;
+  mediaList = items;
+  mediaIndex = Math.max(0, Math.min(startIdx || 0, items.length - 1));
+  mediaLastFocus = document.activeElement;
+  const modal = $('mediaModal');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if(typeof lenis !== 'undefined' && lenis && typeof lenis.stop === 'function') lenis.stop();
+  renderMedia();
+  $('mediaClose').focus();
+  bindMediaModal();
+}
+
+function renderMedia(){
+  const item = mediaList[mediaIndex];
+  const content = $('mediaContent');
+  content.innerHTML = '';
+  if(!item) return;
+
+  if(item.type === 'video'){
+    const v = document.createElement('video');
+    v.src = item.src;
+    v.controls = true;
+    v.playsInline = true;
+    v.preload = 'metadata';
+    v.setAttribute('aria-label', item.alt || 'Video');
+    content.appendChild(v);
+  } else {
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = item.alt || 'Pratinjau media';
+    content.appendChild(img);
+  }
+
+  const multi = mediaList.length > 1;
+  $('mediaPrev').style.display = multi ? '' : 'none';
+  $('mediaNext').style.display = multi ? '' : 'none';
+  $('mediaPrev').disabled = mediaIndex === 0;
+  $('mediaNext').disabled = mediaIndex === mediaList.length - 1;
+  $('mediaCounter').textContent = multi ? `${mediaIndex + 1} / ${mediaList.length}` : '';
+}
+
+function prevMedia(){ if(mediaIndex > 0){ mediaIndex--; renderMedia(); } }
+function nextMedia(){ if(mediaIndex < mediaList.length - 1){ mediaIndex++; renderMedia(); } }
+
+function closeMediaModal(){
+  const modal = $('mediaModal');
+  if(!modal.classList.contains('open')) return;
+  modal.classList.remove('open');
+  $('mediaContent').innerHTML = '';
+  document.body.style.overflow = '';
+  if(typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') lenis.start();
+  if(mediaLastFocus && typeof mediaLastFocus.focus === 'function'){
+    try{ mediaLastFocus.focus(); }catch(e){}
+  }
+  mediaLastFocus = null;
+}
+
+function bindMediaModal(){
+  if(mediaBound) return;
+  mediaBound = true;
+  const modal = $('mediaModal');
+
+  $('mediaClose').addEventListener('click', closeMediaModal);
+  $('mediaPrev').addEventListener('click', (e) => { e.stopPropagation(); prevMedia(); });
+  $('mediaNext').addEventListener('click', (e) => { e.stopPropagation(); nextMedia(); });
+
+  modal.addEventListener('click', (e) => {
+    if(e.target === modal || e.target.id === 'mediaContent') closeMediaModal();
+  });
+
+  const content = $('mediaContent');
+  content.addEventListener('touchstart', (e) => {
+    mediaTouchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  content.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - mediaTouchStartX;
+    if(Math.abs(dx) > 50){
+      if(dx > 0) prevMedia(); else nextMedia();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(!$('mediaModal').classList.contains('open')) return;
+    if(e.key === 'Escape'){ e.preventDefault(); closeMediaModal(); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); prevMedia(); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); nextMedia(); }
+  });
+
+  modal.addEventListener('keydown', (e) => {
+    if(e.key !== 'Tab') return;
+    const nodes = modal.querySelectorAll('button');
+    const focusables = Array.from(nodes).filter(el => el.offsetParent !== null);
+    if(focusables.length === 0) return;
+    const first = focusables[0];
+    const last  = focusables[focusables.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  });
+}
+
+/* Handler global klik: foto busana, galeri, wedding album */
+document.addEventListener('click', (e) => {
+  const dcBtn = e.target.closest('.dresscode-photo');
+  if(dcBtn){
+    e.preventDefault();
+    const group = dcBtn.dataset.dcGroup;
+    const nodes = document.querySelectorAll(`.dresscode-photo[data-dc-group="${group}"] img`);
+    const items = Array.from(nodes).map(img => ({ type: 'image', src: img.src, alt: img.alt }));
+    openMediaModal(items, parseInt(dcBtn.dataset.dcIdx, 10) || 0);
+    return;
+  }
+
+  const galBtn = e.target.closest('.gal-item');
+  if(galBtn){
+    e.preventDefault();
+    const nodes = document.querySelectorAll('#gallery-grid .gal-item img');
+    const items = Array.from(nodes).map(img => ({ type: 'image', src: img.src, alt: img.alt }));
+    openMediaModal(items, parseInt(galBtn.dataset.galleryIdx, 10) || 0);
+    return;
+  }
+
+  const albBtn = e.target.closest('.album-media-item');
+  if(albBtn){
+    e.preventDefault();
+    const nodes = document.querySelectorAll('#wa-grid .album-media-item');
+    const items = Array.from(nodes).map(el => {
+      const img = el.querySelector('img');
+      const vid = el.querySelector('video');
+      const src = img ? img.src : (vid ? vid.src : '');
+      const type = img ? 'image' : 'video';
+      const alt  = img ? img.alt : 'Video album';
+      return { type, src, alt };
+    }).filter(it => it.src);
+    openMediaModal(items, parseInt(albBtn.dataset.albumIdx, 10) || 0);
+  }
+});
+
+/* Handler klik tombol album (Coming Soon / buka) */
+document.addEventListener('click', async (e) => {
+  const link = e.target.closest('#wa-link');
+  if(!link) return;
+  if(link.classList.contains('coming-soon')){
+    e.preventDefault();
+    const aktif = String(CFG.wedding_album_link_aktif_dari || '').trim();
+    let when = '';
+    if(aktif){
+      const d = new Date(aktif.replace(' ', 'T'));
+      if(!isNaN(d.getTime())){
+        when = d.toLocaleString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      }
+    }
+    await showAlert(
+      when ? `Album akan dapat diakses pada ${when}.` : 'Album belum dapat diakses saat ini.',
+      { title: 'Coming Soon', type: 'info', okLabel: 'Mengerti' }
+    );
+  }
+});
+
+/* ======================================================================
    MUSIK LATAR
    ====================================================================== */
 let userMuted = false, unlockBound = false;
 function setupMusic(url){
   const audio = $('bg-music');
   const btn = $('music-btn');
-  if(TEMA.fitur_musik === 'off' || !url){          /* fitur mati: tanpa audio & tanpa tombol */
+  if(TEMA.fitur_musik === 'off' || !url){
     audio.pause(); audio.removeAttribute('src'); btn.style.display = 'none'; return;
   }
   btn.style.display = 'flex';
-  if(audio.getAttribute('src') === url) return;    /* jangan restart kalau sudah dimuat */
+  if(audio.getAttribute('src') === url) return;
   audio.preload = 'auto';
   audio.src = url;
   audio.muted = false;
 
-  /* 1) coba langsung bersuara; 2) kalau diblokir browser, jalan senyap lalu
-        dibunyikan pada sentuhan/klik pertama — posisi lagu TIDAK diulang */
   const unlock = (e) => {
     if(userMuted) return;
-    if(e && e.target && e.target.closest && e.target.closest('#music-btn')) return;   /* tombol musik punya handler sendiri */
+    if(e && e.target && e.target.closest && e.target.closest('#music-btn')) return;
     audio.muted = false;
     audio.play().then(() => {
       updateMusicIcon(false);
@@ -1801,11 +2163,11 @@ function setupMusic(url){
   updateMusicIcon(audio.muted);
 
   btn.addEventListener('click', () => {
-    if(audio.paused || audio.muted){          /* nyalakan */
+    if(audio.paused || audio.muted){
       audio.muted = false; userMuted = false;
       audio.play().catch(() => {});
       updateMusicIcon(false);
-    } else {                                   /* matikan */
+    } else {
       audio.muted = true; userMuted = true;
       updateMusicIcon(true);
     }
@@ -1878,7 +2240,6 @@ function renderComments(items, append){
     const presenceClass = c.presensi === 'Hadir' ? 'hadir' : c.presensi === 'Tidak Hadir' ? 'tidak' : c.presensi === 'Masih Ragu' ? 'ragu' : '';
     const isMine = c.comment_id && myBank[c.comment_id];
     const jumlahLine = (c.presensi === 'Hadir' && c.jumlah_hadir) ? `<p class="jumlah">👥 ${escapeHtml(c.jumlah_hadir)} orang akan hadir</p>` : '';
-    /* --- Tombol Ubah / Hapus pakai gaya pill + ikon --- */
     const actions = isMine ? `
       <div class="my-actions">
         <button type="button" class="btn-mini edit-comment-btn" data-id="${escapeHtml(c.comment_id)}" aria-label="Ubah ucapan dari ${escapeHtml(c.nama)}">
@@ -1997,6 +2358,7 @@ const SECTION_IDS = {
   section_story: 'story',
   section_wedding_date: 'wedding-date',
   section_gallery: 'gallery',
+  section_wedding_album: 'wedding-album',
   section_gift: 'gift',
   section_comment: 'comment',
   section_livestream: 'livestream'
@@ -2006,7 +2368,8 @@ function applySectionVisibility(){
     const el = document.getElementById(SECTION_IDS[key]);
     if(!el) return;
     let off = TEMA[key] === 'off';
-    if(key === 'section_livestream' && !(el.dataset.hasData)) off = true;   /* tanpa tautan live → sembunyikan */
+    if(key === 'section_livestream' && !(el.dataset.hasData)) off = true;
+    if(key === 'section_wedding_album' && !(el.dataset.hasData)) off = true;
     el.style.display = off ? 'none' : '';
   });
   const ng = $('ngunduh-card');
@@ -2015,12 +2378,11 @@ function applySectionVisibility(){
   if($('acara-grid')) buildAcaraOptions();
 }
 
-/* Warna latar section BERGANTIAN otomatis (terang ↔ kontras) hanya di antara section yang tampil,
-   jadi kalau ada section dimatikan, dua section bertetangga tidak pernah sewarna. */
+/* Warna latar section BERGANTIAN otomatis (terang ↔ kontras) hanya di antara section yang tampil */
 function applySectionTones(){
   let i = 0;
   const ft = document.querySelector('footer');
-  ['bride','quotes','story','wedding-date','livestream','gallery','gift','comment','__footer'].forEach(id => {
+  ['bride','quotes','story','wedding-date','livestream','gallery','wedding-album','gift','comment','__footer'].forEach(id => {
     if(id === '__footer'){ ft.classList.remove('tone-a','tone-b'); ft.classList.add(i % 2 === 0 ? 'tone-a' : 'tone-b'); return; }
     const el = document.getElementById(id);
     if(!el) return;
@@ -2050,10 +2412,10 @@ function applyThemeMode(){
 }
 
 /* ======================================================================
-   ANIMASI — Motion (mesin animasi yang sama dengan Framer Motion) + Lenis (scroll halus)
+   ANIMASI — Motion + Lenis
    ====================================================================== */
 let opened = false, motionStart = 0, lenis = null;
-const MO_SEL = '#home .content > *, #bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, #ng-tanggal, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
+const MO_SEL = '#home .content > *, #bride h2 ~ *, .couple-card, .arch, .ig-btn, #quotes .eyebrow, .quote-card, #story .center > *, .story-item, #wedding-date .eyebrow, #ng-tanggal, .countdown, .agenda .item, .dresscode, .location-card, #livestream .eyebrow, #livestream h2, #livestream p, .live-btn, #gallery .eyebrow, #gallery h2, .gal-item, #wedding-album .eyebrow, #wedding-album h2, .album-media-item, #gift .eyebrow, #gift h2, .gift-card, #comment .eyebrow, #comment h2, #rsvp-form .field, .submit-row, .comment, footer > *';
 const MO_STYLE = {
   naik:  (i) => ({ transform: 'translateY(34px)' }),
   pudar: (i) => ({ transform: 'none' }),
@@ -2132,14 +2494,12 @@ function syncThemeButton(theme){
 $('open-btn').addEventListener('click', () => {
   const welcome = $('welcome'), gate = $('gate');
 
-  /* MUSIK: tidak di-restart — lanjut dari posisi sekarang, cukup pastikan bersuara */
   const audio = $('bg-music');
   if(audio.getAttribute('src') && TEMA.fitur_musik !== 'off'){
     if(!userMuted){ audio.muted = false; updateMusicIcon(false); }
     audio.play().catch(() => {});
   }
 
-  /* GERBANG + ASAP */
   const smoke = $('smoke');
   if(!smoke.children.length){
     for(let i = 0; i < 9; i++){
@@ -2173,7 +2533,7 @@ $('open-btn').addEventListener('click', () => {
   setTimeout(() => { gate.classList.remove('show','closing','open'); }, 3600);
 });
 
-/* Ganti tema — AMAN meski tombol tema di-comment/dihapus */
+/* Ganti tema */
 (function bindThemeButton(){
   const themeBtn = $('theme-btn');
   if(!themeBtn) return;
@@ -2187,7 +2547,7 @@ $('open-btn').addEventListener('click', () => {
   });
 })();
 
-/* Salin ke clipboard — hanya ubah label, ikon tetap */
+/* Salin ke clipboard */
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-copy-target]');
   if(!btn) return;
@@ -2207,58 +2567,6 @@ document.addEventListener('click', (e) => {
     setLabel('Gagal');
     setTimeout(() => { setLabel(oldLabel); }, 1600);
   });
-});
-
-/* Galeri modal */
-let lastFocusedEl = null;
-
-function openImgModal(src, altText, trigger){
-  lastFocusedEl = trigger || document.activeElement;
-  const pic = $('imgModalPic');
-  pic.src = src;
-  pic.alt = altText || 'Pratinjau foto galeri';
-  $('imgModal').classList.add('open');
-  $('imgClose').focus();
-}
-
-function closeImgModal(){
-  $('imgModal').classList.remove('open');
-  if(lastFocusedEl && typeof lastFocusedEl.focus === 'function'){
-    lastFocusedEl.focus();
-  }
-}
-
-document.addEventListener('click', (e) => {
-  const item = e.target.closest('.gal-item');
-  if(!item) return;
-  e.preventDefault();
-  const img = item.querySelector('img');
-  openImgModal(item.dataset.src, img ? img.alt : '', item);
-});
-
-$('imgClose').addEventListener('click', closeImgModal);
-
-$('imgModal').addEventListener('click', (e) => {
-  if(e.target.id === 'imgModal') closeImgModal();
-});
-
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape' && $('imgModal').classList.contains('open')){
-    closeImgModal();
-  }
-});
-
-$('imgModal').addEventListener('keydown', (e) => {
-  if(e.key !== 'Tab') return;
-  const focusables = $('imgModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  if(focusables.length === 0) return;
-  const first = focusables[0];
-  const last = focusables[focusables.length - 1];
-  if(e.shiftKey && document.activeElement === first){
-    e.preventDefault(); last.focus();
-  } else if(!e.shiftKey && document.activeElement === last){
-    e.preventDefault(); first.focus();
-  }
 });
 
 /* Load more ucapan */
