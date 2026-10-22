@@ -919,6 +919,9 @@
         .share-card .sc-title{ font-weight:600; font-size:.92rem; margin:.15rem 0; }
         .share-card .sc-desc{ color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
         #metaSnippet{ width:100%; box-sizing:border-box; min-height:220px; font:12px/1.5 ui-monospace,Menlo,Consolas,monospace; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); }
+
+        /* ===== REVISI: form hint ===== */
+        .form-hint{ font-size:.7rem; color:var(--muted); margin-top:.25rem; display:block; }
     </style>
 </head>
 <body>
@@ -1342,7 +1345,6 @@
 
         </div>
 
-        <!-- ===== SECTION: AKUN ===== -->
         <!-- ===== SECTION: ATUR METADATA ===== -->
         <div id="section-meta" class="section-content" style="display:none;">
             <div class="panel">
@@ -1377,6 +1379,7 @@
             </div>
         </div>
 
+        <!-- ===== SECTION: AKUN ===== -->
         <div id="section-akun" class="section-content" style="display:none;">
 
             <div class="panel">
@@ -1473,7 +1476,7 @@
     <!-- ===== TOAST ===== -->
     <div class="toast" id="toast"></div>
 
-    <!-- ===== SCRIPTS ===== -->
+    <!-- ===== UI MODAL ===== -->
     <div id="uiModal" role="dialog" aria-modal="true" aria-labelledby="ui-modal-title" aria-describedby="ui-modal-message">
         <div class="ui-modal-box">
             <div class="ui-modal-icon" id="ui-modal-icon" data-type="info" aria-hidden="true"></div>
@@ -1489,12 +1492,6 @@
     <script>
         // ========================================================================
         //  SESI LOGIN
-        //  Tidak ada kredensial tersimpan di file ini. Username & password
-        //  divalidasi di server (Apps Script) terhadap sheet AkunAdmin, lalu
-        //  server mengeluarkan token sesi (berlaku 6 jam) yang disimpan di
-        //  localStorage. Setiap panggilan API yang sensitif (guests,
-        //  update_status, reset_status, save_template) WAJIB menyertakan
-        //  token ini dan divalidasi ulang di server setiap kali dipanggil.
         // ========================================================================
         const TOKEN_KEY = 'undangan_admin_token';
         const USERNAME_KEY = 'undangan_admin_username';
@@ -1502,7 +1499,6 @@
         const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
         const clearToken = () => { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USERNAME_KEY); };
 
-        /** Kalau respons API menandakan sesi tidak valid/kedaluwarsa, paksa logout. */
         function handleSessionError(message) {
             if (!message) return false;
             const lower = message.toLowerCase();
@@ -1629,8 +1625,7 @@
         let usingMockData = false;
 
         // ========================================================================
-        //  PAGINASI GENERIK — dipakai Daftar Tamu, Kirim WA, & Konfirmasi Terbaru.
-        //  pageSize: 10 | 50 | 100 | 'all'.
+        //  PAGINASI GENERIK
         // ========================================================================
         const guestPager = { page: 1, pageSize: 10 };
         const sendPager = { page: 1, pageSize: 10 };
@@ -1674,112 +1669,112 @@
         //  DOM UTILITY
         // ========================================================================
         const $ = (id) => document.getElementById(id);
-const UI_MODAL_ICONS = {
-  info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-  success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-  error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-  danger:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
-  confirm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-};
+        const UI_MODAL_ICONS = {
+            info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+            danger:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+            confirm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+        };
 
-let uiModalResolve = null;
-let uiModalLastFocus = null;
+        let uiModalResolve = null;
+        let uiModalLastFocus = null;
 
-function uiModalOpen(opts){
-  const o = opts || {};
-  return new Promise((resolve) => {
-    uiModalLastFocus = document.activeElement;
-    uiModalResolve = resolve;
+        function uiModalOpen(opts){
+            const o = opts || {};
+            return new Promise((resolve) => {
+                uiModalLastFocus = document.activeElement;
+                uiModalResolve = resolve;
 
-    const modal    = $('uiModal');
-    const iconEl   = $('ui-modal-icon');
-    const titleEl  = $('ui-modal-title');
-    const msgEl    = $('ui-modal-message');
-    const okBtn    = $('ui-modal-ok');
-    const cancelBtn= $('ui-modal-cancel');
+                const modal    = $('uiModal');
+                const iconEl   = $('ui-modal-icon');
+                const titleEl  = $('ui-modal-title');
+                const msgEl    = $('ui-modal-message');
+                const okBtn    = $('ui-modal-ok');
+                const cancelBtn= $('ui-modal-cancel');
 
-    const type = o.type || 'info';
-    iconEl.dataset.type = type;
-    iconEl.innerHTML = UI_MODAL_ICONS[type] || UI_MODAL_ICONS.info;
+                const type = o.type || 'info';
+                iconEl.dataset.type = type;
+                iconEl.innerHTML = UI_MODAL_ICONS[type] || UI_MODAL_ICONS.info;
 
-    titleEl.textContent = o.title || 'Pemberitahuan';
-    msgEl.textContent = o.message || '';
-    okBtn.textContent = o.okLabel || 'OK';
-    okBtn.classList.toggle('danger', !!o.danger);
-    okBtn.classList.toggle('solid', !o.danger);
+                titleEl.textContent = o.title || 'Pemberitahuan';
+                msgEl.textContent = o.message || '';
+                okBtn.textContent = o.okLabel || 'OK';
+                okBtn.classList.toggle('danger', !!o.danger);
+                okBtn.classList.toggle('solid', !o.danger);
 
-    if(o.cancelLabel){
-      cancelBtn.style.display = '';
-      cancelBtn.textContent = o.cancelLabel;
-    } else {
-      cancelBtn.style.display = 'none';
-    }
+                if(o.cancelLabel){
+                    cancelBtn.style.display = '';
+                    cancelBtn.textContent = o.cancelLabel;
+                } else {
+                    cancelBtn.style.display = 'none';
+                }
 
-    modal.classList.add('open');
-    setTimeout(() => { try{ okBtn.focus(); }catch(e){} }, 40);
-  });
-}
+                modal.classList.add('open');
+                setTimeout(() => { try{ okBtn.focus(); }catch(e){} }, 40);
+            });
+        }
 
-function uiModalClose(result){
-  const modal = $('uiModal');
-  if(!modal.classList.contains('open')) return;
-  modal.classList.remove('open');
+        function uiModalClose(result){
+            const modal = $('uiModal');
+            if(!modal.classList.contains('open')) return;
+            modal.classList.remove('open');
 
-  if(uiModalResolve){
-    const r = uiModalResolve;
-    uiModalResolve = null;
-    r(!!result);
-  }
-  if(uiModalLastFocus && typeof uiModalLastFocus.focus === 'function'){
-    try{ uiModalLastFocus.focus(); }catch(e){}
-  }
-  uiModalLastFocus = null;
-}
+            if(uiModalResolve){
+                const r = uiModalResolve;
+                uiModalResolve = null;
+                r(!!result);
+            }
+            if(uiModalLastFocus && typeof uiModalLastFocus.focus === 'function'){
+                try{ uiModalLastFocus.focus(); }catch(e){}
+            }
+            uiModalLastFocus = null;
+        }
 
-function showAlert(message, opts){
-  return uiModalOpen(Object.assign({
-    title: 'Pemberitahuan',
-    message: message,
-    type: 'info',
-    okLabel: 'OK'
-  }, opts || {}));
-}
+        function showAlert(message, opts){
+            return uiModalOpen(Object.assign({
+                title: 'Pemberitahuan',
+                message: message,
+                type: 'info',
+                okLabel: 'OK'
+            }, opts || {}));
+        }
 
-function showConfirm(message, opts){
-  return uiModalOpen(Object.assign({
-    title: 'Konfirmasi',
-    message: message,
-    type: 'confirm',
-    okLabel: 'Ya',
-    cancelLabel: 'Batal',
-    danger: false
-  }, opts || {}));
-}
+        function showConfirm(message, opts){
+            return uiModalOpen(Object.assign({
+                title: 'Konfirmasi',
+                message: message,
+                type: 'confirm',
+                okLabel: 'Ya',
+                cancelLabel: 'Batal',
+                danger: false
+            }, opts || {}));
+        }
 
-$('ui-modal-ok').addEventListener('click', () => uiModalClose(true));
-$('ui-modal-cancel').addEventListener('click', () => uiModalClose(false));
-$('uiModal').addEventListener('click', (e) => { if(e.target === $('uiModal')) uiModalClose(false); });
+        $('ui-modal-ok').addEventListener('click', () => uiModalClose(true));
+        $('ui-modal-cancel').addEventListener('click', () => uiModalClose(false));
+        $('uiModal').addEventListener('click', (e) => { if(e.target === $('uiModal')) uiModalClose(false); });
 
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape' && $('uiModal').classList.contains('open')){
-    e.preventDefault();
-    uiModalClose(false);
-  }
-});
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape' && $('uiModal').classList.contains('open')){
+                e.preventDefault();
+                uiModalClose(false);
+            }
+        });
 
-$('uiModal').addEventListener('keydown', (e) => {
-  if(e.key !== 'Tab') return;
-  const nodes = $('uiModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  const focusables = Array.from(nodes).filter(el => el.offsetParent !== null);
-  if(focusables.length === 0) return;
-  const first = focusables[0];
-  const last  = focusables[focusables.length - 1];
-  if(e.shiftKey && document.activeElement === first){
-    e.preventDefault(); last.focus();
-  } else if(!e.shiftKey && document.activeElement === last){
-    e.preventDefault(); first.focus();
-  }
-});
+        $('uiModal').addEventListener('keydown', (e) => {
+            if(e.key !== 'Tab') return;
+            const nodes = $('uiModal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const focusables = Array.from(nodes).filter(el => el.offsetParent !== null);
+            if(focusables.length === 0) return;
+            const first = focusables[0];
+            const last  = focusables[focusables.length - 1];
+            if(e.shiftKey && document.activeElement === first){
+                e.preventDefault(); last.focus();
+            } else if(!e.shiftKey && document.activeElement === last){
+                e.preventDefault(); first.focus();
+            }
+        });
 
 
         const qs = (sel, ctx = document) => ctx.querySelector(sel);
@@ -1822,7 +1817,7 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         // ========================================================================
-        //  DATA FETCH — PRIORITAS API, MOCK HANYA SEBAGAI FALLBACK DENGAN PERINGATAN
+        //  DATA FETCH
         // ========================================================================
         async function fetchConfig() {
             try {
@@ -1841,31 +1836,21 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         // ========================================================================
-        //  TEMA / TAMPILAN UNDANGAN — sinkron dengan index.html lewat sheet
-        //  PengaturanTema. Preview di sini memakai variabel CSS --tp-* yang sengaja
-        //  terpisah dari palet dashboard sendiri, supaya WYSIWYG akurat terlepas
-        //  dari tema gelap/terang yang sedang dipakai dashboard ini.
+        //  TEMA
         // ========================================================================
         const FALLBACK_TEMA = {
-            // preset_aktif: 'emerald_gold',
-            // warna_bg_light: '#FAF6EC', warna_surface_light: '#FFFFFF', warna_surface2_light: '#F1EAD9',
-            // warna_text_light: '#2B2620', warna_muted_light: '#7A7266',
-            // warna_aksen_light: '#B8892B', warna_aksen_soft_light: '#9C6B2E',
-            // warna_bg_night: '#0E1A13', warna_surface_night: '#15221A', warna_surface2_night: '#1B2A20',
-            // warna_text_night: '#F2ECDD', warna_muted_night: '#A9B6A6',
-            // warna_aksen_night: '#C9A24B', warna_aksen_soft_night: '#E4C97A',
             preset_aktif: 'rose_blush',
             warna_bg_light:'#FAF3F1', warna_surface_light:'#FFFFFF', warna_surface2_light:'#F3E3DE',
-            warna_text_light:'#3A2A28', warna_muted_light:'#8C7370', 
-            warna_aksen_light:'#B8657A', warna_aksen_soft_light:'#9C4F63', 
+            warna_text_light:'#3A2A28', warna_muted_light:'#8C7370',
+            warna_aksen_light:'#B8657A', warna_aksen_soft_light:'#9C4F63',
             warna_bg_night:'#1C1013', warna_surface_night:'#241619', warna_surface2_night:'#2E1B1F',
-            warna_text_night:'#F5E6E4', warna_muted_night:'#C7A8A6', 
-            warna_aksen_night:'#E28FA0', warna_aksen_soft_night:'#F0B4C0', 
+            warna_text_night:'#F5E6E4', warna_muted_night:'#C7A8A6',
+            warna_aksen_night:'#E28FA0', warna_aksen_soft_night:'#F0B4C0',
             radius_bentuk: 'lembut',
             gaya_font: 'elegant',
             section_bride: 'on', section_quotes: 'on', section_story: 'on', section_wedding_date: 'on',
             section_gallery: 'on', section_gift: 'on', section_comment: 'on',
-            section_livestream: 'on', section_ngunduh: 'on',
+            section_livestream: 'on', section_ngunduh: 'on', section_wedding_album: 'on',
             fitur_musik: 'on', fitur_mode: 'both',
             komentar_nama: 'on', komentar_presensi: 'on', komentar_jumlah: 'on', komentar_acara: 'on', komentar_teks: 'on', komentar_aksi: 'on',
             anim_aktif: 'on', anim_gaya: 'naik', anim_kecepatan: 'normal', anim_daun: 'on', anim_smooth: 'on'
@@ -1882,6 +1867,7 @@ $('uiModal').addEventListener('keydown', (e) => {
             ['section_ngunduh', '🎊 Ngunduh Mantu (di dalam Acara)'],
             ['section_livestream', '📡 Live Streaming'],
             ['section_gallery', '🖼️ Galeri Foto'],
+            ['section_wedding_album', '📸 Wedding Album'],
             ['section_gift', '🎁 Hadiah / Amplop Digital'],
             ['section_comment', '💬 Ucapan & Doa']
         ];
@@ -2199,10 +2185,8 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         async function fetchGuests() {
-            // Reset
             allGuests = [];
             usingMockData = false;
-            // Sembunyikan warning
             $('guestWarning').style.display = 'none';
             $('sendWarning').style.display = 'none';
 
@@ -2224,13 +2208,11 @@ $('uiModal').addEventListener('keydown', (e) => {
                 console.warn('⚠️ Gagal mengambil data dari API:', err.message);
             }
 
-            // Jika gagal, gunakan mock tapi tampilkan peringatan
             console.warn('⚠️ Menggunakan data contoh (mock) karena API tidak tersedia.');
             usingMockData = true;
             $('guestWarning').style.display = 'flex';
             $('sendWarning').style.display = 'flex';
 
-            // Data mock hanya sebagai fallback
             allGuests = [{
                 no: 1,
                 nama_tamu: 'Bapak Contoh Nama (MOCK)',
@@ -2274,16 +2256,11 @@ $('uiModal').addEventListener('keydown', (e) => {
             ];
         }
 
-        // ========================================================================
-        //  STATUS KIRIM — sumber kebenaran adalah sheet NamaTamuUndangan,
-        //  bukan localStorage, supaya konsisten di semua perangkat/browser.
-        // ========================================================================
         function isSent(hp) {
             const g = allGuests.find(x => x.nomor_hp === hp);
             return !!(g && g.status_kirim);
         }
 
-        /** Update status di UI dulu (responsif), lalu sinkronkan ke sheet lewat API. */
         async function markSent(hp) {
             if (!hp) return;
             const g = allGuests.find(x => x.nomor_hp === hp);
@@ -2300,10 +2277,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             }
         }
 
-        // ========================================================================
-        //  TEMPLATE — disimpan di sheet DataMempelai (field template_pesan_wa)
-        //  lewat API, bukan localStorage.
-        // ========================================================================
         function loadTemplate() {
             return (configData.template_pesan_wa && String(configData.template_pesan_wa).trim())
                 ? configData.template_pesan_wa
@@ -2322,9 +2295,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             }
         }
 
-        // ========================================================================
-        //  HELPERS
-        // ========================================================================
         function escapeHtml(str) {
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
                 "'": '&#39;' }[m]));
@@ -2344,7 +2314,7 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         const igAt = (v) => { const u = String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, ''); return u ? '@' + u : ''; };
-        /* [variabel, label, fungsi nilai, alias?]  — SATU sumber untuk pratinjau, pengiriman WA, tombol editor & daftar variabel */
+        /* [variabel, label, fungsi nilai, alias?] */
         const TEMPLATE_VARS = [
             ['$nama_tamu', 'Nama tamu', (g) => g.nama_tamu || 'Tamu'],
             ['$namatamu', 'Alias $nama_tamu', (g) => g.nama_tamu || 'Tamu', true],
@@ -2397,9 +2367,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             return result;
         }
 
-        // ========================================================================
-        //  RENDER FUNCTIONS
-        // ========================================================================
         function presensiBadgeClass(presensi) {
             if (presensi === 'Hadir') return 'hadir';
             if (presensi === 'Tidak Hadir') return 'tidak';
@@ -2457,7 +2424,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             $('lastUpdate').textContent = 'Terakhir: ' + now.toLocaleString('id-ID');
         }
 
-        /** Daftar 10 (atau sesuai pageSize) konfirmasi terbaru + paginasi. confirmations sudah urut terbaru dulu. */
         function renderConfirmationsList() {
             if (confirmations.length === 0) {
                 $('recentComments').innerHTML = '<span class="text-muted">Belum ada konfirmasi.</span>';
@@ -2481,7 +2447,7 @@ $('uiModal').addEventListener('keydown', (e) => {
                 const q = search.trim().toLowerCase();
                 list = list.filter(g => g.nama_tamu.toLowerCase().includes(q));
             }
-            return list.slice().reverse(); // tamu yang ditambah terakhir muncul duluan ("terbaru")
+            return list.slice().reverse();
         }
 
         function renderGuestList(filter = 'all', search = '') {
@@ -2576,10 +2542,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             const message = replaceVariables(template, guest, configData);
             const waLink = buildWALink(hp, message);
 
-            // PENTING: window.open harus jadi hal PERTAMA & langsung (synchronous) di
-            // handler klik, sebelum ada `await` apa pun. Kalau tidak, browser di HP
-            // (terutama Safari/Chrome iOS) menganggapnya bukan hasil langsung dari
-            // ketukan pengguna dan memblokirnya seperti pop-up iklan.
             window.open(waLink, '_blank');
 
             if (btn) {
@@ -2665,9 +2627,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             }, 300);
         }
 
-        // ========================================================================
-        //  CRUD TAMU (modal Tambah/Ubah, Hapus)
-        // ========================================================================
         function openGuestModal(rowNumber) {
             const isEdit = !!rowNumber;
             const guest = isEdit ? allGuests.find(g => g._row === rowNumber) : null;
@@ -2754,7 +2713,7 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         // ========================================================================
-        //  DATA MEMPELAI (tab Data Mempelai)
+        //  DATA MEMPELAI (tab Data Mempelai) — REVISI: grup baru
         // ========================================================================
         const MEMPELAI_GROUPS = [
             { title: '👰🤵 Mempelai', fields: [
@@ -2781,8 +2740,14 @@ $('uiModal').addEventListener('keydown', (e) => {
                 ['alamat_lokasi', 'Alamat Lengkap', 'textarea'],
                 ['link_maps', 'Link Google Maps (tombol)', 'text'],
                 ['link_maps_embed', 'Link Peta Embed Akad & Resepsi (URL iframe atau kode iframe dari Google Maps > Bagikan > Sematkan peta)', 'textarea'],
-                ['link_maps_embed_aktif', 'Tampilkan peta embed Akad & Resepsi', 'toggle'],
-                ['dress_code', 'Dress Code', 'text']
+                ['link_maps_embed_aktif', 'Tampilkan peta embed Akad & Resepsi', 'toggle']
+            ]},
+            /* ===== REVISI: grup Foto Busana & Dress Code ===== */
+            { title: '👗 Foto Busana & Dress Code', fields: [
+                ['dress_code_foto_url', 'URL Foto Busana Wedding (pisahkan koma, opsional — tampil di atas deskripsi dress code)', 'textarea'],
+                ['dress_code', 'Dress Code Wedding (teks deskripsi)', 'text'],
+                ['ngunduh_dress_code_foto_url', 'URL Foto Busana Ngunduh Mantu (pisahkan koma, opsional)', 'textarea'],
+                ['ngunduh_dress_code', 'Dress Code Ngunduh Mantu (teks deskripsi)', 'text']
             ]},
             { title: '🎊 Acara Ngunduh Mantu', fields: [
                 ['ngunduh_tanggal_tampil', 'Tanggal Tampil (teks, mis. Minggu, 22 November 2026)', 'text'],
@@ -2791,8 +2756,7 @@ $('uiModal').addEventListener('keydown', (e) => {
                 ['ngunduh_alamat_lokasi', 'Alamat Lokasi', 'textarea'],
                 ['ngunduh_link_maps', 'Link Google Maps (tombol)', 'text'],
                 ['ngunduh_link_maps_embed', 'Link Peta Embed Ngunduh Mantu', 'textarea'],
-                ['ngunduh_embed_aktif', 'Tampilkan peta embed Ngunduh Mantu', 'toggle'],
-                ['ngunduh_dress_code', 'Dress Code', 'text']
+                ['ngunduh_embed_aktif', 'Tampilkan peta embed Ngunduh Mantu', 'toggle']
             ]},
             { title: '📡 Live Streaming', fields: [
                 ['live_channels', 'Tautan yang ditampilkan (boleh pilih satu atau banyak)', 'multi:instagram=Instagram,youtube=YouTube,zoom=Zoom'],
@@ -2820,6 +2784,16 @@ $('uiModal').addEventListener('keydown', (e) => {
                 ['foto_wanita_url', 'URL Foto Wanita', 'text'],
                 ['galeri_url', 'URL Galeri (pisahkan koma)', 'textarea'],
                 ['musik_url', 'URL Musik (mp3 langsung, bukan link halaman). Aktif/nonaktif musik: tab Tampilan Undangan > Fitur', 'text']
+            ]},
+            /* ===== REVISI: grup Wedding Album ===== */
+            { title: '📸 Wedding Album', fields: [
+                ['wedding_album_judul', 'Judul Section (default: "Momen Bahagia")', 'text'],
+                ['wedding_album_deskripsi', 'Deskripsi Album', 'textarea'],
+                ['wedding_album_url', 'URL Galeri Album (pisahkan koma — foto & video mp4/webm/ogg)', 'textarea'],
+                ['wedding_album_link', 'Link Album Eksternal (Google Drive / YouTube / Flickr dll) — opsional', 'text'],
+                ['wedding_album_link_aktif_dari', 'Tombol Aktif Mulai (format YYYY-MM-DD HH:mm:ss, kosong = aktif sekarang)', 'text'],
+                ['wedding_album_link_label', 'Label Tombol (default: "Buka Album")', 'text'],
+                ['wedding_album_link_teks_cooming_soon', 'Teks Coming Soon (pakai variabel $tanggal)', 'text']
             ]},
             { title: '🎁 Hadiah', fields: [
                 ['bank_nama', 'Bank 1 — Nama Bank', 'text'],
@@ -2911,7 +2885,7 @@ $('uiModal').addEventListener('keydown', (e) => {
         }
 
         // ========================================================================
-        //  AKUN (tab Akun) — ganti password sendiri + CRUD akun lain
+        //  AKUN
         // ========================================================================
         let myUsername = '';
         let accountsCache = [];
@@ -3057,14 +3031,10 @@ $('uiModal').addEventListener('keydown', (e) => {
             });
         }
 
-        // ========================================================================
-        //  FILTERS
-        // ========================================================================
         function setupFilters() {
             const jenisSet = new Set(allGuests.map(g => g.jenis_tamu).filter(Boolean));
             const jenisList = [...jenisSet].sort();
 
-            // Dropdown filter (Daftar Tamu & Kirim WA) — selalu ikut riwayat jenis_tamu terbaru dari sheet.
             ['jenisFilter', 'sendJenisFilter'].forEach(id => {
                 const select = $(id);
                 if (!select) return;
@@ -3074,7 +3044,6 @@ $('uiModal').addEventListener('keydown', (e) => {
                 select.value = jenisList.includes(current) ? current : 'all';
             });
 
-            // Datalist saran Jenis Tamu di form Tambah/Ubah Tamu — kombobox: boleh pilih yang sudah ada, boleh ketik baru.
             $('jenisTamuOptions').innerHTML = jenisList.map(j => `<option value="${escapeHtml(j)}"></option>`).join('');
 
             $('jenisFilter').onchange = () => {
@@ -3096,9 +3065,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             });
         }
 
-        // ========================================================================
-        //  REFRESH & RESET
-        // ========================================================================
         async function refreshAll() {
             showToast('Memuat ulang data dari sheet...', 'success');
             try {
@@ -3145,9 +3111,6 @@ $('uiModal').addEventListener('keydown', (e) => {
             }
         }
 
-        // ========================================================================
-        //  NAVIGATION
-        // ========================================================================
         function navigateTo(section) {
             sections.forEach(s => {
                 sectionEls[s].style.display = s === section ? 'block' : 'none';
@@ -3170,32 +3133,29 @@ $('uiModal').addEventListener('keydown', (e) => {
             closeSidebar();
         }
 
-const META_TAGS = [["title", "title", "", "Judul halaman (tab browser)", "Uleman Palakrama - $namawanita & $namapria", ""], ["description", "name", "description", "Deskripsi (SEO)", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["robots", "name", "robots", "Robots (indeks mesin pencari)", "follow, noindex", ""], ["og_locale", "property", "og:locale", "og:locale", "id_ID", ""], ["og_type", "property", "og:type", "og:type", "article", ""], ["og_title", "property", "og:title", "og:title (judul saat dibagikan)", "Uleman Palakrama $namawanita & $namapria", ""], ["og_description", "property", "og:description", "og:description (deskripsi saat dibagikan)", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["og_url", "property", "og:url", "og:url (otomatis = link undangan tamu + kode/nama)", "", "url"], ["og_site_name", "property", "og:site_name", "og:site_name", "Uleman Digital Website", ""], ["article_section", "property", "article:section", "article:section", "Uleman", ""], ["og_image", "property", "og:image", "og:image (otomatis = URL Foto Cover)", "", "cover"], ["og_image_secure_url", "property", "og:image:secure_url", "og:image:secure_url (otomatis = URL Foto Cover)", "", "cover"], ["og_image_width", "property", "og:image:width", "og:image:width", "1080", ""], ["og_image_height", "property", "og:image:height", "og:image:height", "1620", ""], ["og_image_alt", "property", "og:image:alt", "og:image:alt", "Uleman Palakrama $namawanita & $namapria", ""], ["og_image_type", "property", "og:image:type", "og:image:type", "image/webp", ""], ["twitter_card", "name", "twitter:card", "twitter:card", "summary_large_image", ""], ["twitter_title", "name", "twitter:title", "twitter:title", "Uleman Palakrama $namawanita & $namapria", ""], ["twitter_description", "name", "twitter:description", "twitter:description", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["twitter_image", "name", "twitter:image", "twitter:image (otomatis = URL Foto Cover)", "", "cover"], ["twitter_label1", "name", "twitter:label1", "twitter:label1", "Written by", ""], ["twitter_data1", "name", "twitter:data1", "twitter:data1", "admin", ""], ["twitter_label2", "name", "twitter:label2", "twitter:label2", "Time to read", ""], ["twitter_data2", "name", "twitter:data2", "twitter:data2", "2 minutes", ""]];
-const META_DEFAULT_GUEST = 'Bapak/Ibu/Saudara/i';
-/* Variabel metadata: $namatamu, $namapria/$namawanita (panggilan), $nama_pria/$nama_wanita (lengkap), $tanggal, $lokasi */
-function metaResolveVars(text, cfg, tamu){
-  const map = {
-    '$namatamu': tamu || META_DEFAULT_GUEST, '$nama_tamu': tamu || META_DEFAULT_GUEST,
-    '$namapria': cfg.nama_panggilan_pria || '', '$namawanita': cfg.nama_panggilan_wanita || '',
-    '$nama_pria': cfg.nama_lengkap_pria || '', '$nama_wanita': cfg.nama_lengkap_wanita || '',
-    '$tanggal': cfg.tanggal_tampil || '', '$lokasi': cfg.nama_lokasi || ''
-  };
-  let out = String(text || '');
-  Object.keys(map).sort((a, b) => b.length - a.length).forEach(k => { out = out.split(k).join(map[k]); });
-  return out;
-}
-function metaAbsUrl(u, base){ u = String(u || '').trim(); if(!u) return ''; try{ return new URL(u, base || location.href).href; }catch(e){ return u; } }
-/* Hasil akhir satu tag: {on, val}. ctx = {tamu, url, base} */
-function metaResolve(t, cfg, ctx){
-  const on = String(cfg['meta_' + t[0] + '_aktif'] || 'on').toLowerCase() !== 'off';
-  let v = cfg['meta_' + t[0]];
-  if(v === undefined || v === null || String(v).trim() === ''){
-    v = t[5] === 'url' ? ctx.url : t[5] === 'cover' ? metaAbsUrl(cfg.foto_cover_url, ctx.base) : t[4];
-  }
-  return { on, val: metaResolveVars(v, cfg, ctx.tamu) };
-}
+        const META_TAGS = [["title", "title", "", "Judul halaman (tab browser)", "Uleman Palakrama - $namawanita & $namapria", ""], ["description", "name", "description", "Deskripsi (SEO)", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["robots", "name", "robots", "Robots (indeks mesin pencari)", "follow, noindex", ""], ["og_locale", "property", "og:locale", "og:locale", "id_ID", ""], ["og_type", "property", "og:type", "og:type", "article", ""], ["og_title", "property", "og:title", "og:title (judul saat dibagikan)", "Uleman Palakrama $namawanita & $namapria", ""], ["og_description", "property", "og:description", "og:description (deskripsi saat dibagikan)", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["og_url", "property", "og:url", "og:url (otomatis = link undangan tamu + kode/nama)", "", "url"], ["og_site_name", "property", "og:site_name", "og:site_name", "Uleman Digital Website", ""], ["article_section", "property", "article:section", "article:section", "Uleman", ""], ["og_image", "property", "og:image", "og:image (otomatis = URL Foto Cover)", "", "cover"], ["og_image_secure_url", "property", "og:image:secure_url", "og:image:secure_url (otomatis = URL Foto Cover)", "", "cover"], ["og_image_width", "property", "og:image:width", "og:image:width", "1080", ""], ["og_image_height", "property", "og:image:height", "og:image:height", "1620", ""], ["og_image_alt", "property", "og:image:alt", "og:image:alt", "Uleman Palakrama $namawanita & $namapria", ""], ["og_image_type", "property", "og:image:type", "og:image:type", "image/webp", ""], ["twitter_card", "name", "twitter:card", "twitter:card", "summary_large_image", ""], ["twitter_title", "name", "twitter:title", "twitter:title", "Uleman Palakrama $namawanita & $namapria", ""], ["twitter_description", "name", "twitter:description", "twitter:description", "Kepada Yth. $namatamu. Tanpa mengurangi rasa hormat kami mengundang Anda untuk menghadiri Uleman Palakrama $namawanita & $namapria.", ""], ["twitter_image", "name", "twitter:image", "twitter:image (otomatis = URL Foto Cover)", "", "cover"], ["twitter_label1", "name", "twitter:label1", "twitter:label1", "Written by", ""], ["twitter_data1", "name", "twitter:data1", "twitter:data1", "admin", ""], ["twitter_label2", "name", "twitter:label2", "twitter:label2", "Time to read", ""], ["twitter_data2", "name", "twitter:data2", "twitter:data2", "2 minutes", ""]];
+        const META_DEFAULT_GUEST = 'Bapak/Ibu/Saudara/i';
+        function metaResolveVars(text, cfg, tamu){
+            const map = {
+                '$namatamu': tamu || META_DEFAULT_GUEST, '$nama_tamu': tamu || META_DEFAULT_GUEST,
+                '$namapria': cfg.nama_panggilan_pria || '', '$namawanita': cfg.nama_panggilan_wanita || '',
+                '$nama_pria': cfg.nama_lengkap_pria || '', '$nama_wanita': cfg.nama_lengkap_wanita || '',
+                '$tanggal': cfg.tanggal_tampil || '', '$lokasi': cfg.nama_lokasi || ''
+            };
+            let out = String(text || '');
+            Object.keys(map).sort((a, b) => b.length - a.length).forEach(k => { out = out.split(k).join(map[k]); });
+            return out;
+        }
+        function metaAbsUrl(u, base){ u = String(u || '').trim(); if(!u) return ''; try{ return new URL(u, base || location.href).href; }catch(e){ return u; } }
+        function metaResolve(t, cfg, ctx){
+            const on = String(cfg['meta_' + t[0] + '_aktif'] || 'on').toLowerCase() !== 'off';
+            let v = cfg['meta_' + t[0]];
+            if(v === undefined || v === null || String(v).trim() === ''){
+                v = t[5] === 'url' ? ctx.url : t[5] === 'cover' ? metaAbsUrl(cfg.foto_cover_url, ctx.base) : t[4];
+            }
+            return { on, val: metaResolveVars(v, cfg, ctx.tamu) };
+        }
 
-        /* ================= ATUR METADATA ================= */
         const attrEsc = (v) => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         function metaCfgFromUI() {
             const cfg = { ...configData };
@@ -3295,9 +3255,6 @@ function metaResolve(t, cfg, ctx){
             });
         });
 
-        // ========================================================================
-        //  SIDEBAR MOBILE
-        // ========================================================================
         function toggleSidebar() {
             $('sidebar').classList.toggle('open');
             $('sidebarOverlay').classList.toggle('open');
@@ -3311,9 +3268,6 @@ function metaResolve(t, cfg, ctx){
         $('mobileToggle').addEventListener('click', toggleSidebar);
         $('sidebarOverlay').addEventListener('click', closeSidebar);
 
-        // ========================================================================
-        //  THEME
-        // ========================================================================
         function toggleTheme() {
             const html = document.documentElement;
             const cur = html.getAttribute('data-theme');
@@ -3332,9 +3286,6 @@ function metaResolve(t, cfg, ctx){
             $('themeToggle').addEventListener('click', toggleTheme);
         })();
 
-        // ========================================================================
-        //  INIT DASHBOARD
-        // ========================================================================
         async function initDashboard() {
             myUsername = localStorage.getItem(USERNAME_KEY) || '';
             await fetchConfig();
@@ -3398,13 +3349,9 @@ function metaResolve(t, cfg, ctx){
             }
         }
 
-        // ========================================================================
-        //  INIT LOGIN
-        // ========================================================================
         document.getElementById('loginForm').addEventListener('submit', performLogin);
         document.getElementById('logoutBtn').addEventListener('click', performLogout);
 
-        // Jalankan checkLogin
         checkLogin();
     </script>
 </body>
