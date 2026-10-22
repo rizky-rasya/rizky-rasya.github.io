@@ -76,6 +76,14 @@
   .pick-btn{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:32px 20px; border:2px dashed var(--border-strong); border-radius:8px; background:var(--surface); color:var(--primary); font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; transition:background .15s, border-color .15s; text-align:center;}
   .pick-btn:hover{background:var(--surface-2); border-color:var(--primary);}
   .pick-btn:active{transform:scale(.99);}
+  .pick-btn:disabled{opacity:.55; cursor:not-allowed; border-style:solid; background:var(--surface-2);}
+  .pick-btn:disabled:active{transform:none;}
+  #jobList{display:flex; flex-direction:column; gap:10px;}
+  .job-row{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px;}
+  .job-row .job-title{font-size:12px; font-weight:700; color:var(--text-2); letter-spacing:.02em;}
+  .job-row .progress-bar{margin:8px 0 6px;}
+  .job-row .progress-text{margin-bottom:0; text-align:left;}
+  .job-row.fail .progress-text{color:var(--danger);}
   .pick-btn svg{width:28px; height:28px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
   .pick-btn small{display:block; font-size:11px; font-weight:500; color:var(--text-3); margin-top:6px; letter-spacing:0.02em; text-transform:none;}
   .preview{background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px;}
@@ -231,10 +239,8 @@
 
   <button class="send-btn" id="sendBtn" disabled>Kirim</button>
 
-  <div id="progressWrap" style="display:none; margin-top:16px;">
-    <div class="progress-bar"><i id="progressBar"></i></div>
-    <div class="progress-text" id="progressText">Memproses…</div>
-  </div>
+  <!-- Daftar proses kirim: video/suara di atas, foto (dan lainnya) di bawah -->
+  <div id="jobList" style="display:none; margin-top:16px;" aria-live="polite"></div>
 </div>
 
 <footer class="site-footer">
@@ -257,6 +263,16 @@
     <p id="resultText"></p>
     <button class="btn-primary" id="resultPrimary"></button>
     <button class="btn-secondary" id="resultSecondary"></button>
+  </div>
+</div>
+
+<div class="result-overlay" id="limitOverlay">
+  <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="limitTitle">
+    <div class="result-icon"><svg viewBox="0 0 24 24"><path d="M12 7v6"/><path d="M12 17h.01"/></svg></div>
+    <h3 id="limitTitle"></h3>
+    <p id="limitText"></p>
+    <button class="btn-primary" id="limitPrimary"></button>
+    <button class="btn-secondary" id="limitSecondary"></button>
   </div>
 </div>
 
@@ -328,7 +344,7 @@ async function init() {
     maxVideoSeconds = Number(s.max_video_seconds) || 60;
     maxVoiceSeconds = Number(s.max_voice_seconds) || 60;
 
-    document.getElementById('photoPickHint').textContent = `Bisa pilih maks ${maxPhoto} foto sekaligus`;
+    updatePickState();
 
     document.getElementById('brandName').textContent = (s.ui_config && s.ui_config.index_headline) || `${s.groom_name} & ${s.bride_name}`;
     if (s.date) document.getElementById('brandDate').textContent = formatDate(s.date);
@@ -340,7 +356,7 @@ async function init() {
     if (types.length <= 1) document.getElementById('tabs').style.display = 'none';
     switchMode(types[0] || 'photo');
 
-    await preloadFrameAssets(s);
+    preloadFrameAssets(s);   // di latar belakang; dicek ulang (dengan retry) sebelum dipakai
     hideStatus();
     updateSendButtonState();
   } catch (err) {
@@ -368,21 +384,57 @@ async function fetchJson(qs, tries = 3) {
   throw last || new Error('offline');
 }
 
-async function preloadFrameAssets(settings) {
+// ===== Loader bingkai tangguh: retry + timeout + tidak gagal diam-diam =====
+const framePromises = {};
+function preloadFrameAssets() {
+  const jobs = [];
   for (const type of ['photo', 'video', 'voice']) {
     frameConfigCache[type] = getFrameConfig(type);
-    const cf = frameConfigCache[type].customFrame;
-    if (cf && cf.file_id) {
-      try { customFrameImgCache[type] = await loadFrameImage(cf.file_id); }
-      catch (e) { customFrameImgCache[type] = null; }
-    }
+    jobs.push(ensureFrame(type).catch(() => null));
   }
+  return Promise.all(jobs);
 }
 
-async function loadFrameImage(fileId) {
-  const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.message || 'Gagal memuat frame');
+function ensureFrame(type) {
+  const cfg = frameConfigCache[type] || (frameConfigCache[type] = getFrameConfig(type));
+  const cf = cfg.customFrame;
+  if (!cf || !cf.file_id) return Promise.resolve(null);          // tidak pakai bingkai gambar
+  if (customFrameImgCache[type]) return Promise.resolve(customFrameImgCache[type]);
+  if (!framePromises[type]) {
+    framePromises[type] = fetchFrameImage(cf.file_id)
+      .then(img => { customFrameImgCache[type] = img; return img; })
+      .catch(err => { framePromises[type] = null; customFrameImgCache[type] = null; throw err; });
+  }
+  return framePromises[type];
+}
+
+// true = aman lanjut (bingkai siap / memang tidak memakai bingkai gambar)
+async function frameReady(type) {
+  const c = frameConfigCache[type] || (frameConfigCache[type] = getFrameConfig(type));
+  if (!c.customFrame || customFrameImgCache[type]) return true;
+  showToast('Menyiapkan bingkai…', 'info');
+  try { await ensureFrame(type); return true; }
+  catch (e) { showToast('Bingkai belum berhasil dimuat. Cek koneksi lalu coba lagi ya.', 'error'); return false; }
+}
+
+async function fetchFrameImage(fileId) {
+  let last;
+  for (let i = 0; i < 4; i++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`, { signal: ctrl.signal });
+      const data = await res.json();
+      clearTimeout(to);
+      if (data && data.success) return await decodeFrameData(data);
+      last = new Error((data && data.message) || 'Gagal memuat frame');
+    } catch (e) { clearTimeout(to); last = e; }
+    await new Promise(r => setTimeout(r, 700 * (i + 1)));
+  }
+  throw last || new Error('Gagal memuat frame');
+}
+
+function decodeFrameData(data) {
   const bytes = base64ToUint8(data.base64);
   const blob = new Blob([bytes], { type: data.mimeType || 'image/png' });
   const url = URL.createObjectURL(blob);
@@ -500,31 +552,91 @@ function switchMode(mode) {
 
 document.getElementById('pickPhotoBtn').addEventListener('click', () => document.getElementById('photoInput').click());
 
-document.getElementById('photoInput').addEventListener('change', async function () {
+document.getElementById('photoInput').addEventListener('change', function () {
   const files = Array.from(this.files || []);
   this.value = '';
   if (files.length === 0) return;
-  const remaining = maxPhoto - photoItems.length;
-  if (remaining <= 0) { showToast(`Sudah ${maxPhoto} foto. Hapus salah satu dulu ya.`, 'error'); return; }
-  const take = files.slice(0, remaining);
-  if (files.length > remaining) {
-    showToast(`Maks ${maxPhoto} foto. ${files.length - remaining} foto terakhir tidak dimasukkan.`, 'info');
-  }
-  for (const file of take) {
-    if (!file.type.startsWith('image/')) { showToast('Ada file yang bukan gambar, dilewati.', 'error'); continue; }
-    showToast('Memproses foto…', 'info');
-    try {
-      const result = await processPhoto(file);
-      photoItems.push(result);
-    } catch (err) {
-      showToast('Satu foto gagal diproses: ' + err.message, 'error');
-    }
-  }
-  renderPhotoGrid();
-  updateSendButtonState();
+  handlePhotoSelection(files);
 });
 
+let photoBusy = false;
+
+// Browser tidak bisa membatasi jumlah pilihan di galeri HP, jadi dicek begitu pilihan masuk.
+function handlePhotoSelection(files) {
+  const remaining = maxPhoto - photoItems.length;
+  if (remaining <= 0) {
+    openLimitModal({
+      title: `Sudah ${maxPhoto} foto`,
+      text: `Satu kali kirim maksimal ${maxPhoto} foto. Hapus salah satu foto terpilih dulu kalau mau menggantinya.`,
+      primaryLabel: 'Mengerti'
+    });
+    return;
+  }
+  if (files.length > remaining) {
+    const extra = files.length - remaining;
+    openLimitModal({
+      title: `Maksimal ${maxPhoto} foto`,
+      text: `Kamu memilih ${files.length} foto, padahal satu kali kirim maksimal ${maxPhoto} foto` +
+            (photoItems.length ? ` (sudah ada ${photoItems.length}, sisa ${remaining})` : '') +
+            `.\n\n${extra} foto terakhir tidak akan ikut terkirim.`,
+      primaryLabel: `Pakai ${remaining} foto pertama`,
+      onPrimary: () => addPhotoFiles(files.slice(0, remaining)),
+      secondaryLabel: 'Pilih ulang',
+      onSecondary: () => document.getElementById('photoInput').click()
+    });
+    return;
+  }
+  addPhotoFiles(files);
+}
+
+async function addPhotoFiles(files) {
+  if (photoBusy) return;
+  photoBusy = true; updatePickState();
+  try {
+    if (!(await frameReady('photo'))) return;
+    for (const file of files) {
+      if (photoItems.length >= maxPhoto) break;
+      if (!file.type.startsWith('image/')) { showToast('Ada file yang bukan gambar, dilewati.', 'error'); continue; }
+      showToast('Memproses foto…', 'info');
+      try {
+        const result = await processPhoto(file);
+        photoItems.push(result);
+      } catch (err) {
+        showToast('Satu foto gagal diproses: ' + err.message, 'error');
+      }
+    }
+  } finally {
+    photoBusy = false;
+    renderPhotoGrid();
+    updateSendButtonState();
+  }
+}
+
+function updatePickState() {
+  const btn = document.getElementById('pickPhotoBtn');
+  const hint = document.getElementById('photoPickHint');
+  const remaining = Math.max(0, maxPhoto - photoItems.length);
+  btn.disabled = remaining <= 0 || photoBusy;
+  hint.textContent = remaining <= 0
+    ? `Sudah ${maxPhoto} foto. Hapus salah satu untuk mengganti.`
+    : (photoItems.length ? `Sisa ${remaining} foto lagi (maks ${maxPhoto})` : `Maksimal ${maxPhoto} foto sekali kirim`);
+}
+
+function openLimitModal(o) {
+  const ov = document.getElementById('limitOverlay');
+  document.getElementById('limitTitle').textContent = o.title;
+  document.getElementById('limitText').textContent = o.text;
+  const p = document.getElementById('limitPrimary'), s = document.getElementById('limitSecondary');
+  p.textContent = o.primaryLabel;
+  s.textContent = o.secondaryLabel || ''; s.style.display = o.secondaryLabel ? 'block' : 'none';
+  p.onclick = () => { ov.classList.remove('show'); if (o.onPrimary) o.onPrimary(); };
+  s.onclick = () => { ov.classList.remove('show'); if (o.onSecondary) o.onSecondary(); };
+  ov.onclick = e => { if (e.target === ov) ov.classList.remove('show'); };
+  ov.classList.add('show');
+}
+
 function renderPhotoGrid() {
+  updatePickState();
   const wrap = document.getElementById('photoGridWrap');
   const grid = document.getElementById('photoGrid');
   const counter = document.getElementById('photoGridCounter');
@@ -751,6 +863,7 @@ document.getElementById('sendVoiceBtn').addEventListener('click', () => {
 
 async function startVoiceRecording() {
   try {
+    if (!(await frameReady('voice'))) return;
     voiceStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true } });
     const cfg = frameConfigCache.voice || getFrameConfig('voice');
     const vnRes = getVnResolution();
@@ -924,6 +1037,35 @@ function drawAudiogramLive(ctx, w, h, dataArray, cfg, guestName) {
   ctx.fillText(guestName, cx, cy + 20 * scale);
 }
 
+// ===== Daftar proses kirim: VIDEO & SUARA selalu di atas, foto/lainnya di bawah =====
+const sendingModes = {};
+const JOB_LABEL = { photo: 'Foto', video: 'Video', voice: 'Suara' };
+
+function createJob(mode) {
+  const list = document.getElementById('jobList');
+  const row = document.createElement('div');
+  const priority = (mode === 'video' || mode === 'voice');
+  row.className = 'job-row';
+  row.dataset.pri = priority ? '1' : '0';
+  row.innerHTML = '<div class="job-title"></div><div class="progress-bar"><i></i></div><div class="progress-text">Memproses…</div>';
+  row.querySelector('.job-title').textContent = 'Kirim ' + (JOB_LABEL[mode] || mode);
+  const firstNormal = Array.from(list.children).find(c => c.dataset.pri !== '1');
+  if (priority && firstNormal) list.insertBefore(row, firstNormal); else list.appendChild(row);
+  list.style.display = 'flex';
+  const bar = row.querySelector('.progress-bar i'), text = row.querySelector('.progress-text');
+  return {
+    bar, text,
+    finish(ok) {
+      if (!ok) { row.classList.add('fail'); text.textContent = 'Belum berhasil terkirim'; }
+      setTimeout(() => { row.remove(); if (!list.children.length) list.style.display = 'none'; }, ok ? 2500 : 6000);
+    }
+  };
+}
+
+window.addEventListener('beforeunload', e => {
+  if (Object.keys(sendingModes).some(k => sendingModes[k])) { e.preventDefault(); e.returnValue = ''; }
+});
+
 document.getElementById('sendBtn').addEventListener('click', sendMedia);
 
 function updateSendButtonState() {
@@ -933,7 +1075,7 @@ function updateSendButtonState() {
   if (currentMode === 'photo') ready = photoItems.length > 0;
   else if (currentMode === 'video') ready = !!videoFile;
   else if (currentMode === 'voice') ready = !!voiceBlob;
-  btn.disabled = !(ready && name);
+  btn.disabled = !(ready && name) || !!sendingModes[currentMode];
   btn.textContent = currentMode === 'photo'
     ? (photoItems.length > 1 ? `Kirim ${photoItems.length} Foto` : 'Kirim Foto')
     : currentMode === 'video' ? 'Kirim Video'
@@ -944,12 +1086,13 @@ async function sendMedia() {
   const name = document.getElementById('guestName').value.trim();
   if (!name) { showToast('Tulis namamu dulu ya', 'error'); document.getElementById('guestName').focus(); return; }
 
-  const btn = document.getElementById('sendBtn');
-  btn.disabled = true;
-  const progWrap = document.getElementById('progressWrap');
-  const progBar = document.getElementById('progressBar');
-  const progText = document.getElementById('progressText');
-  progWrap.style.display = 'block';
+  const mode = currentMode;
+  if (sendingModes[mode]) { showToast('Pengiriman ini masih berjalan, tunggu sebentar ya.', 'info'); return; }
+  sendingModes[mode] = true;
+  updateSendButtonState();
+  const job = createJob(mode);
+  const progBar = job.bar, progText = job.text;
+  let jobOk = false;
 
   try {
     if (currentMode === 'photo') {
@@ -975,10 +1118,11 @@ async function sendMedia() {
       progBar.style.width = '100%';
       progText.textContent = 'Selesai';
       showResult('success', 'Terkirim', `${total} foto sudah masuk.\nTunggu persetujuan mempelai ya.`);
-      photoItems = [];
+      photoItems = photoItems.filter(it => snapshot.indexOf(it) === -1);   // jangan hapus foto yang dipilih saat upload berjalan
       renderPhotoGrid();
     } else if (currentMode === 'video') {
       if (!videoFile) throw new Error('Video belum dipilih');
+      if (!(await frameReady('video'))) throw new Error('Bingkai video belum termuat. Coba lagi ya.');
       progText.textContent = 'Memproses video dengan bingkai…';
       progBar.style.width = '0%';
       const processed = await processVideoWithFrame(videoFile, p => {
@@ -1010,12 +1154,12 @@ async function sendMedia() {
       showResult('success', 'Terkirim', `Suaramu sudah masuk.\nTunggu persetujuan mempelai ya.`);
       resetVoice();
     }
+    jobOk = true;
   } catch (err) {
     showResult('error', 'Belum berhasil', err.message || 'Coba lagi ya.');
   } finally {
-    progWrap.style.display = 'none';
-    progBar.style.width = '0%';
-    btn.disabled = false;
+    sendingModes[mode] = false;
+    job.finish(jobOk);
     updateSendButtonState();
   }
 }

@@ -1178,6 +1178,7 @@ function applyFilters(filterData) {
 }
 
 async function init() {
+  if (currentMode !== 'voice') prewarmCamera();   // minta izin kamera SEKARANG, paralel dengan ambil pengaturan
   const nameInput = document.getElementById('guestName');
   try { nameInput.value = localStorage.getItem('guest_name') || ''; } catch (e) {}
   nameInput.addEventListener('input', () => { try { localStorage.setItem('guest_name', nameInput.value.trim()); } catch (e) {} });
@@ -1206,7 +1207,10 @@ async function init() {
 
   if (!haveSettings) return;
 
+  preloadFrameAssets(weddingSettings).catch(() => {});   // mulai muat bingkai lebih awal (non-blocking)
+
   if (currentMode === 'voice') {
+    releaseEarlyStream();
     hideStatus();
   } else {
     const ok = await startCamera();
@@ -1234,7 +1238,6 @@ async function init() {
       .catch(() => {});
   }
 
-  preloadFrameAssets(weddingSettings).catch(() => {});
 }
 
 let modeSwitchInited = false;
@@ -1289,46 +1292,72 @@ function getVnResolution() {
   return { width: 720, height: 720 };
 }
 
+// ===== Loader bingkai tangguh: retry + timeout + tidak gagal diam-diam =====
+const framePromises = {};
 function preloadFrameAssets(settings) {
-  if (framesPreloadStarted) return Promise.resolve();
-  framesPreloadStarted = true;
-  const uiConfig = settings.ui_config || {};
+  const uiConfig = (settings && settings.ui_config) || {};
   autoIncludeFrame = Object.assign({ photo:false, video:false, voice:false }, uiConfig.frame_auto_include || {});
-  if (!autoIncludeFrame.photo && !autoIncludeFrame.video && !autoIncludeFrame.voice) return Promise.resolve();
-
   const jobs = [];
   for (const type of ['photo', 'video', 'voice']) {
     if (!autoIncludeFrame[type]) continue;
     frameConfigCache[type] = getFrameConfig(type);
-    const cf = frameConfigCache[type].customFrame;
-    if (cf && cf.file_id) {
-      jobs.push(
-        loadFrameImageBase64(cf.file_id)
-          .then(img => { customFrameImgCache[type] = img; })
-          .catch(() => { customFrameImgCache[type] = null; })
-      );
-    }
+    jobs.push(ensureFrame(type).catch(() => null));
   }
   return Promise.all(jobs);
 }
 
-function loadFrameImageBase64(fileId) {
-  return (async () => {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message || 'Gagal memuat template bingkai');
-    const byteChars = atob(data.base64);
-    const bytes = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
-    const blob = new Blob([bytes], { type: data.mimeType || 'image/png' });
-    const blobUrl = URL.createObjectURL(blob);
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => { URL.revokeObjectURL(blobUrl); resolve(img); };
-      img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('decode')); };
-      img.src = blobUrl;
-    });
-  })();
+function ensureFrame(type) {
+  const cfg = frameConfigCache[type] || (frameConfigCache[type] = getFrameConfig(type));
+  const cf = cfg.customFrame;
+  if (!cf || !cf.file_id) return Promise.resolve(null);
+  if (customFrameImgCache[type]) return Promise.resolve(customFrameImgCache[type]);
+  if (!framePromises[type]) {
+    framePromises[type] = loadFrameImageBase64(cf.file_id)
+      .then(img => { customFrameImgCache[type] = img; return img; })
+      .catch(err => { framePromises[type] = null; customFrameImgCache[type] = null; throw err; });
+  }
+  return framePromises[type];
+}
+
+function frameMissing(type) {
+  const c = frameConfigCache[type];
+  return !!(autoIncludeFrame[type] && c && c.customFrame && !customFrameImgCache[type]);
+}
+
+// true = aman lanjut. Kalau bingkai belum siap, ditunggu (dengan retry), bukan dilewati diam-diam.
+async function ensureFrameOrWarn(type) {
+  if (!frameMissing(type)) return true;
+  showToast('Menyiapkan bingkai…', 'info');
+  try { await ensureFrame(type); return true; }
+  catch (e) { showToast('Bingkai belum berhasil dimuat. Cek koneksi lalu coba lagi ya.', 'error'); return false; }
+}
+
+async function loadFrameImageBase64(fileId) {
+  let last;
+  for (let i = 0; i < 4; i++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`, { signal: ctrl.signal });
+      const data = await res.json();
+      clearTimeout(to);
+      if (data && data.success) {
+        const byteChars = atob(data.base64);
+        const bytes = new Uint8Array(byteChars.length);
+        for (let k = 0; k < byteChars.length; k++) bytes[k] = byteChars.charCodeAt(k);
+        const blobUrl = URL.createObjectURL(new Blob([bytes], { type: data.mimeType || 'image/png' }));
+        return await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => { URL.revokeObjectURL(blobUrl); resolve(img); };
+          img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('decode')); };
+          img.src = blobUrl;
+        });
+      }
+      last = new Error((data && data.message) || 'Gagal memuat template bingkai');
+    } catch (e) { clearTimeout(to); last = e; }
+    await sleepMs(700 * (i + 1));
+  }
+  throw last || new Error('Gagal memuat template bingkai');
 }
 
 function fillCenterShape(ctx, cx, cy, radius, cfg) {
@@ -1516,7 +1545,10 @@ function switchMode(mode) {
 async function queryPermState(name) {
   try {
     if (!navigator.permissions || !navigator.permissions.query) return null;
-    const s = await navigator.permissions.query({ name });
+    const s = await Promise.race([
+      navigator.permissions.query({ name }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))
+    ]);
     return s.state;
   } catch (e) { return null; }
 }
@@ -1615,13 +1647,18 @@ async function startCamera(isRetry) {
     const wIdeal = isRetry ? Math.min(640, q.width) : q.width;
     const hIdeal = isRetry ? Math.min(480, q.height) : q.height;
 
-    let stream;
+    let stream = null;
+    const slowTimer = setTimeout(() => { if (myToken === cameraToken) showCameraSlowHint(); }, 7000);
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: currentFacing }, width: { ideal: wIdeal }, height: { ideal: hIdeal } },
-        audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
-      });
+      stream = await takeEarlyStream(needsAudio, isRetry, wIdeal, hIdeal);
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: currentFacing }, width: { ideal: wIdeal }, height: { ideal: hIdeal } },
+          audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
+        });
+      }
     } catch (permErr) {
+      clearTimeout(slowTimer);
       const msg = String(permErr && permErr.message || '');
       if (/NotAllowed|Permission|denied/i.test(msg)) {
         showPermissionHelp(needsAudio ? 'both' : 'camera');
@@ -1635,6 +1672,8 @@ async function startCamera(isRetry) {
       return true;
     }
 
+    clearTimeout(slowTimer);
+    if (slowHintShown) { slowHintShown = false; hideStatus(); }
     liveStream = stream;
     streamHasAudio = stream.getAudioTracks().length > 0;
     liveVideo.muted = true;
@@ -1702,17 +1741,53 @@ function stopCameraStream() {
   } catch (e) {}
 }
 
+/* --- Prewarm izin kamera + petunjuk jika menunggu izin terlalu lama --- */
+let earlyStreamPromise = null, earlyFacing = null, slowHintShown = false;
+function prewarmCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  earlyFacing = currentFacing;
+  earlyStreamPromise = navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: currentFacing } } })
+    .catch(() => null);
+}
+async function takeEarlyStream(needsAudio, isRetry, w, h) {
+  if (needsAudio || isRetry || !earlyStreamPromise || earlyFacing !== currentFacing) return null;
+  const p = earlyStreamPromise; earlyStreamPromise = null;
+  const s = await p;
+  if (!s) return null;
+  const vt = s.getVideoTracks()[0];
+  if (!vt || vt.readyState !== 'live') { s.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); return null; }
+  try { await vt.applyConstraints({ width: { ideal: w }, height: { ideal: h } }); } catch (e) {}
+  return s;
+}
+function releaseEarlyStream() {
+  const p = earlyStreamPromise; earlyStreamPromise = null;
+  if (p) p.then(s => { if (s) s.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); });
+}
+function showCameraSlowHint() {
+  slowHintShown = true;
+  showStatus('Menunggu Izin Kamera…',
+    'Kalau ada popup izin kamera, ketuk Izinkan. Kalau tidak muncul, tekan Coba Lagi. Mode samaran/incognito meminta izin lagi setiap halaman dibuka.',
+    { label: 'Coba Lagi', fn: () => { slowHintShown = false; hideStatus(); startCamera(); } });
+}
+window.addEventListener('pagehide', () => { releaseEarlyStream(); stopCameraStream(); });
+window.addEventListener('pageshow', e => {
+  if (e.persisted && currentMode !== 'voice' && !capturedBlob && !liveStream) startCamera();   // kembali dari galeri/album via tombol Back
+});
+
 document.getElementById('flipBtn').addEventListener('click', () => {
   currentFacing = currentFacing === 'environment' ? 'user' : 'environment';
   startCamera();
 });
 
 const shutterBtn = document.getElementById('shutterBtn');
-shutterBtn.addEventListener('click', () => {
-  if (currentMode === 'photo') takePhoto();
-  else if (currentMode === 'video') {
-    if (mediaRecorder && mediaRecorder.state === 'recording') stopVideoRecording();
-    else startVideoRecording();
+shutterBtn.addEventListener('click', async () => {
+  if (currentMode === 'photo') {
+    if (!(await ensureFrameOrWarn('photo'))) return;
+    takePhoto();
+  } else if (currentMode === 'video') {
+    if (mediaRecorder && mediaRecorder.state === 'recording') { stopVideoRecording(); return; }
+    if (!(await ensureFrameOrWarn('video'))) return;
+    startVideoRecording();
   }
 });
 
@@ -2103,7 +2178,10 @@ async function startVoiceRecording() {
     return;
   }
 
-  if (autoIncludeFrame.voice) return startVoiceRecordingWithFrame();
+  if (autoIncludeFrame.voice) {
+    if (!(await ensureFrameOrWarn('voice'))) return;
+    return startVoiceRecordingWithFrame();
+  }
 
   try {
     let stream;
