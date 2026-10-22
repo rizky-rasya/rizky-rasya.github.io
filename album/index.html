@@ -848,7 +848,7 @@ async function runJob(job) {
       if (job.tries >= MAX_TRIES) break;
       job.suspect = true; job.busy = !!e.busy;
       job.state = 'retrying'; renderPill();
-      await sleepMs(1200 * job.tries + Math.floor(Math.random() * 600) + (e.busy ? 2000 + Math.floor(Math.random() * 3000) : 0));
+      await sleepMs(600 * job.tries + Math.floor(Math.random() * 400) + (e.busy ? 1500 + Math.floor(Math.random() * 2500) : 0));   // v17: jeda lebih singkat; acak supaya tamu tidak menyerbu bersamaan
       job.state = 'uploading';
     }
   }
@@ -867,7 +867,7 @@ async function uploadOnce(job) {
   const setP = p => { if (p !== job.progress) job.lastProgAt = Date.now(); job.progress = p; renderPill(); };
   job.phase = 'sending'; job.lastProgAt = Date.now();
   if (job.tries > 1 || job.suspect) {
-    const f = (await checkIds([job.cid], true))[job.cid];
+    const f = (await checkIds([job.cid], job.tries >= 3))[job.cid];   // v17: pemindaian sheet (deep) hanya setelah 2x gagal; server tetap cek duplikat saat attempt=2
     if (f) return { success: true, status: f.status, duplicate: true, message: '' };
   }
   if (!job.noDirect) {
