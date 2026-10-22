@@ -1,3 +1,4 @@
+<!-- galeri.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -953,19 +954,26 @@ async function sendMedia() {
   try {
     if (currentMode === 'photo') {
       if (photoItems.length === 0) throw new Error('Foto belum dipilih');
-      const total = photoItems.length;
       const snapshot = photoItems.slice();
+      const total = snapshot.length;
+      const totalBytes = snapshot.reduce((s, it) => s + ((it.blob && it.blob.size) || 0), 0) || 1;
+      let doneBytes = 0;
+
       for (let i = 0; i < total; i++) {
         const item = snapshot[i];
-        const base = Math.round((i / total) * 100);
-        progBar.style.width = base + '%';
-        progText.textContent = `Mengunggah foto ${i+1} dari ${total}…`;
-        await uploadToDrive(item.blob, 'photo', name, item.thumb, p => {
-          const overall = base + p * (100 / total);
+        progBar.style.width = Math.round((doneBytes / totalBytes) * 100) + '%';
+        progText.textContent = `Mengunggah foto ${i + 1} dari ${total} · ${fmtPair(doneBytes, totalBytes)}`;
+        await uploadToDrive(item.blob, 'photo', name, item.thumb, (loaded) => {
+          const overallBytes = doneBytes + (loaded || 0);
+          const overall = Math.min(99, (overallBytes / totalBytes) * 100);
           progBar.style.width = Math.round(overall) + '%';
-          progText.textContent = `Mengunggah foto ${i+1} dari ${total} (${Math.round(p*100)}%)`;
+          progText.textContent = `Mengunggah foto ${i + 1} dari ${total} · ${fmtPair(overallBytes, totalBytes)}`;
         });
+        doneBytes += (item.blob && item.blob.size) || 0;
+        progBar.style.width = Math.round((doneBytes / totalBytes) * 100) + '%';
       }
+      progBar.style.width = '100%';
+      progText.textContent = 'Selesai';
       showResult('success', 'Terkirim', `${total} foto sudah masuk.\nTunggu persetujuan mempelai ya.`);
       photoItems = [];
       renderPhotoGrid();
@@ -974,23 +982,31 @@ async function sendMedia() {
       progText.textContent = 'Memproses video dengan bingkai…';
       progBar.style.width = '0%';
       const processed = await processVideoWithFrame(videoFile, p => {
-        progBar.style.width = (p * 60) + '%';
-        progText.textContent = `Memproses ${Math.round(p * 100)}% (video diputar real-time)`;
+        progBar.style.width = Math.round(p * 60) + '%';
+        progText.textContent = `Memproses video ${Math.round(p * 100)}% (diputar real-time)`;
       });
+      progBar.style.width = '60%';
       progText.textContent = 'Mengunggah video…';
-      await uploadToDrive(processed.blob, 'video', name, processed.thumb, p => {
-        progBar.style.width = (60 + p * 40) + '%';
-        progText.textContent = `Mengunggah ${Math.round(p * 100)}%`;
+      await uploadToDrive(processed.blob, 'video', name, processed.thumb, (loaded, total) => {
+        const p = total ? (loaded / total) : 0;
+        progBar.style.width = Math.round(60 + p * 40) + '%';
+        progText.textContent = `Mengunggah video · ${fmtPair(loaded, total)}`;
       });
+      progBar.style.width = '100%';
+      progText.textContent = 'Selesai';
       showResult('success', 'Terkirim', `Videomu sudah masuk.\nTunggu persetujuan mempelai ya.`);
       resetVideo();
     } else if (currentMode === 'voice') {
       if (!voiceBlob) throw new Error('Rekam suara dulu');
-      progBar.style.width = '10%'; progText.textContent = 'Mengunggah suara…';
-      await uploadToDrive(voiceBlob, 'voice', name, voiceThumb, p => {
-        progBar.style.width = (10 + p * 90) + '%';
-        progText.textContent = `Mengunggah ${Math.round(p * 100)}%`;
+      progBar.style.width = '5%';
+      progText.textContent = 'Mengunggah suara…';
+      await uploadToDrive(voiceBlob, 'voice', name, voiceThumb, (loaded, total) => {
+        const p = total ? (loaded / total) : 0;
+        progBar.style.width = Math.round(5 + p * 95) + '%';
+        progText.textContent = `Mengunggah suara · ${fmtPair(loaded, total)}`;
       });
+      progBar.style.width = '100%';
+      progText.textContent = 'Selesai';
       showResult('success', 'Terkirim', `Suaramu sudah masuk.\nTunggu persetujuan mempelai ya.`);
       resetVoice();
     }
@@ -1033,7 +1049,7 @@ async function uploadToDrive(blob, type, guestName, thumbDataUri, onProgress) {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', init.upload_url);
     xhr.setRequestHeader('Content-Type', mime);
-    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total); };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try { resolve(JSON.parse(xhr.responseText).id); } catch (e) { reject(new Error('parse error')); }
@@ -1090,6 +1106,18 @@ function showToast(text, type) {
   const t = document.getElementById('toast');
   t.textContent = text; t.className = 'toast ' + type; t.style.display = 'block';
   setTimeout(() => { t.style.display = 'none'; }, 4500);
+}
+
+// Format progres upload: KB/MB, konsisten dengan queue di index.html
+function fmtPair(loaded, total) {
+  loaded = Math.max(0, Number(loaded) || 0);
+  total = Math.max(1, Number(total) || 0);
+  if (total >= 1048576) {
+    const f = n => (n / 1048576).toFixed(1).replace('.', ',');
+    return `${f(Math.min(loaded, total))} / ${f(total)} MB`;
+  }
+  const k = n => Math.round(n / 1024);
+  return `${Math.min(k(loaded), k(total))} / ${Math.max(1, k(total))} KB`;
 }
 
 function formatSeconds(s) {
