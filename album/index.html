@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -170,7 +171,8 @@
   .preview-card h3{margin:0 40px 6px 0; font-family:'Fraunces',serif; font-size:18px; color:var(--text);}
   .preview-card .pv-sub{font-size:12px; color:var(--text-3); margin-bottom:12px;}
   .preview-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:8px; overflow-y:auto; max-height:46vh; margin:0 -4px; padding:0 4px;}
-  .preview-grid .pv-item{position:relative; aspect-ratio:3/4; border-radius:4px; overflow:hidden; border:1px solid #E5DDD1; background:#EFE9DF;}
+  .preview-grid .pv-item{position:relative; aspect-ratio:3/4; border-radius:4px; overflow:hidden; border:1px solid #E5DDD1; background:#EFE9DF; cursor:zoom-in; transition:transform .12s, box-shadow .15s;}
+  .preview-grid .pv-item:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(68,8,8,.12);}
   .preview-grid .pv-item img{width:100%; height:100%; object-fit:cover; display:block;}
   .preview-loading{text-align:center; color:#8A7B6E; font-size:13px; padding:20px; grid-column:1/-1;}
   #previewSendBtn{margin-top:14px; background:var(--primary); color:#fff; padding:13px; border-radius:4px; border:none; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;}
@@ -178,6 +180,23 @@
   #previewSendBtn:disabled{opacity:.6; cursor:not-allowed;}
   #previewCloseBtn{position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; background:transparent; border:none; color:var(--text-3); font-size:16px; cursor:pointer;}
   #previewCloseBtn:hover{background:rgba(68,8,8,.08); color:var(--primary);}
+
+  /* Penampil foto ukuran penuh (dibuka dari grid pratinjau) */
+  .pvfull{position:fixed; inset:0; z-index:120; background:rgba(26,20,16,.94); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:24px;}
+  .pvfull.show{display:flex; animation:fadeInBg .15s ease-out;}
+  .pvfull img{max-width:96vw; max-height:84vh; object-fit:contain; border-radius:2px; box-shadow:0 16px 48px rgba(0,0,0,.5); background:#000; transition:opacity .15s;}
+  .pvfull img.loading{opacity:.6;}
+  .pvfull-cap{color:#F5F1EB; font-size:13px; font-family:'Fraunces',Georgia,serif; font-style:italic; display:flex; align-items:baseline; gap:10px;}
+  .pvfull-cap .pv-count{font-family:'JetBrains Mono',monospace; font-style:normal; font-size:11px; color:rgba(245,241,235,.65);}
+  .pvfull-nav{position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; border:none; cursor:pointer; background:rgba(245,241,235,.14); color:#F5F1EB; display:flex; align-items:center; justify-content:center; transition:background .15s, opacity .15s;}
+  .pvfull-nav:hover:not(:disabled){background:rgba(245,241,235,.28);}
+  .pvfull-nav:disabled{opacity:0; pointer-events:none;}
+  .pvfull-nav svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
+  .pvfull-nav.prev{left:12px;} .pvfull-nav.next{right:12px;}
+  .pvfull-close{position:absolute; top:14px; right:16px; background:rgba(245,241,235,.12); color:#F5F1EB; border:none; width:38px; height:38px; border-radius:50%; font-size:16px; cursor:pointer;}
+  .pvfull-close:hover{background:rgba(245,241,235,.24);}
+  @media (max-width:640px){ .pvfull-nav{width:42px; height:42px;} .pvfull-nav.prev{left:6px;} .pvfull-nav.next{right:6px;} }
+
   .side-spacer{width:44px; flex:none;}
   .queue-card{max-width:380px; padding:26px 22px 20px; text-align:left; position:relative;}
   .queue-card h3{margin:0 40px 4px 0; text-align:left;}
@@ -271,6 +290,14 @@
       <div class="preview-grid" id="photoPreviewGrid"></div>
       <button id="previewSendBtn" onclick="sendFromPreview()">Kirim Semua</button>
     </div>
+  </div>
+
+  <div class="pvfull" id="pvFull" onclick="if(event.target===this)closePvFull()">
+    <button class="pvfull-nav prev" id="pvFullPrev" aria-label="Foto sebelumnya" onclick="stepPvFull(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <img id="pvFullImg" alt="">
+    <div class="pvfull-cap" id="pvFullCap"><span>Pratinjau Foto</span><span class="pv-count" id="pvFullCount"></span></div>
+    <button class="pvfull-nav next" id="pvFullNext" aria-label="Foto berikutnya" onclick="stepPvFull(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="pvfull-close" aria-label="Tutup" onclick="closePvFull()">✕</button>
   </div>
 
   <div id="bottomOverlay">
@@ -915,7 +942,6 @@ function openQueue() { document.getElementById('queueOverlay').classList.add('sh
 function closeQueue() { document.getElementById('queueOverlay').classList.remove('show'); }
 document.getElementById('queueClose').addEventListener('click', closeQueue);
 document.getElementById('queueOverlay').addEventListener('click', e => { if (e.target.id === 'queueOverlay') closeQueue(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && queueOpen()) closeQueue(); });
 
 function paintQueue() {
   const list = document.getElementById('queueList');
@@ -1454,6 +1480,21 @@ function renderFilmstrip() {
 }
 
 // === PREVIEW FOTO ===
+// pvImages menyimpan object URL ukuran penuh (dari blob asli), bukan thumbnail.
+// Object URL ini harus di-revoke saat preview ditutup supaya memori tidak menumpuk.
+let pvImages = [];
+let pvIdx = 0;
+let pvObjectUrls = [];
+
+function trackPvUrl(url) {
+  if (url && url.indexOf('blob:') === 0) pvObjectUrls.push(url);
+  return url;
+}
+function revokePvUrls() {
+  pvObjectUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} });
+  pvObjectUrls = [];
+}
+
 function buildPreviewImage(item) {
   if (autoIncludeFrame.photo) return Promise.resolve(item.thumb);
   return new Promise(resolve => {
@@ -1471,23 +1512,67 @@ function buildPreviewImage(item) {
   });
 }
 
+// Bangun URL ukuran penuh untuk penampil besar. Kalau frame sudah dibakar saat
+// ambil foto (autoIncludeFrame.photo), blob-nya sudah final — langsung dipakai.
+// Kalau belum, frame digambar dulu di resolusi asli blob.
+function buildFullPreviewUrl(item) {
+  return new Promise(resolve => {
+    if (autoIncludeFrame.photo) {
+      resolve(trackPvUrl(URL.createObjectURL(item.blob)));
+      return;
+    }
+    const srcUrl = URL.createObjectURL(item.blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.width; c.height = img.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        try { drawCaptureFrameOverlay(ctx, c.width, c.height, 'photo'); } catch (e) {}
+        c.toBlob(b => {
+          URL.revokeObjectURL(srcUrl);
+          resolve(trackPvUrl(URL.createObjectURL(b || item.blob)));
+        }, 'image/jpeg', 0.92);
+      } catch (e) {
+        URL.revokeObjectURL(srcUrl);
+        resolve(trackPvUrl(URL.createObjectURL(item.blob)));
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(srcUrl);
+      resolve(trackPvUrl(URL.createObjectURL(item.blob)));
+    };
+    img.src = srcUrl;
+  });
+}
+
 async function openPhotoPreview() {
   if (photoShots.length === 0) return;
   const overlay = document.getElementById('photoPreviewOverlay');
   const grid = document.getElementById('photoPreviewGrid');
   const sub = document.getElementById('photoPreviewSub');
   const sendBtn = document.getElementById('previewSendBtn');
+  closePvFull();
+  revokePvUrls();
+  pvImages = [];
   sub.textContent = photoShots.length + ' foto siap dikirim';
   sendBtn.disabled = true;
   sendBtn.textContent = 'Menyiapkan…';
   grid.innerHTML = '<div class="preview-loading">Menyiapkan pratinjau…</div>';
   overlay.classList.add('show');
   try {
-    const html = await Promise.all(photoShots.map(async (shot, i) => {
-      const src = await buildPreviewImage(shot);
-      return '<div class="pv-item"><img src="' + src + '" alt="Foto ' + (i+1) + '"></div>';
+    const built = await Promise.all(photoShots.map(async (shot) => {
+      const thumbSrc = await buildPreviewImage(shot);
+      const fullSrc = await buildFullPreviewUrl(shot);
+      return { thumbSrc, fullSrc };
     }));
-    grid.innerHTML = html.join('');
+    pvImages = built.map(b => b.fullSrc);
+    grid.innerHTML = built.map((b, i) =>
+      '<div class="pv-item" data-pvidx="' + i + '" onclick="openPvFull(' + i + ')">' +
+        '<img src="' + b.thumbSrc + '" alt="Foto ' + (i + 1) + '">' +
+      '</div>'
+    ).join('');
     sendBtn.disabled = false;
     sendBtn.textContent = photoShots.length > 1 ? 'Kirim ' + photoShots.length + ' Foto' : 'Kirim Foto';
   } catch (e) {
@@ -1498,6 +1583,9 @@ async function openPhotoPreview() {
 }
 
 function closePhotoPreview() {
+  closePvFull();
+  revokePvUrls();
+  pvImages = [];
   document.getElementById('photoPreviewOverlay').classList.remove('show');
 }
 
@@ -1505,6 +1593,68 @@ function sendFromPreview() {
   closePhotoPreview();
   sendAllPhotos();
 }
+
+/* ==== Penampil foto ukuran penuh ==== */
+function openPvFull(idx) {
+  if (!pvImages.length) return;
+  pvIdx = Math.max(0, Math.min(pvImages.length - 1, idx | 0));
+  document.getElementById('pvFull').classList.add('show');
+  showPvFull();
+}
+
+function showPvFull() {
+  const img = document.getElementById('pvFullImg');
+  img.classList.add('loading');
+  img.onload = () => img.classList.remove('loading');
+  img.src = pvImages[pvIdx] || '';
+  document.getElementById('pvFullCount').textContent = pvImages.length > 1 ? (pvIdx + 1) + ' / ' + pvImages.length : '';
+  document.getElementById('pvFullPrev').disabled = pvIdx <= 0;
+  document.getElementById('pvFullNext').disabled = pvIdx >= pvImages.length - 1;
+}
+
+function closePvFull() {
+  document.getElementById('pvFull').classList.remove('show');
+  const img = document.getElementById('pvFullImg');
+  img.onload = null;
+  img.src = '';
+  pvIdx = 0;
+}
+
+function stepPvFull(dir) {
+  const n = pvIdx + dir;
+  if (n < 0 || n >= pvImages.length) return;
+  pvIdx = n;
+  showPvFull();
+}
+
+(function () {
+  const el = document.getElementById('pvFull');
+  let x0 = 0, y0 = 0;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const t = e.changedTouches[0]; if (!t) return;
+    const dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) > 55 && Math.abs(dy) < 70) stepPvFull(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const fullOpen = document.getElementById('pvFull').classList.contains('show');
+  const prevOpen = document.getElementById('photoPreviewOverlay').classList.contains('show');
+  if (fullOpen) {
+    if (e.key === 'Escape') closePvFull();
+    else if (e.key === 'ArrowLeft') stepPvFull(-1);
+    else if (e.key === 'ArrowRight') stepPvFull(1);
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (prevOpen) { closePhotoPreview(); return; }
+    if (queueOpen()) { closeQueue(); return; }
+  }
+});
 
 function removeShot(idx) {
   URL.revokeObjectURL(photoShots[idx].url);
