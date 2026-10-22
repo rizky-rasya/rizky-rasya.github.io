@@ -13,8 +13,8 @@
 <meta property="og:title" content="Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri">
 <meta property="og:description" content="Abadikan momen di hari bahagia Rasya &amp; Rizky. Kirim foto, video, atau ucapan langsung dari HP, pilih dari galeri, lalu lihat semuanya di album. Tanpa install aplikasi.">
 <meta property="og:url" content="https://rasya-rizky.online/album">
-<meta property="og:site_name" content="Uleman Digital Website">
-<meta property="article:section" content="Uleman">
+<meta property="og:site_name" content="Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri">
+<meta property="article:section" content="Wedding Album">
 <meta property="og:image" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
 <meta property="og:image:secure_url" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
 <meta property="og:image:width" content="1080">
@@ -37,67 +37,26 @@
 <link rel="dns-prefetch" href="https://script.google.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><style>
-  :root{ --primary:#440808; --accent:#C9A66B; --bg:#F5F1EB; --border:#E5DDD1; --text:#1A1410; --text-3:#8A7B6E; }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;height:100dvh;overflow:hidden;background:var(--bg);overscroll-behavior:none}
-  body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--text);touch-action:manipulation}
-  #app{display:flex;flex-direction:column;height:100%}
-  #tabbar{
-    flex:none;display:flex;gap:4px;
-    padding:max(8px, env(safe-area-inset-top)) 10px 8px;
-    background:var(--bg);border-bottom:1px solid var(--border);
-    position:relative;z-index:10;
-  }
-  #tabbar button{
-    flex:1;padding:10px 6px;min-height:40px;border:1px solid transparent;background:transparent;
-    font-family:inherit;font-size:13px;font-weight:700;letter-spacing:0.02em;
-    color:var(--text-3);border-radius:6px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    transition:background .15s,color .15s,border-color .15s;
-  }
-  #tabbar button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
-  #tabbar button:hover:not(.active){color:var(--text);background:rgba(68,8,8,.04)}
-  #tabbar button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-  #panels{flex:1;position:relative;min-height:0}
-  .panel{position:absolute;inset:0;display:none;background:var(--bg)}
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html,body{height:100%;height:100dvh;margin:0;overflow:hidden;background:#F5F1EB;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
+  #app{height:100%}
+  #panels{position:relative;width:100%;height:100%}
+  .panel{position:absolute;inset:0;display:none;background:#F5F1EB}
   .panel.active{display:block}
-  .panel iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
-  #empty{
-    position:absolute;inset:0;z-index:100;display:none;
-    align-items:center;justify-content:center;flex-direction:column;gap:14px;
-    padding:30px;text-align:center;background:var(--bg);
-  }
+  .panel iframe{display:block;width:100%;height:100%;border:0;background:#F5F1EB}
+  #empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:30px;text-align:center;background:#F5F1EB;z-index:100}
   #empty.show{display:flex}
-  #empty h2{font-family:'Fraunces',serif;font-size:22px;color:var(--text)}
-  #empty p{font-size:14px;color:var(--text-3);max-width:320px;line-height:1.6}
-  @media (max-width:480px){
-    #tabbar{padding-left:8px;padding-right:8px;gap:2px}
-    #tabbar button{font-size:12px;padding:9px 4px}
-    #tabbar button svg{width:14px;height:14px}
-  }
+  #empty h2{font-family:'Fraunces',Georgia,serif;font-size:22px;font-weight:700;color:#1A1410;margin:0}
+  #empty p{font-size:14px;color:#8A7B6E;max-width:320px;line-height:1.6;margin:0}
 </style>
 </head>
 <body>
 <div id="app">
-  <nav id="tabbar" role="tablist" aria-label="Menu utama">
-    <button data-tab="kirim" class="active" role="tab" aria-selected="true">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Kirim
-    </button>
-    <button data-tab="album" role="tab" aria-selected="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      Album
-    </button>
-    <button data-tab="galeri" role="tab" aria-selected="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Galeri
-    </button>
-  </nav>
   <main id="panels">
-    <div class="panel active" data-panel="kirim" role="tabpanel"></div>
-    <div class="panel" data-panel="album" role="tabpanel"></div>
-    <div class="panel" data-panel="galeri" role="tabpanel"></div>
+    <div class="panel active" data-panel="kirim"></div>
+    <div class="panel" data-panel="album"></div>
+    <div class="panel" data-panel="galeri"></div>
     <div id="empty">
       <h2>Link Belum Lengkap</h2>
       <p>Link ini belum berisi kode undangan. Minta mempelai mengirimkan link yang benar ya.</p>
@@ -106,9 +65,10 @@
 </div>
 
 <!-- ============================================================
-     TEMPLATE: KIRIM (fitur 1)
+     TEMPLATE: KIRIM
      ============================================================ -->
 <template id="tpl-kirim">
+<style>html,body{margin:0;background:#1A1410;color:#F5F1EB}</style>
 <meta charset="UTF-8">
 <title>Kirim Momen Rasya &amp; Rizky</title>
 <link rel="preconnect" href="https://script.google.com">
@@ -129,7 +89,7 @@
   #statusScreen p{font-size:14px;color:#A99F94;max-width:320px;line-height:1.6}
   /* #statusScreen button{margin-top:12px;padding:12px 28px;border-radius:4px;border:none;background:var(--accent);color:var(--dark);font-weight:700;font-family:inherit;font-size:14px;letter-spacing:0.01em;cursor:pointer} */
   #statusScreen button{margin-top:12px;padding:12px 28px;border-radius:4px;border:none;background:var(--accent);color:#ffffff;font-weight:700;font-family:inherit;font-size:14px;letter-spacing:0.01em;cursor:pointer}
-  .load-gif{width:50%;display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14))}
+  .load-gif{width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14))}
   @keyframes gentlePulse{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.06);opacity:1}}
   header{position:absolute;top:0;left:0;right:0;z-index:20;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(26,20,16,.72),transparent)}
   header .brand{font-family:'Fraunces',serif;font-weight:700;font-size:15px;color:#F5F1EB;letter-spacing:-0.01em}
@@ -281,11 +241,11 @@
   #resultSecondary{background:transparent;color:var(--text-3);font-weight:600}
 </style>
 <div id="app">
-  <div id="statusScreen">
-    <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true">
+  <div id="statusScreen" style="background:#1A1410">
+    <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true" width="96" height="96" style="width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;">
     <h2 id="statusTitle">Menyiapkan kamera…</h2>
     <p id="statusText">Sebentar ya, kami siapkan semuanya untukmu</p>
-    <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
+    <button id="statusBtn" style="display:none;" onclick="reloadSelf()">Coba Lagi</button>
   </div>
   <header>
     <div class="brand"><span id="brandName">Wedding Album</span><small id="brandDate"></small></div>
@@ -397,6 +357,10 @@
   </div>
 </div>
 <script>
+function reloadSelf(){
+  try { parent.postMessage({ type:'reloadTab', tab:'kirim' }, '*'); return; } catch(e){}
+  location.reload();
+}
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec';
 let MAX_SHOTS = 5;
 
@@ -681,7 +645,6 @@ function openResultModal(o){
   document.getElementById('resultText').textContent=o.text;
   const p=document.getElementById('resultPrimary'),s=document.getElementById('resultSecondary');
   p.textContent=o.primary.label;
-  /* PATCH: jika target album.html → pindah tab lewat parent, bukan navigasi iframe */
   p.onclick = o.primary.fn || (function(){
     var h = o.primary.href || '';
     if (/album\.html/.test(h)) { try { parent.postMessage({ type:'switchTab', tab:'album' }, '*'); } catch (e) {} }
@@ -1440,15 +1403,14 @@ function showStatus(title,text,action){
     btn.style.display='inline-block';btn.textContent=action.label;
     if(action.fn){btn.onclick=action.fn;}
     else if(action.href){
-      /* PATCH: intercept album.html */
       btn.onclick = function(){
         var h = action.href || '';
         if (/album\.html/.test(h)) { try { parent.postMessage({ type:'switchTab', tab:'album' }, '*'); } catch (e) {} }
         else { location.href = h; }
       };
     }
-    else{btn.onclick=()=>location.reload();}
-  }else if(action===true){btn.style.display='inline-block';btn.textContent='Coba Lagi';btn.onclick=()=>location.reload();}
+    else{btn.onclick=reloadSelf;}
+  }else if(action===true){btn.style.display='inline-block';btn.textContent='Coba Lagi';btn.onclick=reloadSelf;}
   else{btn.style.display='none';btn.onclick=null;}
 }
 function hideStatus(){document.getElementById('statusScreen').style.display='none';}
@@ -1457,7 +1419,6 @@ function formatSeconds(s){const m=String(Math.floor(s/60)).padStart(2,'0');const
 function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}}
 </script>
 <script>
-/* BRIDGE: interaksi antar-tab khusus fitur KIRIM */
 (function(){
   document.addEventListener('click', function(e){
     var a = e.target.closest && e.target.closest('a[href]');
@@ -1473,9 +1434,10 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
 </template>
 
 <!-- ============================================================
-     TEMPLATE: ALBUM (fitur 2)
+     TEMPLATE: ALBUM
      ============================================================ -->
 <template id="tpl-album">
+<style>html,body{margin:0;background:#F5F1EB;color:#1A1410}</style>
 <meta charset="UTF-8">
 <title>Album Momen Rasya &amp; Rizky</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1644,6 +1606,10 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
 </div>
 <canvas id="hiddenCanvas"></canvas>
 <script>
+function reloadSelf(){
+  try { parent.postMessage({ type:'reloadTab', tab:'album' }, '*'); return; } catch(e){}
+  location.reload();
+}
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec';
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
@@ -1712,7 +1678,7 @@ function buildFilters(){
     box.appendChild(b);
   });
 }
-function showLoadError(){const l=document.getElementById('loader');l.style.display='block';l.innerHTML='Koneksi sedang kurang stabil.<br><button class="retry-btn" onclick="location.reload()">Coba Lagi</button>';}
+function showLoadError(){const l=document.getElementById('loader');l.style.display='block';l.innerHTML='Koneksi sedang kurang stabil.<br><button class="retry-btn" onclick="reloadSelf()">Coba Lagi</button>';}
 const SIZE_KEY='album_page_size';
 let pageSize=25;
 try{const v=localStorage.getItem(SIZE_KEY);pageSize=v==='50'?50:(v==='all'?'all':25);}catch(e){}
@@ -2157,7 +2123,6 @@ function showToast(text,type){const t=document.getElementById('toast');t.textCon
 if(weddingId)watchPending();
 </script>
 <script>
-/* BRIDGE: interaksi antar-tab khusus fitur ALBUM */
 (function(){
   document.addEventListener('click', function(e){
     var a = e.target.closest && e.target.closest('a[href]');
@@ -2186,11 +2151,14 @@ if(weddingId)watchPending();
 </template>
 
 <!-- ============================================================
-     TEMPLATE: GALERI (fitur 3)
+     TEMPLATE: GALERI (hanya foto & video, tanpa suara)
      ============================================================ -->
 <template id="tpl-galeri">
+<style>html,body{margin:0;background:#F5F1EB;color:#1A1410}</style>
 <meta charset="UTF-8">
 <title>Kirim dari Galeri Rasya &amp; Rizky</title>
+<meta name="description" content="Pilih foto dan video langsung dari galeri HP kamu untuk melengkapi album pernikahan Rasya &amp; Rizky. Bisa pilih beberapa foto sekaligus, otomatis dibingkai, lalu tampil di album.">
+<meta name="twitter:data2" content="Foto &amp; video">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2201,6 +2169,7 @@ if(weddingId)watchPending();
   header{position:sticky;top:0;z-index:20;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:rgba(245,241,235,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);}
   header .brand{font-family:'Fraunces',serif;font-weight:700;font-size:15px;color:var(--text);letter-spacing:-0.01em;}
   header .brand small{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+  header .nav-links{display:flex;gap:8px;align-items:center;}
   header a.nav-link{color:var(--primary);text-decoration:none;font-size:12px;font-weight:600;background:var(--surface);padding:8px 14px;border-radius:4px;letter-spacing:.01em;border:1px solid var(--border);}
   header a.nav-link:hover{background:var(--surface-2);border-color:var(--border-strong);}
   .hero{padding:36px 20px 24px;max-width:720px;margin:0 auto;text-align:center;}
@@ -2233,19 +2202,6 @@ if(weddingId)watchPending();
   .name-field input::placeholder{color:var(--text-3);}
   .send-btn{width:100%;padding:15px 24px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.01em;cursor:pointer;transition:background .15s,transform .1s;}
   .send-btn:hover:not(:disabled){background:#B8955A;}.send-btn:active:not(:disabled){transform:translateY(1px);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
-  .voice-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 20px;text-align:center;}
-  .voice-wrap .orb{width:120px;height:120px;margin:0 auto 20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#A8874E);display:flex;align-items:center;justify-content:center;font-size:44px;color:var(--dark);box-shadow:0 0 0 8px rgba(201,166,107,.15);transition:box-shadow .3s;}
-  .voice-wrap .orb.recording{animation:pulse 1.4s infinite;}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(160,40,40,.4);}70%{box-shadow:0 0 0 26px rgba(160,40,40,0);}100%{box-shadow:0 0 0 0 rgba(160,40,40,0);}}
-  .voice-wrap .timer{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:500;letter-spacing:.04em;color:var(--text);margin-bottom:8px;}
-  .voice-wrap .hint{font-size:13px;color:var(--text-3);margin-bottom:20px;line-height:1.55;}
-  .voice-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-  .voice-actions button{padding:12px 22px;border-radius:4px;border:1px solid var(--border);background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;transition:background .15s,border-color .15s;}
-  .voice-actions button:hover{background:var(--surface-2);}
-  .voice-actions .primary{background:var(--primary);color:#fff;border-color:var(--primary);}
-  .voice-actions .primary:hover{background:var(--primary-hover);}
-  .voice-actions .danger{background:var(--danger);color:#fff;border-color:var(--danger);}
-  .voice-actions .danger:hover{background:#8A2020;}
   .result-overlay{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(26,20,16,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
   .result-overlay.show{display:flex;animation:fadeIn .2s ease-out;}
   .result-card{width:100%;max-width:360px;background:#F5F1EB;color:var(--text);border-radius:8px;padding:32px 28px 24px;text-align:center;box-shadow:0 16px 48px rgba(68,8,8,.24);border:1px solid var(--border);animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2);}
@@ -2264,7 +2220,7 @@ if(weddingId)watchPending();
   .status-screen h2{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--text);}
   .status-screen p{font-size:14px;color:var(--text-3);max-width:320px;line-height:1.6;}
   .status-screen button{margin-top:12px;padding:12px 28px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-weight:700;font-family:inherit;font-size:14px;cursor:pointer;}
-  .load-gif{width:50%;display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14));}
+  .load-gif{width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14));}
   @keyframes gentlePulse{0%,100%{transform:scale(1);opacity:.95;}50%{transform:scale(1.06);opacity:1;}}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99;background:var(--dark);color:#F5F1EB;padding:12px 22px;border-radius:4px;font-size:13px;display:none;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.24);white-space:pre-line;}
   .toast.success{background:var(--success);}.toast.error{background:var(--danger);}
@@ -2288,17 +2244,19 @@ if(weddingId)watchPending();
 </style>
 <header>
   <div class="brand"><span id="brandName">Wedding Album</span><small id="brandDate"></small></div>
-  <a class="nav-link" href="#" id="toAlbumLink">Lihat Album →</a>
+  <div class="nav-links">
+    <a class="nav-link" href="#" id="backToIndex">Kirim Momen</a>
+    <a class="nav-link" href="#" id="toAlbumLink">Lihat Album →</a>
+  </div>
 </header>
 <div class="hero">
   <h1>Kirim dari Galeri</h1>
-  <p>Pilih foto/video dari HP kamu, atau rekam suara</p>
+  <p>Pilih foto atau video dari HP kamu</p>
 </div>
 <div class="container">
   <div class="tabs" id="tabs">
     <button data-mode="photo" class="active">FOTO</button>
     <button data-mode="video">VIDEO</button>
-    <button data-mode="voice">SUARA</button>
   </div>
   <div class="mode-panel active" id="panel-photo">
     <input type="file" id="photoInput" accept="image/*" multiple hidden>
@@ -2326,24 +2284,6 @@ if(weddingId)watchPending();
     </div>
     <p id="videoTrimNote" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;text-align:center;"></p>
     <p id="videoProcessNote" style="display:none;font-size:12px;color:var(--text-3);margin-top:8px;text-align:center;">⏱ Video akan diproses real-time saat kirim (durasi video = waktu proses).</p>
-  </div>
-  <div class="mode-panel" id="panel-voice">
-    <div class="voice-wrap" id="voiceIdle">
-      <div class="orb" id="voiceOrb">🎤</div>
-      <div class="timer" id="voiceTimer">00:00</div>
-      <p class="hint" id="voiceHint">Ketuk tombol merah, lalu ucapkan doa & harapanmu. Bingkai otomatis terpasang.</p>
-      <div class="voice-actions">
-        <button class="danger" id="recordBtn">● Mulai Rekam</button>
-      </div>
-    </div>
-    <div class="voice-wrap" id="voiceReview" style="display:none;">
-      <p class="hint">Dengarkan dulu sebelum dikirim ya</p>
-      <video id="voicePreviewEl" playsinline controls style="width:100%;max-width:400px;border-radius:4px;margin:0 auto 16px;display:block;"></video>
-      <div class="voice-actions">
-        <button id="redoVoiceBtn">Rekam Ulang</button>
-        <button class="primary" id="sendVoiceBtn">Kirim Suara</button>
-      </div>
-    </div>
   </div>
   <div class="name-field">
     <label>Nama kamu</label>
@@ -2377,13 +2317,17 @@ if(weddingId)watchPending();
   </div>
 </div>
 <div class="status-screen" id="statusScreen">
-  <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true">
+  <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true" width="96" height="96" style="width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;">
   <h2 id="statusTitle">Memuat…</h2>
   <p id="statusText">Sebentar ya</p>
-  <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
+  <button id="statusBtn" style="display:none;" onclick="reloadSelf()">Coba Lagi</button>
 </div>
 <div class="toast" id="toast"></div>
 <script>
+function reloadSelf(){
+  try { parent.postMessage({ type:'reloadTab', tab:'galeri' }, '*'); return; } catch(e){}
+  location.reload();
+}
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec';
 const urlParams=new URLSearchParams(window.location.search);
 let weddingId=urlParams.get('w');
@@ -2391,8 +2335,9 @@ if(weddingId)localStorage.setItem('active_wedding_id',weddingId);
 else weddingId=localStorage.getItem('active_wedding_id');
 if(!weddingId){showStatus('Link Belum Lengkap','Link ini belum berisi kode undangan. Minta mempelai mengirimkan link terbaru ya.');throw new Error('no wedding id');}
 document.getElementById('toAlbumLink').href=`album.html?w=${encodeURIComponent(weddingId)}`;
-let weddingSettings=null;let maxPhoto=5;let maxVideoSeconds=60;let maxVoiceSeconds=60;
-let currentMode='photo';let photoItems=[];let videoFile=null;let videoMeta={duration:0,w:0,h:0};let voiceBlob=null;let voiceThumb='';
+document.getElementById('backToIndex').href=`index.html?w=${encodeURIComponent(weddingId)}`;
+let weddingSettings=null;let maxPhoto=5;let maxVideoSeconds=60;
+let currentMode='photo';let photoItems=[];let videoFile=null;let videoMeta={duration:0,w:0,h:0};
 let frameConfigCache={};let customFrameImgCache={};
 const IS_LOW_END=(navigator.deviceMemory&&navigator.deviceMemory<=2)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
 const VIDEO_MIME=(function pickMime(cands){for(const c of cands){if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(c.mime))return c;}return cands[cands.length-1];})([{mime:'video/mp4;codecs=h264,aac',ext:'mp4'},{mime:'video/mp4',ext:'mp4'},{mime:'video/webm;codecs=vp9,opus',ext:'webm'},{mime:'video/webm;codecs=vp8,opus',ext:'webm'},{mime:'video/webm',ext:'webm'}]);
@@ -2406,11 +2351,14 @@ async function init(){
     const s=await fetchJson(`action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
     if(!s.success){showStatus('Momen Tidak Ditemukan',s.message||'Kode undangan tidak valid.');return;}
     weddingSettings=s;applyThemeColors(s);
-    maxPhoto=Number(s.max_photo)||5;maxVideoSeconds=Number(s.max_video_seconds)||60;maxVoiceSeconds=Number(s.max_voice_seconds)||60;
+    maxPhoto=Number(s.max_photo)||5;maxVideoSeconds=Number(s.max_video_seconds)||60;
     document.getElementById('photoPickHint').textContent=`Bisa pilih maks ${maxPhoto} foto sekaligus`;
     document.getElementById('brandName').textContent=(s.ui_config&&s.ui_config.index_headline)||`${s.groom_name} & ${s.bride_name}`;
     if(s.date)document.getElementById('brandDate').textContent=formatDate(s.date);
-    const types=s.types||['photo'];
+    /* Filter: galeri hanya mendukung foto & video; abaikan 'voice' dari server */
+    const rawTypes=(s.types&&s.types.length?s.types:['photo','video']);
+    const types=rawTypes.filter(t=>t==='photo'||t==='video');
+    if(types.length===0)types.push('photo');
     document.querySelectorAll('#tabs button').forEach(btn=>{if(types.indexOf(btn.dataset.mode)===-1)btn.style.display='none';});
     if(types.length<=1)document.getElementById('tabs').style.display='none';
     switchMode(types[0]||'photo');
@@ -2430,7 +2378,7 @@ async function fetchJson(qs,tries=3){
   throw last||new Error('offline');
 }
 async function preloadFrameAssets(settings){
-  for(const type of ['photo','video','voice']){
+  for(const type of ['photo','video']){
     frameConfigCache[type]=getFrameConfig(type);
     const cf=frameConfigCache[type].customFrame;
     if(cf&&cf.file_id){try{customFrameImgCache[type]=await loadFrameImage(cf.file_id);}catch(e){customFrameImgCache[type]=null;}}
@@ -2447,8 +2395,15 @@ async function loadFrameImage(fileId){
 }
 function base64ToUint8(b64){const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return arr;}
 function getFrameConfig(type){
-  const w=weddingSettings||{};const uiConfig=w.ui_config||{};const frames=uiConfig.frames||{};const customFrame=type?frames[type]:null;const voiceCfg=frames.voice||{};
-  return{style:w.frame_style||'elegant',primary:w.primary_color||'#440808',secondary:w.secondary_color||'#C9A66B',groom:w.groom_name||'',bride:w.bride_name||'',date:w.date?formatDate(w.date):'',customFrame:(customFrame&&customFrame.type==='custom'&&customFrame.file_id)?customFrame:null,voiceLabel:voiceCfg.label||'Ucapan & Doa',voiceCenterColor:voiceCfg.centerColor||'#ffffff',voiceBarColor:voiceCfg.barColor||w.primary_color||'#C9A66B',voiceShape:voiceCfg.shape||'radial',voiceCenterShape:voiceCfg.centerShape||'circle',voiceCenterRound:voiceCfg.centerRound!=null?voiceCfg.centerRound:20,voiceFont:voiceCfg.font||'Plus Jakarta Sans'};
+  const w=weddingSettings||{};
+  const uiConfig=w.ui_config||{};
+  const frames=uiConfig.frames||{};
+  const customFrame=type?frames[type]:null;
+  return{
+    style:w.frame_style||'elegant',primary:w.primary_color||'#440808',secondary:w.secondary_color||'#C9A66B',
+    groom:w.groom_name||'',bride:w.bride_name||'',date:w.date?formatDate(w.date):'',
+    customFrame:(customFrame&&customFrame.type==='custom'&&customFrame.file_id)?customFrame:null
+  };
 }
 function drawFrameForMedia(ctx,frameImg,w,h){if(!frameImg)return;const fw=frameImg.naturalWidth||frameImg.width;const fh=frameImg.naturalHeight||frameImg.height;if(!fw||!fh)return;const mediaLandscape=w>h;const frameLandscape=fw>fh;const frameSquare=fw===fh;if(!frameSquare&&mediaLandscape!==frameLandscape){ctx.save();ctx.translate(w/2,h/2);ctx.rotate(Math.PI/2);ctx.drawImage(frameImg,-h/2,-w/2,h,w);ctx.restore();}else{ctx.drawImage(frameImg,0,0,w,h);}}
 function drawFrameBar(ctx,w,h,cfg){
@@ -2585,86 +2540,6 @@ async function processVideoWithFrame(file,onProgress){
     video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('gagal muat video'));};
   });
 }
-let voiceRecorder=null;let voiceChunks=[];let voiceStream=null;let voiceTimerInterval=null;let voiceSeconds=0;let voiceAudioCtx=null;
-document.getElementById('recordBtn').addEventListener('click',()=>startVoiceRecording());
-document.getElementById('redoVoiceBtn').addEventListener('click',resetVoice);
-document.getElementById('sendVoiceBtn').addEventListener('click',()=>{if(voiceBlob){sendMedia();}});
-async function startVoiceRecording(){
-  try{
-    voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
-    const cfg=frameConfigCache.voice||getFrameConfig('voice');
-    const vnRes=getVnResolution();
-    const guestNamePreview=(document.getElementById('guestName').value||'Tamu').trim();
-    const canvas=document.createElement('canvas');canvas.width=vnRes.width;canvas.height=vnRes.height;
-    const ctx=canvas.getContext('2d');
-    voiceAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    const src=voiceAudioCtx.createMediaStreamSource(voiceStream);
-    const analyser=voiceAudioCtx.createAnalyser();analyser.fftSize=256;
-    const dataArray=new Uint8Array(analyser.frequencyBinCount);src.connect(analyser);
-    const customImg=customFrameImgCache.voice;let drawing=true;
-    function drawLoop(){
-      if(!drawing)return;
-      analyser.getByteFrequencyData(dataArray);
-      if(customImg){drawFrameForMedia(ctx,customImg,canvas.width,canvas.height);}
-      else{ctx.fillStyle=cfg.secondary;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=cfg.primary;ctx.globalAlpha=.15;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalAlpha=1;}
-      drawAudiogramLive(ctx,canvas.width,canvas.height,dataArray,cfg,guestNamePreview);
-      if(!customImg)drawFrameBar(ctx,canvas.width,canvas.height,cfg);
-      requestAnimationFrame(drawLoop);
-    }
-    drawLoop();
-    const canvasStream=canvas.captureStream(30);
-    const combined=new MediaStream([...canvasStream.getVideoTracks(),...voiceStream.getAudioTracks()]);
-    voiceChunks=[];
-    voiceRecorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:2500000,audioBitsPerSecond:96000});
-    voiceRecorder.ondataavailable=e=>{if(e.data.size>0)voiceChunks.push(e.data);};
-    voiceRecorder.onstop=()=>{
-      drawing=false;
-      voiceBlob=new Blob(voiceChunks,{type:VIDEO_MIME.mime});
-      const thumb=makeThumbUri(canvas,canvas.width,canvas.height);voiceThumb=thumb;
-      document.getElementById('voicePreviewEl').src=URL.createObjectURL(voiceBlob);
-      document.getElementById('voiceIdle').style.display='none';
-      document.getElementById('voiceReview').style.display='block';
-      voiceStream.getTracks().forEach(t=>t.stop());
-      if(voiceAudioCtx){voiceAudioCtx.close().catch(()=>{});voiceAudioCtx=null;}
-      updateSendButtonState();
-    };
-    voiceRecorder.start();
-    document.getElementById('voiceOrb').classList.add('recording');
-    document.getElementById('voiceTimer').textContent='00:00';
-    document.getElementById('voiceHint').textContent='Sedang merekam… akan otomatis berhenti di '+maxVoiceSeconds+' detik.';
-    const btn=document.getElementById('recordBtn');btn.textContent='■ Berhenti';btn.onclick=stopVoiceRecording;
-    voiceSeconds=0;
-    voiceTimerInterval=setInterval(()=>{voiceSeconds++;document.getElementById('voiceTimer').textContent=formatSeconds(voiceSeconds);if(voiceSeconds>=maxVoiceSeconds)stopVoiceRecording();},1000);
-  }catch(err){showToast('Mikrofon belum bisa dipakai. Cek izin mikrofon di browser.','error');}
-}
-function stopVoiceRecording(){if(voiceRecorder&&voiceRecorder.state==='recording')voiceRecorder.stop();clearInterval(voiceTimerInterval);}
-function resetVoice(){
-  if(voiceBlob)URL.revokeObjectURL(document.getElementById('voicePreviewEl').src);
-  voiceBlob=null;voiceThumb='';voiceChunks=[];
-  document.getElementById('voiceIdle').style.display='block';
-  document.getElementById('voiceReview').style.display='none';
-  document.getElementById('voicePreviewEl').src='';
-  document.getElementById('voiceOrb').classList.remove('recording');
-  document.getElementById('voiceTimer').textContent='00:00';
-  document.getElementById('voiceHint').textContent='Ketuk tombol merah, lalu ucapkan doa & harapanmu. Bingkai otomatis terpasang.';
-  const btn=document.getElementById('recordBtn');btn.textContent='● Mulai Rekam';btn.onclick=startVoiceRecording;
-  voiceSeconds=0;updateSendButtonState();
-}
-function getVnResolution(){const w=weddingSettings||{};const vnRes=(w.ui_config&&w.ui_config.vn_resolution)||{preset:'hd'};if(vnRes.preset==='custom')return{width:vnRes.width||720,height:vnRes.height||720};if(vnRes.preset==='sd')return{width:480,height:480};if(vnRes.preset==='fhd')return{width:1080,height:1080};return{width:720,height:720};}
-function fillCenterShape(ctx,cx,cy,radius,cfg){
-  const shape=cfg.voiceCenterShape||'circle';ctx.fillStyle=cfg.voiceCenterColor;
-  if(shape==='square'){const size=radius*1.7;const round=Math.min(size/2,((cfg.voiceCenterRound!=null?cfg.voiceCenterRound:20)/100)*(size/2));ctx.beginPath();if(ctx.roundRect){ctx.roundRect(cx-size/2,cy-size/2,size,size,round);}else{ctx.rect(cx-size/2,cy-size/2,size,size);}ctx.fill();}
-  else if(shape==='heart'){const s=radius/60;ctx.beginPath();ctx.moveTo(cx,cy+35*s);ctx.bezierCurveTo(cx-70*s,cy-30*s,cx-25*s,cy-70*s,cx,cy-30*s);ctx.bezierCurveTo(cx+25*s,cy-70*s,cx+70*s,cy-30*s,cx,cy+35*s);ctx.closePath();ctx.fill();}
-  else{ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();}
-}
-function drawAudiogramLive(ctx,w,h,dataArray,cfg,guestName){
-  const cx=w/2,cy=h/2;const shape=cfg.voiceShape||'radial';const font=cfg.voiceFont||'Plus Jakarta Sans';const scale=Math.min(w,h)/720;
-  if(shape==='bars'){const barCount=32,barW=(w*.7)/barCount,startX=w*.15,baseY=cy+130*scale;ctx.fillStyle=cfg.voiceBarColor;for(let i=0;i<barCount;i++){const value=dataArray[i%dataArray.length]/255;const barH=(10+value*(h*.2/scale))*scale;ctx.fillRect(startX+i*barW,baseY-barH,barW*.7,barH);}fillCenterShape(ctx,cx,cy,90*scale,cfg);}
-  else if(shape==='pulse'){let avg=0;for(let i=0;i<dataArray.length;i++)avg+=dataArray[i];avg=avg/dataArray.length/255;const radius=(100+avg*40)*scale;ctx.fillStyle=cfg.voiceBarColor;ctx.globalAlpha=.25;ctx.beginPath();ctx.arc(cx,cy,radius+20*scale,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;fillCenterShape(ctx,cx,cy,radius,cfg);}
-  else{const radius=140*scale,bars=48;ctx.strokeStyle=cfg.voiceBarColor;ctx.lineWidth=5*scale;for(let i=0;i<bars;i++){const value=dataArray[i%dataArray.length]/255;const angle=(i/bars)*Math.PI*2;const barLen=(20+value*90)*scale;const x1=cx+Math.cos(angle)*radius,y1=cy+Math.sin(angle)*radius;const x2=cx+Math.cos(angle)*(radius+barLen),y2=cy+Math.sin(angle)*(radius+barLen);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}fillCenterShape(ctx,cx,cy,radius-10*scale,cfg);}
-  ctx.fillStyle=cfg.voiceBarColor;ctx.font=`600 ${Math.round(24*scale)}px "${font}", "Plus Jakarta Sans", sans-serif`;ctx.textAlign='center';ctx.fillText(cfg.voiceLabel,cx,cy-8*scale);
-  ctx.font=`400 ${Math.round(14*scale)}px "JetBrains Mono", monospace`;ctx.fillText(guestName,cx,cy+20*scale);
-}
 document.getElementById('sendBtn').addEventListener('click',sendMedia);
 function updateSendButtonState(){
   const btn=document.getElementById('sendBtn');
@@ -2672,9 +2547,8 @@ function updateSendButtonState(){
   let ready=false;
   if(currentMode==='photo')ready=photoItems.length>0;
   else if(currentMode==='video')ready=!!videoFile;
-  else if(currentMode==='voice')ready=!!voiceBlob;
   btn.disabled=!(ready&&name);
-  btn.textContent=currentMode==='photo'?(photoItems.length>1?`Kirim ${photoItems.length} Foto`:'Kirim Foto'):currentMode==='video'?'Kirim Video':'Kirim Suara';
+  btn.textContent=currentMode==='photo'?(photoItems.length>1?`Kirim ${photoItems.length} Foto`:'Kirim Foto'):'Kirim Video';
 }
 async function sendMedia(){
   const name=document.getElementById('guestName').value.trim();
@@ -2715,13 +2589,6 @@ async function sendMedia(){
       progBar.style.width='100%';progText.textContent='Selesai';
       showResult('success','Terkirim',`Videomu sudah masuk.\nTunggu persetujuan mempelai ya.`);
       resetVideo();
-    }else if(currentMode==='voice'){
-      if(!voiceBlob)throw new Error('Rekam suara dulu');
-      progBar.style.width='5%';progText.textContent='Mengunggah suara…';
-      await uploadToDrive(voiceBlob,'voice',name,voiceThumb,(loaded,total)=>{const p=total?(loaded/total):0;progBar.style.width=Math.round(5+p*95)+'%';progText.textContent=`Mengunggah suara · ${fmtPair(loaded,total)}`;});
-      progBar.style.width='100%';progText.textContent='Selesai';
-      showResult('success','Terkirim',`Suaramu sudah masuk.\nTunggu persetujuan mempelai ya.`);
-      resetVoice();
     }
   }catch(err){showResult('error','Belum berhasil',err.message||'Coba lagi ya.');}
   finally{progWrap.style.display='none';progBar.style.width='0%';btn.disabled=false;updateSendButtonState();}
@@ -2764,9 +2631,8 @@ function showResult(kind,title,text){
   document.getElementById('resultTitle').textContent=title;
   document.getElementById('resultText').textContent=text;
   document.getElementById('resultPrimary').textContent='Lihat Album';
-  /* PATCH: jangan navigasi ke album.html, minta parent ganti tab */
-  document.getElementById('resultPrimary').onclick = function(){
-    try { parent.postMessage({ type:'switchTab', tab:'album' }, '*'); } catch (e) {}
+  document.getElementById('resultPrimary').onclick=function(){
+    try{parent.postMessage({type:'switchTab',tab:'album'},'*');}catch(e){}
     ov.classList.remove('show');
   };
   document.getElementById('resultSecondary').textContent='Kirim Lagi';
@@ -2787,19 +2653,20 @@ function fmtPair(loaded,total){
   const k=n=>Math.round(n/1024);
   return`${Math.min(k(loaded),k(total))} / ${Math.max(1,k(total))} KB`;
 }
-function formatSeconds(s){const m=String(Math.floor(s/60)).padStart(2,'0');const sec=String(s%60).padStart(2,'0');return`${m}:${sec}`;}
 function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}}
 </script>
 <script>
-/* BRIDGE: interaksi antar-tab khusus fitur GALERI */
 (function(){
   document.addEventListener('click', function(e){
     var a = e.target.closest && e.target.closest('a[href]');
     if (!a) return;
     var href = a.getAttribute('href') || '';
-    if (a.id === 'toAlbumLink' || /album\.html/.test(href)) {
+    var tab = null;
+    if (a.id === 'backToIndex' || /index\.html/.test(href)) tab = 'kirim';
+    else if (a.id === 'toAlbumLink' || /album\.html/.test(href)) tab = 'album';
+    if (tab) {
       e.preventDefault();
-      try { parent.postMessage({ type:'switchTab', tab:'album' }, '*'); } catch (err) {}
+      try { parent.postMessage({ type:'switchTab', tab: tab }, '*'); } catch (err) {}
     }
   }, true);
 })();
@@ -2807,7 +2674,7 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
 </template>
 
 <!-- ============================================================
-     PARENT: manajemen tab + lazy load iframe
+     PARENT SCRIPT: routing panel, lazy iframe, reload handler
      ============================================================ -->
 <script>
 (function(){
@@ -2816,66 +2683,59 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
   if (weddingId) localStorage.setItem('active_wedding_id', weddingId);
   else weddingId = localStorage.getItem('active_wedding_id');
 
-  const hasWedding = !!weddingId;
-
-  if (!hasWedding) {
+  if (!weddingId) {
     document.getElementById('empty').classList.add('show');
-    document.getElementById('tabbar').style.display = 'none';
     return;
   }
 
-  const TEMPLATES = { kirim: 'tpl-kirim', album: 'tpl-album', galeri: 'tpl-galeri' };
-  const loaded = { kirim: false, album: false, galeri: false };
+  const TEMPLATES = { kirim:'tpl-kirim', album:'tpl-album', galeri:'tpl-galeri' };
+  const loaded = { kirim:false, album:false, galeri:false };
   let currentTab = null;
+
+  function createIframe(tab){
+    const panel = document.querySelector('.panel[data-panel="'+tab+'"]');
+    const tpl = document.getElementById(TEMPLATES[tab]);
+    if (!panel || !tpl) return;
+    panel.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.title = tab;
+    iframe.setAttribute('allow', 'camera; microphone; autoplay; fullscreen; clipboard-write');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+    iframe.srcdoc = tpl.innerHTML;
+    panel.appendChild(iframe);
+    loaded[tab] = true;
+  }
 
   function activateTab(tab){
     if (!TEMPLATES[tab]) tab = 'kirim';
-    document.querySelectorAll('#tabbar button').forEach(b => {
-      const on = b.dataset.tab === tab;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    document.querySelectorAll('.panel').forEach(p => {
-      p.classList.toggle('active', p.dataset.panel === tab);
-    });
-    if (!loaded[tab]){
-      const panel = document.querySelector('.panel[data-panel="'+tab+'"]');
-      const tpl = document.getElementById(TEMPLATES[tab]);
-      if (panel && tpl){
-        const iframe = document.createElement('iframe');
-        iframe.title = tab;
-        iframe.setAttribute('allow', 'camera; microphone; autoplay; fullscreen; clipboard-write');
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-        iframe.srcdoc = tpl.innerHTML;
-        panel.appendChild(iframe);
-        loaded[tab] = true;
-      }
-    } else if (tab === 'album'){
-      // Album sudah ada → minta refresh data (mis. setelah kirim di tab lain)
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+    if (!loaded[tab]) createIframe(tab);
+    else if (tab === 'album') {
       const ifr = document.querySelector('.panel[data-panel="album"] iframe');
-      if (ifr && ifr.contentWindow) {
-        try { ifr.contentWindow.postMessage({ type: 'refreshAlbum' }, '*'); } catch (e) {}
-      }
+      if (ifr && ifr.contentWindow) try { ifr.contentWindow.postMessage({ type:'refreshAlbum' }, '*'); } catch(e){}
     }
     currentTab = tab;
     try {
       const p = new URLSearchParams(window.location.search);
       p.set('tab', tab);
       history.replaceState(null, '', '?' + p.toString());
-    } catch (e) {}
+    } catch(e){}
+  }
+
+  function reloadTab(tab){
+    if (!TEMPLATES[tab]) return;
+    const wasActive = currentTab === tab;
+    loaded[tab] = false;
+    const panel = document.querySelector('.panel[data-panel="'+tab+'"]');
+    if (panel) panel.innerHTML = '';
+    if (wasActive) activateTab(tab);
   }
 
   window.addEventListener('message', e => {
-    if (e.data && e.data.type === 'switchTab' && TEMPLATES[e.data.tab]) {
-      activateTab(e.data.tab);
-    }
-  });
-
-  document.getElementById('tabbar').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-tab]');
-    if (!btn) return;
-    activateTab(btn.dataset.tab);
+    const d = e.data || {};
+    if (d.type === 'switchTab' && TEMPLATES[d.tab]) activateTab(d.tab);
+    else if (d.type === 'reloadTab' && TEMPLATES[d.tab]) reloadTab(d.tab);
   });
 
   const initial = urlParams.get('tab');
