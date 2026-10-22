@@ -36,6 +36,8 @@ Kalau URL deployment berubah, ganti `APPS_SCRIPT_URL` di keempat file HTML.
 
 ## 3. Yang baru di v16
 
+- **Card album seragam.** Foto, video, dan suara kini sama besar (kotak 4:5) sebelum dan sesudah diputar. Video/suara berbingkai yang diputar mengisi card yang sama, tidak lagi membesarkannya. Foto dipotong rapi di kartu; ketuk untuk lihat utuh.
+
 Hanya `index.html` dan `album.html` yang berubah. `Code.gs` tetap v15 (`ping` tetap menampilkan `v15-2026-10-21-direct-all`, tidak perlu deploy ulang).
 
 - **Bar hijau "selesai" kini penuh 100%.** Sebelumnya lebar sisa dari progres terakhir menimpa gaya CSS.

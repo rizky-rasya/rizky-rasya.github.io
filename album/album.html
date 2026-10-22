@@ -111,19 +111,20 @@
     transition:border-color .15s,box-shadow .15s;
   }
   .item:hover{border-color:var(--border-strong);box-shadow:0 1px 2px rgba(68,8,8,.04);}
-  .item .media-box{
-    position:relative; background:var(--surface-2); min-height:120px;
+  /* Semua card media (foto, video, suara) sama besar: kotak 4:5 */
+  .item .media-box, .item .audio-box{
+    position:relative; width:100%; aspect-ratio:4/5; overflow:hidden;
+    background:var(--surface-2);
     display:flex; align-items:center; justify-content:center;
     border-bottom:1px solid var(--border);
   }
-  .item img{width:100%; display:block; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
-  .item video{width:100%; display:block;}
+  .item .media-box > img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  .item .media-box > video, .item .audio-box > video{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; display:block;}
   .item .audio-box{
-    padding:32px 16px; display:flex; flex-direction:column;
-    align-items:center; gap:12px;
+    flex-direction:column; gap:14px;
     background:linear-gradient(135deg,#EFE9DF,#F5F1EB);
   }
-  .audio-box .wave{font-size:28px;color:var(--accent);}
+  .audio-box .wave{font-size:40px;color:var(--accent);}
   .play-toggle{
     width:44px; height:44px; border-radius:50%; border:none;
     background:var(--primary); color:#fff; font-size:15px; cursor:pointer;
@@ -171,7 +172,7 @@
     background:var(--primary); color:#fff; font-weight:600; font-family:inherit;
     font-size:13px; cursor:pointer; letter-spacing:0.01em;
   }
-  .item{content-visibility:auto; contain-intrinsic-size:auto 260px;}
+  .item{content-visibility:auto; contain-intrinsic-size:auto 330px;}
   .empty{text-align:center; color:var(--text-3); padding:64px 0; font-size:14px; line-height:1.7;}
   .loader{text-align:center; padding:64px 0; color:var(--text-3);}
 
@@ -631,15 +632,15 @@ function renderItems(list, append, startIndex) {
     let mediaHtml = '';
 
     if (!previewOn) {
-      mediaHtml = `<div class="media-box" style="min-height:100px;flex-direction:column;gap:6px;color:var(--text-3);">
+      mediaHtml = `<div class="media-box" style="flex-direction:column;gap:6px;color:var(--text-3);">
         <span style="font-size:26px;">${TYPE_ICON[item.media_type]}</span>
         <span style="font-size:11px;">${TYPE_LABEL[item.media_type]} — unduh untuk melihat</span></div>`;
     } else if (item.media_type === 'photo') {
       mediaHtml = thumb
         ? `<div class="media-box" data-act="view" style="cursor:zoom-in"><img src="${thumb}" decoding="async" alt="Foto dari ${escapeAttr(item.guest_name)}"></div>`
-        : `<div class="media-box" data-act="view" style="min-height:140px;cursor:zoom-in"><span class="spinner">Ketuk untuk melihat foto</span></div>`;
+        : `<div class="media-box" data-act="view" style="cursor:zoom-in"><span class="spinner">Ketuk untuk melihat foto</span></div>`;
     } else if (item.media_type === 'video') {
-      mediaHtml = `<div class="media-box" id="${uid}_box" style="${thumb ? '' : 'min-height:160px;background:#2A2320;'}">
+      mediaHtml = `<div class="media-box" id="${uid}_box" style="${thumb ? '' : 'background:#2A2320;'}">
           ${thumb ? `<img src="${thumb}" decoding="async" alt="">` : ''}
           <button class="video-poster-btn" data-act="playvideo" aria-label="Putar video">▶</button></div>`;
     } else {
@@ -891,7 +892,7 @@ async function playFullVideo(fileId, uid, btn) {
   btn.disabled = true; btn.textContent = '…';
   try {
     const { url } = await fetchFileChunked(fileId);
-    box.innerHTML = `<video id="${uid}" src="${url}" controls playsinline autoplay style="width:100%;display:block;"></video>`;
+    box.innerHTML = `<video id="${uid}" src="${url}" controls playsinline autoplay></video>`;
     document.getElementById(uid).play();
   } catch (err) {
     showToast('Video belum bisa diputar. Coba lagi ya.', 'error');
@@ -910,8 +911,8 @@ async function playAudio(fileId, uid, btn) {
       mediaEl.id = uid; mediaEl.src = url;
       if (isVideoContainer) {
         mediaEl.playsInline = true;
-        mediaEl.style.cssText = 'width:100%;border-radius:2px;display:block;margin-top:10px;';
-        btn.insertAdjacentElement('afterend', mediaEl);
+        btn.closest('.audio-box').appendChild(mediaEl);   // mengisi card yang sama (CSS), tidak membesarkan card
+        btn.parentElement.querySelector('.wave').style.display = 'none'; btn.style.cssText = 'position:absolute;left:10px;top:10px;z-index:2;width:36px;height:36px;';
       } else {
         mediaEl.style.display = 'none';
         document.body.appendChild(mediaEl);
