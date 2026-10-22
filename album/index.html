@@ -163,33 +163,20 @@
   /* Preview slot di capture row */
   .side-slot{position:relative; width:44px; height:44px; flex:none;}
   .side-slot .side-btn{position:absolute; inset:0; margin:0;}
-  #previewBtn{display:none; align-items:center; justify-content:center; background:var(--primary); border:1px solid var(--primary); color:#fff;}
+  #previewBtn{display:none; align-items:center; justify-content:center; background:var(--primary); border:1px solid var(--primary); color:#fff; font-family:inherit; font-size:11px; font-weight:700; letter-spacing:0.02em; line-height:1; padding:0;}
   #previewBtn.show{display:flex;}
-  #previewBtn svg{width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
   #previewBtn:disabled{opacity:.6;}
 
-  /* Preview modal */
-  .preview-card{width:100%; max-width:420px; background:#F5F1EB; color:var(--text); border-radius:8px; padding:22px 20px 20px; position:relative; box-shadow:0 16px 48px rgba(68,8,8,.24); border:1px solid #E5DDD1; max-height:86vh; display:flex; flex-direction:column;}
-  .preview-card h3{margin:0 40px 6px 0; font-family:'Fraunces',serif; font-size:18px; color:var(--text);}
-  .preview-card .pv-sub{font-size:12px; color:var(--text-3); margin-bottom:12px;}
-  .preview-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:8px; overflow-y:auto; max-height:46vh; margin:0 -4px; padding:0 4px;}
-  .preview-grid .pv-item{position:relative; aspect-ratio:3/4; border-radius:4px; overflow:hidden; border:1px solid #E5DDD1; background:#EFE9DF; cursor:zoom-in; transition:transform .12s, box-shadow .15s;}
-  .preview-grid .pv-item:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(68,8,8,.12);}
-  .preview-grid .pv-item img{width:100%; height:100%; object-fit:cover; display:block;}
-  .preview-loading{text-align:center; color:#8A7B6E; font-size:13px; padding:20px; grid-column:1/-1;}
-  #previewSendBtn{margin-top:14px; background:var(--primary); color:#fff; padding:13px; border-radius:4px; border:none; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;}
-  #previewSendBtn:hover{background:var(--primary-hover);}
-  #previewSendBtn:disabled{opacity:.6; cursor:not-allowed;}
-  #previewCloseBtn{position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; background:transparent; border:none; color:var(--text-3); font-size:16px; cursor:pointer;}
-  #previewCloseBtn:hover{background:rgba(68,8,8,.08); color:var(--primary);}
-
-  /* Penampil foto ukuran penuh (dibuka dari grid pratinjau) */
+  /* Penampil foto ukuran penuh (langsung dari tombol "Lihat") */
   .pvfull{position:fixed; inset:0; z-index:120; background:rgba(26,20,16,.94); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:24px;}
   .pvfull.show{display:flex; animation:fadeInBg .15s ease-out;}
-  .pvfull img{max-width:96vw; max-height:84vh; object-fit:contain; border-radius:2px; box-shadow:0 16px 48px rgba(0,0,0,.5); background:#000; transition:opacity .15s;}
+  .pvfull img{max-width:96vw; max-height:72vh; object-fit:contain; border-radius:2px; box-shadow:0 16px 48px rgba(0,0,0,.5); background:#000; transition:opacity .15s;}
   .pvfull img.loading{opacity:.6;}
   .pvfull-cap{color:#F5F1EB; font-size:13px; font-family:'Fraunces',Georgia,serif; font-style:italic; display:flex; align-items:baseline; gap:10px;}
   .pvfull-cap .pv-count{font-family:'JetBrains Mono',monospace; font-style:normal; font-size:11px; color:rgba(245,241,235,.65);}
+  .pvfull-del{background:var(--danger); color:#fff; border:none; padding:10px 22px; border-radius:4px; font-family:inherit; font-size:13px; font-weight:700; letter-spacing:0.01em; cursor:pointer; box-shadow:0 4px 12px rgba(160,40,40,.3);}
+  .pvfull-del:hover{background:#8A2020;}
+  .pvfull-del:active{transform:translateY(1px);}
   .pvfull-nav{position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; border:none; cursor:pointer; background:rgba(245,241,235,.14); color:#F5F1EB; display:flex; align-items:center; justify-content:center; transition:background .15s, opacity .15s;}
   .pvfull-nav:hover:not(:disabled){background:rgba(245,241,235,.28);}
   .pvfull-nav:disabled{opacity:0; pointer-events:none;}
@@ -283,20 +270,11 @@
     </div>
   </div>
 
-  <div class="result-overlay" id="photoPreviewOverlay">
-    <div class="preview-card">
-      <button id="previewCloseBtn" aria-label="Tutup" onclick="closePhotoPreview()">✕</button>
-      <h3>Pratinjau Foto</h3>
-      <div class="pv-sub" id="photoPreviewSub"></div>
-      <div class="preview-grid" id="photoPreviewGrid"></div>
-      <button id="previewSendBtn" onclick="sendFromPreview()">Kirim Semua</button>
-    </div>
-  </div>
-
   <div class="pvfull" id="pvFull" onclick="if(event.target===this)closePvFull()">
     <button class="pvfull-nav prev" id="pvFullPrev" aria-label="Foto sebelumnya" onclick="stepPvFull(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <img id="pvFullImg" alt="">
+    <img id="pvFullImg" alt="Pratinjau foto">
     <div class="pvfull-cap" id="pvFullCap"><span>Pratinjau Foto</span><span class="pv-count" id="pvFullCount"></span></div>
+    <button class="pvfull-del" id="pvFullDel" onclick="deleteFromPvFull()">Hapus Foto</button>
     <button class="pvfull-nav next" id="pvFullNext" aria-label="Foto berikutnya" onclick="stepPvFull(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <button class="pvfull-close" aria-label="Tutup" onclick="closePvFull()">✕</button>
   </div>
@@ -323,9 +301,7 @@
           <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
           <span class="badge"></span>
         </button>
-        <button class="side-btn" id="previewBtn" aria-label="Pratinjau foto" title="Pratinjau foto" onclick="openPhotoPreview()">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+        <button class="side-btn" id="previewBtn" aria-label="Lihat foto yang sudah diambil" title="Lihat foto" onclick="openPhotoPreview()">Lihat</button>
       </div>
     </div>
 
@@ -1069,9 +1045,7 @@ const photoCanvas = document.getElementById('photoCanvasPreview');
 const recordedVideo = document.getElementById('recordedVideo');
 
 /* ================================================================
-   CACHE SETTINGS — supaya kunjungan berikutnya instan.
-   Kunci di localStorage, TTL 12 jam. Kalau kena cache, UI + kamera
-   langsung tampil, lalu settings di-refresh diam-diam di background.
+   CACHE SETTINGS — kunjungan berikutnya instan.
    ================================================================ */
 const SETTINGS_CACHE_TTL = 12 * 3600 * 1000;
 function settingsCacheKey() { return 'ws_v1_' + weddingId; }
@@ -1118,7 +1092,6 @@ function applyThemeColors(s) {
   if (s.secondary_color) document.documentElement.style.setProperty('--accent',  s.secondary_color);
 }
 
-/* Terapkan settings ke UI global. Return false bila tidak ada jenis media aktif. */
 function applySettings(settings, filters) {
   if (!settings || !settings.success) return false;
   weddingSettings = settings;
@@ -1140,7 +1113,6 @@ function applySettings(settings, filters) {
   return true;
 }
 
-/* Terapkan daftar filter ke state global + viewfinder. Idempoten. */
 function applyFilters(filterData) {
   if (!filterData || !filterData.success) return;
   if (!weddingSettings || weddingSettings.allow_filter === false) return;
@@ -1154,7 +1126,6 @@ function applyFilters(filterData) {
     else if (raw.photo || raw.video) activeFilterParams = { photo: raw.photo || {}, video: raw.video || {} };
     else activeFilterParams = { photo: raw, video: raw };
   } catch (e) { activeFilterParams = null; }
-  // Re-apply ke viewfinder yang sedang jalan
   try {
     if (liveVideo && liveStream) {
       liveVideo.style.filter = activeFilterParams
@@ -1174,7 +1145,7 @@ async function init() {
 
   if (cached) {
     if (applySettings(cached.settings, cached.filters)) haveSettings = true;
-    else return; // settings tersimpan menandakan pengiriman ditutup
+    else return;
   } else {
     try {
       const w = encodeURIComponent(weddingId);
@@ -1193,7 +1164,6 @@ async function init() {
 
   if (!haveSettings) return;
 
-  // Start kamera; hideStatus hanya jika berhasil (kalau gagal, startCamera yang set status error).
   if (currentMode === 'voice') {
     hideStatus();
   } else {
@@ -1201,10 +1171,8 @@ async function init() {
     if (ok) hideStatus();
   }
 
-  // ---- BACKGROUND TASKS ----
   const w = encodeURIComponent(weddingId);
 
-  // 1) Filters — refresh dari server. Kalau gagal, tetap pakai cache (bila ada).
   fetchJson(`action=getFilters&wedding_id=${w}`, 2, 10000)
     .then(f => {
       if (f && f.success) {
@@ -1216,18 +1184,14 @@ async function init() {
     })
     .catch(() => {});
 
-  // 2) Kalau dari cache, refresh settings di background juga
   if (cached) {
     fetchJson(`action=getSettings&wedding_id=${w}`, 2, 10000)
       .then(fresh => {
-        if (fresh && fresh.success) {
-          applySettings(fresh, null); // jangan reset filter yang mungkin sudah masuk
-        }
+        if (fresh && fresh.success) applySettings(fresh, null);
       })
       .catch(() => {});
   }
 
-  // 3) Bingkai custom: fire-and-forget, TIDAK memblokir UI/kamera.
   preloadFrameAssets(weddingSettings).catch(() => {});
 }
 
@@ -1247,7 +1211,6 @@ function setupModeSwitch(types) {
   });
   const box = document.getElementById('modeSwitch');
   box.style.display = types.length > 1 ? '' : 'none';
-  if (!modeSwitchInited) { /* tidak mungkin */ }
 }
 
 let autoIncludeFrame = { photo: false, video: false, voice: false };
@@ -1284,7 +1247,6 @@ function getVnResolution() {
   return { width: 720, height: 720 };
 }
 
-/* Fase sinkron: siapkan config (instan). Fase async: unduh gambar bingkai di background. */
 function preloadFrameAssets(settings) {
   if (framesPreloadStarted) return Promise.resolve();
   framesPreloadStarted = true;
@@ -1505,11 +1467,7 @@ function switchMode(mode) {
 }
 
 /* ================================================================
-   KAMERA — perbaikan utama:
-   1) liveVideo.play() eksplisit (fix black screen setelah dialog izin)
-   2) Token lock mencegah race condition (double-tap flip dsb.)
-   3) Retry sekali dengan resolusi lebih rendah kalau video tetap kosong
-   4) srcObject dibersihkan saat stop stream
+   KAMERA — play() eksplisit + retry + token lock
    ================================================================ */
 let cameraToken = 0;
 
@@ -1531,7 +1489,6 @@ async function startCamera(isRetry) {
       audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
     });
 
-    // Kalau ada startCamera yang lebih baru, buang stream ini.
     if (myToken !== cameraToken) {
       stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
       return true;
@@ -1548,12 +1505,10 @@ async function startCamera(isRetry) {
       liveVideo.classList.toggle('mirrored', currentFacing === 'user');
     } catch (e) {}
 
-    // Play eksplisit — ini kunci utama mengatasi kamera hitam.
     try {
       const p = liveVideo.play();
       if (p && p.then) {
-        await p.catch(err => {
-          // Autoplay diblokir — coba lagi saat user berinteraksi sekali.
+        await p.catch(() => {
           const retryPlay = () => { try { liveVideo.play().catch(() => {}); } catch (e) {} };
           document.addEventListener('click', retryPlay, { once: true, passive: true });
           document.addEventListener('touchstart', retryPlay, { once: true, passive: true });
@@ -1561,7 +1516,6 @@ async function startCamera(isRetry) {
       }
     } catch (e) {}
 
-    // Tunggu metadata muncul. Kalau tetap kosong, retry sekali dengan resolusi lebih rendah.
     if (!liveVideo.videoWidth) {
       await new Promise(resolve => {
         let done = false;
@@ -1677,7 +1631,7 @@ function renderFilmstrip() {
   if (previewBtn) previewBtn.style.display = 'flex';
 }
 
-// === PREVIEW FOTO ===
+// === PREVIEW FOTO (FULLSCREEN — tanpa modal grid) ===
 let pvImages = [];
 let pvIdx = 0;
 let pvObjectUrls = [];
@@ -1691,23 +1645,8 @@ function revokePvUrls() {
   pvObjectUrls = [];
 }
 
-function buildPreviewImage(item) {
-  if (autoIncludeFrame.photo) return Promise.resolve(item.thumb);
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement('canvas');
-      c.width = img.width; c.height = img.height;
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      try { drawCaptureFrameOverlay(ctx, c.width, c.height, 'photo'); } catch (e) {}
-      resolve(c.toDataURL('image/jpeg', 0.82));
-    };
-    img.onerror = () => resolve(item.thumb);
-    img.src = item.thumb;
-  });
-}
-
+// Bikin URL ukuran penuh untuk viewer. Kalau frame sudah dibakar saat ambil
+// foto (autoIncludeFrame.photo), blob final sudah ada — langsung dipakai.
 function buildFullPreviewUrl(item) {
   return new Promise(resolve => {
     if (autoIncludeFrame.photo) {
@@ -1740,54 +1679,20 @@ function buildFullPreviewUrl(item) {
   });
 }
 
+// Klik "Lihat" → langsung buka foto besar (tanpa modal grid).
 async function openPhotoPreview() {
   if (photoShots.length === 0) return;
-  const overlay = document.getElementById('photoPreviewOverlay');
-  const grid = document.getElementById('photoPreviewGrid');
-  const sub = document.getElementById('photoPreviewSub');
-  const sendBtn = document.getElementById('previewSendBtn');
-  closePvFull();
+  if (document.getElementById('pvFull').classList.contains('show')) return;
   revokePvUrls();
   pvImages = [];
-  sub.textContent = photoShots.length + ' foto siap dikirim';
-  sendBtn.disabled = true;
-  sendBtn.textContent = 'Menyiapkan…';
-  grid.innerHTML = '<div class="preview-loading">Menyiapkan pratinjau…</div>';
-  overlay.classList.add('show');
   try {
-    const built = await Promise.all(photoShots.map(async (shot) => {
-      const thumbSrc = await buildPreviewImage(shot);
-      const fullSrc = await buildFullPreviewUrl(shot);
-      return { thumbSrc, fullSrc };
-    }));
-    pvImages = built.map(b => b.fullSrc);
-    grid.innerHTML = built.map((b, i) =>
-      '<div class="pv-item" data-pvidx="' + i + '" onclick="openPvFull(' + i + ')">' +
-        '<img src="' + b.thumbSrc + '" alt="Foto ' + (i + 1) + '">' +
-      '</div>'
-    ).join('');
-    sendBtn.disabled = false;
-    sendBtn.textContent = photoShots.length > 1 ? 'Kirim ' + photoShots.length + ' Foto' : 'Kirim Foto';
+    pvImages = await Promise.all(photoShots.map(buildFullPreviewUrl));
+    openPvFull(0);
   } catch (e) {
-    grid.innerHTML = '<div class="preview-loading">Gagal memuat pratinjau</div>';
-    sendBtn.textContent = 'Kirim';
-    sendBtn.disabled = false;
+    showToast('Pratinjau belum bisa dibuka, coba lagi ya', 'error');
   }
 }
 
-function closePhotoPreview() {
-  closePvFull();
-  revokePvUrls();
-  pvImages = [];
-  document.getElementById('photoPreviewOverlay').classList.remove('show');
-}
-
-function sendFromPreview() {
-  closePhotoPreview();
-  sendAllPhotos();
-}
-
-/* ==== Penampil foto ukuran penuh ==== */
 function openPvFull(idx) {
   if (!pvImages.length) return;
   pvIdx = Math.max(0, Math.min(pvImages.length - 1, idx | 0));
@@ -1811,12 +1716,34 @@ function closePvFull() {
   img.onload = null;
   img.src = '';
   pvIdx = 0;
+  revokePvUrls();
+  pvImages = [];
 }
 
 function stepPvFull(dir) {
   const n = pvIdx + dir;
   if (n < 0 || n >= pvImages.length) return;
   pvIdx = n;
+  showPvFull();
+}
+
+// Hapus foto yang sedang dilihat. Otomatis lanjut ke foto tetangga,
+// atau tutup viewer bila sudah tidak ada foto tersisa.
+function deleteFromPvFull() {
+  if (pvIdx < 0 || pvIdx >= photoShots.length) return;
+  if (!confirm('Hapus foto ini?')) return;
+  try { URL.revokeObjectURL(pvImages[pvIdx]); } catch (e) {}
+  try { URL.revokeObjectURL(photoShots[pvIdx].url); } catch (e) {}
+  photoShots.splice(pvIdx, 1);
+  pvImages.splice(pvIdx, 1);
+  shutterBtn.disabled = false;
+  renderFilmstrip();
+  if (photoShots.length === 0) {
+    closePvFull();
+    document.getElementById('finishRow').style.display = 'none';
+    return;
+  }
+  if (pvIdx >= pvImages.length) pvIdx = pvImages.length - 1;
   showPvFull();
 }
 
@@ -1836,21 +1763,18 @@ function stepPvFull(dir) {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
   const fullOpen = document.getElementById('pvFull').classList.contains('show');
-  const prevOpen = document.getElementById('photoPreviewOverlay').classList.contains('show');
   if (fullOpen) {
     if (e.key === 'Escape') closePvFull();
     else if (e.key === 'ArrowLeft') stepPvFull(-1);
     else if (e.key === 'ArrowRight') stepPvFull(1);
     return;
   }
-  if (e.key === 'Escape') {
-    if (prevOpen) { closePhotoPreview(); return; }
-    if (queueOpen()) { closeQueue(); return; }
-  }
+  if (e.key === 'Escape' && queueOpen()) closeQueue();
 });
 
 function removeShot(idx) {
-  URL.revokeObjectURL(photoShots[idx].url);
+  if (idx < 0 || idx >= photoShots.length) return;
+  try { URL.revokeObjectURL(photoShots[idx].url); } catch (e) {}
   photoShots.splice(idx, 1);
   renderFilmstrip();
   shutterBtn.disabled = false;
@@ -1858,7 +1782,7 @@ function removeShot(idx) {
 }
 
 function clearFilmstrip() {
-  photoShots.forEach(s => URL.revokeObjectURL(s.url));
+  photoShots.forEach(s => { try { URL.revokeObjectURL(s.url); } catch (e) {} });
   photoShots = [];
   renderFilmstrip();
   shutterBtn.disabled = false;
