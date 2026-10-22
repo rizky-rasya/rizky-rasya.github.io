@@ -928,7 +928,7 @@
     font-size:.82rem; color:var(--muted); margin-top:.55rem; line-height:1.6;
   }
   .album-countdown-msg small{ font-size:.72rem; opacity:.9; }
-  #wa-link.coming-soon{ opacity:.55; }
+  #wa-link.coming-soon{ opacity:.55; cursor:not-allowed; }
 
   /* ============ REVISI: MEDIA MODAL (foto + video, slider) ============ */
   #mediaModal{
@@ -1425,6 +1425,19 @@ const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const guestName = decodeURIComponent(qs.get('to') || 'Tamu Uleman').replace(/\+/g, ' ');
 const guestId = (qs.get('k') || qs.get('id') || '').trim();
+
+/** Helper: parsing tanggal dengan konsistensi WIB */
+function parseToDateWIB(str){
+  if(!str) return null;
+  const s = String(str).trim();
+  // Jika sudah ada timezone info (Z atau +07:00), parse apa adanya
+  if(/[Zz]$|[+-]\d{2}:?\d{2}$/.test(s)) return new Date(s);
+  // Jika format "YYYY-MM-DD HH:mm[:ss]" tanpa timezone → anggap WIB
+  if(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d+)?$/.test(s)){
+    return new Date(s.replace(' ', 'T') + '+07:00');
+  }
+  return new Date(s);
+}
 
 function setText(id, val){ const el = $(id); if(el) el.textContent = (val === undefined || val === null || val === '') ? '-' : val; }
 function setSrc(id, val){ const el = $(id); if(el && val) el.src = val; }
@@ -1923,35 +1936,54 @@ function setupAlbumLink(cfg){
 
   if(!url){ wrap.style.display = 'none'; return; }
   wrap.style.display = '';
-  link.href = url;
-  link.textContent = label;
-  link.classList.remove('coming-soon');
 
   const aktifDari = String(cfg.wedding_album_link_aktif_dari || '').trim();
   if(albumTimer){ clearInterval(albumTimer); albumTimer = null; }
-  if(!aktifDari){ msgEl.textContent = ''; return; }
 
-  const target = new Date(aktifDari.replace(' ', 'T'));
-  if(isNaN(target.getTime())){ msgEl.textContent = ''; return; }
+  // Terapkan status terkunci/terbuka — URL HANYA dimasukkan ke DOM saat terbuka
+  const applyLocked = (locked) => {
+    if(locked){
+      link.classList.add('coming-soon');
+      link.textContent = '🔒 Coming Soon';
+      link.removeAttribute('href');        // URL TIDAK ada di HTML
+      link.removeAttribute('target');
+      link.removeAttribute('rel');
+      link.removeAttribute('title');       // tidak ada tooltip di hover
+      link.setAttribute('role', 'button');
+      link.setAttribute('tabindex', '0');
+    } else {
+      link.classList.remove('coming-soon');
+      link.textContent = label;
+      link.setAttribute('href', url);      // URL baru dimasukkan setelah waktunya tiba
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener');
+      link.removeAttribute('role');
+      link.removeAttribute('tabindex');
+    }
+  };
+
+  if(!aktifDari){ applyLocked(false); msgEl.textContent = ''; return; }
+
+  const target = parseToDateWIB(aktifDari);
+  if(!target || isNaN(target.getTime())){ applyLocked(false); msgEl.textContent = ''; return; }
 
   const tick = () => {
     const diff = target.getTime() - Date.now();
     if(diff <= 0){
-      link.classList.remove('coming-soon');
-      link.textContent = label;
+      applyLocked(false);
       msgEl.textContent = '';
       if(albumTimer){ clearInterval(albumTimer); albumTimer = null; }
       return;
     }
+    applyLocked(true);
     const d = Math.floor(diff / 86400000);
     const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
     const s = Math.floor((diff % 60000) / 1000);
     const tgl = target.toLocaleString('id-ID', {
-      day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'
+      day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit',
+      timeZone: 'Asia/Jakarta'
     });
-    link.classList.add('coming-soon');
-    link.textContent = '🔒 Coming Soon';
     const tmpl = String(cfg.wedding_album_link_teks_cooming_soon || 'Album akan dibuka pada $tanggal');
     msgEl.innerHTML = escapeHtml(tmpl.replace(/\$tanggal/g, tgl))
       + `<br><small>${d} hari ${h} jam ${m} menit ${s} detik lagi</small>`;
@@ -2114,15 +2146,28 @@ document.addEventListener('click', async (e) => {
     const aktif = String(CFG.wedding_album_link_aktif_dari || '').trim();
     let when = '';
     if(aktif){
-      const d = new Date(aktif.replace(' ', 'T'));
+      const d = parseToDateWIB(aktif);
       if(!isNaN(d.getTime())){
-        when = d.toLocaleString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        when = d.toLocaleString('id-ID', { 
+          day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit',
+          timeZone: 'Asia/Jakarta'
+        });
       }
     }
     await showAlert(
       when ? `Album akan dapat diakses pada ${when}.` : 'Album belum dapat diakses saat ini.',
       { title: 'Coming Soon', type: 'info', okLabel: 'Mengerti' }
     );
+  }
+});
+
+/* Handler keyboard untuk tombol Coming Soon (Enter / Space) */
+document.addEventListener('keydown', (e) => {
+  const link = e.target.closest('#wa-link');
+  if(!link || !link.classList.contains('coming-soon')) return;
+  if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    link.click();
   }
 });
 
@@ -2189,8 +2234,8 @@ function updateMusicIcon(muted){
    ====================================================================== */
 let countdownTimer = null;
 function startCountdown(isoLike){
-  const target = new Date(String(isoLike).replace(' ', 'T'));
-  if(isNaN(target.getTime())) return;
+  const target = parseToDateWIB(isoLike);
+  if(!target || isNaN(target.getTime())) return;
   if(countdownTimer) clearInterval(countdownTimer);
   function tick(){
     const diff = Math.max(0, target.getTime() - Date.now());
