@@ -64,6 +64,8 @@
     background:var(--accent); color:var(--dark); font-weight:700;
     font-family:inherit; font-size:14px; letter-spacing:0.01em; cursor:pointer;
   }
+  .load-gif{display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14));}
+  @keyframes gentlePulse{0%,100%{transform:scale(1);opacity:.95;}50%{transform:scale(1.06);opacity:1;}}
   header{
     position:absolute; top:0; left:0; right:0; z-index:20;
     padding:18px 20px;
@@ -155,6 +157,27 @@
   .up-btn .ico{width:18px; height:18px; stroke:#F5F1EB; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; position:relative;}
   .up-btn .badge{position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:var(--accent); color:#fff; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; display:flex; align-items:center; justify-content:center; border:2px solid #1A1410; box-sizing:content-box;}
   .up-btn.warn .badge{background:#D8A24A; color:#1A1410;}
+  /* Preview slot di capture row */
+  .side-slot{position:relative; width:44px; height:44px; flex:none;}
+  .side-slot .side-btn{position:absolute; inset:0; margin:0;}
+  #previewBtn{display:none; align-items:center; justify-content:center; background:var(--primary); border:1px solid var(--primary); color:#fff;}
+  #previewBtn.show{display:flex;}
+  #previewBtn svg{width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
+  #previewBtn:disabled{opacity:.6;}
+
+  /* Preview modal */
+  .preview-card{width:100%; max-width:420px; background:#F5F1EB; color:var(--text); border-radius:8px; padding:22px 20px 20px; position:relative; box-shadow:0 16px 48px rgba(68,8,8,.24); border:1px solid #E5DDD1; max-height:86vh; display:flex; flex-direction:column;}
+  .preview-card h3{margin:0 40px 6px 0; font-family:'Fraunces',serif; font-size:18px; color:var(--text);}
+  .preview-card .pv-sub{font-size:12px; color:var(--text-3); margin-bottom:12px;}
+  .preview-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:8px; overflow-y:auto; max-height:46vh; margin:0 -4px; padding:0 4px;}
+  .preview-grid .pv-item{position:relative; aspect-ratio:3/4; border-radius:4px; overflow:hidden; border:1px solid #E5DDD1; background:#EFE9DF;}
+  .preview-grid .pv-item img{width:100%; height:100%; object-fit:cover; display:block;}
+  .preview-loading{text-align:center; color:#8A7B6E; font-size:13px; padding:20px; grid-column:1/-1;}
+  #previewSendBtn{margin-top:14px; background:var(--primary); color:#fff; padding:13px; border-radius:4px; border:none; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;}
+  #previewSendBtn:hover{background:var(--primary-hover);}
+  #previewSendBtn:disabled{opacity:.6; cursor:not-allowed;}
+  #previewCloseBtn{position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; background:transparent; border:none; color:var(--text-3); font-size:16px; cursor:pointer;}
+  #previewCloseBtn:hover{background:rgba(68,8,8,.08); color:var(--primary);}
   .side-spacer{width:44px; flex:none;}
   .queue-card{max-width:380px; padding:26px 22px 20px; text-align:left; position:relative;}
   .queue-card h3{margin:0 40px 4px 0; text-align:left;}
@@ -190,7 +213,7 @@
 <div id="app">
 
   <div id="statusScreen">
-    <div class="icon">◈</div>
+    <img class="load-gif" src="assets/loading-art.webp" alt="loading" aria-hidden="true" width="96" height="96">
     <h2 id="statusTitle">Menyiapkan kamera…</h2>
     <p id="statusText">Sebentar ya, kami siapkan semuanya untukmu</p>
     <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
@@ -239,6 +262,16 @@
     </div>
   </div>
 
+  <div class="result-overlay" id="photoPreviewOverlay">
+    <div class="preview-card">
+      <button id="previewCloseBtn" aria-label="Tutup" onclick="closePhotoPreview()">✕</button>
+      <h3>Pratinjau Foto</h3>
+      <div class="pv-sub" id="photoPreviewSub"></div>
+      <div class="preview-grid" id="photoPreviewGrid"></div>
+      <button id="previewSendBtn" onclick="sendFromPreview()">Kirim Semua</button>
+    </div>
+  </div>
+
   <div id="bottomOverlay">
     <div id="filmstrip"></div>
     <div id="controls">
@@ -255,11 +288,16 @@
     <div class="capture-row" id="captureRow">
       <button class="side-btn" id="flipBtn" title="Ganti kamera">🔄</button>
       <button id="shutterBtn"></button>
-      <button class="side-btn up-btn" id="upBtn" aria-label="Lihat progres pengiriman" title="Progres pengiriman" onclick="openQueue()">
-        <svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="ring-bg" cx="23" cy="23" r="20"/><circle class="ring-fg" cx="23" cy="23" r="20"/></svg>
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
-        <span class="badge"></span>
-      </button>
+      <div class="side-slot">
+        <button class="side-btn up-btn" id="upBtn" aria-label="Lihat progres pengiriman" title="Progres pengiriman" onclick="openQueue()">
+          <svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="ring-bg" cx="23" cy="23" r="20"/><circle class="ring-fg" cx="23" cy="23" r="20"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
+          <span class="badge"></span>
+        </button>
+        <button class="side-btn" id="previewBtn" aria-label="Pratinjau foto" title="Pratinjau foto" onclick="openPhotoPreview()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="finish-row" id="finishRow">
@@ -1394,7 +1432,12 @@ function takePhoto() {
 function renderFilmstrip() {
   const strip = document.getElementById('filmstrip');
   strip.innerHTML = '';
-  if (photoShots.length === 0) { strip.style.display = 'none'; return; }
+  const previewBtn = document.getElementById('previewBtn');
+  if (photoShots.length === 0) {
+    strip.style.display = 'none';
+    if (previewBtn) previewBtn.style.display = 'none';
+    return;
+  }
   strip.style.display = 'flex';
   photoShots.forEach((shot, idx) => {
     const div = document.createElement('div');
@@ -1406,6 +1449,60 @@ function renderFilmstrip() {
   counter.className = 'shot-counter';
   counter.textContent = `${photoShots.length}/${MAX_SHOTS}`;
   strip.appendChild(counter);
+  if (previewBtn) previewBtn.style.display = 'flex';
+}
+
+// === PREVIEW FOTO ===
+function buildPreviewImage(item) {
+  if (autoIncludeFrame.photo) return Promise.resolve(item.thumb);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try { drawCaptureFrameOverlay(ctx, c.width, c.height, 'photo'); } catch (e) {}
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => resolve(item.thumb);
+    img.src = item.thumb;
+  });
+}
+
+async function openPhotoPreview() {
+  if (photoShots.length === 0) return;
+  const overlay = document.getElementById('photoPreviewOverlay');
+  const grid = document.getElementById('photoPreviewGrid');
+  const sub = document.getElementById('photoPreviewSub');
+  const sendBtn = document.getElementById('previewSendBtn');
+  sub.textContent = photoShots.length + ' foto siap dikirim';
+  sendBtn.disabled = true;
+  sendBtn.textContent = 'Menyiapkan…';
+  grid.innerHTML = '<div class="preview-loading">Menyiapkan pratinjau…</div>';
+  overlay.classList.add('show');
+  try {
+    const html = await Promise.all(photoShots.map(async (shot, i) => {
+      const src = await buildPreviewImage(shot);
+      return '<div class="pv-item"><img src="' + src + '" alt="Foto ' + (i+1) + '"></div>';
+    }));
+    grid.innerHTML = html.join('');
+    sendBtn.disabled = false;
+    sendBtn.textContent = photoShots.length > 1 ? 'Kirim ' + photoShots.length + ' Foto' : 'Kirim Foto';
+  } catch (e) {
+    grid.innerHTML = '<div class="preview-loading">Gagal memuat pratinjau</div>';
+    sendBtn.textContent = 'Kirim';
+    sendBtn.disabled = false;
+  }
+}
+
+function closePhotoPreview() {
+  document.getElementById('photoPreviewOverlay').classList.remove('show');
+}
+
+function sendFromPreview() {
+  closePhotoPreview();
+  sendAllPhotos();
 }
 
 function removeShot(idx) {
