@@ -3,8 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Kirim dari Galeri — Wedding Album</title>
+<!-- META:START -->
+<title>Kirim dari Galeri Rasya &amp; Rizky</title>
+<meta name="description" content="Pilih foto dan video langsung dari galeri HP kamu untuk melengkapi album pernikahan Rasya &amp; Rizky. Bisa pilih beberapa foto sekaligus, otomatis dibingkai, lalu tampil di album.">
+<meta name="robots" content="follow, noindex">
 <meta name="theme-color" content="#440808">
+<meta property="og:locale" content="id_ID">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kirim dari Galeri Rasya &amp; Rizky">
+<meta property="og:description" content="Pilih foto dan video langsung dari galeri HP kamu untuk melengkapi album pernikahan Rasya &amp; Rizky. Bisa pilih beberapa foto sekaligus, otomatis dibingkai, lalu tampil di album.">
+<meta property="og:url" content="https://rasya-rizky.online/album/galeri">
+<meta property="og:site_name" content="Uleman Digital Website">
+<meta property="article:section" content="Uleman">
+<meta property="og:image" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
+<meta property="og:image:secure_url" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
+<meta property="og:image:width" content="1080">
+<meta property="og:image:height" content="1920">
+<meta property="og:image:alt" content="Kirim dari Galeri Rasya &amp; Rizky">
+<meta property="og:image:type" content="image/webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kirim dari Galeri Rasya &amp; Rizky">
+<meta name="twitter:description" content="Pilih foto dan video langsung dari galeri HP kamu untuk melengkapi album pernikahan Rasya &amp; Rizky. Bisa pilih beberapa foto sekaligus, otomatis dibingkai, lalu tampil di album.">
+<meta name="twitter:image" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
+<meta name="twitter:label1" content="Dibuat oleh">
+<meta name="twitter:data1" content="Rasya &amp; Rizky">
+<meta name="twitter:label2" content="Isi">
+<meta name="twitter:data2" content="Foto, video &amp; suara">
+<!-- META:END -->
+<link rel="icon" type="image/png" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
+<link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -95,16 +122,37 @@
   .result-card .btn-secondary{background:transparent; color:var(--text-3); font-weight:600;}
   .status-screen{position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center; flex-direction:column; background:var(--bg); padding:32px; text-align:center; gap:16px;}
   .status-screen.show{display:flex;}
-  .status-screen .icon{font-size:40px; color:var(--accent);}
   .status-screen h2{font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--text);}
   .status-screen p{font-size:14px; color:var(--text-3); max-width:320px; line-height:1.6;}
   .status-screen button{margin-top:12px; padding:12px 28px; border-radius:4px; border:none; background:var(--accent); color:#fff; font-weight:700; font-family:inherit; font-size:14px; cursor:pointer;}
+  .load-gif{display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14));}
+  @keyframes gentlePulse{0%,100%{transform:scale(1);opacity:.95;}50%{transform:scale(1.06);opacity:1;}}
   .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99; background:var(--dark); color:#F5F1EB; padding:12px 22px; border-radius:4px; font-size:13px; display:none; max-width:88%; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.24); white-space:pre-line;}
   .toast.success{background:var(--success);} .toast.error{background:var(--danger);}
+
+  /* Photo grid preview (multi upload) */
+  .photo-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(94px, 1fr)); gap:8px; margin-bottom:14px;}
+  .photo-grid .pg-item{position:relative; aspect-ratio:3/4; border-radius:4px; overflow:hidden; border:1px solid var(--border); background:var(--surface-2);}
+  .photo-grid .pg-item img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-grid .pg-item .pg-remove{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(26,20,16,.7); color:#fff; border:none; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .photo-grid-wrap{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:12px; color:var(--text-3); font-family:'JetBrains Mono',monospace;}
+  .photo-grid-wrap strong{color:var(--text-2);}
+
+  .site-footer{max-width:720px; margin:0 auto; padding:48px 20px 56px; border-top:1px solid var(--border); text-align:left;}
+  .site-footer .thanks{font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:clamp(20px,3.4vw,26px); line-height:1.25; letter-spacing:-0.01em; color:var(--text); max-width:520px;}
+  .site-footer .thanks-sub{font-size:14px; line-height:1.65; color:var(--text-2); margin-top:10px; max-width:520px;}
+  .site-footer .lattice{color:var(--accent); width:96px; margin:22px 0 18px; opacity:.9;}
+  .site-footer .lattice svg{display:block; width:100%; height:auto;}
+  .site-footer .ft-ig{display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-size:13px; font-weight:600; color:var(--primary); border:1px solid var(--border); background:var(--surface); border-radius:4px; padding:9px 14px; transition:background .15s,border-color .15s;}
+  .site-footer .ft-ig:hover{background:var(--surface-2); border-color:var(--border-strong);}
+  .site-footer .ft-ig svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .site-footer .ft-ig span{font-family:'JetBrains Mono',monospace; font-weight:500; font-size:12px; color:var(--text-2);}
+  .site-footer .sig{display:block; margin-top:22px; font-size:12px; color:var(--text-3);}
   @media (max-width:640px){
     .hero{padding:28px 20px 20px;}
     .container{padding:0 16px 80px;}
     .pick-btn{padding:24px 16px;}
+    .site-footer{padding:36px 16px 48px;}
   }
 </style>
 </head>
@@ -128,17 +176,14 @@
   </div>
 
   <div class="mode-panel active" id="panel-photo">
-    <input type="file" id="photoInput" accept="image/*" hidden>
+    <input type="file" id="photoInput" accept="image/*" multiple hidden>
     <button class="pick-btn" id="pickPhotoBtn">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      <span>Pilih Foto dari Galeri<small>JPG, PNG, WebP — otomatis dibingkai</small></span>
+      <span>Pilih Foto dari Galeri<small id="photoPickHint">Bisa pilih beberapa foto sekaligus</small></span>
     </button>
-    <div class="preview" id="photoPreview" style="display:none;">
-      <div class="preview-media"><img id="photoPreviewImg" alt=""></div>
-      <div class="preview-info">
-        <span>Dimensi: <strong id="photoDims">—</strong></span>
-        <span>Orientasi: <strong id="photoOrient">—</strong></span>
-      </div>
+    <div id="photoGridWrap" style="display:none;">
+      <div class="photo-grid-wrap"><span>Foto terpilih</span><strong id="photoGridCounter">0/5</strong></div>
+      <div class="photo-grid" id="photoGrid"></div>
     </div>
   </div>
 
@@ -191,6 +236,19 @@
   </div>
 </div>
 
+<footer class="site-footer">
+  <p class="thanks">Makasih ya, udah ikut abadiin momennya!</p>
+  <p class="thanks-sub">Tiap foto dan video dari kamu bikin kenangan ini makin lengkap. Masih ada momen lain yang mau dikirim? Tinggal pilih lagi dari galeri di atas.</p>
+  <div class="lattice" aria-hidden="true">
+    <svg viewBox="0 0 100 12" fill="none" focusable="false" aria-hidden="true"><path d="M0 6 L15 0 L30 6 L45 0 L60 6 L75 0 L90 6 L100 3" stroke="currentColor" stroke-width="1"/></svg>
+  </div>
+  <a class="ft-ig" id="ft-ig" href="https://instagram.com/rizky.hanifudin" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.8"/></svg>
+    Kepo yang bikin? Mampir ke IG <span>@rizky.hanifudin</span>
+  </a>
+  <small class="sig" id="ft-dev">Dibuat dengan &hearts; oleh Rasya dan Rizky</small>
+</footer>
+
 <div class="result-overlay" id="resultOverlay">
   <div class="result-card" id="resultCard">
     <div class="result-icon"><svg viewBox="0 0 24 24" id="resultIcon"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
@@ -202,7 +260,7 @@
 </div>
 
 <div class="status-screen" id="statusScreen">
-  <div class="icon">◈</div>
+  <img class="load-gif" src="assets/loading-art.webp" alt="loading" aria-hidden="true" width="96" height="96">
   <h2 id="statusTitle">Memuat…</h2>
   <p id="statusText">Sebentar ya</p>
   <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
@@ -231,8 +289,7 @@ let maxVideoSeconds = 60;
 let maxVoiceSeconds = 60;
 
 let currentMode = 'photo';
-let photoBlobProcessed = null;
-let photoThumb = '';
+let photoItems = [];   // multi foto
 let videoFile = null;
 let videoMeta = { duration: 0, w: 0, h: 0 };
 let voiceBlob = null;
@@ -265,9 +322,11 @@ async function init() {
     if (!s.success) { showStatus('Momen Tidak Ditemukan', s.message || 'Kode undangan tidak valid.'); return; }
     weddingSettings = s;
     applyThemeColors(s);
-    maxPhoto = s.max_photo || 5;
+    maxPhoto = Number(s.max_photo) || 5;
     maxVideoSeconds = Number(s.max_video_seconds) || 60;
     maxVoiceSeconds = Number(s.max_voice_seconds) || 60;
+
+    document.getElementById('photoPickHint').textContent = `Bisa pilih maks ${maxPhoto} foto sekaligus`;
 
     document.getElementById('brandName').textContent = (s.ui_config && s.ui_config.index_headline) || `${s.groom_name} & ${s.bride_name}`;
     if (s.date) document.getElementById('brandDate').textContent = formatDate(s.date);
@@ -360,7 +419,7 @@ function getFrameConfig(type) {
   };
 }
 
-// v17: Draw frame dengan rotasi otomatis sesuai orientasi media
+// Frame dengan rotasi otomatis sesuai orientasi media
 function drawFrameForMedia(ctx, frameImg, w, h) {
   if (!frameImg) return;
   const fw = frameImg.naturalWidth || frameImg.width;
@@ -440,45 +499,99 @@ function switchMode(mode) {
 document.getElementById('pickPhotoBtn').addEventListener('click', () => document.getElementById('photoInput').click());
 
 document.getElementById('photoInput').addEventListener('change', async function () {
-  const file = this.files[0];
-  if (!file) return;
+  const files = Array.from(this.files || []);
   this.value = '';
-  if (!file.type.startsWith('image/')) { showToast('File bukan gambar.', 'error'); return; }
-
-  showToast('Memproses foto…', 'info');
-  try {
-    const result = await processPhoto(file);
-    photoBlobProcessed = result.blob;
-    photoThumb = result.thumb;
-
-    document.getElementById('photoPreviewImg').src = URL.createObjectURL(result.blob);
-    document.getElementById('photoDims').textContent = `${result.w} × ${result.h} px`;
-    document.getElementById('photoOrient').textContent = result.w > result.h ? 'Lanskap' : (result.w < result.h ? 'Potret' : 'Kotak');
-    document.getElementById('photoPreview').style.display = 'block';
-    updateSendButtonState();
-  } catch (err) {
-    showToast('Foto belum bisa diproses: ' + err.message, 'error');
+  if (files.length === 0) return;
+  const remaining = maxPhoto - photoItems.length;
+  if (remaining <= 0) { showToast(`Sudah ${maxPhoto} foto. Hapus salah satu dulu ya.`, 'error'); return; }
+  const take = files.slice(0, remaining);
+  if (files.length > remaining) {
+    showToast(`Maks ${maxPhoto} foto. ${files.length - remaining} foto terakhir tidak dimasukkan.`, 'info');
   }
+  for (const file of take) {
+    if (!file.type.startsWith('image/')) { showToast('Ada file yang bukan gambar, dilewati.', 'error'); continue; }
+    showToast('Memproses foto…', 'info');
+    try {
+      const result = await processPhoto(file);
+      photoItems.push(result);
+    } catch (err) {
+      showToast('Satu foto gagal diproses: ' + err.message, 'error');
+    }
+  }
+  renderPhotoGrid();
+  updateSendButtonState();
 });
+
+function renderPhotoGrid() {
+  const wrap = document.getElementById('photoGridWrap');
+  const grid = document.getElementById('photoGrid');
+  const counter = document.getElementById('photoGridCounter');
+  if (photoItems.length === 0) { wrap.style.display = 'none'; grid.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  counter.textContent = `${photoItems.length}/${maxPhoto}`;
+  grid.innerHTML = '';
+  photoItems.forEach((it, idx) => {
+    const div = document.createElement('div');
+    div.className = 'pg-item';
+    div.innerHTML = `<img src="${it.thumb}" alt="Foto ${idx+1}"><button class="pg-remove" aria-label="Hapus" data-idx="${idx}">✕</button>`;
+    div.querySelector('.pg-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      removePhoto(idx);
+    });
+    grid.appendChild(div);
+  });
+}
+
+function removePhoto(idx) {
+  if (idx < 0 || idx >= photoItems.length) return;
+  photoItems.splice(idx, 1);
+  renderPhotoGrid();
+  updateSendButtonState();
+}
 
 async function processPhoto(file) {
   const img = await loadImageFile(file);
   const maxDim = 2560;
-  let nw = img.naturalWidth, nh = img.naturalHeight;
-  const scale = Math.min(1, maxDim / Math.max(nw, nh));
-  const w = Math.round(nw * scale);
-  const h = Math.round(nh * scale);
+
+  // Crop ke 9:16 / 16:9 sesuai orientasi
+  const sw = img.naturalWidth, sh = img.naturalHeight;
+  const isLandscape = sw >= sh;
+  const targetAspect = isLandscape ? (16/9) : (9/16);
+  const currentAspect = sw / sh;
+
+  let cx, cy, cw, ch;
+  if (Math.abs(currentAspect - targetAspect) < 0.01) {
+    cx = 0; cy = 0; cw = sw; ch = sh;
+  } else if (currentAspect > targetAspect) {
+    // terlalu lebar, crop lebar
+    ch = sh;
+    cw = sh * targetAspect;
+    cx = (sw - cw) / 2;
+    cy = 0;
+  } else {
+    // terlalu tinggi, crop tinggi
+    cw = sw;
+    ch = sw / targetAspect;
+    cx = 0;
+    cy = (sh - ch) / 2;
+  }
+
+  // Output resolution
+  let ow = cw, oh = ch;
+  const scale = Math.min(1, maxDim / Math.max(ow, oh));
+  ow = Math.round(ow * scale);
+  oh = Math.round(oh * scale);
 
   const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
+  canvas.width = ow; canvas.height = oh;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, w, h);
-  drawFrameForType(ctx, w, h, 'photo');
+  ctx.drawImage(img, cx, cy, cw, ch, 0, 0, ow, oh);
+  drawFrameForType(ctx, ow, oh, 'photo');
 
-  const thumb = makeThumbUri(canvas, w, h);
+  const thumb = makeThumbUri(canvas, ow, oh);
   const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
   canvas.width = canvas.height = 1;
-  return { blob, thumb, w, h };
+  return { blob, thumb, w: ow, h: oh };
 }
 
 function loadImageFile(file) {
@@ -815,11 +928,12 @@ function updateSendButtonState() {
   const btn = document.getElementById('sendBtn');
   const name = document.getElementById('guestName').value.trim();
   let ready = false;
-  if (currentMode === 'photo') ready = !!photoBlobProcessed;
+  if (currentMode === 'photo') ready = photoItems.length > 0;
   else if (currentMode === 'video') ready = !!videoFile;
   else if (currentMode === 'voice') ready = !!voiceBlob;
   btn.disabled = !(ready && name);
-  btn.textContent = currentMode === 'photo' ? 'Kirim Foto'
+  btn.textContent = currentMode === 'photo'
+    ? (photoItems.length > 1 ? `Kirim ${photoItems.length} Foto` : 'Kirim Foto')
     : currentMode === 'video' ? 'Kirim Video'
     : 'Kirim Suara';
 }
@@ -837,14 +951,23 @@ async function sendMedia() {
 
   try {
     if (currentMode === 'photo') {
-      if (!photoBlobProcessed) throw new Error('Foto belum dipilih');
-      progBar.style.width = '10%'; progText.textContent = 'Mengunggah foto…';
-      await uploadToDrive(photoBlobProcessed, 'photo', name, photoThumb, p => {
-        progBar.style.width = (10 + p * 90) + '%';
-        progText.textContent = `Mengunggah ${Math.round(p * 100)}%`;
-      });
-      showResult('success', 'Terkirim', `Fotomu sudah masuk.\nTunggu persetujuan mempelai ya.`);
-      resetPhoto();
+      if (photoItems.length === 0) throw new Error('Foto belum dipilih');
+      const total = photoItems.length;
+      const snapshot = photoItems.slice();
+      for (let i = 0; i < total; i++) {
+        const item = snapshot[i];
+        const base = Math.round((i / total) * 100);
+        progBar.style.width = base + '%';
+        progText.textContent = `Mengunggah foto ${i+1} dari ${total}…`;
+        await uploadToDrive(item.blob, 'photo', name, item.thumb, p => {
+          const overall = base + p * (100 / total);
+          progBar.style.width = Math.round(overall) + '%';
+          progText.textContent = `Mengunggah foto ${i+1} dari ${total} (${Math.round(p*100)}%)`;
+        });
+      }
+      showResult('success', 'Terkirim', `${total} foto sudah masuk.\nTunggu persetujuan mempelai ya.`);
+      photoItems = [];
+      renderPhotoGrid();
     } else if (currentMode === 'video') {
       if (!videoFile) throw new Error('Video belum dipilih');
       progText.textContent = 'Memproses video dengan bingkai…';
@@ -876,16 +999,8 @@ async function sendMedia() {
     progWrap.style.display = 'none';
     progBar.style.width = '0%';
     btn.disabled = false;
+    updateSendButtonState();
   }
-}
-
-function resetPhoto() {
-  photoBlobProcessed = null; photoThumb = '';
-  const img = document.getElementById('photoPreviewImg');
-  if (img.src) URL.revokeObjectURL(img.src);
-  img.src = '';
-  document.getElementById('photoPreview').style.display = 'none';
-  updateSendButtonState();
 }
 
 function resetVideo() {

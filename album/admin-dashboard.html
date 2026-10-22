@@ -118,7 +118,7 @@
   .filter-preview-wrap{margin-bottom:16px;}
   .filter-preview-wrap canvas{width:100%;max-width:320px;border-radius:2px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(68,8,8,.06);}
   .slider-row{display:flex;align-items:center;gap:10px;max-width:400px;margin-bottom:10px;font-size:13px;}
-  .slider-row label{width:90px;flex-shrink:0;color:var(--text-2);}
+  .slider-row label{width:110px;flex-shrink:0;color:var(--text-2);}
   .slider-row input[type=range]{flex:1;accent-color:var(--primary);}
   .slider-row span{width:44px;text-align:right;color:var(--text-3);font-size:12px;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
   .filter-group-label{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin:20px 0 10px;}
@@ -219,7 +219,8 @@
 
 <div class="tabs">
   <div class="tab active" data-tab="moderasi">Moderasi</div>
-  <div class="tab" data-tab="filter">Filter Kamera</div>
+  <div class="tab" data-tab="filter">Filter Foto</div>
+  <div class="tab" data-tab="videofilter">Filter Video</div>
   <div class="tab" data-tab="tema">Tema & Frame</div>
   <div class="tab" data-tab="pengaturan">Pengaturan Umum</div>
   <div class="tab" data-tab="tautan">Bagikan</div>
@@ -234,17 +235,17 @@
 </div>
 
 <div class="panel" id="panel-filter">
-  <h3>Filter Kamera Tamu</h3>
-  <p class="desc">Pilih satu filter yang akan otomatis dipakai semua tamu saat memotret, supaya hasilnya seragam. Klik filter untuk melihat pratinjau langsung sebelum disimpan.</p>
+  <h3>Filter Foto Tamu</h3>
+  <p class="desc">Pilih satu filter yang otomatis dipakai semua tamu saat memotret, supaya hasilnya seragam. Klik filter untuk melihat pratinjau langsung sebelum disimpan.</p>
 
   <div class="filter-preview-wrap">
     <canvas id="filterSampleCanvas" width="320" height="220"></canvas>
   </div>
 
   <div class="filter-grid" id="filterGrid"></div>
-  <button class="save-btn" onclick="saveFilter()" style="margin-top:14px;">Simpan Filter Aktif</button>
+  <button class="save-btn" onclick="saveFilter()" style="margin-top:14px;">Simpan Filter Foto Aktif</button>
 
-  <h3 style="margin-top:32px;">Buat Filter Custom</h3>
+  <h3 style="margin-top:32px;">Buat Filter Foto Custom</h3>
   <p class="desc">Atur sendiri seperti pengaturan foto di iPhone, beri nama, lalu simpan sebagai pilihan filter baru. Pratinjau di atas ikut berubah saat kamu geser slider.</p>
 
   <div class="form-group" style="max-width:300px;">
@@ -253,35 +254,65 @@
   </div>
 
   <p class="filter-group-label">Cahaya & Eksposur</p>
-  <div class="slider-row"><label>Pencahayaan</label><input type="range" id="pfExposure" min="-100" max="100" value="0" data-key="exposure"><span id="pfExposureVal">0</span></div>
-  <div class="slider-row"><label>Kecemerlangan</label><input type="range" id="pfBrilliance" min="-100" max="100" value="0" data-key="brilliance"><span id="pfBrillianceVal">0</span></div>
-  <div class="slider-row"><label>Sorotan</label><input type="range" id="pfHighlights" min="-100" max="100" value="0" data-key="highlights"><span id="pfHighlightsVal">0</span></div>
-  <div class="slider-row"><label>Bayangan</label><input type="range" id="pfShadows" min="-100" max="100" value="0" data-key="shadows"><span id="pfShadowsVal">0</span></div>
-  <div class="slider-row"><label>Kontras</label><input type="range" id="pfContrast" min="-100" max="100" value="0" data-key="contrast"><span id="pfContrastVal">0</span></div>
-  <div class="slider-row"><label>Kecerahan</label><input type="range" id="pfBrightness" min="-100" max="100" value="0" data-key="brightness"><span id="pfBrightnessVal">0</span></div>
-  <div class="slider-row"><label>Titik Hitam</label><input type="range" id="pfBlackPoint" min="-100" max="100" value="0" data-key="blackPoint"><span id="pfBlackPointVal">0</span></div>
+  <div class="slider-row"><label>Pencahayaan</label><input type="range" id="pfExposure" min="-100" max="100" value="0"><span id="pfExposureVal">0</span></div>
+  <div class="slider-row"><label>Kecemerlangan</label><input type="range" id="pfBrilliance" min="-100" max="100" value="0"><span id="pfBrillianceVal">0</span></div>
+  <div class="slider-row"><label>Sorotan</label><input type="range" id="pfHighlights" min="-100" max="100" value="0"><span id="pfHighlightsVal">0</span></div>
+  <div class="slider-row"><label>Bayangan</label><input type="range" id="pfShadows" min="-100" max="100" value="0"><span id="pfShadowsVal">0</span></div>
+  <div class="slider-row"><label>Kontras</label><input type="range" id="pfContrast" min="-100" max="100" value="0"><span id="pfContrastVal">0</span></div>
+  <div class="slider-row"><label>Kecerahan</label><input type="range" id="pfBrightness" min="-100" max="100" value="0"><span id="pfBrightnessVal">0</span></div>
+  <div class="slider-row"><label>Titik Hitam</label><input type="range" id="pfBlackPoint" min="-100" max="100" value="0"><span id="pfBlackPointVal">0</span></div>
 
   <p class="filter-group-label">Warna</p>
-  <div class="slider-row"><label>Saturasi</label><input type="range" id="pfSaturation" min="-100" max="100" value="0" data-key="saturation"><span id="pfSaturationVal">0</span></div>
-  <div class="slider-row"><label>Kecemerlangan Warna</label><input type="range" id="pfVibrancy" min="-100" max="100" value="0" data-key="vibrancy"><span id="pfVibrancyVal">0</span></div>
-  <div class="slider-row"><label>Kehangatan</label><input type="range" id="pfWarmth" min="-100" max="100" value="0" data-key="warmth"><span id="pfWarmthVal">0</span></div>
-  <div class="slider-row"><label>Tint</label><input type="range" id="pfTint" min="-100" max="100" value="0" data-key="tint"><span id="pfTintVal">0</span></div>
+  <div class="slider-row"><label>Saturasi</label><input type="range" id="pfSaturation" min="-100" max="100" value="0"><span id="pfSaturationVal">0</span></div>
+  <div class="slider-row"><label>Kecemerlangan Warna</label><input type="range" id="pfVibrancy" min="-100" max="100" value="0"><span id="pfVibrancyVal">0</span></div>
+  <div class="slider-row"><label>Kehangatan</label><input type="range" id="pfWarmth" min="-100" max="100" value="0"><span id="pfWarmthVal">0</span></div>
+  <div class="slider-row"><label>Tint</label><input type="range" id="pfTint" min="-100" max="100" value="0"><span id="pfTintVal">0</span></div>
 
   <p class="filter-group-label">Detail & Efek (khusus foto)</p>
   <p class="hint" style="margin-top:-6px;">4 pengaturan ini hanya berlaku untuk foto — tidak dipakai saat merekam video, supaya video tidak patah-patah.</p>
-  <div class="slider-row"><label>Ketajaman</label><input type="range" id="pfSharpness" min="-100" max="100" value="0" data-key="sharpness"><span id="pfSharpnessVal">0</span></div>
-  <div class="slider-row"><label>Definisi</label><input type="range" id="pfDefinition" min="-100" max="100" value="0" data-key="definition"><span id="pfDefinitionVal">0</span></div>
-  <div class="slider-row"><label>Red. Gangguan</label><input type="range" id="pfNoiseReduction" min="0" max="100" value="0" data-key="noiseReduction"><span id="pfNoiseReductionVal">0</span></div>
-  <div class="slider-row"><label>Vinyet</label><input type="range" id="pfVignette" min="-100" max="100" value="0" data-key="vignette"><span id="pfVignetteVal">0</span></div>
+  <div class="slider-row"><label>Ketajaman</label><input type="range" id="pfSharpness" min="-100" max="100" value="0"><span id="pfSharpnessVal">0</span></div>
+  <div class="slider-row"><label>Definisi</label><input type="range" id="pfDefinition" min="-100" max="100" value="0"><span id="pfDefinitionVal">0</span></div>
+  <div class="slider-row"><label>Red. Gangguan</label><input type="range" id="pfNoiseReduction" min="0" max="100" value="0"><span id="pfNoiseReductionVal">0</span></div>
+  <div class="slider-row"><label>Vinyet</label><input type="range" id="pfVignette" min="-100" max="100" value="0"><span id="pfVignetteVal">0</span></div>
 
-  <h3 style="margin-top:28px;">Pengaturan Khusus Video</h3>
-  <p class="desc">Video butuh pengaturan terpisah dari foto karena diproses real-time saat rekam — cuma sebagian efek yang bisa dipakai.</p>
-  <div class="slider-row"><label>Pencahayaan</label><input type="range" id="pvExposure" min="-100" max="100" value="0" data-key="exposure"><span id="pvExposureVal">0</span></div>
-  <div class="slider-row"><label>Kontras</label><input type="range" id="pvContrast" min="-100" max="100" value="0" data-key="contrast"><span id="pvContrastVal">0</span></div>
-  <div class="slider-row"><label>Kecerahan</label><input type="range" id="pvBrightness" min="-100" max="100" value="0" data-key="brightness"><span id="pvBrightnessVal">0</span></div>
-  <div class="slider-row"><label>Saturasi</label><input type="range" id="pvSaturation" min="-100" max="100" value="0" data-key="saturation"><span id="pvSaturationVal">0</span></div>
-  <div class="slider-row"><label>Kehangatan</label><input type="range" id="pvWarmth" min="-100" max="100" value="0" data-key="warmth"><span id="pvWarmthVal">0</span></div>
-  <div class="slider-row"><label>Vinyet</label><input type="range" id="pvVignette" min="-100" max="100" value="0" data-key="vignette"><span id="pvVignetteVal">0</span></div>
+  <div style="display:flex; gap:10px; margin-top:14px;">
+    <button class="save-btn" onclick="saveCustomFilter()">+ Simpan Sebagai Filter Baru</button>
+    <button class="frame-style-btn" onclick="resetPhotoFilterSliders()">Reset Slider</button>
+  </div>
+  <div class="status-msg" id="filterMsg"></div>
+</div>
+
+<div class="panel" id="panel-videofilter">
+  <h3>Filter Video Tamu</h3>
+  <p class="desc">Video butuh pengaturan terpisah dari foto karena diproses real-time saat rekam — cuma sebagian efek yang bisa dipakai. Pilih filter video yang akan dipakai semua tamu.</p>
+
+  <div class="filter-preview-wrap">
+    <canvas id="videoFilterSampleCanvas" width="320" height="220"></canvas>
+  </div>
+
+  <div class="filter-grid" id="videoFilterGrid"></div>
+  <button class="save-btn" onclick="saveVideoFilter()" style="margin-top:14px;">Simpan Filter Video Aktif</button>
+
+  <h3 style="margin-top:32px;">Buat Filter Video Custom</h3>
+  <p class="desc">Atur pengaturan video, beri nama, lalu simpan sebagai pilihan filter baru. Pratinjau di atas ikut berubah saat kamu geser slider.</p>
+
+  <div class="form-group" style="max-width:300px;">
+    <label>Nama Filter</label>
+    <input type="text" id="customVideoFilterName" placeholder="contoh: Sinematik Lembut">
+  </div>
+
+  <p class="filter-group-label">Cahaya & Eksposur</p>
+  <div class="slider-row"><label>Pencahayaan</label><input type="range" id="pvExposure" min="-100" max="100" value="0"><span id="pvExposureVal">0</span></div>
+  <div class="slider-row"><label>Kontras</label><input type="range" id="pvContrast" min="-100" max="100" value="0"><span id="pvContrastVal">0</span></div>
+  <div class="slider-row"><label>Kecerahan</label><input type="range" id="pvBrightness" min="-100" max="100" value="0"><span id="pvBrightnessVal">0</span></div>
+
+  <p class="filter-group-label">Warna</p>
+  <div class="slider-row"><label>Saturasi</label><input type="range" id="pvSaturation" min="-100" max="100" value="0"><span id="pvSaturationVal">0</span></div>
+  <div class="slider-row"><label>Kehangatan</label><input type="range" id="pvWarmth" min="-100" max="100" value="0"><span id="pvWarmthVal">0</span></div>
+
+  <p class="filter-group-label">Efek</p>
+  <div class="slider-row"><label>Vinyet</label><input type="range" id="pvVignette" min="-100" max="100" value="0"><span id="pvVignetteVal">0</span></div>
+
   <div class="form-group" style="max-width:260px;">
     <label>Frame Rate (FPS) Rekaman</label>
     <select id="pvFps">
@@ -292,10 +323,10 @@
   </div>
 
   <div style="display:flex; gap:10px; margin-top:14px;">
-    <button class="save-btn" onclick="saveCustomFilter()">+ Simpan Sebagai Filter Baru</button>
-    <button class="frame-style-btn" onclick="resetProFilterSliders()">Reset Slider</button>
+    <button class="save-btn" onclick="saveCustomVideoFilter()">+ Simpan Sebagai Filter Baru</button>
+    <button class="frame-style-btn" onclick="resetVideoFilterSliders()">Reset Slider</button>
   </div>
-  <div class="status-msg" id="filterMsg"></div>
+  <div class="status-msg" id="videoFilterMsg"></div>
 </div>
 
 <div class="panel" id="panel-tema">
@@ -437,6 +468,11 @@
     <input type="text" id="weddingDate" placeholder="YYYY-MM-DD">
   </div>
   <div class="form-group">
+    <label>Maksimal Foto per Kiriman</label>
+    <input type="number" id="maxPhoto" min="1" max="20" placeholder="5">
+    <p class="hint" style="margin-top:6px;">Berlaku di kamera tamu (multi-shot) dan upload dari galeri.</p>
+  </div>
+  <div class="form-group">
     <label>Maksimal Durasi Video (detik)</label>
     <input type="number" id="maxVideoSeconds" min="5" max="300">
   </div>
@@ -446,44 +482,20 @@
   </div>
   <h3 style="margin-top:22px;">Jenis Momen yang Boleh Dikirim</h3>
   <p class="desc">Nyalakan atau matikan tiap jenis. Pengaturan ini langsung berlaku di halaman kirim momen <b>dan</b> di album.</p>
-  <div class="toggle-row">
-    <span>Foto</span>
-    <input type="checkbox" id="allowPhoto">
-  </div>
-  <div class="toggle-row">
-    <span>Video</span>
-    <input type="checkbox" id="allowVideo">
-  </div>
-  <div class="toggle-row">
-    <span>Voice note</span>
-    <input type="checkbox" id="allowVoice">
-  </div>
+  <div class="toggle-row"><span>Foto</span><input type="checkbox" id="allowPhoto"></div>
+  <div class="toggle-row"><span>Video</span><input type="checkbox" id="allowVideo"></div>
+  <div class="toggle-row"><span>Voice note</span><input type="checkbox" id="allowVoice"></div>
   <p class="hint" style="margin-top:6px;">Minimal satu jenis harus aktif supaya tamu bisa mengirim momen.</p>
-  <div class="toggle-row">
-    <span>Pakai filter kamera untuk tamu</span>
-    <input type="checkbox" id="allowFilter">
-  </div>
-  <div class="toggle-row">
-    <span>Moderasi manual sebelum tampil di album</span>
-    <input type="checkbox" id="moderation">
-  </div>
+  <div class="toggle-row"><span>Pakai filter kamera untuk tamu</span><input type="checkbox" id="allowFilter"></div>
+  <div class="toggle-row"><span>Moderasi manual sebelum tampil di album</span><input type="checkbox" id="moderation"></div>
   <p class="hint" style="margin-top:6px;">Kalau moderasi dimatikan, momen dari tamu langsung tampil di album tanpa perlu kamu setujui dulu.</p>
 
   <h3 style="margin-top:28px;">Kontrol Album</h3>
   <p class="desc">Atur apa yang boleh dilihat/diunduh tamu lain di halaman album.</p>
-  <div class="toggle-row">
-    <span>Tampilkan pratinjau foto/video/suara di album</span>
-    <input type="checkbox" id="allowPreview">
-  </div>
+  <div class="toggle-row"><span>Tampilkan pratinjau foto/video/suara di album</span><input type="checkbox" id="allowPreview"></div>
   <p class="hint" style="margin-top:-4px;">Kalau dimatikan, album hanya menampilkan info nama & tanggal.</p>
-  <div class="toggle-row">
-    <span>Izinkan tombol "Unduh Asli"</span>
-    <input type="checkbox" id="allowDownloadOriginal">
-  </div>
-  <div class="toggle-row">
-    <span>Izinkan tombol "Unduh Berbingkai"</span>
-    <input type="checkbox" id="allowDownloadFramed">
-  </div>
+  <div class="toggle-row"><span>Izinkan tombol "Unduh Asli"</span><input type="checkbox" id="allowDownloadOriginal"></div>
+  <div class="toggle-row"><span>Izinkan tombol "Unduh Berbingkai"</span><input type="checkbox" id="allowDownloadFramed"></div>
 
   <h3 style="margin-top:28px;">Kualitas Media</h3>
   <p class="desc">Atur seberapa tinggi kualitas foto/video/voice note yang diambil dari HP tamu.</p>
@@ -609,6 +621,7 @@ if (!weddingId || !token) window.location.href = 'admin-login.html';
 let currentSettings = {};
 let filtersList = [];
 let selectedFilterId = null;
+let selectedVideoFilterId = null;
 let selectedFrameStyle = 'elegant';
 let frameTemplates = {
   photo: { type: 'builtin' },
@@ -630,6 +643,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'tema') drawPreview();
+    if (tab.dataset.tab === 'videofilter') drawVideoSamplePhoto();
   });
 });
 
@@ -763,13 +777,27 @@ async function moderate(mediaId, action, btn) {
   }
 }
 
+/* ============ FILTER FOTO ============ */
 async function loadFilters() {
-  const data = await callApi({ action: 'getFilters', wedding_id: weddingId }, 'GET');
-  if (!data.success) return;
-  filtersList = data.filters;
-  selectedFilterId = data.active_filter_id ? String(data.active_filter_id) : (filtersList[0] ? String(filtersList[0].filter_id) : null);
+  let filterData, settingsData;
+  try {
+    [filterData, settingsData] = await Promise.all([
+      callApi({ action: 'getFilters', wedding_id: weddingId }, 'GET'),
+      callApi({ action: 'getSettings' }, 'GET').catch(() => null)
+    ]);
+  } catch (e) { return; }
+  if (!filterData.success) return;
+  filtersList = filterData.filters || [];
+  selectedFilterId = filterData.active_filter_id ? String(filterData.active_filter_id) : (filtersList[0] ? String(filtersList[0].filter_id) : null);
+  if (settingsData && settingsData.active_video_filter_id) {
+    selectedVideoFilterId = String(settingsData.active_video_filter_id);
+  } else if (!selectedVideoFilterId) {
+    selectedVideoFilterId = selectedFilterId;
+  }
   drawSamplePhoto();
   renderFilterGrid();
+  renderVideoFilterGrid();
+  drawVideoSamplePhoto();
 }
 
 const sampleBaseCanvas = document.createElement('canvas');
@@ -976,7 +1004,7 @@ async function saveFilter() {
   try {
     const data = await callApi({ action: 'updateSettings', active_filter_id: selectedFilterId });
     if (handleAuthError(data)) return;
-    showStatus('filterMsg', data.success, data.success ? 'Filter aktif tersimpan, semua tamu akan pakai filter ini.' : data.message);
+    showStatus('filterMsg', data.success, data.success ? 'Filter foto aktif tersimpan, semua tamu akan pakai filter ini.' : data.message);
   } catch (err) {
     showStatus('filterMsg', false, 'Gagal terhubung ke server: ' + err.message);
   }
@@ -1002,38 +1030,22 @@ function readPhotoFilterParams() {
   };
 }
 
-function readVideoFilterParams() {
-  return {
-    exposure: Number(document.getElementById('pvExposure').value),
-    contrast: Number(document.getElementById('pvContrast').value),
-    brightness: Number(document.getElementById('pvBrightness').value),
-    saturation: Number(document.getElementById('pvSaturation').value),
-    warmth: Number(document.getElementById('pvWarmth').value),
-    vignette: Number(document.getElementById('pvVignette').value),
-    fps: Number(document.getElementById('pvFps').value)
-  };
-}
-
-function resetProFilterSliders() {
+function resetPhotoFilterSliders() {
   ['pfExposure','pfBrilliance','pfHighlights','pfShadows','pfContrast','pfBrightness','pfBlackPoint',
-   'pfSaturation','pfVibrancy','pfWarmth','pfTint','pfSharpness','pfDefinition','pfNoiseReduction','pfVignette',
-   'pvExposure','pvContrast','pvBrightness','pvSaturation','pvWarmth','pvVignette'].forEach(id => {
+   'pfSaturation','pfVibrancy','pfWarmth','pfTint','pfSharpness','pfDefinition','pfNoiseReduction','pfVignette'].forEach(id => {
     document.getElementById(id).value = 0;
     document.getElementById(id + 'Val').textContent = '0';
   });
-  document.getElementById('pvFps').value = '30';
   updateFilterLivePreview();
 }
 
 ['pfExposure','pfBrilliance','pfHighlights','pfShadows','pfContrast','pfBrightness','pfBlackPoint',
- 'pfSaturation','pfVibrancy','pfWarmth','pfTint','pfSharpness','pfDefinition','pfNoiseReduction','pfVignette',
- 'pvExposure','pvContrast','pvBrightness','pvSaturation','pvWarmth','pvVignette'].forEach(id => {
+ 'pfSaturation','pfVibrancy','pfWarmth','pfTint','pfSharpness','pfDefinition','pfNoiseReduction','pfVignette'].forEach(id => {
   document.getElementById(id).addEventListener('input', function () {
     document.getElementById(id + 'Val').textContent = this.value;
     updateFilterLivePreview();
   });
 });
-document.getElementById('pvFps').addEventListener('change', updateFilterLivePreview);
 
 function updateFilterLivePreview() {
   selectedFilterId = null;
@@ -1046,14 +1058,13 @@ async function saveCustomFilter() {
   const name = document.getElementById('customFilterName').value.trim();
   if (!name) { showStatus('filterMsg', false, 'Beri nama dulu untuk filter custom ini'); return; }
   const photoParams = readPhotoFilterParams();
-  const videoParams = readVideoFilterParams();
   const cssFilter = approximateCssFromParamsAdmin(photoParams);
   try {
     const data = await callApi({
       action: 'addCustomFilter',
       name,
       css_filter: cssFilter,
-      filter_params: JSON.stringify({ photo: photoParams, video: videoParams })
+      filter_params: JSON.stringify({ photo: photoParams, video: {} })
     });
     if (handleAuthError(data)) return;
     if (!data.success) { showStatus('filterMsg', false, data.message); return; }
@@ -1062,7 +1073,7 @@ async function saveCustomFilter() {
     renderFilterGrid();
     applyPreviewFilter(getSelectedFilterCss());
     document.getElementById('customFilterName').value = '';
-    showStatus('filterMsg', true, `Filter "${name}" tersimpan.`);
+    showStatus('filterMsg', true, `Filter foto "${name}" tersimpan.`);
   } catch (err) {
     showStatus('filterMsg', false, 'Gagal terhubung ke server: ' + err.message);
   }
@@ -1081,6 +1092,141 @@ async function deleteCustomFilterConfirm(filterId) {
   }
 }
 
+/* ============ FILTER VIDEO ============ */
+function readVideoFilterParams() {
+  return {
+    exposure: Number(document.getElementById('pvExposure').value),
+    contrast: Number(document.getElementById('pvContrast').value),
+    brightness: Number(document.getElementById('pvBrightness').value),
+    saturation: Number(document.getElementById('pvSaturation').value),
+    warmth: Number(document.getElementById('pvWarmth').value),
+    vignette: Number(document.getElementById('pvVignette').value),
+    fps: Number(document.getElementById('pvFps').value)
+  };
+}
+
+function resetVideoFilterSliders() {
+  ['pvExposure','pvContrast','pvBrightness','pvSaturation','pvWarmth','pvVignette'].forEach(id => {
+    document.getElementById(id).value = 0;
+    document.getElementById(id + 'Val').textContent = '0';
+  });
+  document.getElementById('pvFps').value = '30';
+  updateVideoFilterLivePreview();
+}
+
+['pvExposure','pvContrast','pvBrightness','pvSaturation','pvWarmth','pvVignette'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function () {
+    document.getElementById(id + 'Val').textContent = this.value;
+    updateVideoFilterLivePreview();
+  });
+});
+document.getElementById('pvFps').addEventListener('change', updateVideoFilterLivePreview);
+
+const videoSampleBaseCanvas = document.createElement('canvas');
+function drawVideoSamplePhoto() {
+  const visible = document.getElementById('videoFilterSampleCanvas');
+  if (!visible) return;
+  videoSampleBaseCanvas.width = visible.width; videoSampleBaseCanvas.height = visible.height;
+  const ctx = videoSampleBaseCanvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, videoSampleBaseCanvas.width, videoSampleBaseCanvas.height);
+  grad.addColorStop(0, '#F5ECD9'); grad.addColorStop(0.5, '#C9A66B'); grad.addColorStop(1, '#440808');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, videoSampleBaseCanvas.width, videoSampleBaseCanvas.height);
+  ctx.fillStyle = 'rgba(245,241,235,0.85)';
+  ctx.beginPath(); ctx.arc(videoSampleBaseCanvas.width * 0.75, videoSampleBaseCanvas.height * 0.28, 34, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(26,20,16,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(0, videoSampleBaseCanvas.height * 0.72);
+  ctx.lineTo(videoSampleBaseCanvas.width * 0.3, videoSampleBaseCanvas.height * 0.5);
+  ctx.lineTo(videoSampleBaseCanvas.width * 0.55, videoSampleBaseCanvas.height * 0.68);
+  ctx.lineTo(videoSampleBaseCanvas.width * 0.8, videoSampleBaseCanvas.height * 0.42);
+  ctx.lineTo(videoSampleBaseCanvas.width, videoSampleBaseCanvas.height * 0.6);
+  ctx.lineTo(videoSampleBaseCanvas.width, videoSampleBaseCanvas.height);
+  ctx.lineTo(0, videoSampleBaseCanvas.height);
+  ctx.closePath(); ctx.fill();
+  applyVideoFilterPreview(readVideoFilterParams());
+}
+
+function applyVideoFilterPreview(params) {
+  const visible = document.getElementById('videoFilterSampleCanvas');
+  if (!visible) return;
+  visible.style.filter = 'none';
+  const ctx = visible.getContext('2d');
+  ctx.clearRect(0, 0, visible.width, visible.height);
+  ctx.drawImage(videoSampleBaseCanvas, 0, 0);
+  const imgData = ctx.getImageData(0, 0, visible.width, visible.height);
+  applyToneColorPass(imgData, params);
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function getSelectedVideoFilterCss() {
+  const f = filtersList.find(x => String(x.filter_id) === selectedVideoFilterId);
+  return f ? f.css_filter : 'none';
+}
+
+function renderVideoFilterGrid() {
+  const grid = document.getElementById('videoFilterGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  filtersList.forEach(f => {
+    const opt = document.createElement('div');
+    opt.className = 'filter-option' + (String(f.filter_id) === selectedVideoFilterId ? ' active' : '');
+    const isOwnCustom = f.wedding_id === weddingId;
+    opt.innerHTML = `
+      <div class="filter-swatch" style="filter:${f.css_filter}"></div>
+      <span>${escapeHtml(f.name)}</span>
+      ${isOwnCustom ? `<button class="reset" style="margin-top:6px;font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid #EBC8C2;background:#fff;color:var(--danger);" onclick="event.stopPropagation();deleteCustomFilterConfirm('${f.filter_id}')">Hapus</button>` : ''}
+    `;
+    opt.addEventListener('click', () => {
+      selectedVideoFilterId = String(f.filter_id);
+      renderVideoFilterGrid();
+      const match = filtersList.find(x => String(x.filter_id) === selectedVideoFilterId);
+      applyVideoFilterPreview((match && match.filter_params && match.filter_params.video) || {});
+    });
+    grid.appendChild(opt);
+  });
+}
+
+function updateVideoFilterLivePreview() {
+  selectedVideoFilterId = null;
+  document.querySelectorAll('#videoFilterGrid .filter-option').forEach(o => o.classList.remove('active'));
+  applyVideoFilterPreview(readVideoFilterParams());
+}
+
+async function saveVideoFilter() {
+  try {
+    const data = await callApi({ action: 'updateSettings', active_video_filter_id: selectedVideoFilterId });
+    if (handleAuthError(data)) return;
+    showStatus('videoFilterMsg', data.success, data.success ? 'Filter video aktif tersimpan, semua tamu akan pakai filter ini saat rekam video.' : data.message);
+  } catch (err) {
+    showStatus('videoFilterMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+async function saveCustomVideoFilter() {
+  const name = document.getElementById('customVideoFilterName').value.trim();
+  if (!name) { showStatus('videoFilterMsg', false, 'Beri nama dulu untuk filter video custom ini'); return; }
+  const videoParams = readVideoFilterParams();
+  const cssFilter = approximateCssFromParamsAdmin(videoParams);
+  try {
+    const data = await callApi({
+      action: 'addCustomFilter',
+      name,
+      css_filter: cssFilter,
+      filter_params: JSON.stringify({ photo: {}, video: videoParams })
+    });
+    if (handleAuthError(data)) return;
+    if (!data.success) { showStatus('videoFilterMsg', false, data.message); return; }
+    await loadFilters();
+    selectedVideoFilterId = String(data.filter.filter_id);
+    renderVideoFilterGrid();
+    document.getElementById('customVideoFilterName').value = '';
+    showStatus('videoFilterMsg', true, `Filter video "${name}" tersimpan.`);
+  } catch (err) {
+    showStatus('videoFilterMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
+/* ============ TEMA / PREVIEW ============ */
 let currentPreviewMode = 'photo';
 let previewAnimTimer = null;
 
@@ -1390,7 +1536,6 @@ function renderFrameTemplateList() {
   });
 }
 
-// v17: compress frame HANYA jika > 5MB
 const MAX_FRAME_MB = 5;
 
 async function handleFrameUpload(mediaType, inputEl) {
@@ -1504,6 +1649,7 @@ async function loadSettings() {
   document.getElementById('groomName').value = data.groom_name || '';
   document.getElementById('brideName').value = data.bride_name || '';
   document.getElementById('weddingDate').value = data.date ? String(data.date).slice(0,10) : '';
+  document.getElementById('maxPhoto').value = data.max_photo || 5;
   document.getElementById('maxVideoSeconds').value = data.max_video_seconds || 60;
   document.getElementById('maxVoiceSeconds').value = data.max_voice_seconds || 60;
   document.getElementById('allowPhoto').checked = data.allow_photo !== false;
@@ -1560,7 +1706,12 @@ async function loadSettings() {
   document.getElementById('uploadLink').value = `${base}index.html?w=${weddingId}`;
   document.getElementById('albumLink').value = `${base}album.html?w=${weddingId}`;
   document.getElementById('galeriLink').value = `${base}galeri.html?w=${weddingId}`;
+  if (data.active_video_filter_id) {
+    selectedVideoFilterId = String(data.active_video_filter_id);
+    renderVideoFilterGrid();
+  }
   drawPreview();
+  drawVideoSamplePhoto();
 }
 
 function buildUiConfig() {
@@ -1610,11 +1761,13 @@ async function saveSettings() {
     showStatus('settingsMsg', false, 'Nyalakan minimal satu jenis momen (foto, video, atau voice note) ya.');
     return;
   }
+  const maxPhotoVal = Math.max(1, Math.min(20, Number(document.getElementById('maxPhoto').value) || 5));
   const payload = {
     action: 'updateSettings',
     groom_name: document.getElementById('groomName').value.trim(),
     bride_name: document.getElementById('brideName').value.trim(),
     date: document.getElementById('weddingDate').value.trim(),
+    max_photo: maxPhotoVal,
     max_video_seconds: document.getElementById('maxVideoSeconds').value,
     max_voice_seconds: document.getElementById('maxVoiceSeconds').value,
     allow_photo: document.getElementById('allowPhoto').checked,
