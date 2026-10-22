@@ -186,6 +186,28 @@
   .pvfull-close:hover{background:rgba(245,241,235,.24);}
   @media (max-width:640px){ .pvfull-nav{width:42px; height:42px;} .pvfull-nav.prev{left:6px;} .pvfull-nav.next{right:6px;} }
 
+  /* Modal izin (permission pre-prompt) */
+  #permOverlay { z-index: 100; }
+  .perm-card { max-width: 380px; padding: 32px 28px 24px; }
+  .perm-icon { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent-soft); }
+  .perm-icon svg { width: 36px; height: 36px; stroke: var(--accent); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .perm-card h3 { font-family: 'Fraunces',serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; color: var(--text); letter-spacing: -0.01em; }
+  .perm-card p { font-size: 14px; line-height: 1.65; color: var(--text-2); white-space: pre-line; margin-bottom: 22px; }
+  .perm-primary { display: block; width: 100%; padding: 14px; border-radius: 4px; border: none; background: var(--primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: 0.01em; cursor: pointer; margin-bottom: 8px; }
+  .perm-primary:hover { background: var(--primary-hover); }
+  .perm-secondary { display: block; width: 100%; padding: 13px; border-radius: 4px; border: none; background: transparent; color: var(--text-3); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  /* Modal konfirmasi hapus */
+  #confirmOverlay { z-index: 130; }
+  .confirm-card { max-width: 380px; padding: 32px 28px 24px; }
+  .confirm-icon { width: 68px; height: 68px; margin: 0 auto 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #F7E4E2; }
+  .confirm-icon svg { width: 32px; height: 32px; stroke: var(--danger); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .confirm-card h3 { font-family: 'Fraunces',serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; color: var(--text); letter-spacing: -0.01em; }
+  .confirm-card p { font-size: 14px; line-height: 1.6; color: var(--text-2); margin-bottom: 22px; }
+  .confirm-danger { display: block; width: 100%; padding: 14px; border-radius: 4px; border: none; background: var(--danger); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: 0.01em; cursor: pointer; margin-bottom: 8px; }
+  .confirm-danger:hover { background: #8A2020; }
+  .confirm-secondary { display: block; width: 100%; padding: 13px; border-radius: 4px; border: none; background: transparent; color: var(--text-3); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+
   .side-spacer{width:44px; flex:none;}
   .queue-card{max-width:380px; padding:26px 22px 20px; text-align:left; position:relative;}
   .queue-card h3{margin:0 40px 4px 0; text-align:left;}
@@ -267,6 +289,30 @@
       <p id="resultText"></p>
       <button id="resultPrimary"></button>
       <button id="resultSecondary"></button>
+    </div>
+  </div>
+
+  <!-- Modal izin kamera/mikrofon (pre-prompt sebelum dialog browser) -->
+  <div class="result-overlay" id="permOverlay">
+    <div class="result-card perm-card" id="permCard" role="dialog" aria-modal="true" aria-labelledby="permTitle">
+      <div class="perm-icon" id="permIcon"></div>
+      <h3 id="permTitle">Aktifkan Kamera</h3>
+      <p id="permText"></p>
+      <button class="perm-primary" id="permAllow">Aktifkan</button>
+      <button class="perm-secondary" id="permDeny">Nanti Saja</button>
+    </div>
+  </div>
+
+  <!-- Modal konfirmasi hapus foto (pengganti confirm()) -->
+  <div class="result-overlay" id="confirmOverlay">
+    <div class="result-card confirm-card" id="confirmCard" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <h3 id="confirmTitle">Hapus Foto Ini?</h3>
+      <p id="confirmText">Foto yang dihapus tidak akan bisa dikembalikan. Kamu masih bisa mengambil foto baru.</p>
+      <button class="confirm-danger" id="confirmOk">Hapus Foto</button>
+      <button class="confirm-secondary" id="confirmCancel">Batal</button>
     </div>
   </div>
 
@@ -1045,7 +1091,7 @@ const photoCanvas = document.getElementById('photoCanvasPreview');
 const recordedVideo = document.getElementById('recordedVideo');
 
 /* ================================================================
-   CACHE SETTINGS — kunjungan berikutnya instan.
+   CACHE SETTINGS
    ================================================================ */
 const SETTINGS_CACHE_TTL = 12 * 3600 * 1000;
 function settingsCacheKey() { return 'ws_v1_' + weddingId; }
@@ -1467,7 +1513,122 @@ function switchMode(mode) {
 }
 
 /* ================================================================
-   KAMERA — play() eksplisit + retry + token lock
+   IZIN MEDIA — modal penjelasan sebelum browser prompt muncul
+   ================================================================ */
+async function queryPermState(name) {
+  try {
+    if (!navigator.permissions || !navigator.permissions.query) return null;
+    const s = await navigator.permissions.query({ name });
+    return s.state;
+  } catch (e) { return null; }
+}
+
+function getPermCopy(needBoth, needCam, needMic) {
+  if (needBoth) {
+    return {
+      title: 'Aktifkan Kamera & Mikrofon',
+      text: 'Agar kamu bisa merekam video dengan suara, kami butuh izin kamera dan mikrofon HP kamu.\n\n' +
+            'Video yang kamu ambil hanya dikirim ke album pernikahan. Tidak disimpan di tempat lain, dan tidak dipakai untuk hal lain. Aman ya.\n\n' +
+            'Saat muncul pertanyaan dari browser, pilih “Izinkan”.',
+      btn: 'Aktifkan Keduanya',
+      icon: '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-6 4 6 4V8z"/><path d="M12 3a3 3 0 0 1 3 3v3"/><circle cx="12" cy="12" r="2"/></svg>'
+    };
+  }
+  if (needCam) {
+    return {
+      title: 'Aktifkan Kamera',
+      text: 'Agar kamu bisa mengambil foto momen langsung dari halaman ini, kami butuh izin kamera HP kamu.\n\n' +
+            'Foto yang kamu ambil hanya dikirim ke album pernikahan. Tidak disimpan di tempat lain, dan tidak dipakai untuk hal lain. Aman ya.\n\n' +
+            'Saat muncul pertanyaan dari browser, pilih “Izinkan”.',
+      btn: 'Aktifkan Kamera',
+      icon: '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+    };
+  }
+  return {
+    title: 'Aktifkan Mikrofon',
+    text: 'Agar kamu bisa merekam pesan suara, kami butuh izin mikrofon HP kamu.\n\n' +
+          'Rekaman kamu hanya dikirim ke album pernikahan. Tidak disimpan di tempat lain, dan tidak dipakai untuk hal lain. Aman ya.\n\n' +
+          'Saat muncul pertanyaan dari browser, pilih “Izinkan”.',
+    btn: 'Aktifkan Mikrofon',
+    icon: '<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>'
+  };
+}
+
+function showPermissionModal(needBoth, needCam, needMic) {
+  return new Promise(resolve => {
+    hideStatus();
+    const copy = getPermCopy(needBoth, needCam, needMic);
+    document.getElementById('permIcon').innerHTML = copy.icon;
+    document.getElementById('permTitle').textContent = copy.title;
+    document.getElementById('permText').textContent = copy.text;
+    const allowBtn = document.getElementById('permAllow');
+    const denyBtn = document.getElementById('permDeny');
+    allowBtn.textContent = copy.btn;
+    const ov = document.getElementById('permOverlay');
+    const done = (allowed) => {
+      ov.classList.remove('show');
+      allowBtn.onclick = null;
+      denyBtn.onclick = null;
+      resolve(allowed);
+    };
+    allowBtn.onclick = () => done(true);
+    denyBtn.onclick = () => done(false);
+    ov.classList.add('show');
+  });
+}
+
+async function ensureMediaPermission(needsCam, needsMic) {
+  const camState = needsCam ? await queryPermState('camera') : 'granted';
+  const micState = needsMic ? await queryPermState('microphone') : 'granted';
+
+  const camNeedsPrompt = needsCam && camState !== 'granted';
+  const micNeedsPrompt = needsMic && micState !== 'granted';
+
+  // Semua sudah granted → langsung jalan
+  if (!camNeedsPrompt && !micNeedsPrompt) return true;
+
+  // Ada yang denied di level browser → user harus ubah pengaturan
+  if ((needsCam && camState === 'denied') || (needsMic && micState === 'denied')) {
+    return 'denied';
+  }
+
+  // Cache per sesi: kalau modal sudah tampil untuk kombinasi ini, langsung coba
+  const ssKey = 'permModalShown_' + (needsCam ? 'c' : '') + (needsMic ? 'm' : '');
+  if (sessionStorage.getItem(ssKey) === '1') return true;
+
+  const allowed = await showPermissionModal(camNeedsPrompt && micNeedsPrompt, camNeedsPrompt, micNeedsPrompt);
+  if (allowed) {
+    try { sessionStorage.setItem(ssKey, '1'); } catch (e) {}
+    return true;
+  }
+  return 'dismissed';
+}
+
+/* ================================================================
+   MODAL KONFIRMASI HAPUS
+   ================================================================ */
+let _confirmCallback = null;
+function showConfirmDialog(opts, onConfirm) {
+  const ov = document.getElementById('confirmOverlay');
+  document.getElementById('confirmTitle').textContent = opts.title || 'Yakin?';
+  document.getElementById('confirmText').textContent = opts.text || '';
+  const ok = document.getElementById('confirmOk');
+  const cancel = document.getElementById('confirmCancel');
+  ok.textContent = opts.confirmLabel || 'Ya';
+  cancel.textContent = opts.cancelLabel || 'Batal';
+  _confirmCallback = onConfirm || null;
+  ok.onclick = () => {
+    const cb = _confirmCallback;
+    _confirmCallback = null;
+    ov.classList.remove('show');
+    if (cb) cb();
+  };
+  cancel.onclick = () => { _confirmCallback = null; ov.classList.remove('show'); };
+  ov.classList.add('show');
+}
+
+/* ================================================================
+   KAMERA
    ================================================================ */
 let cameraToken = 0;
 
@@ -1479,8 +1640,27 @@ async function startCamera(isRetry) {
       throw new Error('Browser tidak mendukung akses kamera. Coba browser lain ya.');
     }
     const needsAudio = currentMode === 'video';
-    const q = getQuality(currentMode === 'video' ? 'video' : 'photo');
 
+    const perm = await ensureMediaPermission(true, needsAudio);
+    if (myToken !== cameraToken) return false;
+    if (perm === 'dismissed') {
+      showStatus('Kamera Belum Aktif', 'Izinkan kamera supaya kamu bisa mengambil momen. Ketuk tombol di bawah untuk mencoba lagi.', {
+        label: 'Izinkan Kamera',
+        fn: () => {
+          try { sessionStorage.removeItem('permModalShown_c'); } catch (e) {}
+          try { sessionStorage.removeItem('permModalShown_cm'); } catch (e) {}
+          hideStatus();
+          startCamera();
+        }
+      });
+      return false;
+    }
+    if (perm === 'denied') {
+      showStatus('Izin Kamera Ditolak', 'Kamera tidak bisa dibuka karena izinnya ditolak. Aktifkan izin kamera di pengaturan browser (ikon gembok di address bar), lalu muat ulang halaman ini.', true);
+      return false;
+    }
+
+    const q = getQuality(currentMode === 'video' ? 'video' : 'photo');
     const wIdeal = isRetry ? Math.min(640, q.width) : q.width;
     const hIdeal = isRetry ? Math.min(480, q.height) : q.height;
 
@@ -1631,7 +1811,7 @@ function renderFilmstrip() {
   if (previewBtn) previewBtn.style.display = 'flex';
 }
 
-// === PREVIEW FOTO (FULLSCREEN — tanpa modal grid) ===
+// === PREVIEW FOTO (FULLSCREEN) ===
 let pvImages = [];
 let pvIdx = 0;
 let pvObjectUrls = [];
@@ -1645,8 +1825,6 @@ function revokePvUrls() {
   pvObjectUrls = [];
 }
 
-// Bikin URL ukuran penuh untuk viewer. Kalau frame sudah dibakar saat ambil
-// foto (autoIncludeFrame.photo), blob final sudah ada — langsung dipakai.
 function buildFullPreviewUrl(item) {
   return new Promise(resolve => {
     if (autoIncludeFrame.photo) {
@@ -1679,7 +1857,6 @@ function buildFullPreviewUrl(item) {
   });
 }
 
-// Klik "Lihat" → langsung buka foto besar (tanpa modal grid).
 async function openPhotoPreview() {
   if (photoShots.length === 0) return;
   if (document.getElementById('pvFull').classList.contains('show')) return;
@@ -1727,11 +1904,19 @@ function stepPvFull(dir) {
   showPvFull();
 }
 
-// Hapus foto yang sedang dilihat. Otomatis lanjut ke foto tetangga,
-// atau tutup viewer bila sudah tidak ada foto tersisa.
+// Hapus foto dari viewer (pakai modal konfirmasi, bukan confirm()).
 function deleteFromPvFull() {
   if (pvIdx < 0 || pvIdx >= photoShots.length) return;
-  if (!confirm('Hapus foto ini?')) return;
+  showConfirmDialog({
+    title: 'Hapus Foto Ini?',
+    text: 'Foto yang dihapus tidak akan bisa dikembalikan. Kamu masih bisa mengambil foto baru.',
+    confirmLabel: 'Hapus Foto',
+    cancelLabel: 'Batal'
+  }, doDeleteFromPvFull);
+}
+
+function doDeleteFromPvFull() {
+  if (pvIdx < 0 || pvIdx >= photoShots.length) return;
   try { URL.revokeObjectURL(pvImages[pvIdx]); } catch (e) {}
   try { URL.revokeObjectURL(photoShots[pvIdx].url); } catch (e) {}
   photoShots.splice(pvIdx, 1);
@@ -1953,6 +2138,17 @@ document.getElementById('vnPlayBtn').addEventListener('click', () => {
 document.getElementById('vnSendBtn').addEventListener('click', () => sendSingleMedia('voice'));
 
 async function startVoiceRecording() {
+  const perm = await ensureMediaPermission(false, true);
+  if (perm === 'dismissed') {
+    showToast('Izinkan mikrofon dulu ya supaya bisa merekam suara', 'error');
+    return;
+  }
+  if (perm === 'denied') {
+    showToast('Izin mikrofon ditolak. Aktifkan di pengaturan browser, lalu coba lagi.', 'error');
+    return;
+  }
+  if (perm !== true) return;
+
   if (autoIncludeFrame.voice) return startVoiceRecordingWithFrame();
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true } });
@@ -2128,10 +2324,19 @@ function showStatus(title, text, action) {
   const btn = document.getElementById('statusBtn');
   if (action && typeof action === 'object') {
     btn.style.display = 'inline-block'; btn.textContent = action.label;
-    btn.onclick = () => { location.href = action.href; };
-  } else {
-    btn.style.display = action ? 'inline-block' : 'none'; btn.textContent = 'Coba Lagi';
+    if (action.fn) {
+      btn.onclick = action.fn;
+    } else if (action.href) {
+      btn.onclick = () => { location.href = action.href; };
+    } else {
+      btn.onclick = () => location.reload();
+    }
+  } else if (action === true) {
+    btn.style.display = 'inline-block'; btn.textContent = 'Coba Lagi';
     btn.onclick = () => location.reload();
+  } else {
+    btn.style.display = 'none';
+    btn.onclick = null;
   }
 }
 function hideStatus() { document.getElementById('statusScreen').style.display = 'none'; }
