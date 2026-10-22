@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -33,6 +32,9 @@
 <!-- META:END -->
 <link rel="icon" type="image/png" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
 <link rel="apple-touch-icon" href="https://blogger.googleusercontent.com/img/a/AVvXsEiMWdQxz2gdJtwIyt7ThCwA506671mAkvI0TED6qSdsUHwxA7eBu-19M_KalIs1ItncLnlg5hUDSdCUn5GUoTqbWNR0By4E2oQGTPSYGep6FfJZ0Ku5cRgAm5fHKbC6qXH2q7wEApznnccMPZsmNBBI3O16qVDjF5SK-GAVwcjz7tZzfsjPaXko9SNjoQ0f">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://script.google.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -232,7 +234,6 @@
 <div id="app">
 
   <div id="statusScreen">
-    <!-- <img class="load-gif" src="assets/loading-art.webp" alt="loading" aria-hidden="true" width="96" height="96"> -->
     <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true">
     <h2 id="statusTitle">Menyiapkan kamera…</h2>
     <p id="statusText">Sebentar ya, kami siapkan semuanya untukmu</p>
@@ -1067,19 +1068,46 @@ const liveVideo = document.getElementById('liveVideo');
 const photoCanvas = document.getElementById('photoCanvasPreview');
 const recordedVideo = document.getElementById('recordedVideo');
 
+/* ================================================================
+   CACHE SETTINGS — supaya kunjungan berikutnya instan.
+   Kunci di localStorage, TTL 12 jam. Kalau kena cache, UI + kamera
+   langsung tampil, lalu settings di-refresh diam-diam di background.
+   ================================================================ */
+const SETTINGS_CACHE_TTL = 12 * 3600 * 1000;
+function settingsCacheKey() { return 'ws_v1_' + weddingId; }
+function readSettingsCache() {
+  try {
+    const raw = localStorage.getItem(settingsCacheKey());
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    if (!c || !c.settings || !c.ts) return null;
+    if (Date.now() - c.ts > SETTINGS_CACHE_TTL) return null;
+    return c;
+  } catch (e) { return null; }
+}
+function writeSettingsCache(settings, filters) {
+  try {
+    localStorage.setItem(settingsCacheKey(), JSON.stringify({
+      ts: Date.now(),
+      settings: settings || null,
+      filters: filters || null
+    }));
+  } catch (e) {}
+}
+
 init();
 
-async function fetchJson(qs, tries = 3) {
+async function fetchJson(qs, tries = 2, timeoutMs = 10000) {
   let last;
   for (let i = 0; i < tries; i++) {
     const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 15000);
+    const to = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
       const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { signal: ctrl.signal });
       const d = await res.json(); clearTimeout(to);
-      if (d && d.busy && i < tries - 1) { await sleepMs(700 * (i + 1)); continue; }
+      if (d && d.busy && i < tries - 1) { await sleepMs(400 * (i + 1)); continue; }
       return d;
-    } catch (e) { clearTimeout(to); last = e; await sleepMs(500 * (i + 1)); }
+    } catch (e) { clearTimeout(to); last = e; await sleepMs(300 * (i + 1)); }
   }
   throw last || new Error('offline');
 }
@@ -1090,50 +1118,142 @@ function applyThemeColors(s) {
   if (s.secondary_color) document.documentElement.style.setProperty('--accent',  s.secondary_color);
 }
 
+/* Terapkan settings ke UI global. Return false bila tidak ada jenis media aktif. */
+function applySettings(settings, filters) {
+  if (!settings || !settings.success) return false;
+  weddingSettings = settings;
+  applyThemeColors(settings);
+  MAX_SHOTS = settings.max_photo || 5;
+
+  document.getElementById('brandName').textContent =
+    (settings.ui_config && settings.ui_config.index_headline) || `${settings.groom_name} & ${settings.bride_name}`;
+  if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
+
+  const types = settings.types || ['photo'];
+  if (types.length === 0) {
+    showStatus('Pengiriman Sedang Ditutup', 'Mempelai sedang menutup pengiriman momen. Kamu tetap bisa melihat album ya.', { label: 'Lihat Album', href: document.getElementById('toAlbumLink').href });
+    return false;
+  }
+
+  setupModeSwitch(types);
+  if (filters) applyFilters(filters);
+  return true;
+}
+
+/* Terapkan daftar filter ke state global + viewfinder. Idempoten. */
+function applyFilters(filterData) {
+  if (!filterData || !filterData.success) return;
+  if (!weddingSettings || weddingSettings.allow_filter === false) return;
+  if (!filterData.active_filter_id) return;
+  const match = (filterData.filters || []).find(f => String(f.filter_id) === String(filterData.active_filter_id));
+  if (!match) return;
+  activeFilterCss = match.css_filter || 'none';
+  try {
+    const raw = match.params ? JSON.parse(match.params) : null;
+    if (!raw) activeFilterParams = null;
+    else if (raw.photo || raw.video) activeFilterParams = { photo: raw.photo || {}, video: raw.video || {} };
+    else activeFilterParams = { photo: raw, video: raw };
+  } catch (e) { activeFilterParams = null; }
+  // Re-apply ke viewfinder yang sedang jalan
+  try {
+    if (liveVideo && liveStream) {
+      liveVideo.style.filter = activeFilterParams
+        ? approximateCssFromParams(currentMode === 'video' ? activeFilterParams.video : activeFilterParams.photo)
+        : activeFilterCss;
+    }
+  } catch (e) {}
+}
+
 async function init() {
   const nameInput = document.getElementById('guestName');
   try { nameInput.value = localStorage.getItem('guest_name') || ''; } catch (e) {}
   nameInput.addEventListener('input', () => { try { localStorage.setItem('guest_name', nameInput.value.trim()); } catch (e) {} });
-  try {
-    const w = encodeURIComponent(weddingId);
-    const [settings, filterData] = await Promise.all([
-      fetchJson(`action=getSettings&wedding_id=${w}`),
-      fetchJson(`action=getFilters&wedding_id=${w}`).catch(() => null)
-    ]);
-    if (!settings.success) { showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid. Minta link terbaru ke mempelai ya.', false); return; }
-    weddingSettings = settings;
-    applyThemeColors(settings);
-    MAX_SHOTS = settings.max_photo || 5;
-    document.getElementById('brandName').textContent = (settings.ui_config && settings.ui_config.index_headline) || `${settings.groom_name} & ${settings.bride_name}`;
-    if (settings.date) document.getElementById('brandDate').textContent = formatDate(settings.date);
-    const types = settings.types || ['photo'];
-    if (types.length === 0) {
-      showStatus('Pengiriman Sedang Ditutup', 'Mempelai sedang menutup pengiriman momen. Kamu tetap bisa melihat album ya.', { label: 'Lihat Album', href: document.getElementById('toAlbumLink').href });
+
+  const cached = readSettingsCache();
+  let haveSettings = false;
+
+  if (cached) {
+    if (applySettings(cached.settings, cached.filters)) haveSettings = true;
+    else return; // settings tersimpan menandakan pengiriman ditutup
+  } else {
+    try {
+      const w = encodeURIComponent(weddingId);
+      const settings = await fetchJson(`action=getSettings&wedding_id=${w}`, 2, 10000);
+      if (!settings.success) {
+        showStatus('Momen Tidak Ditemukan', settings.message || 'Kode undangan tidak valid. Minta link terbaru ke mempelai ya.', false);
+        return;
+      }
+      if (applySettings(settings, null)) haveSettings = true;
+      else return;
+    } catch (err) {
+      showStatus('Belum Bisa Terhubung', 'Koneksi internet kamu sepertinya sedang kurang stabil. Coba lagi ya.', true);
       return;
     }
-    if (settings.allow_filter !== false && filterData && filterData.success && filterData.active_filter_id) {
-      const match = filterData.filters.find(f => String(f.filter_id) === String(filterData.active_filter_id));
-      if (match) {
-        activeFilterCss = match.css_filter || 'none';
-        try {
-          const raw = match.params ? JSON.parse(match.params) : null;
-          if (!raw) activeFilterParams = null;
-          else if (raw.photo || raw.video) activeFilterParams = { photo: raw.photo || {}, video: raw.video || {} };
-          else activeFilterParams = { photo: raw, video: raw };
-        } catch (e) { activeFilterParams = null; }
-      }
-    }
-    setupModeSwitch(types);
-    await Promise.all([preloadFrameAssets(settings), currentMode === 'voice' ? Promise.resolve() : startCamera()]);
-    hideStatus();
-  } catch (err) {
-    showStatus('Belum Bisa Terhubung', 'Koneksi internet kamu sepertinya sedang kurang stabil. Coba lagi ya.', true);
   }
+
+  if (!haveSettings) return;
+
+  // Start kamera; hideStatus hanya jika berhasil (kalau gagal, startCamera yang set status error).
+  if (currentMode === 'voice') {
+    hideStatus();
+  } else {
+    const ok = await startCamera();
+    if (ok) hideStatus();
+  }
+
+  // ---- BACKGROUND TASKS ----
+  const w = encodeURIComponent(weddingId);
+
+  // 1) Filters — refresh dari server. Kalau gagal, tetap pakai cache (bila ada).
+  fetchJson(`action=getFilters&wedding_id=${w}`, 2, 10000)
+    .then(f => {
+      if (f && f.success) {
+        applyFilters(f);
+        writeSettingsCache(weddingSettings, f);
+      } else if (!cached) {
+        writeSettingsCache(weddingSettings, null);
+      }
+    })
+    .catch(() => {});
+
+  // 2) Kalau dari cache, refresh settings di background juga
+  if (cached) {
+    fetchJson(`action=getSettings&wedding_id=${w}`, 2, 10000)
+      .then(fresh => {
+        if (fresh && fresh.success) {
+          applySettings(fresh, null); // jangan reset filter yang mungkin sudah masuk
+        }
+      })
+      .catch(() => {});
+  }
+
+  // 3) Bingkai custom: fire-and-forget, TIDAK memblokir UI/kamera.
+  preloadFrameAssets(weddingSettings).catch(() => {});
+}
+
+let modeSwitchInited = false;
+function setupModeSwitch(types) {
+  const buttons = document.querySelectorAll('#modeSwitch button');
+  if (!modeSwitchInited) {
+    modeSwitchInited = true;
+    buttons.forEach(btn => {
+      const mode = btn.dataset.mode;
+      btn.addEventListener('click', () => switchMode(mode));
+    });
+  }
+  buttons.forEach(btn => {
+    const mode = btn.dataset.mode;
+    btn.style.display = types.indexOf(mode) !== -1 ? '' : 'none';
+  });
+  const box = document.getElementById('modeSwitch');
+  box.style.display = types.length > 1 ? '' : 'none';
+  if (!modeSwitchInited) { /* tidak mungkin */ }
 }
 
 let autoIncludeFrame = { photo: false, video: false, voice: false };
 let frameConfigCache = {};
 let customFrameImgCache = {};
+let framesPreloadStarted = false;
 
 function getFrameConfig(type) {
   const w = weddingSettings || {};
@@ -1164,19 +1284,28 @@ function getVnResolution() {
   return { width: 720, height: 720 };
 }
 
-async function preloadFrameAssets(settings) {
+/* Fase sinkron: siapkan config (instan). Fase async: unduh gambar bingkai di background. */
+function preloadFrameAssets(settings) {
+  if (framesPreloadStarted) return Promise.resolve();
+  framesPreloadStarted = true;
   const uiConfig = settings.ui_config || {};
   autoIncludeFrame = Object.assign({ photo:false, video:false, voice:false }, uiConfig.frame_auto_include || {});
-  if (!autoIncludeFrame.photo && !autoIncludeFrame.video && !autoIncludeFrame.voice) return;
+  if (!autoIncludeFrame.photo && !autoIncludeFrame.video && !autoIncludeFrame.voice) return Promise.resolve();
+
+  const jobs = [];
   for (const type of ['photo', 'video', 'voice']) {
     if (!autoIncludeFrame[type]) continue;
     frameConfigCache[type] = getFrameConfig(type);
     const cf = frameConfigCache[type].customFrame;
     if (cf && cf.file_id) {
-      try { customFrameImgCache[type] = await loadFrameImageBase64(cf.file_id); }
-      catch (e) { customFrameImgCache[type] = null; }
+      jobs.push(
+        loadFrameImageBase64(cf.file_id)
+          .then(img => { customFrameImgCache[type] = img; })
+          .catch(() => { customFrameImgCache[type] = null; })
+      );
     }
   }
+  return Promise.all(jobs);
 }
 
 function loadFrameImageBase64(fileId) {
@@ -1191,8 +1320,8 @@ function loadFrameImageBase64(fileId) {
     const blobUrl = URL.createObjectURL(blob);
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onload = () => { URL.revokeObjectURL(blobUrl); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('decode')); };
       img.src = blobUrl;
     });
   })();
@@ -1264,7 +1393,6 @@ function drawAudiogramLive(ctx, w, h, dataArray, cfg, guestName) {
   ctx.fillText(guestName, cx, cy + 20 * scale);
 }
 
-// v17: Draw frame dengan rotasi otomatis sesuai orientasi media
 function drawFrameForMedia(ctx, frameImg, w, h) {
   if (!frameImg) return;
   const fw = frameImg.naturalWidth || frameImg.width;
@@ -1345,17 +1473,6 @@ function drawFrameBar(ctx, w, h, cfg) {
   window.addEventListener('orientationchange', set);
 })();
 
-function setupModeSwitch(types) {
-  const buttons = document.querySelectorAll('#modeSwitch button');
-  buttons.forEach(btn => {
-    const mode = btn.dataset.mode;
-    if (types.indexOf(mode) === -1) { btn.style.display = 'none'; return; }
-    btn.addEventListener('click', () => switchMode(mode));
-  });
-  if (types.length <= 1) document.getElementById('modeSwitch').style.display = 'none';
-  applyModeUI(types[0]);
-}
-
 function applyModeUI(mode) {
   currentMode = mode;
   document.querySelectorAll('#modeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
@@ -1387,26 +1504,107 @@ function switchMode(mode) {
   else { startCamera(); }
 }
 
-async function startCamera() {
+/* ================================================================
+   KAMERA — perbaikan utama:
+   1) liveVideo.play() eksplisit (fix black screen setelah dialog izin)
+   2) Token lock mencegah race condition (double-tap flip dsb.)
+   3) Retry sekali dengan resolusi lebih rendah kalau video tetap kosong
+   4) srcObject dibersihkan saat stop stream
+   ================================================================ */
+let cameraToken = 0;
+
+async function startCamera(isRetry) {
+  const myToken = ++cameraToken;
   try {
     stopCameraStream();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Browser tidak mendukung akses kamera. Coba browser lain ya.');
+    }
     const needsAudio = currentMode === 'video';
     const q = getQuality(currentMode === 'video' ? 'video' : 'photo');
-    liveStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: currentFacing }, width: { ideal: q.width }, height: { ideal: q.height } },
-      audio: needsAudio ? { echoCancellation:true, noiseSuppression:true } : false
+
+    const wIdeal = isRetry ? Math.min(640, q.width) : q.width;
+    const hIdeal = isRetry ? Math.min(480, q.height) : q.height;
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: currentFacing }, width: { ideal: wIdeal }, height: { ideal: hIdeal } },
+      audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
     });
-    streamHasAudio = liveStream.getAudioTracks().length > 0;
-    liveVideo.srcObject = liveStream;
-    liveVideo.style.filter = activeFilterParams ? approximateCssFromParams(currentMode === 'video' ? activeFilterParams.video : activeFilterParams.photo) : activeFilterCss;
-    liveVideo.classList.toggle('mirrored', currentFacing === 'user');
+
+    // Kalau ada startCamera yang lebih baru, buang stream ini.
+    if (myToken !== cameraToken) {
+      stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+      return true;
+    }
+
+    liveStream = stream;
+    streamHasAudio = stream.getAudioTracks().length > 0;
+    liveVideo.muted = true;
+    liveVideo.srcObject = stream;
+    try {
+      liveVideo.style.filter = activeFilterParams
+        ? approximateCssFromParams(currentMode === 'video' ? activeFilterParams.video : activeFilterParams.photo)
+        : activeFilterCss;
+      liveVideo.classList.toggle('mirrored', currentFacing === 'user');
+    } catch (e) {}
+
+    // Play eksplisit — ini kunci utama mengatasi kamera hitam.
+    try {
+      const p = liveVideo.play();
+      if (p && p.then) {
+        await p.catch(err => {
+          // Autoplay diblokir — coba lagi saat user berinteraksi sekali.
+          const retryPlay = () => { try { liveVideo.play().catch(() => {}); } catch (e) {} };
+          document.addEventListener('click', retryPlay, { once: true, passive: true });
+          document.addEventListener('touchstart', retryPlay, { once: true, passive: true });
+        });
+      }
+    } catch (e) {}
+
+    // Tunggu metadata muncul. Kalau tetap kosong, retry sekali dengan resolusi lebih rendah.
+    if (!liveVideo.videoWidth) {
+      await new Promise(resolve => {
+        let done = false;
+        const finish = () => { if (!done) { done = true; liveVideo.removeEventListener('loadedmetadata', finish); resolve(); } };
+        liveVideo.addEventListener('loadedmetadata', finish);
+        setTimeout(finish, 2000);
+      });
+    }
+
+    if (!liveVideo.videoWidth && !isRetry && myToken === cameraToken) {
+      await sleepMs(200);
+      return startCamera(true);
+    }
+
+    return true;
   } catch (err) {
-    showStatus('Kamera Belum Diizinkan', 'Kami perlu akses kamera (dan mikrofon untuk video) supaya kamu bisa mengabadikan momen. Aktifkan izinnya di pengaturan browser, lalu muat ulang halaman.', true);
+    if (myToken !== cameraToken) return false;
+    const msg = String(err && err.message || '');
+    let title = 'Kamera Belum Bisa Dibuka';
+    let body = 'Kami perlu izin kamera supaya kamu bisa mengabadikan momen. Cek pengaturan browser lalu coba lagi ya.';
+    if (/NotAllowed|Permission|denied/i.test(msg)) {
+      title = 'Izin Kamera Belum Diberikan';
+      body = 'Aktifkan izin kamera di pengaturan browser (ikon gembok di address bar), lalu muat ulang halaman ini.';
+    } else if (/NotFound|NotReadable|DevicesNotFound/i.test(msg)) {
+      title = 'Kamera Tidak Terdeteksi';
+      body = 'Pastikan kamera tidak sedang dipakai aplikasi lain, lalu tekan Coba Lagi.';
+    } else if (/NotSupported|Overconstrained/i.test(msg)) {
+      title = 'Kamera Tidak Mendukung';
+      body = 'Browser kamu belum bisa memakai kamera di halaman ini. Coba buka di Chrome atau Safari terbaru ya.';
+    }
+    showStatus(title, body, true);
+    return false;
   }
 }
 
 function stopCameraStream() {
-  if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
+  if (liveStream) {
+    liveStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+    liveStream = null;
+  }
+  try {
+    if (liveVideo && liveVideo.srcObject) liveVideo.srcObject = null;
+  } catch (e) {}
 }
 
 document.getElementById('flipBtn').addEventListener('click', () => {
@@ -1480,8 +1678,6 @@ function renderFilmstrip() {
 }
 
 // === PREVIEW FOTO ===
-// pvImages menyimpan object URL ukuran penuh (dari blob asli), bukan thumbnail.
-// Object URL ini harus di-revoke saat preview ditutup supaya memori tidak menumpuk.
 let pvImages = [];
 let pvIdx = 0;
 let pvObjectUrls = [];
@@ -1512,9 +1708,6 @@ function buildPreviewImage(item) {
   });
 }
 
-// Bangun URL ukuran penuh untuk penampil besar. Kalau frame sudah dibakar saat
-// ambil foto (autoIncludeFrame.photo), blob-nya sudah final — langsung dipakai.
-// Kalau belum, frame digambar dulu di resolusi asli blob.
 function buildFullPreviewUrl(item) {
   return new Promise(resolve => {
     if (autoIncludeFrame.photo) {
