@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kirim dari Galeri — Wedding Album</title>
+<meta name="theme-color" content="#440808">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#440808; --primary-hover:#5A1010;
+    --accent:#C9A66B; --accent-soft:#F5ECD9;
+    --surface:#FFFFFF; --surface-2:#EFE9DF;
+    --text:#1A1410; --text-2:#5A4D42; --text-3:#8A7B6E;
+    --danger:#A02828; --success:#2F6B3F;
+    --dark:#1A1410; --dark-2:#2A2320;
+    --bg:#F5F1EB; --border:#E5DDD1; --border-strong:#D6CBB8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  body{
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.55;
+    touch-action:pan-y; overscroll-behavior:none; min-height:100vh;
+  }
+  header{
+    position:sticky; top:0; z-index:20; padding:14px 20px;
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(245,241,235,.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  header .brand{font-family:'Fraunces',serif; font-weight:700; font-size:15px; color:var(--text); letter-spacing:-0.01em;}
+  header .brand small{display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:400; color:var(--text-3); letter-spacing:0.06em; text-transform:uppercase; margin-top:2px;}
+  header a.nav-link{color:var(--primary); text-decoration:none; font-size:12px; font-weight:600; background:var(--surface); padding:8px 14px; border-radius:4px; letter-spacing:0.01em; border:1px solid var(--border);}
+  header a.nav-link:hover{background:var(--surface-2);border-color:var(--border-strong);}
+  .hero{padding:36px 20px 24px; max-width:720px; margin:0 auto; text-align:center;}
+  .hero h1{font-family:'Fraunces',serif; font-size:clamp(26px,5vw,38px); font-weight:800; line-height:1.1; letter-spacing:-0.02em; color:var(--primary); margin-bottom:8px;}
+  .hero p{font-family:'JetBrains Mono',monospace; color:var(--text-3); font-size:12px; letter-spacing:0.04em; text-transform:uppercase;}
+  .container{max-width:720px; margin:0 auto; padding:0 20px 96px;}
+  .tabs{display:flex; gap:4px; margin-bottom:24px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:4px;}
+  .tabs button{flex:1; padding:10px 8px; border:none; background:transparent; font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0.06em; color:var(--text-3); border-radius:4px; cursor:pointer; transition:background .15s,color .15s;}
+  .tabs button.active{background:var(--primary); color:#fff;}
+  .tabs button:hover:not(.active){color:var(--text-2); background:var(--surface-2);}
+  .mode-panel{display:none;}
+  .mode-panel.active{display:block; animation:fadeIn .2s ease-out;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .pick-btn{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:32px 20px; border:2px dashed var(--border-strong); border-radius:8px; background:var(--surface); color:var(--primary); font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; transition:background .15s, border-color .15s; text-align:center;}
+  .pick-btn:hover{background:var(--surface-2); border-color:var(--primary);}
+  .pick-btn:active{transform:scale(.99);}
+  .pick-btn svg{width:28px; height:28px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .pick-btn small{display:block; font-size:11px; font-weight:500; color:var(--text-3); margin-top:6px; letter-spacing:0.02em; text-transform:none;}
+  .preview{background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px;}
+  .preview-media{position:relative; background:var(--surface-2); min-height:200px; display:flex; align-items:center; justify-content:center;}
+  .preview-media img, .preview-media video{max-width:100%; max-height:60vh; display:block; object-fit:contain;}
+  .preview-info{padding:14px 16px; font-size:12px; color:var(--text-3); font-family:'JetBrains Mono',monospace; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .preview-info strong{color:var(--text-2); font-weight:600;}
+  .progress-bar{width:100%; height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden; margin:12px 0;}
+  .progress-bar i{display:block; height:100%; width:0; background:var(--accent); transition:width .25s;}
+  .progress-text{font-size:12px; color:var(--text-3); text-align:center; margin-bottom:8px; font-family:'JetBrains Mono',monospace;}
+  .name-field{margin:20px 0 16px;}
+  .name-field label{display:block; font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:6px;}
+  .name-field input{width:100%; padding:13px 14px; border-radius:4px; border:1.5px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:16px; transition:border-color .15s, box-shadow .15s;}
+  .name-field input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(201,166,107,.22);}
+  .name-field input::placeholder{color:var(--text-3);}
+  .send-btn{width:100%; padding:15px 24px; border-radius:4px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:15px; font-weight:700; letter-spacing:0.01em; cursor:pointer; transition:background .15s, transform .1s;}
+  .send-btn:hover:not(:disabled){background:#B8955A;}
+  .send-btn:active:not(:disabled){transform:translateY(1px);}
+  .send-btn:disabled{opacity:.4; cursor:not-allowed;}
+  .voice-wrap{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:28px 20px; text-align:center;}
+  .voice-wrap .orb{width:120px; height:120px; margin:0 auto 20px; border-radius:50%; background:linear-gradient(135deg,var(--accent),#A8874E); display:flex; align-items:center; justify-content:center; font-size:44px; color:var(--dark); box-shadow:0 0 0 8px rgba(201,166,107,.15); transition:box-shadow .3s;}
+  .voice-wrap .orb.recording{animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(160,40,40,.4);}70%{box-shadow:0 0 0 26px rgba(160,40,40,0);}100%{box-shadow:0 0 0 0 rgba(160,40,40,0);}}
+  .voice-wrap .timer{font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:500; letter-spacing:0.04em; color:var(--text); margin-bottom:8px;}
+  .voice-wrap .hint{font-size:13px; color:var(--text-3); margin-bottom:20px; line-height:1.55;}
+  .voice-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .voice-actions button{padding:12px 22px; border-radius:4px; border:1px solid var(--border); background:var(--surface); font-family:inherit; font-size:13px; font-weight:600; color:var(--text-2); cursor:pointer; transition:background .15s, border-color .15s;}
+  .voice-actions button:hover{background:var(--surface-2);}
+  .voice-actions .primary{background:var(--primary); color:#fff; border-color:var(--primary);}
+  .voice-actions .primary:hover{background:var(--primary-hover);}
+  .voice-actions .danger{background:var(--danger); color:#fff; border-color:var(--danger);}
+  .voice-actions .danger:hover{background:#8A2020;}
+  .result-overlay{position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(26,20,16,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);}
+  .result-overlay.show{display:flex; animation:fadeIn .2s ease-out;}
+  .result-card{width:100%; max-width:360px; background:#F5F1EB; color:var(--text); border-radius:8px; padding:32px 28px 24px; text-align:center; box-shadow:0 16px 48px rgba(68,8,8,.24); border:1px solid var(--border); animation:cardIn .32s cubic-bezier(.2,.9,.3,1.2);}
+  @keyframes cardIn{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
+  .result-icon{width:68px; height:68px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--accent-soft);}
+  .result-icon svg{width:34px; height:34px; stroke:var(--accent); fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round;}
+  .result-card.success .result-icon{background:#E4F0E6;} .result-card.success .result-icon svg{stroke:var(--success);}
+  .result-card.error .result-icon{background:#F7E4E2;} .result-card.error .result-icon svg{stroke:var(--danger);}
+  .result-card h3{font-family:'Fraunces',serif; font-size:20px; font-weight:700; margin-bottom:10px;}
+  .result-card p{font-size:14px; line-height:1.6; color:var(--text-2); white-space:pre-line; margin-bottom:20px;}
+  .result-card button{display:block; width:100%; padding:13px; border-radius:4px; border:none; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; margin-top:8px;}
+  .result-card .btn-primary{background:var(--primary); color:#fff;}
+  .result-card .btn-secondary{background:transparent; color:var(--text-3); font-weight:600;}
+  .status-screen{position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center; flex-direction:column; background:var(--bg); padding:32px; text-align:center; gap:16px;}
+  .status-screen.show{display:flex;}
+  .status-screen .icon{font-size:40px; color:var(--accent);}
+  .status-screen h2{font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--text);}
+  .status-screen p{font-size:14px; color:var(--text-3); max-width:320px; line-height:1.6;}
+  .status-screen button{margin-top:12px; padding:12px 28px; border-radius:4px; border:none; background:var(--accent); color:#fff; font-weight:700; font-family:inherit; font-size:14px; cursor:pointer;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99; background:var(--dark); color:#F5F1EB; padding:12px 22px; border-radius:4px; font-size:13px; display:none; max-width:88%; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.24); white-space:pre-line;}
+  .toast.success{background:var(--success);} .toast.error{background:var(--danger);}
+  @media (max-width:640px){
+    .hero{padding:28px 20px 20px;}
+    .container{padding:0 16px 80px;}
+    .pick-btn{padding:24px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span id="brandName">Wedding Album</span><small id="brandDate"></small></div>
+  <a class="nav-link" href="#" id="toAlbumLink">Lihat Album →</a>
+</header>
+
+<div class="hero">
+  <h1>Kirim dari Galeri</h1>
+  <p>Pilih foto/video dari HP kamu, atau rekam suara</p>
+</div>
+
+<div class="container">
+  <div class="tabs" id="tabs">
+    <button data-mode="photo" class="active">FOTO</button>
+    <button data-mode="video">VIDEO</button>
+    <button data-mode="voice">SUARA</button>
+  </div>
+
+  <div class="mode-panel active" id="panel-photo">
+    <input type="file" id="photoInput" accept="image/*" hidden>
+    <button class="pick-btn" id="pickPhotoBtn">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <span>Pilih Foto dari Galeri<small>JPG, PNG, WebP — otomatis dibingkai</small></span>
+    </button>
+    <div class="preview" id="photoPreview" style="display:none;">
+      <div class="preview-media"><img id="photoPreviewImg" alt=""></div>
+      <div class="preview-info">
+        <span>Dimensi: <strong id="photoDims">—</strong></span>
+        <span>Orientasi: <strong id="photoOrient">—</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mode-panel" id="panel-video">
+    <input type="file" id="videoInput" accept="video/*" hidden>
+    <button class="pick-btn" id="pickVideoBtn">
+      <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-6 4 6 4V8z"/></svg>
+      <span>Pilih Video dari Galeri<small>MP4, WebM, MOV — otomatis dibingkai</small></span>
+    </button>
+    <div class="preview" id="videoPreview" style="display:none;">
+      <div class="preview-media"><video id="videoPreviewEl" playsinline controls></video></div>
+      <div class="preview-info">
+        <span>Durasi: <strong id="videoDims">—</strong></span>
+        <span>Orientasi: <strong id="videoOrient">—</strong></span>
+      </div>
+    </div>
+    <p id="videoTrimNote" style="display:none; font-size:12px; color:var(--danger); margin-top:8px; text-align:center;"></p>
+    <p id="videoProcessNote" style="display:none; font-size:12px; color:var(--text-3); margin-top:8px; text-align:center;">⏱ Video akan diproses real-time saat kirim (durasi video = waktu proses).</p>
+  </div>
+
+  <div class="mode-panel" id="panel-voice">
+    <div class="voice-wrap" id="voiceIdle">
+      <div class="orb" id="voiceOrb">🎤</div>
+      <div class="timer" id="voiceTimer">00:00</div>
+      <p class="hint" id="voiceHint">Ketuk tombol merah, lalu ucapkan doa & harapanmu. Bingkai otomatis terpasang.</p>
+      <div class="voice-actions">
+        <button class="danger" id="recordBtn">● Mulai Rekam</button>
+      </div>
+    </div>
+    <div class="voice-wrap" id="voiceReview" style="display:none;">
+      <p class="hint">Dengarkan dulu sebelum dikirim ya</p>
+      <video id="voicePreviewEl" playsinline controls style="width:100%; max-width:400px; border-radius:4px; margin:0 auto 16px; display:block;"></video>
+      <div class="voice-actions">
+        <button id="redoVoiceBtn">Rekam Ulang</button>
+        <button class="primary" id="sendVoiceBtn">Kirim Suara</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="name-field">
+    <label>Nama kamu</label>
+    <input type="text" id="guestName" placeholder="Tulis nama lengkapmu" maxlength="40" autocomplete="name">
+  </div>
+
+  <button class="send-btn" id="sendBtn" disabled>Kirim</button>
+
+  <div id="progressWrap" style="display:none; margin-top:16px;">
+    <div class="progress-bar"><i id="progressBar"></i></div>
+    <div class="progress-text" id="progressText">Memproses…</div>
+  </div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card" id="resultCard">
+    <div class="result-icon"><svg viewBox="0 0 24 24" id="resultIcon"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h3 id="resultTitle"></h3>
+    <p id="resultText"></p>
+    <button class="btn-primary" id="resultPrimary"></button>
+    <button class="btn-secondary" id="resultSecondary"></button>
+  </div>
+</div>
+
+<div class="status-screen" id="statusScreen">
+  <div class="icon">◈</div>
+  <h2 id="statusTitle">Memuat…</h2>
+  <p id="statusText">Sebentar ya</p>
+  <button id="statusBtn" style="display:none;" onclick="location.reload()">Coba Lagi</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec';
+
+const urlParams = new URLSearchParams(window.location.search);
+let weddingId = urlParams.get('w');
+if (weddingId) localStorage.setItem('active_wedding_id', weddingId);
+else weddingId = localStorage.getItem('active_wedding_id');
+
+if (!weddingId) {
+  showStatus('Link Belum Lengkap', 'Link ini belum berisi kode undangan. Minta mempelai mengirimkan link terbaru ya.');
+  throw new Error('no wedding id');
+}
+
+document.getElementById('toAlbumLink').href = `album.html?w=${encodeURIComponent(weddingId)}`;
+
+let weddingSettings = null;
+let maxPhoto = 5;
+let maxVideoSeconds = 60;
+let maxVoiceSeconds = 60;
+
+let currentMode = 'photo';
+let photoBlobProcessed = null;
+let photoThumb = '';
+let videoFile = null;
+let videoMeta = { duration: 0, w: 0, h: 0 };
+let voiceBlob = null;
+let voiceThumb = '';
+let frameConfigCache = {};
+let customFrameImgCache = {};
+
+const IS_LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+const VIDEO_MIME = (function pickMime(cands) {
+  for (const c of cands) { if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c.mime)) return c; }
+  return cands[cands.length - 1];
+})([
+  { mime: 'video/mp4;codecs=h264,aac', ext: 'mp4' },
+  { mime: 'video/mp4', ext: 'mp4' },
+  { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+  { mime: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+  { mime: 'video/webm', ext: 'webm' }
+]);
+
+init();
+
+async function init() {
+  try {
+    const nameInput = document.getElementById('guestName');
+    try { nameInput.value = localStorage.getItem('guest_name') || ''; } catch (e) {}
+    nameInput.addEventListener('input', () => { try { localStorage.setItem('guest_name', nameInput.value.trim()); } catch (e) {} });
+    nameInput.addEventListener('input', updateSendButtonState);
+
+    const s = await fetchJson(`action=getSettings&wedding_id=${encodeURIComponent(weddingId)}`);
+    if (!s.success) { showStatus('Momen Tidak Ditemukan', s.message || 'Kode undangan tidak valid.'); return; }
+    weddingSettings = s;
+    applyThemeColors(s);
+    maxPhoto = s.max_photo || 5;
+    maxVideoSeconds = Number(s.max_video_seconds) || 60;
+    maxVoiceSeconds = Number(s.max_voice_seconds) || 60;
+
+    document.getElementById('brandName').textContent = (s.ui_config && s.ui_config.index_headline) || `${s.groom_name} & ${s.bride_name}`;
+    if (s.date) document.getElementById('brandDate').textContent = formatDate(s.date);
+
+    const types = s.types || ['photo'];
+    document.querySelectorAll('#tabs button').forEach(btn => {
+      if (types.indexOf(btn.dataset.mode) === -1) btn.style.display = 'none';
+    });
+    if (types.length <= 1) document.getElementById('tabs').style.display = 'none';
+    switchMode(types[0] || 'photo');
+
+    await preloadFrameAssets(s);
+    hideStatus();
+    updateSendButtonState();
+  } catch (err) {
+    showStatus('Belum Bisa Terhubung', 'Koneksi internet kurang stabil. Coba lagi ya.');
+  }
+}
+
+function applyThemeColors(s) {
+  if (!s) return;
+  if (s.primary_color) document.documentElement.style.setProperty('--primary', s.primary_color);
+  if (s.secondary_color) document.documentElement.style.setProperty('--accent', s.secondary_color);
+}
+
+async function fetchJson(qs, tries = 3) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 15000);
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { signal: ctrl.signal });
+      const d = await res.json(); clearTimeout(to);
+      return d;
+    } catch (e) { clearTimeout(to); last = e; await new Promise(r => setTimeout(r, 500 * (i + 1))); }
+  }
+  throw last || new Error('offline');
+}
+
+async function preloadFrameAssets(settings) {
+  for (const type of ['photo', 'video', 'voice']) {
+    frameConfigCache[type] = getFrameConfig(type);
+    const cf = frameConfigCache[type].customFrame;
+    if (cf && cf.file_id) {
+      try { customFrameImgCache[type] = await loadFrameImage(cf.file_id); }
+      catch (e) { customFrameImgCache[type] = null; }
+    }
+  }
+}
+
+async function loadFrameImage(fileId) {
+  const res = await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || 'Gagal memuat frame');
+  const bytes = base64ToUint8(data.base64);
+  const blob = new Blob([bytes], { type: data.mimeType || 'image/png' });
+  const url = URL.createObjectURL(blob);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
+  });
+}
+
+function base64ToUint8(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+function getFrameConfig(type) {
+  const w = weddingSettings || {};
+  const uiConfig = w.ui_config || {};
+  const frames = uiConfig.frames || {};
+  const customFrame = type ? frames[type] : null;
+  const voiceCfg = frames.voice || {};
+  return {
+    style: w.frame_style || 'elegant', primary: w.primary_color || '#440808', secondary: w.secondary_color || '#C9A66B',
+    groom: w.groom_name || '', bride: w.bride_name || '', date: w.date ? formatDate(w.date) : '',
+    customFrame: (customFrame && customFrame.type === 'custom' && customFrame.file_id) ? customFrame : null,
+    voiceLabel: voiceCfg.label || 'Ucapan & Doa',
+    voiceCenterColor: voiceCfg.centerColor || '#ffffff',
+    voiceBarColor: voiceCfg.barColor || w.primary_color || '#C9A66B',
+    voiceShape: voiceCfg.shape || 'radial',
+    voiceCenterShape: voiceCfg.centerShape || 'circle',
+    voiceCenterRound: voiceCfg.centerRound != null ? voiceCfg.centerRound : 20,
+    voiceFont: voiceCfg.font || 'Plus Jakarta Sans'
+  };
+}
+
+// v17: Draw frame dengan rotasi otomatis sesuai orientasi media
+function drawFrameForMedia(ctx, frameImg, w, h) {
+  if (!frameImg) return;
+  const fw = frameImg.naturalWidth || frameImg.width;
+  const fh = frameImg.naturalHeight || frameImg.height;
+  if (!fw || !fh) return;
+  const mediaLandscape = w > h;
+  const frameLandscape = fw > fh;
+  const frameSquare = fw === fh;
+
+  if (!frameSquare && mediaLandscape !== frameLandscape) {
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(frameImg, -h / 2, -w / 2, h, w);
+    ctx.restore();
+  } else {
+    ctx.drawImage(frameImg, 0, 0, w, h);
+  }
+}
+
+function drawFrameBar(ctx, w, h, cfg) {
+  const barH = Math.round(h * 0.10);
+  if (cfg.style === 'minimalist') {
+    ctx.fillStyle = 'rgba(26,20,16,0.55)'; ctx.fillRect(0, h - barH, w, barH);
+  } else if (cfg.style === 'modern') {
+    ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(4, w * 0.006);
+    ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
+  } else if (cfg.style === 'floral-simple') {
+    ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.globalAlpha = 0.6; ctx.lineWidth = Math.max(3, w*0.005);
+    const step = Math.max(10, w*0.03);
+    [[10,10,1,1],[w-10,10,-1,1],[10,h-barH-10,1,-1],[w-10,h-barH-10,-1,-1]].forEach(([x,y,sx,sy])=>{
+      for (let k=1;k<=4;k++){
+        ctx.beginPath();
+        ctx.moveTo(x + sx*step*(k-1), y + sy*step*k);
+        ctx.lineTo(x + sx*step*k, y + sy*step*(k-1));
+        ctx.stroke();
+      }
+    });
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.fillStyle = cfg.primary; ctx.fillRect(0, h - barH, w, barH);
+    ctx.strokeStyle = cfg.secondary; ctx.lineWidth = Math.max(2, w*0.0025);
+    const pad = w*0.02;
+    ctx.strokeRect(pad, pad, w-pad*2, h-pad*2-barH*0.15);
+  }
+  const centerY = h - barH/2;
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.font = `700 ${Math.round(barH*0.32)}px Fraunces, Georgia, serif`;
+  ctx.fillText(`${cfg.groom} & ${cfg.bride}`, w/2, centerY - barH*0.08);
+  ctx.font = `400 ${Math.round(barH*0.18)}px "Plus Jakarta Sans", sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(cfg.date, w/2, centerY + barH*0.28);
+}
+
+function drawFrameForType(ctx, w, h, type) {
+  const cfg = frameConfigCache[type];
+  if (!cfg) return;
+  const customImg = customFrameImgCache[type];
+  if (customImg) { drawFrameForMedia(ctx, customImg, w, h); return; }
+  drawFrameBar(ctx, w, h, cfg);
+}
+
+document.querySelectorAll('#tabs button').forEach(btn => {
+  btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+});
+
+function switchMode(mode) {
+  if (currentMode === mode) return;
+  currentMode = mode;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.querySelectorAll('.mode-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + mode));
+  updateSendButtonState();
+}
+
+document.getElementById('pickPhotoBtn').addEventListener('click', () => document.getElementById('photoInput').click());
+
+document.getElementById('photoInput').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+  this.value = '';
+  if (!file.type.startsWith('image/')) { showToast('File bukan gambar.', 'error'); return; }
+
+  showToast('Memproses foto…', 'info');
+  try {
+    const result = await processPhoto(file);
+    photoBlobProcessed = result.blob;
+    photoThumb = result.thumb;
+
+    document.getElementById('photoPreviewImg').src = URL.createObjectURL(result.blob);
+    document.getElementById('photoDims').textContent = `${result.w} × ${result.h} px`;
+    document.getElementById('photoOrient').textContent = result.w > result.h ? 'Lanskap' : (result.w < result.h ? 'Potret' : 'Kotak');
+    document.getElementById('photoPreview').style.display = 'block';
+    updateSendButtonState();
+  } catch (err) {
+    showToast('Foto belum bisa diproses: ' + err.message, 'error');
+  }
+});
+
+async function processPhoto(file) {
+  const img = await loadImageFile(file);
+  const maxDim = 2560;
+  let nw = img.naturalWidth, nh = img.naturalHeight;
+  const scale = Math.min(1, maxDim / Math.max(nw, nh));
+  const w = Math.round(nw * scale);
+  const h = Math.round(nh * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  drawFrameForType(ctx, w, h, 'photo');
+
+  const thumb = makeThumbUri(canvas, w, h);
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
+  canvas.width = canvas.height = 1;
+  return { blob, thumb, w, h };
+}
+
+function loadImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('gagal muat gambar')); };
+    img.src = url;
+  });
+}
+
+function makeThumbUri(source, sw, sh) {
+  const scale = Math.min(1, 360 / Math.max(sw, 1));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
+  c.getContext('2d').drawImage(source, 0, 0, c.width, c.height);
+  let q = 0.62, uri = c.toDataURL('image/jpeg', q);
+  while (uri.length > 42000 && q > 0.2) { q -= 0.1; uri = c.toDataURL('image/jpeg', q); }
+  c.width = c.height = 1;
+  return uri.length <= 42000 ? uri : '';
+}
+
+document.getElementById('pickVideoBtn').addEventListener('click', () => document.getElementById('videoInput').click());
+
+document.getElementById('videoInput').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+  this.value = '';
+  if (!file.type.startsWith('video/')) { showToast('File bukan video.', 'error'); return; }
+
+  try {
+    const meta = await loadVideoMeta(file);
+    videoFile = file;
+    videoMeta = meta;
+
+    document.getElementById('videoPreviewEl').src = URL.createObjectURL(file);
+    document.getElementById('videoDims').textContent = `${Math.round(meta.duration)}s · ${meta.w} × ${meta.h}`;
+    document.getElementById('videoOrient').textContent = meta.w > meta.h ? 'Lanskap' : (meta.w < meta.h ? 'Potret' : 'Kotak');
+    document.getElementById('videoPreview').style.display = 'block';
+
+    const note = document.getElementById('videoTrimNote');
+    if (meta.duration > maxVideoSeconds) {
+      note.textContent = `⚠️ Durasi video ${Math.round(meta.duration)} detik, akan dipotong menjadi ${maxVideoSeconds} detik pertama.`;
+      note.style.display = 'block';
+    } else note.style.display = 'none';
+    document.getElementById('videoProcessNote').style.display = 'block';
+    updateSendButtonState();
+  } catch (err) {
+    showToast('Video belum bisa dimuat: ' + err.message, 'error');
+  }
+});
+
+function loadVideoMeta(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.muted = true;
+    v.onloadedmetadata = () => resolve({ duration: v.duration, w: v.videoWidth, h: v.videoHeight });
+    v.onerror = () => { URL.revokeObjectURL(url); reject(new Error('gagal muat video')); };
+    v.src = url;
+  });
+}
+
+async function processVideoWithFrame(file, onProgress) {
+  return new Promise(async (resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.src = url;
+    video.muted = false;
+    video.playsInline = true;
+
+    video.onloadedmetadata = async () => {
+      const duration = Math.min(video.duration, maxVideoSeconds);
+      const vw = video.videoWidth, vh = video.videoHeight;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = vw; canvas.height = vh;
+      const ctx = canvas.getContext('2d');
+
+      let audioCtx, audioTracks = [];
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaElementSource(video);
+        const dest = audioCtx.createMediaStreamDestination();
+        src.connect(dest);
+        audioTracks = dest.stream.getAudioTracks();
+      } catch (e) { audioCtx = null; }
+
+      const canvasStream = canvas.captureStream(IS_LOW_END ? 24 : 30);
+      const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+      const recorder = new MediaRecorder(combined, {
+        mimeType: VIDEO_MIME.mime,
+        videoBitsPerSecond: IS_LOW_END ? 2000000 : 5000000,
+        audioBitsPerSecond: 128000
+      });
+
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        try { if (audioCtx) audioCtx.close(); } catch (e) {}
+        video.pause();
+        URL.revokeObjectURL(url);
+        const blob = new Blob(chunks, { type: VIDEO_MIME.mime });
+        const thumb = makeThumbUri(canvas, vw, vh);
+        canvas.width = canvas.height = 1;
+        resolve({ blob, thumb, w: vw, h: vh, ext: VIDEO_MIME.ext });
+      };
+
+      let drawing = true;
+      let stopped = false;
+      function stop() {
+        if (stopped) return;
+        stopped = true;
+        drawing = false;
+        try { recorder.stop(); } catch (e) {}
+      }
+
+      function drawLoop() {
+        if (!drawing) return;
+        if (video.ended || video.currentTime >= duration) { stop(); return; }
+        ctx.drawImage(video, 0, 0, vw, vh);
+        drawFrameForType(ctx, vw, vh, 'video');
+        if (onProgress) onProgress(Math.min(0.99, video.currentTime / duration));
+        requestAnimationFrame(drawLoop);
+      }
+
+      video.currentTime = 0;
+      recorder.start();
+      try {
+        await video.play();
+        drawLoop();
+      } catch (e) {
+        stop();
+        reject(new Error('gagal memutar video'));
+      }
+    };
+    video.onerror = () => { URL.revokeObjectURL(url); reject(new Error('gagal muat video')); };
+  });
+}
+
+let voiceRecorder = null;
+let voiceChunks = [];
+let voiceStream = null;
+let voiceTimerInterval = null;
+let voiceSeconds = 0;
+let voiceAudioCtx = null;
+
+document.getElementById('recordBtn').addEventListener('click', () => startVoiceRecording());
+document.getElementById('redoVoiceBtn').addEventListener('click', resetVoice);
+document.getElementById('sendVoiceBtn').addEventListener('click', () => {
+  if (voiceBlob) { sendMedia(); }
+});
+
+async function startVoiceRecording() {
+  try {
+    voiceStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true } });
+    const cfg = frameConfigCache.voice || getFrameConfig('voice');
+    const vnRes = getVnResolution();
+    const guestNamePreview = (document.getElementById('guestName').value || 'Tamu').trim();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = vnRes.width; canvas.height = vnRes.height;
+    const ctx = canvas.getContext('2d');
+
+    voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = voiceAudioCtx.createMediaStreamSource(voiceStream);
+    const analyser = voiceAudioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    src.connect(analyser);
+
+    const customImg = customFrameImgCache.voice;
+    let drawing = true;
+    function drawLoop() {
+      if (!drawing) return;
+      analyser.getByteFrequencyData(dataArray);
+      if (customImg) {
+        drawFrameForMedia(ctx, customImg, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = cfg.secondary; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = cfg.primary; ctx.globalAlpha = 0.15; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1;
+      }
+      drawAudiogramLive(ctx, canvas.width, canvas.height, dataArray, cfg, guestNamePreview);
+      if (!customImg) drawFrameBar(ctx, canvas.width, canvas.height, cfg);
+      requestAnimationFrame(drawLoop);
+    }
+    drawLoop();
+
+    const canvasStream = canvas.captureStream(30);
+    const combined = new MediaStream([...canvasStream.getVideoTracks(), ...voiceStream.getAudioTracks()]);
+
+    voiceChunks = [];
+    voiceRecorder = new MediaRecorder(combined, {
+      mimeType: VIDEO_MIME.mime,
+      videoBitsPerSecond: 2500000,
+      audioBitsPerSecond: 96000
+    });
+    voiceRecorder.ondataavailable = e => { if (e.data.size > 0) voiceChunks.push(e.data); };
+    voiceRecorder.onstop = () => {
+      drawing = false;
+      voiceBlob = new Blob(voiceChunks, { type: VIDEO_MIME.mime });
+      const thumb = makeThumbUri(canvas, canvas.width, canvas.height);
+      voiceThumb = thumb;
+      document.getElementById('voicePreviewEl').src = URL.createObjectURL(voiceBlob);
+      document.getElementById('voiceIdle').style.display = 'none';
+      document.getElementById('voiceReview').style.display = 'block';
+      voiceStream.getTracks().forEach(t => t.stop());
+      if (voiceAudioCtx) { voiceAudioCtx.close().catch(()=>{}); voiceAudioCtx = null; }
+      updateSendButtonState();
+    };
+
+    voiceRecorder.start();
+    document.getElementById('voiceOrb').classList.add('recording');
+    document.getElementById('voiceTimer').textContent = '00:00';
+    document.getElementById('voiceHint').textContent = 'Sedang merekam… akan otomatis berhenti di ' + maxVoiceSeconds + ' detik.';
+    const btn = document.getElementById('recordBtn');
+    btn.textContent = '■ Berhenti';
+    btn.onclick = stopVoiceRecording;
+
+    voiceSeconds = 0;
+    voiceTimerInterval = setInterval(() => {
+      voiceSeconds++;
+      document.getElementById('voiceTimer').textContent = formatSeconds(voiceSeconds);
+      if (voiceSeconds >= maxVoiceSeconds) stopVoiceRecording();
+    }, 1000);
+  } catch (err) {
+    showToast('Mikrofon belum bisa dipakai. Cek izin mikrofon di browser.', 'error');
+  }
+}
+
+function stopVoiceRecording() {
+  if (voiceRecorder && voiceRecorder.state === 'recording') voiceRecorder.stop();
+  clearInterval(voiceTimerInterval);
+}
+
+function resetVoice() {
+  if (voiceBlob) URL.revokeObjectURL(document.getElementById('voicePreviewEl').src);
+  voiceBlob = null; voiceThumb = ''; voiceChunks = [];
+  document.getElementById('voiceIdle').style.display = 'block';
+  document.getElementById('voiceReview').style.display = 'none';
+  document.getElementById('voicePreviewEl').src = '';
+  document.getElementById('voiceOrb').classList.remove('recording');
+  document.getElementById('voiceTimer').textContent = '00:00';
+  document.getElementById('voiceHint').textContent = 'Ketuk tombol merah, lalu ucapkan doa & harapanmu. Bingkai otomatis terpasang.';
+  const btn = document.getElementById('recordBtn');
+  btn.textContent = '● Mulai Rekam';
+  btn.onclick = startVoiceRecording;
+  voiceSeconds = 0;
+  updateSendButtonState();
+}
+
+function getVnResolution() {
+  const w = weddingSettings || {};
+  const vnRes = (w.ui_config && w.ui_config.vn_resolution) || { preset: 'hd' };
+  if (vnRes.preset === 'custom') return { width: vnRes.width || 720, height: vnRes.height || 720 };
+  if (vnRes.preset === 'sd') return { width: 480, height: 480 };
+  if (vnRes.preset === 'fhd') return { width: 1080, height: 1080 };
+  return { width: 720, height: 720 };
+}
+
+function fillCenterShape(ctx, cx, cy, radius, cfg) {
+  const shape = cfg.voiceCenterShape || 'circle';
+  ctx.fillStyle = cfg.voiceCenterColor;
+  if (shape === 'square') {
+    const size = radius * 1.7;
+    const round = Math.min(size / 2, ((cfg.voiceCenterRound != null ? cfg.voiceCenterRound : 20) / 100) * (size / 2));
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(cx - size/2, cy - size/2, size, size, round); }
+    else { ctx.rect(cx - size/2, cy - size/2, size, size); }
+    ctx.fill();
+  } else if (shape === 'heart') {
+    const s = radius / 60;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 35*s);
+    ctx.bezierCurveTo(cx - 70*s, cy - 30*s, cx - 25*s, cy - 70*s, cx, cy - 30*s);
+    ctx.bezierCurveTo(cx + 25*s, cy - 70*s, cx + 70*s, cy - 30*s, cx, cy + 35*s);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawAudiogramLive(ctx, w, h, dataArray, cfg, guestName) {
+  const cx = w / 2, cy = h / 2;
+  const shape = cfg.voiceShape || 'radial';
+  const font = cfg.voiceFont || 'Plus Jakarta Sans';
+  const scale = Math.min(w, h) / 720;
+
+  if (shape === 'bars') {
+    const barCount = 32, barW = (w * 0.7) / barCount, startX = w * 0.15, baseY = cy + 130 * scale;
+    ctx.fillStyle = cfg.voiceBarColor;
+    for (let i = 0; i < barCount; i++) {
+      const value = dataArray[i % dataArray.length] / 255;
+      const barH = (10 + value * (h * 0.2 / scale)) * scale;
+      ctx.fillRect(startX + i * barW, baseY - barH, barW * 0.7, barH);
+    }
+    fillCenterShape(ctx, cx, cy, 90 * scale, cfg);
+  } else if (shape === 'pulse') {
+    let avg = 0; for (let i = 0; i < dataArray.length; i++) avg += dataArray[i];
+    avg = avg / dataArray.length / 255;
+    const radius = (100 + avg * 40) * scale;
+    ctx.fillStyle = cfg.voiceBarColor; ctx.globalAlpha = 0.25;
+    ctx.beginPath(); ctx.arc(cx, cy, radius + 20 * scale, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    fillCenterShape(ctx, cx, cy, radius, cfg);
+  } else {
+    const radius = 140 * scale, bars = 48;
+    ctx.strokeStyle = cfg.voiceBarColor; ctx.lineWidth = 5 * scale;
+    for (let i = 0; i < bars; i++) {
+      const value = dataArray[i % dataArray.length] / 255;
+      const angle = (i / bars) * Math.PI * 2;
+      const barLen = (20 + value * 90) * scale;
+      const x1 = cx + Math.cos(angle)*radius, y1 = cy + Math.sin(angle)*radius;
+      const x2 = cx + Math.cos(angle)*(radius+barLen), y2 = cy + Math.sin(angle)*(radius+barLen);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+    fillCenterShape(ctx, cx, cy, radius - 10 * scale, cfg);
+  }
+
+  ctx.fillStyle = cfg.voiceBarColor;
+  ctx.font = `600 ${Math.round(24*scale)}px "${font}", "Plus Jakarta Sans", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(cfg.voiceLabel, cx, cy - 8 * scale);
+  ctx.font = `400 ${Math.round(14*scale)}px "JetBrains Mono", monospace`;
+  ctx.fillText(guestName, cx, cy + 20 * scale);
+}
+
+document.getElementById('sendBtn').addEventListener('click', sendMedia);
+
+function updateSendButtonState() {
+  const btn = document.getElementById('sendBtn');
+  const name = document.getElementById('guestName').value.trim();
+  let ready = false;
+  if (currentMode === 'photo') ready = !!photoBlobProcessed;
+  else if (currentMode === 'video') ready = !!videoFile;
+  else if (currentMode === 'voice') ready = !!voiceBlob;
+  btn.disabled = !(ready && name);
+  btn.textContent = currentMode === 'photo' ? 'Kirim Foto'
+    : currentMode === 'video' ? 'Kirim Video'
+    : 'Kirim Suara';
+}
+
+async function sendMedia() {
+  const name = document.getElementById('guestName').value.trim();
+  if (!name) { showToast('Tulis namamu dulu ya', 'error'); document.getElementById('guestName').focus(); return; }
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  const progWrap = document.getElementById('progressWrap');
+  const progBar = document.getElementById('progressBar');
+  const progText = document.getElementById('progressText');
+  progWrap.style.display = 'block';
+
+  try {
+    if (currentMode === 'photo') {
+      if (!photoBlobProcessed) throw new Error('Foto belum dipilih');
+      progBar.style.width = '10%'; progText.textContent = 'Mengunggah foto…';
+      await uploadToDrive(photoBlobProcessed, 'photo', name, photoThumb, p => {
+        progBar.style.width = (10 + p * 90) + '%';
+        progText.textContent = `Mengunggah ${Math.round(p * 100)}%`;
+      });
+      showResult('success', 'Terkirim', `Fotomu sudah masuk.\nTunggu persetujuan mempelai ya.`);
+      resetPhoto();
+    } else if (currentMode === 'video') {
+      if (!videoFile) throw new Error('Video belum dipilih');
+      progText.textContent = 'Memproses video dengan bingkai…';
+      progBar.style.width = '0%';
+      const processed = await processVideoWithFrame(videoFile, p => {
+        progBar.style.width = (p * 60) + '%';
+        progText.textContent = `Memproses ${Math.round(p * 100)}% (video diputar real-time)`;
+      });
+      progText.textContent = 'Mengunggah video…';
+      await uploadToDrive(processed.blob, 'video', name, processed.thumb, p => {
+        progBar.style.width = (60 + p * 40) + '%';
+        progText.textContent = `Mengunggah ${Math.round(p * 100)}%`;
+      });
+      showResult('success', 'Terkirim', `Videomu sudah masuk.\nTunggu persetujuan mempelai ya.`);
+      resetVideo();
+    } else if (currentMode === 'voice') {
+      if (!voiceBlob) throw new Error('Rekam suara dulu');
+      progBar.style.width = '10%'; progText.textContent = 'Mengunggah suara…';
+      await uploadToDrive(voiceBlob, 'voice', name, voiceThumb, p => {
+        progBar.style.width = (10 + p * 90) + '%';
+        progText.textContent = `Mengunggah ${Math.round(p * 100)}%`;
+      });
+      showResult('success', 'Terkirim', `Suaramu sudah masuk.\nTunggu persetujuan mempelai ya.`);
+      resetVoice();
+    }
+  } catch (err) {
+    showResult('error', 'Belum berhasil', err.message || 'Coba lagi ya.');
+  } finally {
+    progWrap.style.display = 'none';
+    progBar.style.width = '0%';
+    btn.disabled = false;
+  }
+}
+
+function resetPhoto() {
+  photoBlobProcessed = null; photoThumb = '';
+  const img = document.getElementById('photoPreviewImg');
+  if (img.src) URL.revokeObjectURL(img.src);
+  img.src = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  updateSendButtonState();
+}
+
+function resetVideo() {
+  videoFile = null; videoMeta = { duration:0, w:0, h:0 };
+  const v = document.getElementById('videoPreviewEl');
+  if (v.src) URL.revokeObjectURL(v.src);
+  v.src = '';
+  document.getElementById('videoPreview').style.display = 'none';
+  document.getElementById('videoTrimNote').style.display = 'none';
+  document.getElementById('videoProcessNote').style.display = 'none';
+  updateSendButtonState();
+}
+
+async function uploadToDrive(blob, type, guestName, thumbDataUri, onProgress) {
+  const mime = blob.type.split(';')[0];
+
+  const init = await callServer({
+    action: 'initUpload',
+    wedding_id: weddingId,
+    guest_name: guestName,
+    media_type: type,
+    mime_type: mime,
+    size: blob.size,
+    origin: location.origin
+  });
+  if (!init.success) throw new Error(init.message || 'Gagal menyiapkan upload');
+
+  const fileId = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', init.upload_url);
+    xhr.setRequestHeader('Content-Type', mime);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText).id); } catch (e) { reject(new Error('parse error')); }
+      } else reject(new Error('Upload gagal: ' + xhr.status));
+    };
+    xhr.onerror = () => reject(new Error('Koneksi terputus saat upload'));
+    xhr.send(blob);
+  });
+
+  const fin = await callServer({
+    action: 'finalizeUpload',
+    wedding_id: weddingId,
+    guest_name: guestName,
+    media_type: type,
+    file_id: fileId,
+    thumb_data: thumbDataUri || ''
+  });
+  if (!fin.success) throw new Error(fin.message || 'Gagal mencatat media');
+  return fin;
+}
+
+async function callServer(payload) {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (data.busy) throw new Error('Server sedang ramai, coba lagi ya');
+  return data;
+}
+
+function showResult(kind, title, text) {
+  const ov = document.getElementById('resultOverlay');
+  const card = document.getElementById('resultCard');
+  card.className = 'result-card ' + kind;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultText').textContent = text;
+  document.getElementById('resultPrimary').textContent = 'Lihat Album';
+  document.getElementById('resultPrimary').onclick = () => { location.href = `album.html?w=${encodeURIComponent(weddingId)}`; };
+  document.getElementById('resultSecondary').textContent = 'Kirim Lagi';
+  document.getElementById('resultSecondary').onclick = () => { ov.classList.remove('show'); };
+  ov.classList.add('show');
+}
+
+function showStatus(title, text) {
+  document.getElementById('statusScreen').classList.add('show');
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusBtn').style.display = 'inline-block';
+}
+function hideStatus() { document.getElementById('statusScreen').classList.remove('show'); }
+
+function showToast(text, type) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4500);
+}
+
+function formatSeconds(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0');
+  const sec = String(s % 60).padStart(2, '0');
+  return `${m}:${sec}`;
+}
+function formatDate(d) {
+  try { return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }); }
+  catch (e) { return d; }
+}
+</script>
+</body>
+</html>

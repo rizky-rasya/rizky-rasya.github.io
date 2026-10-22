@@ -44,7 +44,6 @@
     --text:#1A1410; --text-2:#5A4D42; --text-3:#8A7B6E;
     --danger:#A02828; --success:#2F6B3F;
   }
-  /* Semua teks mengikuti warna tombol (marun/primary dari pengaturan mempelai), bukan hitam */
   :root{ --text:var(--primary); --text-2:#6B3A3A; --text-3:#9A6E6E; }
   @supports (color: color-mix(in srgb, red, blue)) {
     :root{ --text-2:color-mix(in srgb, var(--primary) 82%, white); --text-3:color-mix(in srgb, var(--primary) 58%, white); }
@@ -62,7 +61,6 @@
     max-width:1080px; margin:0 auto;
     border-bottom:1px solid var(--border);
   }
-  /* Logo mempelai di kanan: tingginya mengikuti tinggi judul + tanggal (top/bottom = padding hero) */
   .hero{--crest-w:116px;}
   .hero::before{
     content:''; position:absolute; top:64px; bottom:40px; right:24px; width:var(--crest-w);
@@ -82,7 +80,7 @@
     color:var(--text-3); font-size:12px; line-height:1.6;
     letter-spacing:0.04em; text-transform:uppercase;
   }
-  .topnav{max-width:1080px; margin:0 auto; padding:20px 24px 8px; text-align:center;}
+  .topnav{max-width:1080px; margin:0 auto; padding:20px 24px 8px; text-align:center; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
   .topnav a{
     display:inline-block; text-decoration:none; font-size:13px; font-weight:600;
     color:var(--primary); background:var(--surface);
@@ -111,7 +109,6 @@
     transition:border-color .15s,box-shadow .15s;
   }
   .item:hover{border-color:var(--border-strong);box-shadow:0 1px 2px rgba(68,8,8,.04);}
-  /* Semua card media (foto, video, suara) sama besar: kotak 4:5 */
   .item .media-box, .item .audio-box{
     position:relative; width:100%; aspect-ratio:4/5; overflow:hidden;
     background:var(--surface-2);
@@ -193,8 +190,6 @@
   .toast.success{background:var(--success);} .toast.error{background:var(--danger);}
   #hiddenCanvas{display:none;}
 
-
-  /* ---- Toolbar & pagination ---- */
   .toolbar{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:-12px 0 20px;}
   .toolbar .count{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-3); letter-spacing:.02em;}
   .size-pick{display:flex; align-items:center; gap:6px;}
@@ -219,7 +214,6 @@
   .pager .info{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-2); text-align:center;}
   .grid.busy{opacity:.45; transition:opacity .15s; pointer-events:none;}
 
-  /* ---- Penampil foto: tombol kiri/kanan ---- */
   .pv-nav{
     position:absolute; top:50%; transform:translateY(-50%);
     width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
@@ -240,8 +234,6 @@
     .pv-nav{width:42px; height:42px;} .pv-nav.prev{left:6px;} .pv-nav.next{right:6px;}
   }
 
-
-  /* ---- Popup info (gaya sama dengan popup halaman kirim) ---- */
   .info-overlay{position:fixed; inset:0; z-index:120; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(26,20,16,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);}
   .info-overlay.show{display:flex; animation:fadeInBg .2s ease-out;}
   @keyframes fadeInBg{from{opacity:0;}to{opacity:1;}}
@@ -257,7 +249,6 @@
   .info-card .i-secondary{background:transparent; color:var(--text-3); font-weight:600;}
   .info-card .i-x{position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; border:none; background:transparent; color:var(--text-3); font-size:16px; cursor:pointer;}
 
-  /* ---- Footer ---- */
   .site-footer{max-width:1080px; margin:0 auto; padding:48px 24px 56px; border-top:1px solid var(--border); text-align:left;}
   .site-footer .thanks{font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:clamp(20px,3.4vw,26px); line-height:1.25; letter-spacing:-0.01em; color:var(--text); max-width:520px;}
   .site-footer .thanks-sub{font-size:14px; line-height:1.65; color:var(--text-2); margin-top:10px; max-width:520px;}
@@ -285,6 +276,7 @@
 
 <div class="topnav">
   <a id="backToIndex" href="#">Kirim Momen</a>
+  <a id="toGaleri" href="#">Kirim dari Galeri</a>
 </div>
 
 <div class="container">
@@ -346,7 +338,6 @@
 <canvas id="hiddenCanvas"></canvas>
 
 <script>
-// const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5oH41qOF8tlHPVGVm5T_iT5KD-CfblVL6Yu9oGKp9t7eP6ewOGvh4KnmG1qfKv3F_/exec';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRNMVjhKK93fq3r2LNsRBkSUkWK3LU44iFALV3YmjVZkkG37912TtX3wy3jXcTpnFE/exec';
 
 document.addEventListener('gesturestart', e => e.preventDefault());
@@ -364,6 +355,7 @@ if (weddingId) localStorage.setItem('active_wedding_id', weddingId);
 else weddingId = localStorage.getItem('active_wedding_id');
 
 document.getElementById('backToIndex').href = weddingId ? `index.html?w=${encodeURIComponent(weddingId)}` : 'index.html';
+document.getElementById('toGaleri').href = weddingId ? `galeri.html?w=${encodeURIComponent(weddingId)}` : 'galeri.html';
 
 let items = [];
 let currentFilter = 'all';
@@ -415,7 +407,6 @@ function applyThemeColors(s) {
   const root = document.documentElement;
   if (ok(s.primary_color)) {
     let p = s.primary_color, guard = 0;
-    // teks & tombol memakai warna ini -> pastikan tetap terbaca di latar krem (kontras minimal 4.5:1)
     while (1.05 / (lum_(p) + 0.05) < 4.5 && guard++ < 12) p = mixHex_(p, '#1A1410', 0.15);
     root.style.setProperty('--primary', p);
     root.style.setProperty('--primary-hover', mixHex_(p, '#1A1410', 0.15));
@@ -469,12 +460,12 @@ function showLoadError() {
 }
 
 const SIZE_KEY = 'album_page_size';
-let pageSize = 25;                       // 25 | 50 | 'all'
+let pageSize = 25;
 try { const v = localStorage.getItem(SIZE_KEY); pageSize = v === '50' ? 50 : (v === 'all' ? 'all' : 25); } catch (e) {}
 let totalPages = 1, totalItems = 0, firstLoadDone = false;
-const reqSize = () => pageSize === 'all' ? 50 : pageSize;   // mode "Semua" = gulir terus, ambil 50 per kali
+const reqSize = () => pageSize === 'all' ? 50 : pageSize;
 const LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-const pageMem = new Map();               // simpan beberapa halaman terakhir agar tombol Sebelumnya/Selanjutnya terasa instan
+const pageMem = new Map();
 
 function memKey(page) { return `${currentFilter}|${reqSize()}|${page}`; }
 async function fetchPage(page) {
@@ -488,7 +479,6 @@ async function fetchPage(page) {
   return data;
 }
 
-// reset=true -> mulai dari halaman `page` (bawaan 1). reset=false: mode Semua = tambah halaman berikutnya; mode halaman = pindah ke `page`.
 async function loadPage(reset, page, opts) {
   opts = opts || {};
   const paged = pageSize !== 'all';
@@ -511,7 +501,7 @@ async function loadPage(reset, page, opts) {
       else loader.style.display = 'block';
     } catch (e) { loader.style.display = 'block'; }
   } else if (replace) {
-    grid.classList.add('busy');          // pindah halaman: isi lama diredupkan sampai data baru datang
+    grid.classList.add('busy');
   } else {
     loader.style.display = 'block';
   }
@@ -557,7 +547,7 @@ function updateToolbar() {
   const tb = document.getElementById('toolbar');
   if (totalItems === 0) { tb.style.display = 'none'; return; }
   tb.style.display = 'flex';
-  document.getElementById('sizePick').style.display = totalItems > 25 ? 'flex' : 'none';   // kurang dari 25 momen: pilihan tidak perlu
+  document.getElementById('sizePick').style.display = totalItems > 25 ? 'flex' : 'none';
   document.querySelectorAll('#sizePick button').forEach(b => b.classList.toggle('active', b.dataset.size === String(pageSize)));
   const size = reqSize();
   if (pageSize === 'all') document.getElementById('countText').textContent = `${items.length} dari ${totalItems} momen`;
@@ -580,7 +570,6 @@ function setPagerBusy(b) {
   else updatePager();
 }
 
-// Siapkan halaman berikutnya diam-diam (hemat kuota di HP irit data / RAM kecil: dilewati)
 function prefetchNext() {
   if (pageSize === 'all' || LOW_END || currentPage >= totalPages) return;
   if (navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || ''))) return;
@@ -607,7 +596,7 @@ function watchSentinel() {
   if (!('IntersectionObserver' in window)) return;
   if (!sentinelObserver) {
     sentinelObserver = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && pageSize === 'all' && hasMore && !isLoading) loadPage(false);   // hanya mode Semua
+      if (entries[0].isIntersecting && pageSize === 'all' && hasMore && !isLoading) loadPage(false);
     }, { rootMargin: '600px' });
     sentinelObserver.observe(s);
   } else { sentinelObserver.unobserve(s); sentinelObserver.observe(s); }
@@ -704,11 +693,10 @@ function showViewer() {
   document.getElementById('pvName').textContent = item.guest_name;
   const photos = items.filter(x => x.media_type === 'photo');
   document.getElementById('pvCount').textContent = photos.length > 1 ? `${photos.indexOf(item) + 1} / ${photos.length}` : '';
-  img.src = item.thumbnail_url || '';       // thumbnail langsung tampil
+  img.src = item.thumbnail_url || '';
   img.classList.add('loading');
   document.getElementById('pvPrev').disabled = !canStepMore(-1);
   document.getElementById('pvNext').disabled = !canStepMore(1);
-  // Foto ukuran penuh baru diambil kalau tamu berhenti sebentar -> geser cepat tidak membebani server
   viewTimer = setTimeout(async () => {
     try {
       const { url } = await fetchFileChunked(item.file_id);
@@ -721,7 +709,7 @@ function showViewer() {
 async function stepPhoto(dir) {
   if (viewBusy || viewIdx < 0) return;
   let nxt = photoAfter(viewIdx, dir);
-  if (nxt === -1) {                          // ujung halaman: ambil halaman sebelah lalu lanjut
+  if (nxt === -1) {
     if (!canStepMore(dir)) return;
     viewBusy = true;
     document.getElementById('pvCount').textContent = 'Memuat…';
@@ -753,7 +741,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowRight') stepPhoto(1);
   else if (e.key === 'Escape') closePhoto();
 });
-(function () {                              // geser jari kiri/kanan
+(function () {
   const v = document.getElementById('photoViewer'); let x0 = 0, y0 = 0;
   v.addEventListener('touchstart', e => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive: true });
   v.addEventListener('touchend', e => {
@@ -763,11 +751,6 @@ document.addEventListener('keydown', e => {
   }, { passive: true });
 })();
 
-
-// ============================================
-// KIRIMAN TERTUNDA — kalau tamu pindah ke album saat file masih dikirim, kita cek ke server
-// dan beri tahu lewat popup begitu semuanya sudah masuk.
-// ============================================
 const PEND_KEY = 'pending_uploads';
 function readPending() {
   try { return JSON.parse(localStorage.getItem(PEND_KEY) || '[]').filter(x => x && x.w === weddingId && Date.now() - x.ts < 30 * 60 * 1000); }
@@ -810,11 +793,11 @@ function watchPending() {
     try {
       const d = await apiGet({ action: 'checkUpload', wedding_id: weddingId, client_ids: ids.join(','), deep: deep ? 1 : 0 }, 2);
       if (d && d.success) Object.keys(d.found || {}).forEach(id => { got[id] = d.found[id]; left.delete(id); });
-    } catch (e) { /* coba lagi di putaran berikut */ }
+    } catch (e) { }
     removePending(Object.keys(got));
     if (left.size === 0) {
       const approved = Object.keys(got).every(id => got[id].status === 'approved');
-      pageMem.clear(); loadPage(true, 1, { keepScroll: true });     // muat ulang album supaya foto baru langsung terlihat
+      pageMem.clear(); loadPage(true, 1, { keepScroll: true });
       openInfo({
         kind: 'ok', title: total > 1 ? 'Semua momen sudah terupload' : 'Momenmu sudah terupload',
         text: `Terima kasih sudah ikut mengabadikan momen.\n` + (approved ? `${total} momen kamu sudah tampil di album.` : `${total} momen kamu sudah masuk dan menunggu persetujuan mempelai. Setelah disetujui, otomatis tampil di album.`),
@@ -822,7 +805,7 @@ function watchPending() {
       });
       return;
     }
-    if (Date.now() - t0 > 240000) {                     // 4 menit belum ada kabar -> jujur ke tamu
+    if (Date.now() - t0 > 240000) {
       const sent = total - left.size;
       removePending(Array.from(left));
       openInfo({
@@ -911,7 +894,7 @@ async function playAudio(fileId, uid, btn) {
       mediaEl.id = uid; mediaEl.src = url;
       if (isVideoContainer) {
         mediaEl.playsInline = true;
-        btn.closest('.audio-box').appendChild(mediaEl);   // mengisi card yang sama (CSS), tidak membesarkan card
+        btn.closest('.audio-box').appendChild(mediaEl);
         btn.parentElement.querySelector('.wave').style.display = 'none'; btn.style.cssText = 'position:absolute;left:10px;top:10px;z-index:2;width:36px;height:36px;';
       } else {
         mediaEl.style.display = 'none';
@@ -1013,12 +996,31 @@ function loadCustomFrameImage(fileId) {
   return p;
 }
 
+// v17: Draw frame dengan rotasi otomatis sesuai orientasi media
+function drawFrameForMedia(ctx, frameImg, w, h) {
+  if (!frameImg) return;
+  const fw = frameImg.naturalWidth || frameImg.width;
+  const fh = frameImg.naturalHeight || frameImg.height;
+  if (!fw || !fh) return;
+  const mediaLandscape = w > h;
+  const frameLandscape = fw > fh;
+  const frameSquare = fw === fh;
+  if (!frameSquare && mediaLandscape !== frameLandscape) {
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(frameImg, -h / 2, -w / 2, h, w);
+    ctx.restore();
+  } else {
+    ctx.drawImage(frameImg, 0, 0, w, h);
+  }
+}
+
 function drawFrame(ctx, w, h, cfg, customImg) {
   if (customImg) {
-    ctx.drawImage(customImg, 0, 0, w, h);
+    drawFrameForMedia(ctx, customImg, w, h);
     return;
   }
-
   const barH = Math.round(h * 0.10);
   ctx.fillStyle = cfg.primary;
   if (cfg.style === 'minimalist') {
@@ -1058,7 +1060,6 @@ function drawFrame(ctx, w, h, cfg, customImg) {
 async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
   const originalText = btnEl.textContent;
   btnEl.disabled = true; btnEl.textContent = '0%';
-
   const autoInclude = (weddingSettings && weddingSettings.ui_config && weddingSettings.ui_config.frame_auto_include) || {};
   if (autoInclude[type]) {
     try {
@@ -1073,12 +1074,10 @@ async function downloadWithFrame(mediaId, fileId, type, guestName, btnEl) {
     }
     return;
   }
-
   try {
     const { url } = await fetchFileChunked(fileId, pct => { btnEl.textContent = pct + '%'; });
     const cfg = getFrameConfig(type);
     const customImg = cfg.customFrame ? await loadCustomFrameImage(cfg.customFrame.file_id) : null;
-
     if (type === 'photo') {
       btnEl.textContent = 'Membingkai...';
       await downloadPhotoWithFrame(url, cfg, guestName, customImg);
@@ -1117,13 +1116,11 @@ function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress, customImg) 
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     video.src = blobUrl; video.muted = false; video.playsInline = true;
-
     video.onloadedmetadata = () => {
       const canvas = document.getElementById('hiddenCanvas');
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       const duration = video.duration || 1;
-
       const canvasStream = canvas.captureStream(30);
       let audioTrack = [];
       try {
@@ -1133,7 +1130,6 @@ function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress, customImg) 
         src.connect(dest); src.connect(audioCtx.destination);
         audioTrack = dest.stream.getAudioTracks();
       } catch (e) { }
-
       const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTrack]);
       const recorder = new MediaRecorder(combined, { mimeType: OUT_VIDEO_MIME.mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 128000 });
       const chunks = [];
@@ -1143,7 +1139,6 @@ function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress, customImg) 
         triggerDownload(blob, `wedding-${guestName}-${Date.now()}.${OUT_VIDEO_MIME.ext}`);
         resolve();
       };
-
       let drawing = true;
       function drawLoop() {
         if (!drawing) return;
@@ -1152,7 +1147,6 @@ function downloadVideoWithFrame(blobUrl, cfg, guestName, onProgress, customImg) 
         onProgress(Math.min(99, Math.round((video.currentTime / duration) * 100)));
         requestAnimationFrame(drawLoop);
       }
-
       video.onended = () => { drawing = false; onProgress(100); recorder.stop(); };
       video.currentTime = 0;
       recorder.start();
@@ -1190,7 +1184,6 @@ function drawAudiogram(ctx, w, h, dataArray, cfg, guestName) {
   const shape = cfg.voiceShape || 'radial';
   const font = cfg.voiceFont || 'Plus Jakarta Sans';
   const scale = Math.min(w, h) / 720;
-
   if (shape === 'bars') {
     const barCount = 32;
     const barW = (w * 0.7) / barCount;
@@ -1225,7 +1218,6 @@ function drawAudiogram(ctx, w, h, dataArray, cfg, guestName) {
     }
     fillCenterShape(ctx, cx, cy, radius - 10 * scale, cfg);
   }
-
   ctx.fillStyle = cfg.voiceBarColor;
   ctx.font = `600 ${Math.round(24*scale)}px "${font}", "Plus Jakarta Sans", sans-serif`;
   ctx.textAlign = 'center';
@@ -1238,14 +1230,12 @@ function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress, customImg) {
   return new Promise((resolve, reject) => {
     const audio = document.createElement('audio');
     audio.src = blobUrl;
-
     audio.onloadedmetadata = () => {
       const canvas = document.getElementById('hiddenCanvas');
       const vnRes = getVnResolution();
       canvas.width = vnRes.width; canvas.height = vnRes.height;
       const ctx = canvas.getContext('2d');
       const duration = audio.duration || 1;
-
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const src = audioCtx.createMediaElementSource(audio);
       const analyser = audioCtx.createAnalyser();
@@ -1253,7 +1243,6 @@ function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress, customImg) {
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const dest = audioCtx.createMediaStreamDestination();
       src.connect(analyser); analyser.connect(dest); src.connect(audioCtx.destination);
-
       const canvasStream = canvas.captureStream(30);
       const combined = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
       const recorder = new MediaRecorder(combined, { mimeType: OUT_VIDEO_MIME.mime, videoBitsPerSecond: 4000000, audioBitsPerSecond: 128000 });
@@ -1264,29 +1253,23 @@ function downloadAudioAsVideo(blobUrl, cfg, guestName, onProgress, customImg) {
         triggerDownload(blob, `wedding-vn-${guestName}-${Date.now()}.${OUT_VIDEO_MIME.ext}`);
         resolve();
       };
-
       let drawing = true;
       function drawLoop() {
         if (!drawing) return;
         analyser.getByteFrequencyData(dataArray);
-
         if (customImg) {
-          ctx.drawImage(customImg, 0, 0, canvas.width, canvas.height);
+          drawFrameForMedia(ctx, customImg, canvas.width, canvas.height);
         } else {
           ctx.fillStyle = cfg.secondary; ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = cfg.primary; ctx.globalAlpha = 0.15; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1;
         }
-
         drawAudiogram(ctx, canvas.width, canvas.height, dataArray, cfg, guestName);
-
         if (!customImg) {
           drawFrame(ctx, canvas.width, canvas.height, cfg, null);
         }
-
         onProgress(Math.min(99, Math.round((audio.currentTime / duration) * 100)));
         requestAnimationFrame(drawLoop);
       }
-
       audio.onended = () => { drawing = false; onProgress(100); recorder.stop(); };
       audio.currentTime = 0;
       recorder.start();
@@ -1313,7 +1296,7 @@ function showToast(text, type) {
   setTimeout(() => { t.style.display = 'none'; }, 4500);
 }
 
-if (weddingId) watchPending();   // di akhir skrip supaya semua konstanta sudah siap
+if (weddingId) watchPending();
 </script>
 </body>
 </html>
