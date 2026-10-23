@@ -89,6 +89,10 @@
   #statusScreen p{font-size:14px;color:#A99F94;max-width:320px;line-height:1.6}
   /* #statusScreen button{margin-top:12px;padding:12px 28px;border-radius:4px;border:none;background:var(--accent);color:var(--dark);font-weight:700;font-family:inherit;font-size:14px;letter-spacing:0.01em;cursor:pointer} */
   #statusScreen button{margin-top:12px;padding:12px 28px;border-radius:4px;border:none;background:var(--accent);color:#ffffff;font-weight:700;font-family:inherit;font-size:14px;letter-spacing:0.01em;cursor:pointer}
+  #statusScreen .status-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  #statusScreen .status-actions button{margin-top:12px}
+  #statusScreen #statusAltBtn{background:transparent;color:#F5F1EB;border:1.5px solid rgba(245,241,235,.4)}
+  #statusScreen #statusAltBtn:active{background:rgba(245,241,235,.12)}
   .load-gif{width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;animation:gentlePulse 1.8s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(68,8,8,.14))}
   @keyframes gentlePulse{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.06);opacity:1}}
   header{position:absolute;top:0;left:0;right:0;z-index:20;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(26,20,16,.72),transparent)}
@@ -245,7 +249,10 @@
     <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true" width="96" height="96" style="width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;">
     <h2 id="statusTitle">Menyiapkan kamera…</h2>
     <p id="statusText">Sebentar ya, kami siapkan semuanya untukmu</p>
-    <button id="statusBtn" style="display:none;" onclick="reloadSelf()">Coba Lagi</button>
+    <div class="status-actions">
+      <button id="statusBtn" style="display:none;" onclick="reloadSelf()">Coba Lagi</button>
+      <button id="statusAltBtn" style="display:none;">Kirim dari Galeri</button>
+    </div>
   </div>
   <header>
     <div class="brand"><span id="brandName">Wedding Album</span><small id="brandDate"></small></div>
@@ -688,6 +695,52 @@ function readSettingsCache(){
 }
 function writeSettingsCache(settings,filters){try{localStorage.setItem(settingsCacheKey(),JSON.stringify({ts:Date.now(),settings:settings||null,filters:filters||null}));}catch(e){}}
 
+/* ===== v18: siklus kamera mengikuti tab =====
+   Tab ini adalah iframe yang tetap hidup saat kamu pindah ke Album/Galeri (tidak di-refresh).
+   Supaya kamera tidak menggantung: saat tab disembunyikan kamera dilepas (setelah 20 dtk, jadi
+   kalau cuma lihat album sebentar, balik lagi langsung jalan), dan saat tab dibuka kamera dicek/dinyalakan ulang. */
+let tabActive=(window.name!=='bg');   // 'bg' = iframe dimuat di latar belakang; kamera menunggu sampai tab dibuka
+let camReleaseTimer=null;
+const GALERI_ALT={label:'Kirim dari Galeri',fn:()=>{try{parent.postMessage({type:'switchTab',tab:'galeri'},'*');}catch(e){}}};
+const CAM_SLOW_TEXT='Kamera butuh waktu lebih lama dari biasanya. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi. Atau kirim foto dan video dari galeri HP-mu dulu.';
+function camStatus(title,text){showStatus(title,text,{label:'Coba Lagi',fn:retryCamera,alt:GALERI_ALT});}
+async function bootCamera(){
+  const p=startCamera();
+  const result=await Promise.race([p,new Promise(r=>setTimeout(()=>r('timeout'),10000))]);
+  if(result===true)hideStatus();
+  else if(result==='timeout'){
+    camStatus('Kamera Lama Dimuat',CAM_SLOW_TEXT);
+    p.then(ok=>{if(ok===true&&document.getElementById('statusTitle').textContent==='Kamera Lama Dimuat')hideStatus();});
+  }
+  return result;
+}
+function retryCamera(){
+  showStatus('Menyiapkan kamera…','Sebentar ya, kami siapkan semuanya untukmu',false);
+  return bootCamera();
+}
+function isRecordingNow(){return !!((mediaRecorder&&mediaRecorder.state==='recording')||(vnRecorder&&vnRecorder.state==='recording'));}
+function onTabHide(){
+  tabActive=false;
+  if(isRecordingNow())return;                 // sedang merekam: jangan putuskan kamera
+  clearTimeout(camReleaseTimer);
+  camReleaseTimer=setTimeout(()=>{if(!tabActive&&!isRecordingNow())stopCameraStream();},20000);
+}
+function onTabShow(){
+  tabActive=true;clearTimeout(camReleaseTimer);
+  if(!weddingSettings)return;                 // pengaturan belum siap: init() yang menyalakan kamera
+  if(currentMode==='voice'||capturedBlob)return;
+  const tracks=liveStream?liveStream.getVideoTracks():[];
+  const alive=tracks.length>0&&tracks.some(t=>t.readyState==='live')&&!tracks.some(t=>t.muted);
+  if(alive){try{liveVideo.play().catch(()=>{});}catch(e){}return;}   // kamera masih hidup: langsung siap
+  retryCamera();
+}
+window.addEventListener('message',e=>{
+  const d=e.data||{};
+  if(d.type==='tabState'){if(d.active)onTabShow();else onTabHide();}
+  else if(d.type==='shutdown'){try{stopCameraStream();}catch(err){}}
+});
+try{parent.postMessage({type:'frameReady',tab:'kirim'},'*');}catch(e){}   // beri tahu induk: siap menerima status tab
+
 init();
 
 window.addEventListener('pagehide',()=>{try{stopCameraStream();}catch(e){}});
@@ -710,8 +763,8 @@ async function handleReturnToPage(){
 setTimeout(()=>{
   const visible=document.getElementById('statusScreen').style.display!=='none';
   const title=(document.getElementById('statusTitle').textContent||'');
-  if(visible&&(title.indexOf('Menyiapkan')!==-1||title.indexOf('Memuat')!==-1)){
-    showStatus('Kamera Lama Dimuat','Kamera butuh waktu lebih lama dari biasanya. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi.',true);
+  if(tabActive&&visible&&(title.indexOf('Menyiapkan')!==-1||title.indexOf('Memuat')!==-1)){
+    camStatus('Kamera Lama Dimuat',CAM_SLOW_TEXT);
   }
 },10000);
 
@@ -737,6 +790,7 @@ function applySettings(settings,filters){
   if(!settings||!settings.success)return false;
   weddingSettings=settings;
   applyThemeColors(settings);
+  syncFrameSettings(settings);
   MAX_SHOTS=settings.max_photo||5;
   document.getElementById('brandName').textContent=(settings.ui_config&&settings.ui_config.index_headline)||`${settings.groom_name} & ${settings.bride_name}`;
   if(settings.date)document.getElementById('brandDate').textContent=formatDate(settings.date);
@@ -781,12 +835,9 @@ async function init(){
     }
   }
   if(!haveSettings)return;
-  if(currentMode==='voice'){hideStatus();}
-  else{
-    const result=await Promise.race([startCamera(),new Promise(resolve=>setTimeout(()=>resolve('timeout'),10000))]);
-    if(result===true)hideStatus();
-    else if(result==='timeout')showStatus('Kamera Lama Dimuat','Kamera butuh waktu lebih lama dari biasanya. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi.',true);
-  }
+  preloadFrameAssets(weddingSettings).catch(()=>{});   // bingkai mulai diunduh bersamaan dengan kamera
+  if(currentMode==='voice'||!tabActive){hideStatus();}   // tab di latar belakang: kamera dinyalakan saat tab dibuka
+  else{await bootCamera();}
   const w=encodeURIComponent(weddingId);
   fetchJson(`action=getFilters&wedding_id=${w}`,2,10000).then(f=>{
     if(f&&f.success){applyFilters(f);writeSettingsCache(weddingSettings,f);}
@@ -837,37 +888,77 @@ function getVnResolution(){
   if(vnRes.preset==='fhd')return{width:1080,height:1080};
   return{width:720,height:720};
 }
-function preloadFrameAssets(settings){
-  if(framesPreloadStarted)return Promise.resolve();
-  framesPreloadStarted=true;
-  const uiConfig=settings.ui_config||{};
-  autoIncludeFrame=Object.assign({photo:false,video:false,voice:false},uiConfig.frame_auto_include||{});
-  if(!autoIncludeFrame.photo&&!autoIncludeFrame.video&&!autoIncludeFrame.voice)return Promise.resolve();
-  const jobs=[];
-  for(const type of ['photo','video','voice']){
-    if(!autoIncludeFrame[type])continue;
-    frameConfigCache[type]=getFrameConfig(type);
-    const cf=frameConfigCache[type].customFrame;
-    if(cf&&cf.file_id){jobs.push(loadFrameImageBase64(cf.file_id).then(img=>{customFrameImgCache[type]=img;}).catch(()=>{customFrameImgCache[type]=null;}));}
+// v18: bingkai custom disimpan di Cache Storage (tidak diunduh ulang tiap tab) + 4x percobaan.
+async function fetchFrameBlob(fileId){
+  const url=`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`;
+  let store=null;
+  try{store=window.caches?await caches.open('frames-v1'):null;}catch(e){}
+  if(store){try{const hit=await store.match(url);if(hit)return await hit.blob();}catch(e){}}
+  let last;
+  for(let i=0;i<4;i++){
+    try{
+      const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),25000);
+      const res=await fetch(url,{signal:ctrl.signal});const data=await res.json();clearTimeout(to);
+      if(data&&data.success){
+        const bin=atob(data.base64),bytes=new Uint8Array(bin.length);
+        for(let k=0;k<bin.length;k++)bytes[k]=bin.charCodeAt(k);
+        const blob=new Blob([bytes],{type:data.mimeType||'image/png'});
+        if(store){try{await store.put(url,new Response(blob,{headers:{'content-type':blob.type}}));}catch(e){}}
+        return blob;
+      }
+      last=new Error((data&&data.message)||'Gagal memuat template bingkai');
+    }catch(e){last=e;}
+    await sleepMs(600*(i+1)+Math.floor(Math.random()*400));
   }
-  return Promise.all(jobs);
+  throw last||new Error('frame');
 }
-function loadFrameImageBase64(fileId){
-  return(async()=>{
-    const res=await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
-    const data=await res.json();
-    if(!data.success)throw new Error(data.message||'Gagal memuat template bingkai');
-    const byteChars=atob(data.base64);const bytes=new Uint8Array(byteChars.length);
-    for(let i=0;i<byteChars.length;i++)bytes[i]=byteChars.charCodeAt(i);
-    const blob=new Blob([bytes],{type:data.mimeType||'image/png'});
-    const blobUrl=URL.createObjectURL(blob);
-    return new Promise((resolve,reject)=>{
-      const img=new Image();
-      img.onload=()=>{URL.revokeObjectURL(blobUrl);resolve(img);};
-      img.onerror=()=>{URL.revokeObjectURL(blobUrl);reject(new Error('decode'));};
-      img.src=blobUrl;
-    });
-  })();
+async function loadFrameImageBase64(fileId){
+  const blob=await fetchFrameBlob(fileId);
+  const blobUrl=URL.createObjectURL(blob);
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{URL.revokeObjectURL(blobUrl);resolve(img);};
+    img.onerror=()=>{URL.revokeObjectURL(blobUrl);reject(new Error('decode'));};
+    img.src=blobUrl;
+  });
+}
+const frameLoad={},frameLoadedId={};
+function syncFrameSettings(settings){
+  const ui=(settings&&settings.ui_config)||{};
+  autoIncludeFrame=Object.assign({photo:false,video:false,voice:false},ui.frame_auto_include||{});
+  ['photo','video','voice'].forEach(t=>{if(autoIncludeFrame[t])frameConfigCache[t]=getFrameConfig(t);});
+}
+function frameCustomId(type){const c=frameConfigCache[type];return c&&c.customFrame?c.customFrame.file_id:null;}
+function frameMissing(type){
+  if(!autoIncludeFrame[type])return false;
+  const id=frameCustomId(type);
+  return !!id&&!(customFrameImgCache[type]&&frameLoadedId[type]===id);
+}
+function startFrameLoad(type){
+  const id=frameCustomId(type);
+  frameLoadedId[type]=null;
+  frameLoad[type]=loadFrameImageBase64(id).then(img=>{customFrameImgCache[type]=img;frameLoadedId[type]=id;return true;}).catch(()=>{customFrameImgCache[type]=null;return false;});
+  return frameLoad[type];
+}
+async function ensureFrame(type){
+  if(!frameMissing(type))return true;
+  if(!frameLoad[type])startFrameLoad(type);
+  await frameLoad[type];
+  if(frameMissing(type))await startFrameLoad(type);
+  return !frameMissing(type);
+}
+async function guardFrame(type){
+  if(!frameMissing(type))return true;
+  showToast('Bingkai lagi disiapkan, tunggu sebentar ya','success');
+  const ok=await ensureFrame(type);
+  if(!ok)showToast('Bingkai belum bisa dimuat. Periksa sinyal lalu coba lagi ya','error');
+  return ok;
+}
+function preloadFrameAssets(settings){
+  syncFrameSettings(settings);
+  const jobs=[];
+  ['photo','video','voice'].forEach(t=>{if(frameMissing(t)&&!frameLoad[t])jobs.push(startFrameLoad(t));});
+  return Promise.all(jobs);
 }
 function fillCenterShape(ctx,cx,cy,radius,cfg){
   const shape=cfg.voiceCenterShape||'circle';ctx.fillStyle=cfg.voiceCenterColor;
@@ -1000,7 +1091,7 @@ async function startCamera(isRetry){
     }catch(permErr){
       if(myToken!==cameraToken)return false;
       const msg=String(permErr&&permErr.message||'');
-      if(msg==='__gum_timeout__'){if(!isRetry){await sleepMs(1200);return startCamera(true);}showStatus('Kamera Tidak Merespon','Kamera tidak merespon. Tutup aplikasi lain yang mungkin memakai kamera, lalu tekan Coba Lagi.',true);return false;}
+      if(msg==='__gum_timeout__'){if(!isRetry){await sleepMs(1200);return startCamera(true);}camStatus('Kamera Tidak Merespon',CAM_SLOW_TEXT);return false;}
       if(/NotAllowed|Permission|denied/i.test(msg)){showPermissionHelp(needsAudio?'both':'camera');return false;}
       if(/NotReadable|Could not start|TrackStart|In use/i.test(msg)&&!isRetry){await sleepMs(1500);return startCamera(true);}
       throw permErr;
@@ -1036,7 +1127,7 @@ async function startCamera(isRetry){
     if(/NotAllowed|Permission|denied/i.test(msg)){title='Izin Kamera Belum Diberikan';body='Aktifkan izin kamera di pengaturan browser (ikon gembok di address bar), lalu muat ulang halaman ini.';}
     else if(/NotFound|NotReadable|DevicesNotFound/i.test(msg)){title='Kamera Tidak Terdeteksi';body='Pastikan kamera tidak sedang dipakai aplikasi lain, lalu tekan Coba Lagi.';}
     else if(/NotSupported|Overconstrained/i.test(msg)){title='Kamera Tidak Mendukung';body='Browser kamu belum bisa memakai kamera di halaman ini. Coba buka di Chrome atau Safari terbaru ya.';}
-    showStatus(title,body,true);
+    camStatus(title,body+' Atau kirim foto dan video dari galeri HP-mu dulu.');
     return false;
   }
 }
@@ -1053,6 +1144,7 @@ shutterBtn.addEventListener('click',()=>{
 let shotsInFlight=0;
 function takePhoto(){
   if(photoShots.length+shotsInFlight>=MAX_SHOTS)return;
+  if(frameMissing('photo')){guardFrame('photo');return;}   // jangan memotret tanpa bingkai diam-diam
   const vw0=liveVideo.videoWidth,vh0=liveVideo.videoHeight;
   if(!vw0){showToast('Kamera belum siap, tunggu sebentar ya','error');return;}
   const q=getQuality('photo');
@@ -1193,6 +1285,7 @@ function captureVideoThumbnail(){
   });
 }
 async function startVideoRecording(){
+  if(!(await guardFrame('video')))return;
   if(!streamHasAudio){showToast('Mikrofon tidak terdeteksi, jadi videonya akan tanpa suara.','error');}
   videoThumbBlob=await captureVideoThumbnail();
   recordedChunks=[];
@@ -1271,7 +1364,7 @@ document.getElementById('vnPlayBtn').addEventListener('click',()=>{
 document.getElementById('vnSendBtn').addEventListener('click',()=>sendSingleMedia('voice'));
 async function startVoiceRecording(){
   if(await queryPermState('microphone')==='denied'){showPermissionHelp('mic');return;}
-  if(autoIncludeFrame.voice)return startVoiceRecordingWithFrame();
+  if(autoIncludeFrame.voice){if(!(await guardFrame('voice')))return;return startVoiceRecordingWithFrame();}
   try{
     let stream;
     try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}
@@ -1399,6 +1492,11 @@ function showStatus(title,text,action){
   document.getElementById('statusTitle').textContent=title;
   document.getElementById('statusText').textContent=text;
   const btn=document.getElementById('statusBtn');
+  const alt=document.getElementById('statusAltBtn');
+  if(alt){
+    if(action&&typeof action==='object'&&action.alt){alt.style.display='inline-block';alt.textContent=action.alt.label;alt.onclick=action.alt.fn;}
+    else{alt.style.display='none';alt.onclick=null;}
+  }
   if(action&&typeof action==='object'){
     btn.style.display='inline-block';btn.textContent=action.label;
     if(action.fn){btn.onclick=action.fn;}
@@ -2194,6 +2292,23 @@ if(weddingId)watchPending();
   .preview-info strong{color:var(--text-2);font-weight:600;}
   .progress-bar{width:100%;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin:12px 0;}
   .progress-bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s;}
+  .tasks{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+  .tasks:empty{display:none;}
+  .tasks-title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);font-weight:700;margin-top:6px;}
+  .task{background:var(--surface-2);border:1px solid var(--border,rgba(0,0,0,.08));border-radius:6px;padding:12px 14px;animation:taskIn .25s ease;}
+  @keyframes taskIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .task-head{display:flex;align-items:center;gap:10px;}
+  .task-ic{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .task-ttl{flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .task-pct{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text-3);}
+  .task .progress-bar{margin:10px 0 6px;}
+  .task-msg{font-size:12px;color:var(--text-3);line-height:1.5;}
+  .task.done .progress-bar i{background:var(--success);}.task.done .task-ic{background:var(--success);}
+  .task.error .progress-bar i{background:var(--danger);}.task.error .task-ic{background:var(--danger);}.task.error .task-msg{color:var(--danger);}
+  .task-actions{display:flex;gap:8px;margin-top:8px;}
+  .task-actions button{padding:7px 14px;border-radius:4px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+  .task-actions button.primary{background:var(--accent);color:#fff;}
+  .pick-btn.full{opacity:.45;cursor:not-allowed;}
   .progress-text{font-size:12px;color:var(--text-3);text-align:center;margin-bottom:8px;font-family:'JetBrains Mono',monospace;}
   .name-field{margin:20px 0 16px;}
   .name-field label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;}
@@ -2290,10 +2405,8 @@ if(weddingId)watchPending();
     <input type="text" id="guestName" placeholder="Tulis nama lengkapmu" maxlength="40" autocomplete="name">
   </div>
   <button class="send-btn" id="sendBtn" disabled>Kirim</button>
-  <div id="progressWrap" style="display:none;margin-top:16px;">
-    <div class="progress-bar"><i id="progressBar"></i></div>
-    <div class="progress-text" id="progressText">Memproses…</div>
-  </div>
+  <div class="tasks-title" id="tasksTitle" style="display:none;">Sedang dikirim</div>
+  <div class="tasks" id="taskList" aria-live="polite"></div>
 </div>
 <footer class="site-footer">
   <p class="thanks">Makasih ya, udah ikut abadiin momennya!</p>
@@ -2362,8 +2475,9 @@ async function init(){
     document.querySelectorAll('#tabs button').forEach(btn=>{if(types.indexOf(btn.dataset.mode)===-1)btn.style.display='none';});
     if(types.length<=1)document.getElementById('tabs').style.display='none';
     switchMode(types[0]||'photo');
-    await preloadFrameAssets(s);
+    preloadFrameAssets(s);
     hideStatus();
+    updatePickState();
     updateSendButtonState();
   }catch(err){showStatus('Belum Bisa Terhubung','Koneksi internet kurang stabil. Coba lagi ya.');}
 }
@@ -2377,21 +2491,57 @@ async function fetchJson(qs,tries=3){
   }
   throw last||new Error('offline');
 }
-async function preloadFrameAssets(settings){
-  for(const type of ['photo','video']){
-    frameConfigCache[type]=getFrameConfig(type);
-    const cf=frameConfigCache[type].customFrame;
-    if(cf&&cf.file_id){try{customFrameImgCache[type]=await loadFrameImage(cf.file_id);}catch(e){customFrameImgCache[type]=null;}}
+const sleepMs=ms=>new Promise(r=>setTimeout(r,ms));
+/* v18: bingkai custom disimpan di Cache Storage + 4x percobaan; kirim selalu menunggu bingkai siap (tidak pernah lolos tanpa bingkai). */
+async function fetchFrameBlob(fileId){
+  const url=`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`;
+  let store=null;
+  try{store=window.caches?await caches.open('frames-v1'):null;}catch(e){}
+  if(store){try{const hit=await store.match(url);if(hit)return await hit.blob();}catch(e){}}
+  let last;
+  for(let i=0;i<4;i++){
+    try{
+      const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),25000);
+      const res=await fetch(url,{signal:ctrl.signal});const data=await res.json();clearTimeout(to);
+      if(data&&data.success){
+        const bytes=base64ToUint8(data.base64);
+        const blob=new Blob([bytes],{type:data.mimeType||'image/png'});
+        if(store){try{await store.put(url,new Response(blob,{headers:{'content-type':blob.type}}));}catch(e){}}
+        return blob;
+      }
+      last=new Error((data&&data.message)||'Gagal memuat bingkai');
+    }catch(e){last=e;}
+    await sleepMs(600*(i+1)+Math.floor(Math.random()*400));
   }
+  throw last||new Error('frame');
 }
 async function loadFrameImage(fileId){
-  const res=await fetch(`${APPS_SCRIPT_URL}?action=getMediaFile&file_id=${encodeURIComponent(fileId)}`);
-  const data=await res.json();
-  if(!data.success)throw new Error(data.message||'Gagal memuat frame');
-  const bytes=base64ToUint8(data.base64);
-  const blob=new Blob([bytes],{type:data.mimeType||'image/png'});
+  const blob=await fetchFrameBlob(fileId);
   const url=URL.createObjectURL(blob);
   return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('decode'));};img.src=url;});
+}
+const frameLoad={},frameLoadedId={};
+function frameCustomId(type){const c=frameConfigCache[type];return c&&c.customFrame?c.customFrame.file_id:null;}
+function frameMissing(type){const id=frameCustomId(type);return !!id&&!(customFrameImgCache[type]&&frameLoadedId[type]===id);}
+function startFrameLoad(type){
+  const id=frameCustomId(type);frameLoadedId[type]=null;
+  frameLoad[type]=loadFrameImage(id).then(img=>{customFrameImgCache[type]=img;frameLoadedId[type]=id;return true;}).catch(()=>{customFrameImgCache[type]=null;return false;});
+  return frameLoad[type];
+}
+async function ensureFrame(type){
+  if(!frameMissing(type))return true;
+  if(!frameLoad[type])startFrameLoad(type);
+  await frameLoad[type];
+  if(frameMissing(type))await startFrameLoad(type);
+  return !frameMissing(type);
+}
+function preloadFrameAssets(settings){
+  const jobs=[];
+  for(const type of ['photo','video']){
+    frameConfigCache[type]=getFrameConfig(type);
+    if(frameMissing(type)&&!frameLoad[type])jobs.push(startFrameLoad(type));
+  }
+  return Promise.all(jobs);
 }
 function base64ToUint8(b64){const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return arr;}
 function getFrameConfig(type){
@@ -2425,21 +2575,41 @@ function switchMode(mode){
   document.querySelectorAll('.mode-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+mode));
   updateSendButtonState();
 }
+document.getElementById('pickPhotoBtn').addEventListener('click',e=>{
+  if(photoItems.length+photoBusy>=maxPhoto){e.stopImmediatePropagation();showInfo('Maksimal '+maxPhoto+' foto',`Kamu sudah memilih ${maxPhoto} foto, itu batas sekali kirim.\nKirim dulu foto yang ini, atau hapus salah satu kalau mau ganti. Setelah itu pilih lagi ya.`);}
+},true);
+let photoBusy=0;
 document.getElementById('pickPhotoBtn').addEventListener('click',()=>document.getElementById('photoInput').click());
+function updatePickState(){
+  const btn=document.getElementById('pickPhotoBtn');const hint=document.getElementById('photoPickHint');
+  const left=Math.max(0,maxPhoto-photoItems.length-photoBusy);
+  btn.classList.toggle('full',left<=0);
+  hint.textContent=left<=0?`Sudah ${maxPhoto} foto (batas sekali kirim). Kirim dulu atau hapus salah satu.`:(photoItems.length?`Masih bisa tambah ${left} foto lagi (maks ${maxPhoto})`:`Bisa pilih maks ${maxPhoto} foto sekaligus`);
+}
 document.getElementById('photoInput').addEventListener('change',async function(){
   const files=Array.from(this.files||[]);this.value='';
   if(files.length===0)return;
-  const remaining=maxPhoto-photoItems.length;
-  if(remaining<=0){showToast(`Sudah ${maxPhoto} foto. Hapus salah satu dulu ya.`,'error');return;}
-  const take=files.slice(0,remaining);
-  if(files.length>remaining){showToast(`Maks ${maxPhoto} foto. ${files.length-remaining} foto terakhir tidak dimasukkan.`,'info');}
-  for(const file of take){
-    if(!file.type.startsWith('image/')){showToast('Ada file yang bukan gambar, dilewati.','error');continue;}
-    showToast('Memproses foto…','info');
+  const remaining=maxPhoto-photoItems.length-photoBusy;
+  if(files.length>remaining){
+    /* Seluruh pilihan ditolak: jelas bagi tamu, tidak ada foto yang "hilang diam-diam". */
+    showInfo('Kebanyakan, maks '+maxPhoto+' foto',remaining<=0?`Kamu sudah memilih ${maxPhoto} foto. Kirim dulu atau hapus salah satu, lalu pilih lagi.`:`Kamu memilih ${files.length} foto, padahal tinggal ada ${remaining} slot (maks ${maxPhoto} sekali kirim).\nPilih ulang ${remaining} foto saja ya. Tidak ada foto yang kami masukkan dari pilihan tadi.`);
+    return;
+  }
+  const valid=files.filter(f=>f.type&&f.type.startsWith('image/'));
+  if(valid.length<files.length)showToast('Ada file yang bukan gambar, dilewati.','error');
+  if(!valid.length)return;
+  photoBusy+=valid.length;updatePickState();
+  showToast('Menyiapkan foto…','info');
+  if(frameMissing('photo')){showToast('Bingkai lagi disiapkan, tunggu sebentar ya','info');}
+  const okFrame=await ensureFrame('photo');
+  if(!okFrame){photoBusy-=valid.length;updatePickState();showInfo('Bingkai belum siap','Bingkai foto belum bisa dimuat, mungkin sinyal lagi lemah. Foto tidak dimasukkan supaya tidak terkirim tanpa bingkai. Coba pilih lagi sebentar lagi ya.');return;}
+  for(const file of valid){
     try{const result=await processPhoto(file);photoItems.push(result);}
     catch(err){showToast('Satu foto gagal diproses: '+err.message,'error');}
+    photoBusy--;
+    renderPhotoGrid();updateSendButtonState();updatePickState();
   }
-  renderPhotoGrid();updateSendButtonState();
+  renderPhotoGrid();updateSendButtonState();updatePickState();
 });
 function renderPhotoGrid(){
   const wrap=document.getElementById('photoGridWrap');const grid=document.getElementById('photoGrid');const counter=document.getElementById('photoGridCounter');
@@ -2452,7 +2622,7 @@ function renderPhotoGrid(){
     grid.appendChild(div);
   });
 }
-function removePhoto(idx){if(idx<0||idx>=photoItems.length)return;photoItems.splice(idx,1);renderPhotoGrid();updateSendButtonState();}
+function removePhoto(idx){if(idx<0||idx>=photoItems.length)return;photoItems.splice(idx,1);renderPhotoGrid();updateSendButtonState();updatePickState();}
 async function processPhoto(file){
   const img=await loadImageFile(file);
   const maxDim=2560;
@@ -2550,49 +2720,107 @@ function updateSendButtonState(){
   btn.disabled=!(ready&&name);
   btn.textContent=currentMode==='photo'?(photoItems.length>1?`Kirim ${photoItems.length} Foto`:'Kirim Foto'):'Kirim Video';
 }
-async function sendMedia(){
+/* ===== v18: progres per-pengiriman (video di atas, foto di bawah, terbaru paling atas) ===== */
+const tasks=[];let taskSeq=0;let batchDone=0,batchFail=0;let videoChain=Promise.resolve();
+function newClientId(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function sendMedia(){
   const name=document.getElementById('guestName').value.trim();
   if(!name){showToast('Tulis namamu dulu ya','error');document.getElementById('guestName').focus();return;}
-  const btn=document.getElementById('sendBtn');btn.disabled=true;
-  const progWrap=document.getElementById('progressWrap');
-  const progBar=document.getElementById('progressBar');
-  const progText=document.getElementById('progressText');
-  progWrap.style.display='block';
-  try{
-    if(currentMode==='photo'){
-      if(photoItems.length===0)throw new Error('Foto belum dipilih');
-      const snapshot=photoItems.slice();const total=snapshot.length;
-      const totalBytes=snapshot.reduce((s,it)=>s+((it.blob&&it.blob.size)||0),0)||1;
-      let doneBytes=0;
-      for(let i=0;i<total;i++){
-        const item=snapshot[i];
-        progBar.style.width=Math.round((doneBytes/totalBytes)*100)+'%';
-        progText.textContent=`Mengunggah foto ${i+1} dari ${total} · ${fmtPair(doneBytes,totalBytes)}`;
-        await uploadToDrive(item.blob,'photo',name,item.thumb,loaded=>{
-          const overallBytes=doneBytes+(loaded||0);
-          const overall=Math.min(99,(overallBytes/totalBytes)*100);
-          progBar.style.width=Math.round(overall)+'%';
-          progText.textContent=`Mengunggah foto ${i+1} dari ${total} · ${fmtPair(overallBytes,totalBytes)}`;
-        });
-        doneBytes+=(item.blob&&item.blob.size)||0;
-        progBar.style.width=Math.round((doneBytes/totalBytes)*100)+'%';
-      }
-      progBar.style.width='100%';progText.textContent='Selesai';
-      showResult('success','Terkirim',`${total} foto sudah masuk.\nTunggu persetujuan mempelai ya.`);
-      photoItems=[];renderPhotoGrid();
-    }else if(currentMode==='video'){
-      if(!videoFile)throw new Error('Video belum dipilih');
-      progText.textContent='Memproses video dengan bingkai…';progBar.style.width='0%';
-      const processed=await processVideoWithFrame(videoFile,p=>{progBar.style.width=Math.round(p*60)+'%';progText.textContent=`Memproses video ${Math.round(p*100)}% (diputar real-time)`;});
-      progBar.style.width='60%';progText.textContent='Mengunggah video…';
-      await uploadToDrive(processed.blob,'video',name,processed.thumb,(loaded,total)=>{const p=total?(loaded/total):0;progBar.style.width=Math.round(60+p*40)+'%';progText.textContent=`Mengunggah video · ${fmtPair(loaded,total)}`;});
-      progBar.style.width='100%';progText.textContent='Selesai';
-      showResult('success','Terkirim',`Videomu sudah masuk.\nTunggu persetujuan mempelai ya.`);
-      resetVideo();
-    }
-  }catch(err){showResult('error','Belum berhasil',err.message||'Coba lagi ya.');}
-  finally{progWrap.style.display='none';progBar.style.width='0%';btn.disabled=false;updateSendButtonState();}
+  if(currentMode==='photo'){
+    if(photoItems.length===0){showToast('Pilih foto dulu ya','error');return;}
+    const items=photoItems.map(it=>({blob:it.blob,thumb:it.thumb,cid:newClientId(),fileId:null,done:false,tries:0}));
+    photoItems=[];renderPhotoGrid();updateSendButtonState();updatePickState();
+    addTask({kind:'photo',name,items,total:items.length,title:items.length>1?`${items.length} foto`:'1 foto'});
+  }else{
+    if(!videoFile){showToast('Pilih video dulu ya','error');return;}
+    const file=videoFile;resetVideo();
+    addTask({kind:'video',name,file,processed:null,cid:newClientId(),fileId:null,tries:0,title:'1 video'});
+  }
+  showToast('Mulai dikirim. Pantau progresnya di bawah, kamu boleh lanjut pilih yang lain.','success');
 }
+function addTask(t){
+  t.id=++taskSeq;t.seq=t.id;t.state='queued';t.pct=0;t.msg='Menunggu giliran…';
+  tasks.push(t);renderTasks();
+  runTask(t);
+}
+function runTask(t){
+  t.state='running';t.msg=t.kind==='video'?'Menunggu giliran…':'Mulai mengirim…';renderTasks();
+  if(t.kind==='video'){videoChain=videoChain.then(()=>doVideo(t)).catch(()=>{});}
+  else doPhotos(t).catch(()=>{});
+}
+function setTask(t,pct,msg){if(typeof pct==='number')t.pct=Math.max(t.pct||0,Math.min(100,pct));if(msg)t.msg=msg;renderTasks();}
+function finishTask(t,ok,msg){
+  t.state=ok?'done':'error';t.msg=msg;if(ok){t.pct=100;batchDone++;}else batchFail++;
+  renderTasks();maybeSummary();
+  if(ok)setTimeout(()=>{const k=tasks.indexOf(t);if(k>-1&&t.state==='done'){tasks.splice(k,1);renderTasks();}},12000);
+}
+function activeTasks(){return tasks.filter(t=>t.state==='running'||t.state==='queued');}
+function maybeSummary(){
+  if(activeTasks().length>0)return;
+  if(batchDone>0&&batchFail===0){showResult('success','Terkirim',`Semua kiriman sudah masuk.\nTunggu persetujuan mempelai ya.`);}
+  else if(batchFail>0){showResult('error','Ada yang belum terkirim',`${batchDone?batchDone+' kiriman berhasil, ':''}${batchFail} belum berhasil.\nTekan "Coba Lagi" di daftar kiriman, nanti dilanjutkan dari yang belum selesai.`);}
+  batchDone=0;batchFail=0;
+}
+function renderTasks(){
+  const box=document.getElementById('taskList');const ttl=document.getElementById('tasksTitle');
+  const ordered=tasks.slice().sort((a,b)=>{const av=a.kind==='video'?0:1,bv=b.kind==='video'?0:1;if(av!==bv)return av-bv;return b.seq-a.seq;});
+  ttl.style.display=ordered.length?'block':'none';
+  const ids=ordered.map(t=>t.id).join(',');
+  if(box.dataset.ids!==ids){
+    box.dataset.ids=ids;box.innerHTML='';
+    ordered.forEach(t=>{
+      const d=document.createElement('div');d.className='task';d.dataset.id=t.id;
+      d.innerHTML=`<div class="task-head"><span class="task-ic"></span><span class="task-ttl"></span><span class="task-pct"></span></div><div class="progress-bar"><i></i></div><div class="task-msg"></div><div class="task-actions" style="display:none;"></div>`;
+      box.appendChild(d);
+    });
+  }
+  ordered.forEach(t=>{
+    const d=box.querySelector(`.task[data-id="${t.id}"]`);if(!d)return;
+    d.className='task '+(t.state==='done'?'done':t.state==='error'?'error':'');
+    d.querySelector('.task-ic').textContent=t.state==='done'?'✓':t.state==='error'?'!':(t.kind==='video'?'▶':'▣');
+    d.querySelector('.task-ttl').textContent=`${t.kind==='video'?'Video':'Foto'} · ${t.title}`;
+    d.querySelector('.task-pct').textContent=t.state==='done'?'Selesai':Math.round(t.pct||0)+'%';
+    d.querySelector('.progress-bar i').style.width=Math.round(t.pct||0)+'%';
+    d.querySelector('.task-msg').textContent=t.msg||'';
+    const act=d.querySelector('.task-actions');
+    if(t.state==='error'){
+      act.style.display='flex';
+      if(!act.firstChild){
+        act.innerHTML='<button class="primary" data-a="retry">Coba Lagi</button><button data-a="drop">Batalkan</button>';
+        act.querySelector('[data-a=retry]').onclick=()=>{act.innerHTML='';runTask(t);};
+        act.querySelector('[data-a=drop]').onclick=()=>{const k=tasks.indexOf(t);if(k>-1)tasks.splice(k,1);renderTasks();};
+      }
+    }else{act.style.display='none';act.innerHTML='';}
+  });
+}
+async function doPhotos(t){
+  const total=t.items.length;const totalBytes=t.items.reduce((s,it)=>s+((it.blob&&it.blob.size)||0),0)||1;
+  const bytesDone=()=>t.items.reduce((s,it)=>s+(it.done?((it.blob&&it.blob.size)||0):0),0);
+  try{
+    for(let i=0;i<total;i++){
+      const it=t.items[i];if(it.done)continue;
+      const base=bytesDone();const n=t.items.filter(x=>x.done).length+1;
+      setTask(t,(base/totalBytes)*100,`Mengunggah foto ${n} dari ${total} · ${fmtPair(base,totalBytes)}`);
+      await uploadToDrive(it,'photo',t.name,loaded=>{const ob=base+(loaded||0);setTask(t,Math.min(99,(ob/totalBytes)*100),`Mengunggah foto ${n} dari ${total} · ${fmtPair(ob,totalBytes)}`);});
+      it.done=true;
+    }
+    finishTask(t,true,`${total} foto sudah masuk`);
+  }catch(err){finishTask(t,false,(err&&err.message)||'Belum berhasil. Coba lagi ya.');}
+}
+async function doVideo(t){
+  try{
+    if(!t.processed){
+      setTask(t,0,'Menyiapkan bingkai…');
+      if(!(await ensureFrame('video')))throw new Error('Bingkai video belum bisa dimuat (sinyal lemah?). Coba lagi ya, video tidak dikirim tanpa bingkai.');
+      setTask(t,0,'Memproses video dengan bingkai…');
+      t.processed=await processVideoWithFrame(t.file,p=>setTask(t,p*60,`Memproses video ${Math.round(p*100)}% (diputar real-time, jangan tutup halaman)`));
+    }
+    setTask(t,60,'Mengunggah video…');
+    await uploadToDrive(t,'video',t.name,(loaded,total)=>{const p=total?(loaded/total):0;setTask(t,60+p*39,`Mengunggah video · ${fmtPair(loaded,total)}`);});
+    finishTask(t,true,'Video sudah masuk');
+  }catch(err){finishTask(t,false,(err&&err.message)||'Belum berhasil. Coba lagi ya.');}
+}
+window.addEventListener('beforeunload',e=>{if(activeTasks().length){e.preventDefault();e.returnValue='';}});
 function resetVideo(){
   videoFile=null;videoMeta={duration:0,w:0,h:0};
   const v=document.getElementById('videoPreviewEl');
@@ -2603,26 +2831,47 @@ function resetVideo(){
   document.getElementById('videoProcessNote').style.display='none';
   updateSendButtonState();
 }
-async function uploadToDrive(blob,type,guestName,thumbDataUri,onProgress){
-  const mime=blob.type.split(';')[0];
-  const init=await callServer({action:'initUpload',wedding_id:weddingId,guest_name:guestName,media_type:type,mime_type:mime,size:blob.size,origin:location.origin});
-  if(!init.success)throw new Error(init.message||'Gagal menyiapkan upload');
-  const fileId=await new Promise((resolve,reject)=>{
-    const xhr=new XMLHttpRequest();xhr.open('PUT',init.upload_url);xhr.setRequestHeader('Content-Type',mime);
+/* job: {blob|processed.blob, thumb|processed.thumb, cid, fileId, tries}. Idempotent lewat client_id; retry melanjutkan (fileId dipakai ulang). */
+function xhrPut(url,blob,mime,onProgress){
+  return new Promise((resolve,reject)=>{
+    const xhr=new XMLHttpRequest();xhr.open('PUT',url);xhr.setRequestHeader('Content-Type',mime);xhr.timeout=300000;
     xhr.upload.onprogress=e=>{if(e.lengthComputable&&onProgress)onProgress(e.loaded,e.total);};
-    xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300){try{resolve(JSON.parse(xhr.responseText).id);}catch(e){reject(new Error('parse error'));}}else reject(new Error('Upload gagal: '+xhr.status));};
-    xhr.onerror=()=>reject(new Error('Koneksi terputus saat upload'));
+    xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300){try{resolve(JSON.parse(xhr.responseText).id);}catch(e){reject(new Error('Balasan upload tidak terbaca'));}}else reject(new Error('Upload gagal ('+xhr.status+')'));};
+    xhr.onerror=()=>reject(new Error('Koneksi terputus saat upload'));xhr.ontimeout=()=>reject(new Error('Upload terlalu lama'));
     xhr.send(blob);
   });
-  const fin=await callServer({action:'finalizeUpload',wedding_id:weddingId,guest_name:guestName,media_type:type,file_id:fileId,thumb_data:thumbDataUri||''});
+}
+async function checkDone(cid){
+  try{const r=await fetch(`${APPS_SCRIPT_URL}?action=checkUpload&wedding_id=${encodeURIComponent(weddingId)}&client_ids=${encodeURIComponent(cid)}&deep=1`);const d=await r.json();
+    const f=d&&(d.found||d.items||d.results);if(f&&f[cid])return true;if(Array.isArray(f))return f.some(x=>x&&(x.client_id===cid||x===cid));}catch(e){}
+  return false;
+}
+async function uploadToDrive(job,type,guestName,onProgress){
+  const data=job.processed||job;const blob=data.blob;const thumb=data.thumb||'';
+  const mime=(blob.type||'application/octet-stream').split(';')[0];
+  job.tries=(job.tries||0)+1;
+  if(job.tries>1&&await checkDone(job.cid))return {success:true,duplicate:true};
+  const base={wedding_id:weddingId,guest_name:guestName,media_type:type,client_id:job.cid,attempt:job.tries>1?2:1};
+  if(!job.fileId){
+    const init=await callServer(Object.assign({},base,{action:'initUpload',mime_type:mime,size:blob.size,origin:location.origin}));
+    if(!init.success)throw new Error(init.message||'Gagal menyiapkan upload');
+    job.fileId=await xhrPut(init.upload_url,blob,mime,onProgress);
+  }
+  const fin=await callServer(Object.assign({},base,{action:'finalizeUpload',file_id:job.fileId,thumb_data:thumb}));
   if(!fin.success)throw new Error(fin.message||'Gagal mencatat media');
   return fin;
 }
-async function callServer(payload){
-  const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)});
-  const data=await res.json();
-  if(data.busy)throw new Error('Server sedang ramai, coba lagi ya');
-  return data;
+async function callServer(payload,tries=4){
+  let last;
+  for(let i=0;i<tries;i++){
+    try{
+      const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)});
+      const data=await res.json();
+      if(data&&data.busy){last=new Error('Server sedang ramai, coba lagi ya');await sleepMs(900*(i+1)+Math.floor(Math.random()*600));continue;}
+      return data;
+    }catch(e){last=e;await sleepMs(700*(i+1));}
+  }
+  throw last||new Error('Koneksi bermasalah');
 }
 function showResult(kind,title,text){
   const ov=document.getElementById('resultOverlay');
@@ -2635,8 +2884,19 @@ function showResult(kind,title,text){
     try{parent.postMessage({type:'switchTab',tab:'album'},'*');}catch(e){}
     ov.classList.remove('show');
   };
+  document.getElementById('resultPrimary').style.display='';
+  document.getElementById('resultSecondary').style.display='';
   document.getElementById('resultSecondary').textContent='Kirim Lagi';
   document.getElementById('resultSecondary').onclick=()=>{ov.classList.remove('show');};
+  ov.classList.add('show');
+}
+function showInfo(title,text){
+  const ov=document.getElementById('resultOverlay');
+  document.getElementById('resultCard').className='result-card error';
+  document.getElementById('resultTitle').textContent=title;
+  document.getElementById('resultText').textContent=text;
+  const p=document.getElementById('resultPrimary');p.style.display='';p.textContent='Mengerti';p.onclick=()=>ov.classList.remove('show');
+  document.getElementById('resultSecondary').style.display='none';
   ov.classList.add('show');
 }
 function showStatus(title,text){
@@ -2692,13 +2952,20 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
   const loaded = { kirim:false, album:false, galeri:false };
   let currentTab = null;
 
-  function createIframe(tab){
+  function frameOf(tab){ return document.querySelector('.panel[data-panel="'+tab+'"] iframe'); }
+  function tell(tab, msg){
+    const f = frameOf(tab);
+    if (f && f.contentWindow) try { f.contentWindow.postMessage(msg, '*'); } catch(e){}
+  }
+
+  function createIframe(tab, background){
     const panel = document.querySelector('.panel[data-panel="'+tab+'"]');
     const tpl = document.getElementById(TEMPLATES[tab]);
     if (!panel || !tpl) return;
     panel.innerHTML = '';
     const iframe = document.createElement('iframe');
     iframe.title = tab;
+    iframe.name = background ? 'bg' : '';   // 'bg' = dimuat di latar belakang (kamera menunggu sampai tab dibuka)
     iframe.setAttribute('allow', 'camera; microphone; autoplay; fullscreen; clipboard-write');
     iframe.setAttribute('allowfullscreen', '');
     iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
@@ -2710,12 +2977,14 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
   function activateTab(tab){
     if (!TEMPLATES[tab]) tab = 'kirim';
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
-    if (!loaded[tab]) createIframe(tab);
-    else if (tab === 'album') {
-      const ifr = document.querySelector('.panel[data-panel="album"] iframe');
-      if (ifr && ifr.contentWindow) try { ifr.contentWindow.postMessage({ type:'refreshAlbum' }, '*'); } catch(e){}
+    if (!loaded[tab]) createIframe(tab, false);
+    else {
+      if (tab === 'album') tell('album', { type:'refreshAlbum' });
     }
+    // beri tahu tiap tab: aktif / tidak (kamera di tab Kirim dilepas & dinyalakan mengikuti ini)
+    Object.keys(TEMPLATES).forEach(t => { if (loaded[t]) tell(t, { type:'tabState', active: t === tab }); });
     currentTab = tab;
+    schedulePreloadKirim();
     try {
       const p = new URLSearchParams(window.location.search);
       p.set('tab', tab);
@@ -2727,15 +2996,33 @@ function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'n
     if (!TEMPLATES[tab]) return;
     const wasActive = currentTab === tab;
     loaded[tab] = false;
+    tell(tab, { type:'shutdown' });         // lepas kamera/mikrofon dulu supaya iframe baru tidak berebut perangkat
     const panel = document.querySelector('.panel[data-panel="'+tab+'"]');
-    if (panel) panel.innerHTML = '';
-    if (wasActive) activateTab(tab);
+    setTimeout(() => {
+      if (panel) panel.innerHTML = '';
+      if (wasActive && currentTab === tab) activateTab(tab);
+    }, 350);
+  }
+
+  // Muat tab Kirim di latar belakang (tanpa menyalakan kamera) supaya saat dibuka sudah siap.
+  // Dilewati di HP RAM kecil dan mode hemat data.
+  let preloadTimer = null;
+  function schedulePreloadKirim(){
+    if (loaded.kirim || preloadTimer) return;
+    const lowEnd = (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    const saveData = navigator.connection && navigator.connection.saveData;
+    if (lowEnd || saveData) return;
+    preloadTimer = setTimeout(() => {
+      preloadTimer = null;
+      if (!loaded.kirim && currentTab && currentTab !== 'kirim') createIframe('kirim', true);
+    }, 2500);
   }
 
   window.addEventListener('message', e => {
     const d = e.data || {};
     if (d.type === 'switchTab' && TEMPLATES[d.tab]) activateTab(d.tab);
     else if (d.type === 'reloadTab' && TEMPLATES[d.tab]) reloadTab(d.tab);
+    else if (d.type === 'frameReady' && TEMPLATES[d.tab]) tell(d.tab, { type:'tabState', active: currentTab === d.tab });
   });
 
   const initial = urlParams.get('tab');
