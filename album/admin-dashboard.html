@@ -87,7 +87,7 @@
 
   .form-group{margin-bottom:18px;max-width:440px;}
   .form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-2);letter-spacing:0.01em;}
-  .form-group input[type=text],.form-group input[type=number],.form-group select,.form-group input[type=password],.form-group textarea{
+  .form-group input[type=text],.form-group input[type=number],.form-group input[type=date],.form-group select,.form-group input[type=password],.form-group textarea{
     width:100%; padding:10px 12px;
     border:1.5px solid var(--border); border-radius:4px;
     font-size:14px; font-family:inherit; background:var(--surface); color:var(--text);
@@ -135,7 +135,11 @@
   .theme-layout{display:flex;gap:32px;flex-wrap:wrap;}
   .theme-form{flex:1;min-width:280px;}
   .theme-preview-wrap{flex:1;min-width:260px;display:flex;flex-direction:column;align-items:center;gap:8px;}
-  .theme-preview-wrap canvas{width:100%;max-width:320px;border-radius:2px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(68,8,8,.06);}
+  .theme-preview-wrap canvas{width:auto;height:auto;max-width:min(100%,320px);max-height:min(70vh,560px);border-radius:2px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(68,8,8,.06);background:#fff;}
+  .name-row{display:flex;align-items:center;gap:12px;}
+  .name-row input[type=text]{flex:1;min-width:0;}
+  .form-group .first-check{display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;}
+  .first-check input{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;margin:0;}
   .theme-preview-wrap .cap{font-size:12px;color:var(--text-3);}
   .frame-style-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
   .frame-style-btn{
@@ -416,7 +420,7 @@
           <option value="sd">SD — 480×480, ringan & cepat</option>
           <option value="hd">HD — 720×720, seimbang (disarankan)</option>
           <option value="fhd">Full HD — 1080×1080, kualitas terbaik</option>
-          <option value="custom">Custom — atur sendiri</option>
+          <option value="custom">Custom — atur lebar × tinggi sendiri</option>
         </select>
       </div>
       <div class="quality-custom-panel" id="customPanelVn">
@@ -453,19 +457,27 @@
 
 <div class="panel" id="panel-pengaturan">
   <h3>Pengaturan Umum</h3>
-  <p class="desc">Detail acara dan batasan unggahan tamu.</p>
+  <p class="desc">Nama mempelai, tanggal acara, dan batas unggahan tamu.</p>
 
   <div class="form-group">
-    <label>Nama Mempelai Pria</label>
-    <input type="text" id="groomName">
+    <label for="groomName">Nama Mempelai Pria</label>
+    <div class="name-row">
+      <input type="text" id="groomName" maxlength="40" placeholder="Contoh: Rasya">
+      <label class="first-check" for="firstGroom"><input type="checkbox" id="firstGroom" checked><span>Tampil pertama</span></label>
+    </div>
   </div>
   <div class="form-group">
-    <label>Nama Mempelai Wanita</label>
-    <input type="text" id="brideName">
+    <label for="brideName">Nama Mempelai Wanita</label>
+    <div class="name-row">
+      <input type="text" id="brideName" maxlength="40" placeholder="Contoh: Rizky">
+      <label class="first-check" for="firstBride"><input type="checkbox" id="firstBride"><span>Tampil pertama</span></label>
+    </div>
+    <p class="hint" style="margin-top:8px;margin-bottom:0;">Nama yang dicentang tampil lebih dulu di bingkai, judul halaman, dan album. Hanya satu yang bisa dipilih. <b id="namePreview"></b></p>
   </div>
   <div class="form-group">
-    <label>Tanggal Pernikahan</label>
-    <input type="text" id="weddingDate" placeholder="YYYY-MM-DD">
+    <label for="weddingDate">Tanggal Pernikahan</label>
+    <input type="date" id="weddingDate">
+    <p class="hint" style="margin-top:6px;margin-bottom:0;">Pilih lewat kalender. Tanggal ini tampil di bingkai dan halaman album.</p>
   </div>
   <div class="form-group">
     <label>Maksimal Foto per Kiriman</label>
@@ -498,15 +510,15 @@
   <div class="toggle-row"><span>Izinkan tombol "Unduh Berbingkai"</span><input type="checkbox" id="allowDownloadFramed"></div>
 
   <h3 style="margin-top:28px;">Kualitas Media</h3>
-  <p class="desc">Atur seberapa tinggi kualitas foto/video/voice note yang diambil dari HP tamu.</p>
+  <p class="desc">Atur kualitas foto, video, dan voice note yang diambil dari HP tamu. Rasio pratinjau bingkai di tab Tema mengikuti pilihan ini: 9:16 untuk foto dan video, atau sesuai lebar × tinggi kalau kamu pilih Custom.</p>
 
   <div class="form-group">
     <label>Kualitas Foto</label>
     <select id="qualityPhoto">
-      <option value="standard">Standar — 1280×720, cepat & hemat kuota</option>
-      <option value="high">Tinggi — 1920×1080, seimbang (disarankan)</option>
-      <option value="max">Maksimal — 3840×2160, kualitas terbaik, file besar</option>
-      <option value="custom">Custom — atur sendiri</option>
+      <option value="standard">Standar — 720×1280 (9:16), cepat & hemat kuota</option>
+      <option value="high">Tinggi — 1080×1920 (9:16), seimbang (disarankan)</option>
+      <option value="max">Maksimal — 2160×3840 (9:16), kualitas terbaik, file besar</option>
+      <option value="custom">Custom — atur lebar × tinggi sendiri</option>
     </select>
   </div>
   <div class="quality-custom-panel" id="customPanelPhoto">
@@ -523,10 +535,10 @@
   <div class="form-group">
     <label>Kualitas Video</label>
     <select id="qualityVideo">
-      <option value="standard">Standar — 1280×720, cepat & hemat kuota</option>
-      <option value="high">Tinggi — 1920×1080, seimbang (disarankan)</option>
-      <option value="max">Maksimal — 1920×1080 bitrate tinggi, file besar</option>
-      <option value="custom">Custom — atur sendiri</option>
+      <option value="standard">Standar — 720×1280 (9:16), cepat & hemat kuota</option>
+      <option value="high">Tinggi — 1080×1920 (9:16), seimbang (disarankan)</option>
+      <option value="max">Maksimal — 1080×1920 (9:16), bitrate tinggi, file besar</option>
+      <option value="custom">Custom — atur lebar × tinggi sendiri</option>
     </select>
   </div>
   <div class="quality-custom-panel" id="customPanelVideo">
@@ -1196,7 +1208,8 @@ async function saveVideoFilter() {
   try {
     const data = await callApi({ action: 'updateSettings', active_video_filter_id: selectedVideoFilterId });
     if (handleAuthError(data)) return;
-    showStatus('videoFilterMsg', data.success, data.success ? 'Filter video aktif tersimpan, semua tamu akan pakai filter ini saat rekam video.' : data.message);
+    const miss = missingColsText(data);
+    showStatus('videoFilterMsg', data.success && !miss, miss || (data.success ? 'Filter video tersimpan. Semua tamu akan memakainya saat merekam video.' : (data.message || 'Filter video belum tersimpan, coba lagi ya.')));
   } catch (err) {
     showStatus('videoFilterMsg', false, 'Gagal terhubung ke server: ' + err.message);
   }
@@ -1442,19 +1455,101 @@ function fetchFrameImage(fileId) {
   return p;
 }
 
+/* ---- Rasio pratinjau mengikuti Kualitas Media ----
+   Foto & Video : template (Standar/Tinggi/Maksimal) = 9:16, Custom = lebar:tinggi
+   Voice Note   : template SD/HD/FHD = 1:1 (kotak), Custom = lebar:tinggi            */
+function mediaAspect(mode) {
+  const val = id => Number(document.getElementById(id).value);
+  const gcd = (x, y) => y ? gcd(y, x % y) : x;
+  let w = 9, h = 16, custom = false;
+  if (mode === 'voice') {
+    w = 1; h = 1;
+    if (document.getElementById('vnResolution').value === 'custom') { w = val('customVnWidth'); h = val('customVnHeight'); custom = true; }
+  } else {
+    const sel = mode === 'video' ? 'qualityVideo' : 'qualityPhoto';
+    if (document.getElementById(sel).value === 'custom') {
+      const p = mode === 'video' ? 'customVideo' : 'customPhoto';
+      w = val(p + 'Width'); h = val(p + 'Height'); custom = true;
+    }
+  }
+  if (!(w > 0 && h > 0) || !isFinite(w) || !isFinite(h)) { w = mode === 'voice' ? 1 : 9; h = mode === 'voice' ? 1 : 16; custom = false; }
+  let label;
+  if (!custom) label = w + ':' + h;
+  else {
+    const g = gcd(Math.round(w), Math.round(h)) || 1;
+    const rw = Math.round(w) / g, rh = Math.round(h) / g;
+    label = (rw <= 32 && rh <= 32) ? rw + ':' + rh : (w / h).toFixed(2) + ':1';
+    label += ' (' + Math.round(w) + '×' + Math.round(h) + ')';
+  }
+  return { w, h, label };
+}
+
+function redrawPreviewIfVisible() {
+  const p = document.getElementById('panel-tema');
+  if (p && p.classList.contains('active')) drawPreview();
+}
+
+function drawFrameFit(ctx, img, w, h) {
+  const fw = img.naturalWidth || img.width, fh = img.naturalHeight || img.height;
+  if (!fw || !fh) return;
+  if (fw !== fh && (w > h) !== (fw > fh)) {      // sama seperti di HP tamu: bingkai diputar mengikuti orientasi
+    ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(Math.PI / 2); ctx.drawImage(img, -h / 2, -w / 2, h, w); ctx.restore();
+  } else ctx.drawImage(img, 0, 0, w, h);
+}
+
+/* ---- Urutan nama mempelai ---- */
+let nameFirst = 'groom';
+function setNameFirst(which) {
+  nameFirst = which === 'bride' ? 'bride' : 'groom';
+  document.getElementById('firstGroom').checked = nameFirst === 'groom';
+  document.getElementById('firstBride').checked = nameFirst === 'bride';
+  updateNamePreview();
+}
+function getOrderedNames() {
+  const g = document.getElementById('groomName').value.trim() || currentSettings.groom_name || '';
+  const b = document.getElementById('brideName').value.trim() || currentSettings.bride_name || '';
+  return nameFirst === 'bride' ? { first: b, second: g } : { first: g, second: b };
+}
+function updateNamePreview() {
+  const n = getOrderedNames();
+  const el = document.getElementById('namePreview');
+  if (el) el.textContent = (n.first || n.second) ? 'Tampil sebagai: ' + [n.first, n.second].filter(Boolean).join(' & ') : '';
+  redrawPreviewIfVisible();
+}
+document.getElementById('firstGroom').addEventListener('change', () => setNameFirst('groom'));
+document.getElementById('firstBride').addEventListener('change', () => setNameFirst('bride'));
+['groomName', 'brideName', 'weddingDate'].forEach(id => document.getElementById(id).addEventListener('input', updateNamePreview));
+['qualityPhoto','qualityVideo','vnResolution','customPhotoWidth','customPhotoHeight','customVideoWidth','customVideoHeight','customVnWidth','customVnHeight']
+  .forEach(id => { const el = document.getElementById(id); el.addEventListener('change', redrawPreviewIfVisible); el.addEventListener('input', redrawPreviewIfVisible); });
+
+function missingColsText(data) {
+  const m = data && data.missing_columns;
+  return (m && m.length) ? ('Kolom ' + m.join(', ') + ' belum ada di sheet WEDDINGS. Jalankan setupSheets() sekali di Apps Script, lalu simpan lagi.') : '';
+}
+
+let previewDrawToken = 0;
 function drawPreview() {
   clearInterval(previewAnimTimer);
+  const myToken = ++previewDrawToken;
   const canvas = document.getElementById('previewCanvas');
+  const asp = mediaAspect(currentPreviewMode);
+  const LONG = 640, ratio = Math.min(3.4, Math.max(0.3, asp.w / asp.h));
+  canvas.width  = ratio >= 1 ? LONG : Math.round(LONG * ratio);
+  canvas.height = ratio >= 1 ? Math.round(LONG / ratio) : LONG;
+  const capBase = { photo: 'Pratinjau bingkai foto', video: 'Pratinjau bingkai video', voice: 'Pratinjau audiogram voice note' };
+  document.getElementById('previewCaption').textContent = capBase[currentPreviewMode] + ' · rasio ' + asp.label;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  const names = getOrderedNames();
+  const dateVal = document.getElementById('weddingDate').value || currentSettings.date;
   const cfg = {
     style: selectedFrameStyle,
     primary: document.getElementById('primaryColor').value,
     secondary: document.getElementById('secondaryColor').value,
-    groom: currentSettings.groom_name,
-    bride: currentSettings.bride_name,
-    date: currentSettings.date ? formatDate(currentSettings.date) : '',
+    groom: names.first,
+    bride: names.second,
+    date: dateVal ? formatDate(dateVal) : '',
     voiceLabel: (frameTemplates.voice && frameTemplates.voice.label) || 'Ucapan & Doa',
     voiceCenterColor: (frameTemplates.voice && frameTemplates.voice.centerColor) || '#ffffff',
     voiceBarColor: (frameTemplates.voice && frameTemplates.voice.barColor) || document.getElementById('primaryColor').value,
@@ -1474,7 +1569,7 @@ function drawPreview() {
     const loop = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (hasCustom && bgImg) {
-        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        drawFrameFit(ctx, bgImg, canvas.width, canvas.height);
       } else {
         ctx.fillStyle = cfg.secondary; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = cfg.primary; ctx.globalAlpha = 0.15; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1;
@@ -1491,7 +1586,7 @@ function drawPreview() {
     ctx.fillStyle = '#EFE9DF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     fetchFrameImage(frameForMode.file_id)
-      .then(img => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); })
+      .then(img => { if (myToken === previewDrawToken) drawFrameFit(ctx, img, canvas.width, canvas.height); })
       .catch(() => { showToast('Gagal memuat pratinjau template PNG', 'error'); });
     return;
   }
@@ -1648,7 +1743,8 @@ async function loadSettings() {
   currentSettings = data;
   document.getElementById('groomName').value = data.groom_name || '';
   document.getElementById('brideName').value = data.bride_name || '';
-  document.getElementById('weddingDate').value = data.date ? String(data.date).slice(0,10) : '';
+  const dm = String(data.date || '').match(/^\d{4}-\d{2}-\d{2}/);
+  document.getElementById('weddingDate').value = dm ? dm[0] : '';
   document.getElementById('maxPhoto').value = data.max_photo || 5;
   document.getElementById('maxVideoSeconds').value = data.max_video_seconds || 60;
   document.getElementById('maxVoiceSeconds').value = data.max_voice_seconds || 60;
@@ -1658,6 +1754,7 @@ async function loadSettings() {
   document.getElementById('allowFilter').checked = data.allow_filter === true;
   document.getElementById('moderation').checked = data.moderation !== false;
   const uiConfig = data.ui_config || {};
+  setNameFirst(uiConfig.name_order === 'bride' ? 'bride' : 'groom');
   document.getElementById('allowPreview').checked = uiConfig.allow_preview !== false;
   document.getElementById('allowDownloadOriginal').checked = uiConfig.allow_download_original !== false;
   document.getElementById('allowDownloadFramed').checked = uiConfig.allow_download_framed !== false;
@@ -1718,6 +1815,7 @@ function buildUiConfig() {
   return {
     index_headline: document.getElementById('indexHeadline').value.trim(),
     album_headline: document.getElementById('albumHeadline').value.trim(),
+    name_order: nameFirst,
     frames: frameTemplates,
     allow_preview: document.getElementById('allowPreview').checked,
     allow_download_original: document.getElementById('allowDownloadOriginal').checked,
@@ -1761,6 +1859,10 @@ async function saveSettings() {
     showStatus('settingsMsg', false, 'Nyalakan minimal satu jenis momen (foto, video, atau voice note) ya.');
     return;
   }
+  if (!document.getElementById('groomName').value.trim() || !document.getElementById('brideName').value.trim()) {
+    showStatus('settingsMsg', false, 'Isi nama kedua mempelai dulu ya.');
+    return;
+  }
   const maxPhotoVal = Math.max(1, Math.min(20, Number(document.getElementById('maxPhoto').value) || 5));
   const payload = {
     action: 'updateSettings',
@@ -1780,7 +1882,9 @@ async function saveSettings() {
   try {
     const data = await callApi(payload);
     if (handleAuthError(data)) return;
-    showStatus('settingsMsg', data.success, data.success ? 'Pengaturan tersimpan.' : (data.message || 'Pengaturan belum tersimpan, coba lagi ya.'));
+    const miss = missingColsText(data);
+    if (data.success && !miss) { currentSettings.groom_name = payload.groom_name; currentSettings.bride_name = payload.bride_name; currentSettings.date = payload.date; }
+    showStatus('settingsMsg', data.success && !miss, miss || (data.success ? 'Pengaturan tersimpan.' : (data.message || 'Pengaturan belum tersimpan, coba lagi ya.')));
   } catch (err) {
     showStatus('settingsMsg', false, 'Gagal terhubung ke server: ' + err.message);
   }

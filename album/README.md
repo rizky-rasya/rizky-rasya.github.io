@@ -1,3 +1,40 @@
+# Yang baru di v18.4 (index.html saja)
+
+- **FPS video benar-benar dihormati.** Rekam di Kirim: kamera diminta merekam sesuai FPS filter video di admin, dan batas 24 fps untuk HP "berspek rendah" dihapus (iPhone terbaca berspek rendah karena Safari hanya melaporkan 4 core). Kini hanya HP dengan RAM ≤ 2 GB yang dibatasi 30 fps.
+- **Galeri: FPS mengikuti video asli, ukuran mengikuti pengaturan sistem.** FPS dibaca dari metadata MP4/MOV (cadangan: diukur saat diputar). Resolusi hasil diturunkan sesuai Kualitas Video di admin (4K jadi HD), sehingga proses tidak lagi tersendat. Pemotongan durasi tetap mengikuti batas sistem.
+- **Unduh berbingkai di Album** juga memakai FPS video aslinya (dulu dipatok 30).
+- Frame digambar per frame asli (bukan per refresh layar), dan bingkai digambar sekali lalu ditempel. Lebih ringan, hasil lebih mulus.
+- Filter video dengan FPS (mis. 60) hanya berlaku di Kirim kalau `setupSheets()` v18.3 sudah dijalankan.
+
+# Yang baru di v18.3 (Code.gs, index.html, admin-dashboard.html)
+
+**Setelah menempel Code.gs: jalankan `setupSheets()` sekali** (menambah kolom `active_video_filter_id`), lalu Deploy versi baru.
+
+- **Filter video sekarang benar-benar tersimpan.** Sebelumnya pilihan filter video di admin tidak punya kolom di sheet, jadi tidak pernah sampai ke tamu. Kini tamu memakai filter video (dan FPS-nya) sendiri; kalau belum dipilih, ikut filter foto.
+- **Urutan nama mempelai.** Di Pengaturan Umum, centang "Tampil pertama" pada pria atau wanita. Berlaku di bingkai, judul halaman kirim, dan judul album.
+- **Tanggal pernikahan** kini memakai date picker. Disimpan sebagai teks `yyyy-MM-dd`, jadi tidak bergeser sehari karena zona waktu.
+- **Pratinjau bingkai di tab Tema** mengikuti rasio Kualitas Media: 9:16 untuk foto dan video (template), 1:1 untuk voice note (template), atau lebar:tinggi kalau Custom.
+- Filter aktif berlaku seketika (cache filter dibersihkan saat simpan), dan dashboard memberi tahu kalau ada kolom sheet yang belum ada.
+
+# Yang baru di v18.2 (index.html dan admin-dashboard.html; Code.gs tetap v17)
+
+- **Tombol Foto/Video/Suara mati di mode biasa (v18.1).** `init()` kini dipanggil di akhir skrip tab Kirim, jadi jalur cache tidak lagi menabrak variabel yang belum siap.
+- **Album terbarui tanpa reload.** Cache halaman dikosongkan saat tab Album dibuka, dan album mengecek kiriman baru tiap 45 detik selama tabnya terbuka (dilewati saat video diputar, penampil foto terbuka, atau mode hemat data). Daftar diganti tanpa kedip.
+- **Geser untuk ganti mode.** Menu Kirim: Foto, Video, Suara. Menu Galeri: Foto, Video. Geser kiri ke mode berikutnya, kanan ke sebelumnya. Dikunci saat merekam, ada rekaman belum dikirim, atau popup terbuka. Tamu melihat tips sekali.
+- **Galeri: pilihan melebihi batas dikirim bertahap.** Popup menjelaskan, batch pertama (sebesar batas) diproses dan dikirim dulu, lalu setelah selesai muncul popup untuk lanjut kirim sisanya per batch. Sisanya juga tampil di kartu "Masih ada N foto..." yang punya tombol Kirim dan Buang.
+- **Galeri: pratinjau foto terpilih.** Ketuk foto untuk melihat besar, tombol kiri/kanan, geser, Esc, dan tombol Hapus dengan popup konfirmasi yang sama seperti menu Kirim.
+- **Dashboard admin:** tautan Album dan Galeri kini `index.html?w=KODE&tab=album` / `&tab=galeri` (file `album.html` dan `galeri.html` sudah tidak ada sejak v18). Teks bantuan Maksimal Foto dan keterangan tautan disesuaikan.
+- Catatan: tautan lama `album.html?w=...` atau `galeri.html?w=...` yang sudah telanjur dibagikan akan 404 kecuali kamu membuat berkas pengalih.
+
+# Yang baru di v18 (index.html saja; Code.gs tetap v17)
+
+- Pindah tab TIDAK refresh. Halaman kirim/album/galeri hanya di-show/hide; hanya tombol "Coba Lagi" yang membuat ulang halaman.
+- Kamera: dilepas 20 dtk setelah tab ditinggal, dinyalakan lagi saat kembali; halaman kirim disiapkan di latar sesudah 2,5 dtk supaya buka pertama cepat.
+- Status kamera lambat: dua tombol "Coba Lagi" + "Kirim dari Galeri".
+- Galeri: pilih foto > batas langsung ditolak dengan popup, tombol pilih dinonaktifkan saat penuh, sisa slot ditampilkan.
+- Galeri: progres per kiriman (video di atas, foto di bawah, terbaru paling atas), bisa jalan bersamaan, ada Coba Lagi per kiriman.
+- Bingkai: dimuat dengan Cache Storage + 4x retry; kirim/rekam menunggu bingkai siap, tidak pernah lolos tanpa bingkai.
+
 # Wedding Album v17 — Panduan Lengkap
 
 Album momen pernikahan: tamu memotret / merekam video / merekam voice note langsung dari HP, mempelai memoderasi, semua tampil di album.
@@ -214,8 +251,9 @@ Minimal satu jenis harus aktif (dashboard menolak menyimpan jika semuanya mati).
 
 ## 4. Struktur Spreadsheet
 
-**WEDDINGS:** `wedding_id, groom_name, bride_name, date, admin_username, admin_password, theme, primary_color, secondary_color, max_photo, max_video_seconds, max_voice_seconds, allow_video, allow_voice, allow_filter, moderation, created_date, active_filter_id, frame_style, ui_config, allow_photo`
-- `allow_photo` ditambah otomatis oleh `setupSheets()`.
+**WEDDINGS:** `wedding_id, groom_name, bride_name, date, admin_username, admin_password, theme, primary_color, secondary_color, max_photo, max_video_seconds, max_voice_seconds, allow_video, allow_voice, allow_filter, moderation, created_date, active_filter_id, frame_style, ui_config, allow_photo, active_video_filter_id`
+- `allow_photo` dan `active_video_filter_id` ditambah otomatis oleh `setupSheets()`.
+- Kualitas media, ukuran video voice note, bingkai, dan urutan nama (`name_order`) tersimpan sebagai JSON di kolom `ui_config`. Parameter filter (termasuk FPS video) tersimpan sebagai JSON di kolom `params` sheet `FILTERS`.
 - `max_photo` harus **angka 1–20** (jumlah foto per kiriman). Isi lain (mis. `TRUE`) dianggap 5.
 - `admin_password` berbentuk hash. Buat dengan `hashPasswordForSheet()` (ubah `PASSWORD_MENTAH`, Run, salin hasil di Logger). Jangan simpan password mentah.
 
