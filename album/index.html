@@ -741,7 +741,9 @@ window.addEventListener('message',e=>{
 });
 try{parent.postMessage({type:'frameReady',tab:'kirim'},'*');}catch(e){}   // beri tahu induk: siap menerima status tab
 
-init();
+/* v18.1: init() dipanggil di AKHIR skrip (lihat bawah). Jalur cache menjalankan applySettings() secara sinkron;
+   kalau init() dipanggil di sini, let/const di bawah (modeSwitchInited, autoIncludeFrame, cameraToken, dst.)
+   belum terinisialisasi -> ReferenceError -> tombol FOTO/VIDEO/SUARA tidak pernah dipasang. */
 
 window.addEventListener('pagehide',()=>{try{stopCameraStream();}catch(e){}});
 window.addEventListener('pageshow',event=>{if(!event.persisted)return;handleReturnToPage();});
@@ -856,6 +858,7 @@ function setupModeSwitch(types){
   buttons.forEach(btn=>{const mode=btn.dataset.mode;btn.style.display=types.indexOf(mode)!==-1?'':'none';});
   const box=document.getElementById('modeSwitch');
   box.style.display=types.length>1?'':'none';
+  if(types.length>1)swipeHint();
 }
 let autoIncludeFrame={photo:false,video:false,voice:false};
 let frameConfigCache={};
@@ -1028,6 +1031,45 @@ function switchMode(mode){
   if(mode==='voice'){stopCameraStream();resetVoice();}
   else{startCamera();}
 }
+/* ===== v18.2: geser kiri/kanan untuk ganti mode (Foto / Video / Suara) ===== */
+let swipeHintScheduled=false;
+function swipeHint(){
+  if(swipeHintScheduled)return;
+  try{
+    if(!(('ontouchstart' in window)||navigator.maxTouchPoints>0))return;
+    if(localStorage.getItem('swipe_hint_v1'))return;
+    swipeHintScheduled=true;
+    setTimeout(()=>{try{localStorage.setItem('swipe_hint_v1','1');}catch(e){}showToast('Tips: geser layar ke kiri atau kanan untuk ganti Foto, Video, dan Suara','success');},2500);
+  }catch(e){}
+}
+function visibleModes(){return Array.from(document.querySelectorAll('#modeSwitch button')).filter(b=>b.style.display!=='none').map(b=>b.dataset.mode);}
+function swipeBlocked(){
+  if(document.querySelector('.result-overlay.show,.pvfull.show'))return true;
+  if((mediaRecorder&&mediaRecorder.state==='recording')||(vnRecorder&&vnRecorder.state==='recording'))return true;
+  if(capturedBlob)return true;
+  if(getComputedStyle(document.getElementById('statusScreen')).display!=='none')return true;
+  return false;
+}
+(function(){
+  let sx=0,sy=0,st=0,track=false;
+  const root=document.getElementById('app');
+  root.addEventListener('touchstart',e=>{
+    track=false;if(e.touches.length!==1)return;
+    if(e.target.closest&&e.target.closest('input,button,audio,#filmstrip,.pvfull,.result-overlay'))return;
+    const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();track=true;
+  },{passive:true});
+  root.addEventListener('touchend',e=>{
+    if(!track)return;track=false;
+    const t=e.changedTouches[0];if(!t)return;
+    const dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Date.now()-st>700||Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.6)return;
+    if(swipeBlocked())return;
+    const modes=visibleModes();if(modes.length<2)return;
+    const n=modes.indexOf(currentMode)+(dx<0?1:-1);
+    if(n<0||n>=modes.length)return;
+    switchMode(modes[n]);
+  },{passive:true});
+})();
 async function queryPermState(name){
   try{
     if(!navigator.permissions||!navigator.permissions.query)return null;
@@ -1515,6 +1557,7 @@ function hideStatus(){document.getElementById('statusScreen').style.display='non
 function showToast(text,type){const t=document.getElementById('toast');t.textContent=text;t.className='toast '+type;t.style.display='block';setTimeout(()=>{t.style.display='none';},4000);}
 function formatSeconds(s){const m=String(Math.floor(s/60)).padStart(2,'0');const sec=String(s%60).padStart(2,'0');return`${m}:${sec}`;}
 function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}}
+init();   // v18.1: sengaja di paling akhir, setelah semua let/const terdefinisi
 </script>
 <script>
 (function(){
@@ -2218,6 +2261,47 @@ function escapeAttr(str){return String(str==null?'':str).replace(/[&<>"']/g,c=>(
 function escapeHtml(str){return escapeAttr(str);}
 function formatDate(d){try{return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}}
 function showToast(text,type){const t=document.getElementById('toast');t.textContent=text;t.className='toast '+type;t.style.display='block';setTimeout(()=>{t.style.display='none';},4500);}
+/* ===== v18.2: album selalu terbaru tanpa reload ===== */
+let refreshingAlbum=false,albumActive=true;
+function isMediaPlaying(){
+  if(currentlyPlayingEl&&!currentlyPlayingEl.paused)return true;
+  return Array.from(document.querySelectorAll('#grid video')).some(v=>!v.paused);
+}
+function applyAlbumData(data){
+  const grid=document.getElementById('grid');
+  if(JSON.stringify(data.types)!==JSON.stringify(enabledTypes)){enabledTypes=data.types;buildFilters();}
+  currentPage=data.page;hasMore=data.has_more;totalPages=data.total_pages||1;totalItems=data.total||0;
+  items=data.media.slice();
+  grid.innerHTML='';renderItems(items,false);
+  document.getElementById('empty').style.display=items.length===0?'block':'none';
+  if(currentPage===1){try{sessionStorage.setItem(`alb_${weddingId}_${currentFilter}_${reqSize()}`,JSON.stringify({media:data.media}));}catch(e){}}
+  updateToolbar();updatePager();watchSentinel();
+}
+async function refreshAlbumSilently(){
+  if(refreshingAlbum||isLoading||!weddingSettings||!weddingId)return;
+  if(viewerOpen()||viewBusy||isMediaPlaying())return;
+  if(pageSize==='all'&&currentPage>1)return;
+  refreshingAlbum=true;
+  try{
+    const page=Math.max(1,currentPage||1);
+    const data=await apiGet({action:'getAlbum',wedding_id:weddingId,page,type:currentFilter,size:reqSize(),_:Date.now()},2);
+    if(!data||!data.success)return;
+    const sig=l=>l.map(x=>x.media_id).join(',');
+    if(sig(data.media)===sig(items)&&(data.total||0)===totalItems)return;
+    if(isLoading||viewerOpen()||viewBusy||isMediaPlaying())return;
+    pageMem.clear();pageMem.set(memKey(data.page),data);
+    applyAlbumData(data);
+  }catch(e){}
+  finally{refreshingAlbum=false;}
+}
+setInterval(()=>{if(albumActive&&!document.hidden&&!(navigator.connection&&navigator.connection.saveData))refreshAlbumSilently();},45000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&albumActive)refreshAlbumSilently();});
+window.addEventListener('message',e=>{
+  const d=e.data||{};
+  if(d.type==='refreshAlbum'){albumActive=true;refreshAlbumSilently();}
+  else if(d.type==='tabState'){albumActive=!!d.active;if(d.active)refreshAlbumSilently();}
+});
+try{parent.postMessage({type:'frameReady',tab:'album'},'*');}catch(e){}
 if(weddingId)watchPending();
 </script>
 <script>
@@ -2235,15 +2319,6 @@ if(weddingId)watchPending();
       try { parent.postMessage({ type:'switchTab', tab: tab }, '*'); } catch (err) {}
     }
   }, true);
-  window.addEventListener('message', function(e){
-    if (e.data && e.data.type === 'refreshAlbum') {
-      try {
-        if (typeof loadPage === 'function' && weddingSettings) {
-          loadPage(true, 1, { keepScroll: true });
-        }
-      } catch (err) {}
-    }
-  });
 })();
 </script>
 </template>
@@ -2355,6 +2430,36 @@ if(weddingId)watchPending();
   .site-footer .ft-ig svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
   .site-footer .ft-ig span{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px;color:var(--text-2);}
   .site-footer .sig{display:block;margin-top:22px;font-size:12px;color:var(--text-3);}
+  .photo-grid .pg-item{cursor:zoom-in;}
+  .overflow-bar{margin:0 0 14px;padding:14px 16px;border:1px solid #EFDFB8;background:var(--accent-soft);border-radius:6px;}
+  .overflow-bar p{font-size:13px;line-height:1.55;color:var(--text-2);margin-bottom:10px;}
+  .overflow-bar .ob-actions{display:flex;gap:8px;}
+  .overflow-bar button{flex:1;padding:10px 12px;border-radius:4px;border:1px solid var(--accent);background:transparent;color:var(--text-2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+  .overflow-bar button.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .overflow-bar button:disabled{opacity:.55;cursor:not-allowed;}
+  .pvfull{position:fixed;inset:0;z-index:120;background:rgba(26,20,16,.94);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:24px;}
+  .pvfull.show{display:flex;animation:fadeIn .15s ease-out;}
+  .pvfull img{max-width:96vw;max-height:72vh;object-fit:contain;border-radius:2px;box-shadow:0 16px 48px rgba(0,0,0,.5);background:#000;transition:opacity .15s;}
+  .pvfull img.loading{opacity:.6;}
+  .pvfull-cap{color:#F5F1EB;font-size:13px;font-family:'Fraunces',Georgia,serif;font-style:italic;display:flex;align-items:baseline;gap:10px;}
+  .pvfull-cap .pv-count{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:11px;color:rgba(245,241,235,.65);}
+  .pvfull-del{background:var(--danger);color:#fff;border:none;padding:10px 22px;border-radius:4px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.01em;cursor:pointer;box-shadow:0 4px 12px rgba(160,40,40,.3);}
+  .pvfull-del:hover{background:#8A2020;}.pvfull-del:active{transform:translateY(1px);}
+  .pvfull-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;background:rgba(245,241,235,.14);color:#F5F1EB;display:flex;align-items:center;justify-content:center;transition:background .15s,opacity .15s;}
+  .pvfull-nav:hover:not(:disabled){background:rgba(245,241,235,.28);}
+  .pvfull-nav:disabled{opacity:0;pointer-events:none;}
+  .pvfull-nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+  .pvfull-nav.prev{left:12px;}.pvfull-nav.next{right:12px;}
+  .pvfull-close{position:absolute;top:14px;right:16px;background:rgba(245,241,235,.12);color:#F5F1EB;border:none;width:38px;height:38px;border-radius:50%;font-size:16px;cursor:pointer;}
+  .pvfull-close:hover{background:rgba(245,241,235,.24);}
+  #confirmOverlay{z-index:130;}
+  .confirm-card{max-width:380px;padding:32px 28px 24px;}
+  .confirm-icon{width:68px;height:68px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F7E4E2;}
+  .confirm-icon svg{width:32px;height:32px;stroke:var(--danger);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+  .result-card .confirm-danger{background:var(--danger);color:#fff;}
+  .result-card .confirm-danger:hover{background:#8A2020;}
+  .result-card .confirm-secondary{background:transparent;color:var(--text-3);font-weight:600;}
+  @media (max-width:640px){.pvfull-nav{width:42px;height:42px;}.pvfull-nav.prev{left:6px;}.pvfull-nav.next{right:6px;}}
   @media (max-width:640px){.hero{padding:28px 20px 20px;}.container{padding:0 16px 80px;}.pick-btn{padding:24px 16px;}.site-footer{padding:36px 16px 48px;}}
 </style>
 <header>
@@ -2380,8 +2485,15 @@ if(weddingId)watchPending();
       <span>Pilih Foto dari Galeri<small id="photoPickHint">Bisa pilih beberapa foto sekaligus</small></span>
     </button>
     <div id="photoGridWrap" style="display:none;">
-      <div class="photo-grid-wrap"><span>Foto terpilih</span><strong id="photoGridCounter">0/5</strong></div>
+      <div class="photo-grid-wrap"><span>Foto terpilih · ketuk untuk pratinjau</span><strong id="photoGridCounter">0/5</strong></div>
       <div class="photo-grid" id="photoGrid"></div>
+    </div>
+    <div class="overflow-bar" id="overflowBar" style="display:none;">
+      <p id="overflowText"></p>
+      <div class="ob-actions">
+        <button type="button" class="primary" id="overflowSend">Kirim Sekarang</button>
+        <button type="button" id="overflowDrop">Buang</button>
+      </div>
     </div>
   </div>
   <div class="mode-panel" id="panel-video">
@@ -2429,6 +2541,23 @@ if(weddingId)watchPending();
     <button class="btn-secondary" id="resultSecondary"></button>
   </div>
 </div>
+<div class="pvfull" id="pvFull" onclick="if(event.target===this)closePvFull()">
+  <button class="pvfull-nav prev" id="pvFullPrev" aria-label="Foto sebelumnya" onclick="stepPvFull(-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <img id="pvFullImg" alt="Pratinjau foto">
+  <div class="pvfull-cap"><span>Pratinjau Foto</span><span class="pv-count" id="pvFullCount"></span></div>
+  <button class="pvfull-del" id="pvFullDel" onclick="deleteFromPvFull()">Hapus Foto</button>
+  <button class="pvfull-nav next" id="pvFullNext" aria-label="Foto berikutnya" onclick="stepPvFull(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="pvfull-close" aria-label="Tutup" onclick="closePvFull()">✕</button>
+</div>
+<div class="result-overlay" id="confirmOverlay">
+  <div class="result-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-icon"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></div>
+    <h3 id="confirmTitle">Hapus Foto Ini?</h3>
+    <p id="confirmText"></p>
+    <button class="confirm-danger" id="confirmOk">Hapus Foto</button>
+    <button class="confirm-secondary" id="confirmCancel">Batal</button>
+  </div>
+</div>
 <div class="status-screen" id="statusScreen">
   <img class="load-gif" src="https://rasya-rizky.online/album/loading-camera.webp" alt="loading" aria-hidden="true" width="96" height="96" style="width:50%;max-width:200px;height:auto;display:block;margin:0 auto 4px;">
   <h2 id="statusTitle">Memuat…</h2>
@@ -2465,7 +2594,7 @@ async function init(){
     if(!s.success){showStatus('Momen Tidak Ditemukan',s.message||'Kode undangan tidak valid.');return;}
     weddingSettings=s;applyThemeColors(s);
     maxPhoto=Number(s.max_photo)||5;maxVideoSeconds=Number(s.max_video_seconds)||60;
-    document.getElementById('photoPickHint').textContent=`Bisa pilih maks ${maxPhoto} foto sekaligus`;
+    document.getElementById('photoPickHint').textContent=`Pilih sebanyak yang kamu mau, dikirim bertahap ${maxPhoto} foto per kiriman`;
     document.getElementById('brandName').textContent=(s.ui_config&&s.ui_config.index_headline)||`${s.groom_name} & ${s.bride_name}`;
     if(s.date)document.getElementById('brandDate').textContent=formatDate(s.date);
     /* Filter: galeri hanya mendukung foto & video; abaikan 'voice' dari server */
@@ -2477,6 +2606,7 @@ async function init(){
     switchMode(types[0]||'photo');
     preloadFrameAssets(s);
     hideStatus();
+    if(types.length>1)swipeHint();
     updatePickState();
     updateSendButtonState();
   }catch(err){showStatus('Belum Bisa Terhubung','Koneksi internet kurang stabil. Coba lagi ya.');}
@@ -2576,7 +2706,7 @@ function switchMode(mode){
   updateSendButtonState();
 }
 document.getElementById('pickPhotoBtn').addEventListener('click',e=>{
-  if(photoItems.length+photoBusy>=maxPhoto){e.stopImmediatePropagation();showInfo('Maksimal '+maxPhoto+' foto',`Kamu sudah memilih ${maxPhoto} foto, itu batas sekali kirim.\nKirim dulu foto yang ini, atau hapus salah satu kalau mau ganti. Setelah itu pilih lagi ya.`);}
+  if(photoItems.length+photoBusy>=maxPhoto){e.stopImmediatePropagation();showInfo('Sudah '+maxPhoto+' foto',`Itu batas sekali kirim.\nKirim dulu foto yang sudah dipilih, atau hapus salah satu. Setelah itu pilih lagi ya.`);}
 },true);
 let photoBusy=0;
 document.getElementById('pickPhotoBtn').addEventListener('click',()=>document.getElementById('photoInput').click());
@@ -2584,25 +2714,17 @@ function updatePickState(){
   const btn=document.getElementById('pickPhotoBtn');const hint=document.getElementById('photoPickHint');
   const left=Math.max(0,maxPhoto-photoItems.length-photoBusy);
   btn.classList.toggle('full',left<=0);
-  hint.textContent=left<=0?`Sudah ${maxPhoto} foto (batas sekali kirim). Kirim dulu atau hapus salah satu.`:(photoItems.length?`Masih bisa tambah ${left} foto lagi (maks ${maxPhoto})`:`Bisa pilih maks ${maxPhoto} foto sekaligus`);
+  hint.textContent=left<=0?`Sudah ${maxPhoto} foto (batas sekali kirim). Kirim dulu atau hapus salah satu.`:(photoItems.length?`Masih bisa tambah ${left} foto lagi`:`Pilih sebanyak yang kamu mau, dikirim bertahap ${maxPhoto} foto per kiriman`);
 }
-document.getElementById('photoInput').addEventListener('change',async function(){
-  const files=Array.from(this.files||[]);this.value='';
-  if(files.length===0)return;
-  const remaining=maxPhoto-photoItems.length-photoBusy;
-  if(files.length>remaining){
-    /* Seluruh pilihan ditolak: jelas bagi tamu, tidak ada foto yang "hilang diam-diam". */
-    showInfo('Kebanyakan, maks '+maxPhoto+' foto',remaining<=0?`Kamu sudah memilih ${maxPhoto} foto. Kirim dulu atau hapus salah satu, lalu pilih lagi.`:`Kamu memilih ${files.length} foto, padahal tinggal ada ${remaining} slot (maks ${maxPhoto} sekali kirim).\nPilih ulang ${remaining} foto saja ya. Tidak ada foto yang kami masukkan dari pilihan tadi.`);
-    return;
-  }
-  const valid=files.filter(f=>f.type&&f.type.startsWith('image/'));
-  if(valid.length<files.length)showToast('Ada file yang bukan gambar, dilewati.','error');
-  if(!valid.length)return;
+/* v18.2: pilihan melebihi batas tidak lagi ditolak. Batch pertama diproses & dikirim dulu,
+   sisanya (File saja, belum diproses) antre di overflowFiles lalu ditanyakan setelah batch pertama selesai. */
+let overflowFiles=[];let overflowBusy=false;
+async function addFilesToGrid(valid){
   photoBusy+=valid.length;updatePickState();
   showToast('Menyiapkan foto…','info');
   if(frameMissing('photo')){showToast('Bingkai lagi disiapkan, tunggu sebentar ya','info');}
   const okFrame=await ensureFrame('photo');
-  if(!okFrame){photoBusy-=valid.length;updatePickState();showInfo('Bingkai belum siap','Bingkai foto belum bisa dimuat, mungkin sinyal lagi lemah. Foto tidak dimasukkan supaya tidak terkirim tanpa bingkai. Coba pilih lagi sebentar lagi ya.');return;}
+  if(!okFrame){photoBusy-=valid.length;updatePickState();showInfo('Bingkai belum siap','Bingkai foto belum bisa dimuat, mungkin sinyal lagi lemah. Foto tidak dimasukkan supaya tidak terkirim tanpa bingkai. Coba pilih lagi sebentar lagi ya.');return false;}
   for(const file of valid){
     try{const result=await processPhoto(file);photoItems.push(result);}
     catch(err){showToast('Satu foto gagal diproses: '+err.message,'error');}
@@ -2610,6 +2732,65 @@ document.getElementById('photoInput').addEventListener('change',async function()
     renderPhotoGrid();updateSendButtonState();updatePickState();
   }
   renderPhotoGrid();updateSendButtonState();updatePickState();
+  return true;
+}
+document.getElementById('photoInput').addEventListener('change',async function(){
+  const files=Array.from(this.files||[]);this.value='';
+  if(files.length===0)return;
+  const valid=files.filter(f=>f.type&&f.type.startsWith('image/'));
+  if(valid.length<files.length)showToast('Ada file yang bukan gambar, dilewati.','error');
+  if(!valid.length)return;
+  const slots=maxPhoto-photoItems.length-photoBusy;
+  if(slots<=0){showInfo('Sudah '+maxPhoto+' foto','Itu batas sekali kirim.\nKirim dulu foto yang sudah dipilih, atau hapus salah satu. Setelah itu pilih lagi ya.');return;}
+  if(valid.length<=slots){await addFilesToGrid(valid);return;}
+  askOverflow(valid,slots);
+});
+function askOverflow(valid,slots){
+  const rest=valid.length-slots;
+  const nameOk=!!document.getElementById('guestName').value.trim();
+  showChoice({kind:'success',title:`Kamu memilih ${valid.length} foto`,
+    text:`Sekali kirim maksimal ${maxPhoto} foto, jadi ${maxPhoto} foto dikirim dulu.\nSisanya ${rest} foto menyusul: setelah yang pertama terkirim, kami tanya lagi mau lanjut kirim atau tidak.`+(nameOk?'':'\n\nTulis namamu dulu ya, lalu tekan Kirim.'),
+    primary:{label:nameOk?`Kirim ${maxPhoto} Foto Dulu`:'Lanjut',fn:async()=>{
+      overflowFiles=overflowFiles.concat(valid.slice(slots));renderOverflowBar();
+      const ok=await addFilesToGrid(valid.slice(0,slots));
+      if(!ok){overflowFiles.splice(overflowFiles.length-rest,rest);renderOverflowBar();return;}
+      const name=document.getElementById('guestName').value.trim();
+      if(name&&photoItems.length){submitPhotos(name);showToast('Mulai dikirim. Pantau progresnya di bawah. Sisanya kami tanyakan setelah ini.','success');}
+      else{showToast('Tulis namamu, lalu tekan Kirim ya','info');document.getElementById('guestName').focus();}
+    }},
+    secondary:{label:'Batal'}});
+}
+function renderOverflowBar(){
+  const bar=document.getElementById('overflowBar');const n=overflowFiles.length;
+  if(!n){bar.style.display='none';return;}
+  bar.style.display='block';
+  document.getElementById('overflowText').textContent=`Masih ada ${n} foto dari pilihanmu yang belum dikirim.`;
+  const b=document.getElementById('overflowSend');
+  b.textContent=overflowBusy?'Menyiapkan…':`Kirim ${Math.min(n,maxPhoto)} Foto`;b.disabled=overflowBusy;
+}
+async function sendOverflowBatch(){
+  if(overflowBusy||!overflowFiles.length)return;
+  const name=document.getElementById('guestName').value.trim();
+  if(!name){showToast('Tulis namamu dulu ya, supaya mempelai tahu siapa pengirimnya','error');document.getElementById('guestName').focus();return;}
+  overflowBusy=true;renderOverflowBar();
+  const batch=overflowFiles.splice(0,maxPhoto);renderOverflowBar();
+  try{
+    showToast(`Menyiapkan ${batch.length} foto…`,'info');
+    if(!(await ensureFrame('photo'))){overflowFiles=batch.concat(overflowFiles);showInfo('Bingkai belum siap','Bingkai foto belum bisa dimuat, mungkin sinyal lagi lemah. Foto belum dikirim dan masih menunggu. Coba lagi sebentar lagi ya.');return;}
+    const items=[];
+    for(const f of batch){
+      try{const r=await processPhoto(f);items.push({blob:r.blob,thumb:r.thumb,cid:newClientId(),fileId:null,done:false,tries:0});}
+      catch(err){showToast('Satu foto gagal diproses: '+err.message,'error');}
+    }
+    if(!items.length)return;
+    addTask({kind:'photo',name,items,total:items.length,title:items.length>1?`${items.length} foto`:'1 foto'});
+    showToast('Mulai dikirim. Pantau progresnya di bawah.','success');
+  }finally{overflowBusy=false;renderOverflowBar();}
+}
+document.getElementById('overflowSend').addEventListener('click',sendOverflowBatch);
+document.getElementById('overflowDrop').addEventListener('click',()=>{
+  const n=overflowFiles.length;if(!n)return;
+  showConfirmDialog({title:'Buang Foto yang Belum Terkirim?',text:`${n} foto yang belum terkirim akan dilepas dari antrean. Fotonya tetap aman di galeri HP-mu.`,confirmLabel:'Buang',cancelLabel:'Batal'},()=>{overflowFiles=[];renderOverflowBar();});
 });
 function renderPhotoGrid(){
   const wrap=document.getElementById('photoGridWrap');const grid=document.getElementById('photoGrid');const counter=document.getElementById('photoGridCounter');
@@ -2618,11 +2799,101 @@ function renderPhotoGrid(){
   photoItems.forEach((it,idx)=>{
     const div=document.createElement('div');div.className='pg-item';
     div.innerHTML=`<img src="${it.thumb}" alt="Foto ${idx+1}"><button class="pg-remove" aria-label="Hapus" data-idx="${idx}">✕</button>`;
+    div.addEventListener('click',()=>openPvFull(idx));
     div.querySelector('.pg-remove').addEventListener('click',e=>{e.stopPropagation();removePhoto(idx);});
     grid.appendChild(div);
   });
 }
-function removePhoto(idx){if(idx<0||idx>=photoItems.length)return;photoItems.splice(idx,1);renderPhotoGrid();updateSendButtonState();updatePickState();}
+function freePv(it){if(it&&it.pv){try{URL.revokeObjectURL(it.pv);}catch(e){}it.pv=null;}}
+function removePhoto(idx){if(idx<0||idx>=photoItems.length)return;freePv(photoItems[idx]);photoItems.splice(idx,1);renderPhotoGrid();updateSendButtonState();updatePickState();}
+/* ----- pratinjau foto terpilih (sama seperti di menu Kirim) ----- */
+let pvIdx=0;
+function pvOpen(){return document.getElementById('pvFull').classList.contains('show');}
+function openPvFull(idx){
+  if(!photoItems.length||pvOpen())return;
+  pvIdx=Math.max(0,Math.min(photoItems.length-1,idx|0));
+  document.getElementById('pvFull').classList.add('show');showPvFull();
+}
+function showPvFull(){
+  const it=photoItems[pvIdx];if(!it)return;
+  if(!it.pv)it.pv=URL.createObjectURL(it.blob);
+  const img=document.getElementById('pvFullImg');
+  img.classList.add('loading');img.onload=()=>img.classList.remove('loading');img.src=it.pv;
+  document.getElementById('pvFullCount').textContent=photoItems.length>1?(pvIdx+1)+' / '+photoItems.length:'';
+  document.getElementById('pvFullPrev').disabled=pvIdx<=0;
+  document.getElementById('pvFullNext').disabled=pvIdx>=photoItems.length-1;
+}
+function closePvFull(){
+  document.getElementById('pvFull').classList.remove('show');
+  const img=document.getElementById('pvFullImg');img.onload=null;img.src='';
+  photoItems.forEach(freePv);pvIdx=0;
+}
+function stepPvFull(dir){const n=pvIdx+dir;if(n<0||n>=photoItems.length)return;pvIdx=n;showPvFull();}
+function deleteFromPvFull(){
+  if(pvIdx<0||pvIdx>=photoItems.length)return;
+  showConfirmDialog({title:'Hapus Foto Ini?',text:'Foto yang dihapus tidak akan bisa dikembalikan. Kamu masih bisa memilih foto lain.',confirmLabel:'Hapus Foto',cancelLabel:'Batal'},doDeleteFromPvFull);
+}
+function doDeleteFromPvFull(){
+  if(pvIdx<0||pvIdx>=photoItems.length)return;
+  freePv(photoItems[pvIdx]);photoItems.splice(pvIdx,1);
+  renderPhotoGrid();updateSendButtonState();updatePickState();
+  if(photoItems.length===0){closePvFull();return;}
+  if(pvIdx>=photoItems.length)pvIdx=photoItems.length-1;
+  showPvFull();
+}
+let _confirmCb=null;
+function showConfirmDialog(opts,onConfirm){
+  const ov=document.getElementById('confirmOverlay');
+  document.getElementById('confirmTitle').textContent=opts.title||'Yakin?';
+  document.getElementById('confirmText').textContent=opts.text||'';
+  const ok=document.getElementById('confirmOk'),cancel=document.getElementById('confirmCancel');
+  ok.textContent=opts.confirmLabel||'Ya';cancel.textContent=opts.cancelLabel||'Batal';
+  _confirmCb=onConfirm||null;
+  ok.onclick=()=>{const cb=_confirmCb;_confirmCb=null;ov.classList.remove('show');if(cb)cb();};
+  cancel.onclick=()=>{_confirmCb=null;ov.classList.remove('show');};
+  ov.classList.add('show');
+}
+(function(){
+  const el=document.getElementById('pvFull');let x0=0,y0=0;
+  el.addEventListener('touchstart',e=>{if(e.touches.length===1){x0=e.touches[0].clientX;y0=e.touches[0].clientY;}},{passive:true});
+  el.addEventListener('touchend',e=>{const t=e.changedTouches[0];if(!t)return;const dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)>55&&Math.abs(dy)<70)stepPvFull(dx<0?1:-1);},{passive:true});
+})();
+document.addEventListener('keydown',e=>{
+  if(!pvOpen())return;
+  if(document.getElementById('confirmOverlay').classList.contains('show'))return;
+  if(e.key==='Escape')closePvFull();else if(e.key==='ArrowLeft')stepPvFull(-1);else if(e.key==='ArrowRight')stepPvFull(1);
+});
+/* ----- geser kiri/kanan untuk ganti Foto <-> Video ----- */
+let swipeHintScheduled=false;
+function swipeHint(){
+  if(swipeHintScheduled)return;
+  try{
+    if(!(('ontouchstart' in window)||navigator.maxTouchPoints>0))return;
+    if(localStorage.getItem('swipe_hint_v1'))return;
+    swipeHintScheduled=true;
+    setTimeout(()=>{try{localStorage.setItem('swipe_hint_v1','1');}catch(e){}showToast('Tips: geser layar ke kiri atau kanan untuk ganti Foto dan Video','success');},2500);
+  }catch(e){}
+}
+(function(){
+  let sx=0,sy=0,st=0,track=false;
+  document.addEventListener('touchstart',e=>{
+    track=false;if(e.touches.length!==1)return;
+    if(e.target.closest&&e.target.closest('input,video,audio,.pvfull,.result-overlay,.status-screen'))return;
+    const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();track=true;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!track)return;track=false;
+    const t=e.changedTouches[0];if(!t)return;
+    const dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Date.now()-st>700||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8)return;
+    if(document.querySelector('.pvfull.show,.result-overlay.show,.status-screen.show'))return;
+    const modes=Array.from(document.querySelectorAll('#tabs button')).filter(b=>b.style.display!=='none').map(b=>b.dataset.mode);
+    if(modes.length<2)return;
+    const n=modes.indexOf(currentMode)+(dx<0?1:-1);
+    if(n<0||n>=modes.length)return;
+    switchMode(modes[n]);
+  },{passive:true});
+})();
 async function processPhoto(file){
   const img=await loadImageFile(file);
   const maxDim=2560;
@@ -2728,15 +2999,21 @@ function sendMedia(){
   if(!name){showToast('Tulis namamu dulu ya','error');document.getElementById('guestName').focus();return;}
   if(currentMode==='photo'){
     if(photoItems.length===0){showToast('Pilih foto dulu ya','error');return;}
-    const items=photoItems.map(it=>({blob:it.blob,thumb:it.thumb,cid:newClientId(),fileId:null,done:false,tries:0}));
-    photoItems=[];renderPhotoGrid();updateSendButtonState();updatePickState();
-    addTask({kind:'photo',name,items,total:items.length,title:items.length>1?`${items.length} foto`:'1 foto'});
+    submitPhotos(name);
   }else{
     if(!videoFile){showToast('Pilih video dulu ya','error');return;}
     const file=videoFile;resetVideo();
     addTask({kind:'video',name,file,processed:null,cid:newClientId(),fileId:null,tries:0,title:'1 video'});
   }
   showToast('Mulai dikirim. Pantau progresnya di bawah, kamu boleh lanjut pilih yang lain.','success');
+}
+function submitPhotos(name){
+  if(photoItems.length===0)return;
+  if(pvOpen())closePvFull();
+  const items=photoItems.map(it=>({blob:it.blob,thumb:it.thumb,cid:newClientId(),fileId:null,done:false,tries:0}));
+  photoItems.forEach(freePv);
+  photoItems=[];renderPhotoGrid();updateSendButtonState();updatePickState();
+  addTask({kind:'photo',name,items,total:items.length,title:items.length>1?`${items.length} foto`:'1 foto'});
 }
 function addTask(t){
   t.id=++taskSeq;t.seq=t.id;t.state='queued';t.pct=0;t.msg='Menunggu giliran…';
@@ -2757,7 +3034,12 @@ function finishTask(t,ok,msg){
 function activeTasks(){return tasks.filter(t=>t.state==='running'||t.state==='queued');}
 function maybeSummary(){
   if(activeTasks().length>0)return;
-  if(batchDone>0&&batchFail===0){showResult('success','Terkirim',`Semua kiriman sudah masuk.\nTunggu persetujuan mempelai ya.`);}
+  if(batchDone>0&&batchFail===0&&overflowFiles.length>0){
+    const n=overflowFiles.length,k=Math.min(n,maxPhoto);
+    showChoice({kind:'success',title:'Terkirim, lanjut yang berikutnya?',text:`Kiriman tadi sudah masuk.\nKamu masih punya ${n} foto dari pilihan tadi yang belum dikirim. Kirim ${k} foto berikutnya sekarang?`,
+      primary:{label:`Kirim ${k} Foto`,fn:sendOverflowBatch},secondary:{label:'Nanti Saja'}});
+  }
+  else if(batchDone>0&&batchFail===0){showResult('success','Terkirim',`Semua kiriman sudah masuk.\nTunggu persetujuan mempelai ya.`);}
   else if(batchFail>0){showResult('error','Ada yang belum terkirim',`${batchDone?batchDone+' kiriman berhasil, ':''}${batchFail} belum berhasil.\nTekan "Coba Lagi" di daftar kiriman, nanti dilanjutkan dari yang belum selesai.`);}
   batchDone=0;batchFail=0;
 }
@@ -2813,14 +3095,14 @@ async function doVideo(t){
       setTask(t,0,'Menyiapkan bingkai…');
       if(!(await ensureFrame('video')))throw new Error('Bingkai video belum bisa dimuat (sinyal lemah?). Coba lagi ya, video tidak dikirim tanpa bingkai.');
       setTask(t,0,'Memproses video dengan bingkai…');
-      t.processed=await processVideoWithFrame(t.file,p=>setTask(t,p*60,`Memproses video ${Math.round(p*100)}% (diputar real-time, jangan tutup halaman)`));
+      t.processed=await processVideoWithFrame(t.file,p=>setTask(t,p*60,`Memproses video ${Math.round(p*100)}% (diputar real-time, jangan tutup halaman atau pindah tab)`));
     }
     setTask(t,60,'Mengunggah video…');
     await uploadToDrive(t,'video',t.name,(loaded,total)=>{const p=total?(loaded/total):0;setTask(t,60+p*39,`Mengunggah video · ${fmtPair(loaded,total)}`);});
     finishTask(t,true,'Video sudah masuk');
   }catch(err){finishTask(t,false,(err&&err.message)||'Belum berhasil. Coba lagi ya.');}
 }
-window.addEventListener('beforeunload',e=>{if(activeTasks().length){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(activeTasks().length||overflowFiles.length){e.preventDefault();e.returnValue='';}});
 function resetVideo(){
   videoFile=null;videoMeta={duration:0,w:0,h:0};
   const v=document.getElementById('videoPreviewEl');
@@ -2872,6 +3154,18 @@ async function callServer(payload,tries=4){
     }catch(e){last=e;await sleepMs(700*(i+1));}
   }
   throw last||new Error('Koneksi bermasalah');
+}
+function showChoice(o){
+  const ov=document.getElementById('resultOverlay');
+  document.getElementById('resultCard').className='result-card '+(o.kind||'success');
+  document.getElementById('resultTitle').textContent=o.title;
+  document.getElementById('resultText').textContent=o.text;
+  const p=document.getElementById('resultPrimary'),s=document.getElementById('resultSecondary');
+  p.style.display='';p.textContent=o.primary.label;
+  p.onclick=()=>{ov.classList.remove('show');if(o.primary.fn)o.primary.fn();};
+  if(o.secondary){s.style.display='';s.textContent=o.secondary.label;s.onclick=()=>{ov.classList.remove('show');if(o.secondary.fn)o.secondary.fn();};}
+  else s.style.display='none';
+  ov.classList.add('show');
 }
 function showResult(kind,title,text){
   const ov=document.getElementById('resultOverlay');

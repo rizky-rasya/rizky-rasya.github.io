@@ -470,7 +470,7 @@
   <div class="form-group">
     <label>Maksimal Foto per Kiriman</label>
     <input type="number" id="maxPhoto" min="1" max="20" placeholder="5">
-    <p class="hint" style="margin-top:6px;">Berlaku di kamera tamu (multi-shot) dan upload dari galeri.</p>
+    <p class="hint" style="margin-top:6px;">Batas foto sekali kirim. Di kamera tamu, tombol foto berhenti di angka ini. Di galeri, tamu boleh memilih lebih banyak: foto dikirim bertahap sebanyak angka ini per kiriman, lalu tamu ditanya mau lanjut kirim sisanya.</p>
   </div>
   <div class="form-group">
     <label>Maksimal Durasi Video (detik)</label>
@@ -561,7 +561,7 @@
 
 <div class="panel" id="panel-tautan">
   <h3>Bagikan ke Tamu</h3>
-  <p class="desc">Sebarkan tautan ini agar tamu bisa ikut mengabadikan momen, dan siapa saja bisa melihat album.</p>
+  <p class="desc">Sebarkan tautan ini agar tamu bisa ikut mengabadikan momen, dan siapa saja bisa melihat album. Ketiga tautan membuka halaman yang sama (Kirim, Album, Galeri), hanya tab awalnya yang berbeda. Di HP, tamu bisa geser layar ke kiri atau kanan untuk ganti Foto, Video, dan Suara. Album memperbarui dirinya sendiri, jadi tamu tidak perlu memuat ulang halaman.</p>
   <div class="form-group">
     <label>Link untuk Tamu (kirim momen)</label>
     <div class="link-box">
@@ -1704,8 +1704,8 @@ async function loadSettings() {
   document.getElementById('customVoiceBitrate').value = Math.round(qc.voice.audioBitsPerSecond / 1000);
   const base = window.location.href.replace(/admin-dashboard\.html.*$/, '');
   document.getElementById('uploadLink').value = `${base}index.html?w=${weddingId}`;
-  document.getElementById('albumLink').value = `${base}album.html?w=${weddingId}`;
-  document.getElementById('galeriLink').value = `${base}galeri.html?w=${weddingId}`;
+  document.getElementById('albumLink').value = `${base}index.html?w=${weddingId}&tab=album`;
+  document.getElementById('galeriLink').value = `${base}index.html?w=${weddingId}&tab=galeri`;
   if (data.active_video_filter_id) {
     selectedVideoFilterId = String(data.active_video_filter_id);
     renderVideoFilterGrid();
