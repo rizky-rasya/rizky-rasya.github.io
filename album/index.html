@@ -1128,7 +1128,7 @@ let cameraToken=0;
 async function startCamera(isRetry){
   const myToken=++cameraToken;
   try{
-    stopCameraStream();
+    stopCameraStream(currentMode==='video');
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showStatus('Browser Tidak Mendukung','Coba browser lain seperti Chrome atau Safari terbaru ya.',true);return false;}
     const needsAudio=currentMode==='video';
     if(await queryPermState('camera')==='denied'){showPermissionHelp(needsAudio?'both':'camera');return false;}
@@ -1139,7 +1139,7 @@ async function startCamera(isRetry){
     let stream;
     try{
       stream=await Promise.race([
-        navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:currentFacing},width:{ideal:wIdeal},height:{ideal:hIdeal}},audio:needsAudio?{echoCancellation:true,noiseSuppression:true}:false}),
+        navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:currentFacing},width:{ideal:wIdeal},height:{ideal:hIdeal}},audio:(needsAudio&&!micLive())?{echoCancellation:true,noiseSuppression:true}:false}),
         new Promise((_,reject)=>setTimeout(()=>reject(new Error('__gum_timeout__')),12000))
       ]);
     }catch(permErr){
@@ -1151,6 +1151,7 @@ async function startCamera(isRetry){
       throw permErr;
     }
     if(myToken!==cameraToken){stream.getTracks().forEach(t=>{try{t.stop();}catch(e){}});return true;}
+    if(needsAudio&&micLive()&&stream.getAudioTracks().length===0)stream.addTrack(keptMicTrack);   // pakai mikrofon yang sama setelah ganti kamera
     liveStream=stream;
     streamHasAudio=stream.getAudioTracks().length>0;
     liveVideo.muted=true;
@@ -1185,8 +1186,13 @@ async function startCamera(isRetry){
     return false;
   }
 }
-function stopCameraStream(){
-  if(liveStream){liveStream.getTracks().forEach(t=>{try{t.stop();}catch(e){}});liveStream=null;}
+/* Mikrofon dipegang terpisah: saat ganti kamera depan/belakang, hanya kamera yang dibuka ulang, mikrofon jalan terus. */
+let keptMicTrack=null;
+function micLive(){return !!(keptMicTrack&&keptMicTrack.readyState==='live');}
+function releaseMic(){if(keptMicTrack){try{keptMicTrack.stop();}catch(e){}keptMicTrack=null;}}
+function stopCameraStream(keepMic){
+  if(liveStream){liveStream.getTracks().forEach(t=>{if(keepMic&&t.kind==='audio'&&t.readyState==='live'){keptMicTrack=t;return;}try{t.stop();}catch(e){}});liveStream=null;}
+  if(!keepMic)releaseMic();
   try{if(liveVideo&&liveVideo.srcObject)liveVideo.srcObject=null;}catch(e){}
 }
 document.getElementById('flipBtn').addEventListener('click',()=>{currentFacing=currentFacing==='environment'?'user':'environment';startCamera();});
@@ -1338,56 +1344,41 @@ function captureVideoThumbnail(){
     }catch(e){resolve('');}
   });
 }
-/* Gambar video ke kanvas dengan crop 'cover': rasio asli kamera selalu terjaga, tidak pernah ditarik. */
-function drawVideoCover(ctx,v,cw,ch){
-  const vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh)return;
-  const s=Math.max(cw/vw,ch/vh),sw=cw/s,sh=ch/s;
-  ctx.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,cw,ch);
-}
 async function startVideoRecording(){
   if(!(await guardFrame('video')))return;
-  if(!streamHasAudio){showToast('Mikrofon tidak terdeteksi, jadi videonya akan tanpa suara.','error');}
   videoThumbBlob=await captureVideoThumbnail();
   recordedChunks=[];
   const maxSeconds=Number(weddingSettings.max_video_seconds)||60;
   const recordFps=(activeFilterParams&&activeFilterParams.video&&activeFilterParams.video.fps)||30;
-  const weakDevice=!!(navigator.deviceMemory&&navigator.deviceMemory<=2);   // hanya HP benar-benar lemah yang dibatasi (maks 30 fps)
-  const fps=weakDevice?Math.min(30,recordFps):recordFps;
   const vq=getQuality('video');
-  // Minta FPS lebih tinggi HANYA kalau kamera belum sampai, dan kunci resolusi + rasio yang sedang dipakai
-  // (tanpa itu, sebagian HP Samsung memilih ukuran baru dan gambar jadi tertarik/gepeng).
-  try{
-    const vt=liveStream.getVideoTracks()[0];const st=(vt&&vt.getSettings)?vt.getSettings():null;
-    if(vt&&st&&st.width&&st.height&&st.frameRate&&st.frameRate<fps-2){
-      await vt.applyConstraints({width:{ideal:st.width},height:{ideal:st.height},aspectRatio:{ideal:st.width/st.height},frameRate:{ideal:fps}});
-      await new Promise(r=>setTimeout(r,250));   // tunggu ukuran video benar-benar settle sebelum kanvas dibuat
-    }
-  }catch(e){}
-  const audioTracks=liveStream.getAudioTracks();
+  let audioTracks=liveStream.getAudioTracks().filter(t=>t.readyState==='live');
+  if(!audioTracks.length){   // mikrofon hilang (mis. setelah ganti kamera): minta lagi supaya video tidak bisu
+    try{const ms=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});const t=ms.getAudioTracks()[0];if(t){keptMicTrack=t;liveStream.addTrack(t);audioTracks=[t];streamHasAudio=true;}}catch(e){}
+  }
+  if(!audioTracks.length)showToast('Mikrofon tidak terdeteksi, jadi videonya akan tanpa suara.','error');
   const needsCanvas=currentFacing==='user'||autoIncludeFrame.video||!!activeFilterParams||(activeVideoCss&&activeVideoCss!=='none');
   let drawing=false;let combined;
   if(needsCanvas){
     const vw0=liveVideo.videoWidth||1280,vh0=liveVideo.videoHeight||720;
     const sc=Math.min(1,Math.max(vq.width,vq.height)/Math.max(vw0,vh0));
     const canvas=document.createElement('canvas');
-    canvas.width=Math.max(2,Math.round(vw0*sc/2)*2);canvas.height=Math.max(2,Math.round(vh0*sc/2)*2);
+    canvas.width=Math.round(vw0*sc);canvas.height=Math.round(vh0*sc);
     const ctx=canvas.getContext('2d');drawing=true;
-    let ov=null;   // bingkai digambar SEKALI lalu ditempel per frame (jauh lebih ringan, FPS naik)
-    if(autoIncludeFrame.video){ov=document.createElement('canvas');ov.width=canvas.width;ov.height=canvas.height;drawCaptureFrameOverlay(ov.getContext('2d'),ov.width,ov.height,'video');}
     const drawFrame=()=>{
       if(!drawing)return;
       drawWithGuaranteedFilter(ctx,()=>{
-        if(currentFacing==='user'){ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);drawVideoCover(ctx,liveVideo,canvas.width,canvas.height);ctx.restore();}
-        else{drawVideoCover(ctx,liveVideo,canvas.width,canvas.height);}
+        if(currentFacing==='user'){ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(liveVideo,0,0,canvas.width,canvas.height);ctx.restore();}
+        else{ctx.drawImage(liveVideo,0,0,canvas.width,canvas.height);}
       },canvas.width,canvas.height,true);
       if(activeFilterParams&&activeFilterParams.video&&activeFilterParams.video.vignette){drawCheapVignette(ctx,canvas.width,canvas.height,activeFilterParams.video.vignette);}
-      if(ov)ctx.drawImage(ov,0,0);
-      if(typeof liveVideo.requestVideoFrameCallback==='function')liveVideo.requestVideoFrameCallback(drawFrame);else requestAnimationFrame(drawFrame);   // satu gambar per frame kamera
+      if(autoIncludeFrame.video)drawCaptureFrameOverlay(ctx,canvas.width,canvas.height,'video');
+      requestAnimationFrame(drawFrame);
     };
     drawFrame();
+    const fps=(navigator.deviceMemory&&navigator.deviceMemory<=2)?Math.min(30,recordFps):recordFps;
     combined=new MediaStream([...canvas.captureStream(fps).getVideoTracks(),...audioTracks]);
   }else{combined=liveStream;}
-  mediaRecorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:Math.round(vq.videoBitsPerSecond*Math.min(1.5,Math.max(1,fps/30))),audioBitsPerSecond:vq.audioBitsPerSecond});
+  mediaRecorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:vq.videoBitsPerSecond,audioBitsPerSecond:vq.audioBitsPerSecond});
   mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);};
   mediaRecorder.onstop=()=>{
     drawing=false;
