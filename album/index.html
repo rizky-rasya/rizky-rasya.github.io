@@ -1345,10 +1345,7 @@ async function startVideoRecording(){
   recordedChunks=[];
   const maxSeconds=Number(weddingSettings.max_video_seconds)||60;
   const recordFps=(activeFilterParams&&activeFilterParams.video&&activeFilterParams.video.fps)||30;
-  const weakDevice=!!(navigator.deviceMemory&&navigator.deviceMemory<=2);   // hanya HP benar-benar lemah yang dibatasi (maks 30 fps)
-  const fps=weakDevice?Math.min(30,recordFps):recordFps;
   const vq=getQuality('video');
-  try{const vt=liveStream.getVideoTracks()[0];if(vt&&vt.applyConstraints)await vt.applyConstraints({frameRate:{ideal:fps}});}catch(e){}   // minta kamera merekam sesuai FPS admin
   const audioTracks=liveStream.getAudioTracks();
   const needsCanvas=currentFacing==='user'||autoIncludeFrame.video||!!activeFilterParams||(activeVideoCss&&activeVideoCss!=='none');
   let drawing=false;let combined;
@@ -1366,12 +1363,13 @@ async function startVideoRecording(){
       },canvas.width,canvas.height,true);
       if(activeFilterParams&&activeFilterParams.video&&activeFilterParams.video.vignette){drawCheapVignette(ctx,canvas.width,canvas.height,activeFilterParams.video.vignette);}
       if(autoIncludeFrame.video)drawCaptureFrameOverlay(ctx,canvas.width,canvas.height,'video');
-      if(typeof liveVideo.requestVideoFrameCallback==='function')liveVideo.requestVideoFrameCallback(drawFrame);else requestAnimationFrame(drawFrame);   // satu gambar per frame kamera
+      requestAnimationFrame(drawFrame);
     };
     drawFrame();
+    const fps=IS_LOW_END?Math.min(24,recordFps):recordFps;
     combined=new MediaStream([...canvas.captureStream(fps).getVideoTracks(),...audioTracks]);
   }else{combined=liveStream;}
-  mediaRecorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:Math.round(vq.videoBitsPerSecond*Math.min(1.5,Math.max(1,fps/30))),audioBitsPerSecond:vq.audioBitsPerSecond});
+  mediaRecorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:vq.videoBitsPerSecond,audioBitsPerSecond:vq.audioBitsPerSecond});
   mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);};
   mediaRecorder.onstop=()=>{
     drawing=false;
@@ -2213,83 +2211,24 @@ function downloadPhotoWithFrame(blobUrl,cfg,guestName,customImg){
     img.onerror=reject;img.src=blobUrl;
   });
 }
-
-/* ===== v18.4: deteksi FPS asli video (baca metadata MP4/MOV, cadangan: ukur saat diputar) ===== */
-function normFps(f){if(!isFinite(f)||f<=0)return 0;const std=[24,25,30,48,50,60,90,120];for(const c of std){if(Math.abs(f-c)/c<0.04)return c;}return Math.min(120,Math.max(10,Math.round(f)));}
-function walkBoxes(dv,start,end,cb){let o=start;while(o+8<=end){let sz=dv.getUint32(o);const t=String.fromCharCode(dv.getUint8(o+4),dv.getUint8(o+5),dv.getUint8(o+6),dv.getUint8(o+7));let hdr=8;if(sz===1){sz=Number(dv.getBigUint64(o+8));hdr=16;}else if(sz===0){sz=end-o;}if(sz<hdr)break;cb(t,o+hdr,Math.min(end,o+sz));o+=sz;}}
-function fpsFromMoov(dv){
-  let fps=0;
-  walkBoxes(dv,0,dv.byteLength,(t,s,e)=>{
-    if(t!=='trak'||fps)return;
-    let isVideo=false,ts=0,dur=0,count=0;
-    walkBoxes(dv,s,e,(t2,s2,e2)=>{
-      if(t2!=='mdia')return;
-      walkBoxes(dv,s2,e2,(t3,s3,e3)=>{
-        if(t3==='hdlr'){isVideo=String.fromCharCode(dv.getUint8(s3+8),dv.getUint8(s3+9),dv.getUint8(s3+10),dv.getUint8(s3+11))==='vide';}
-        else if(t3==='mdhd'){if(dv.getUint8(s3)===1){ts=dv.getUint32(s3+20);dur=Number(dv.getBigUint64(s3+24));}else{ts=dv.getUint32(s3+12);dur=dv.getUint32(s3+16);}}
-        else if(t3==='minf'){walkBoxes(dv,s3,e3,(t4,s4,e4)=>{if(t4==='stbl')walkBoxes(dv,s4,e4,(t5,s5)=>{if(t5==='stsz')count=dv.getUint32(s5+8);});});}
-      });
-    });
-    if(isVideo&&ts&&dur&&count)fps=count/(dur/ts);
-  });
-  return fps;
-}
-async function mp4Fps(blob){
-  try{
-    const size=blob.size;let off=0;
-    while(off+8<=size){
-      const h=new DataView(await blob.slice(off,Math.min(size,off+16)).arrayBuffer());
-      let sz=h.getUint32(0);const t=String.fromCharCode(h.getUint8(4),h.getUint8(5),h.getUint8(6),h.getUint8(7));let hdr=8;
-      if(sz===1){sz=Number(h.getBigUint64(8));hdr=16;}else if(sz===0){sz=size-off;}
-      if(sz<hdr)break;
-      if(t==='moov'){const buf=new DataView(await blob.slice(off+hdr,off+sz).arrayBuffer());return fpsFromMoov(buf);}
-      off+=sz;
-    }
-  }catch(e){}
-  return 0;
-}
-function rvfcFps(video){
-  return new Promise(res=>{
-    if(!video.requestVideoFrameCallback)return res(0);
-    const t=[];let done=false;const wasMuted=video.muted;
-    const finish=()=>{if(done)return;done=true;try{video.pause();video.currentTime=0;}catch(e){}video.muted=wasMuted;
-      const d=[];for(let i=1;i<t.length;i++){const q=t[i]-t[i-1];if(q>0.002)d.push(q);}
-      d.sort((a,b)=>a-b);res(d.length>=4?1/d[Math.floor(d.length*0.25)]:0);};
-    const cb=(now,md)=>{t.push(md.mediaTime);if(t.length>=16)finish();else video.requestVideoFrameCallback(cb);};
-    video.muted=true;video.requestVideoFrameCallback(cb);
-    video.play().catch(()=>finish());
-    setTimeout(finish,1800);
-  });
-}
-async function detectSourceFps(blob,video){
-  let f=normFps(await mp4Fps(blob));
-  if(!f&&video)f=normFps(await rvfcFps(video));
-  return f||30;
-}
-
 function downloadVideoWithFrame(blobUrl,cfg,guestName,onProgress,customImg){
-  return new Promise(async(resolve,reject)=>{
-    let srcBlob=null;try{srcBlob=await (await fetch(blobUrl)).blob();}catch(e){}
-    const video=document.createElement('video');video.src=blobUrl;video.muted=false;video.playsInline=true;video.preload='auto';
-    video.onerror=reject;
-    video.onloadedmetadata=async()=>{
-      const srcFps=await detectSourceFps(srcBlob||new Blob(),video);
+  return new Promise((resolve,reject)=>{
+    const video=document.createElement('video');video.src=blobUrl;video.muted=false;video.playsInline=true;
+    video.onloadedmetadata=()=>{
       const canvas=document.getElementById('hiddenCanvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;
       const ctx=canvas.getContext('2d');const duration=video.duration||1;
-      const ov=document.createElement('canvas');ov.width=canvas.width;ov.height=canvas.height;drawFrame(ov.getContext('2d'),ov.width,ov.height,cfg,customImg);
-      const canvasStream=canvas.captureStream(srcFps);let audioTrack=[];
+      const canvasStream=canvas.captureStream(30);let audioTrack=[];
       try{const audioCtx=new(window.AudioContext||window.webkitAudioContext)();const src=audioCtx.createMediaElementSource(video);const dest=audioCtx.createMediaStreamDestination();src.connect(dest);src.connect(audioCtx.destination);audioTrack=dest.stream.getAudioTracks();}catch(e){}
       const combined=new MediaStream([...canvasStream.getVideoTracks(),...audioTrack]);
-      const bps=Math.round(6000000*Math.min(1.5,Math.max(1,srcFps/30)));
-      const recorder=new MediaRecorder(combined,{mimeType:OUT_VIDEO_MIME.mime,videoBitsPerSecond:bps,audioBitsPerSecond:128000});
+      const recorder=new MediaRecorder(combined,{mimeType:OUT_VIDEO_MIME.mime,videoBitsPerSecond:6000000,audioBitsPerSecond:128000});
       const chunks=[];recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
       recorder.onstop=()=>{const blob=new Blob(chunks,{type:OUT_VIDEO_MIME.mime});triggerDownload(blob,`wedding-${guestName}-${Date.now()}.${OUT_VIDEO_MIME.ext}`);resolve();};
       let drawing=true;
-      const useRvfc=typeof video.requestVideoFrameCallback==='function';
-      function step(){if(!drawing)return;ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.drawImage(ov,0,0);onProgress(Math.min(99,Math.round((video.currentTime/duration)*100)));if(useRvfc)video.requestVideoFrameCallback(step);else requestAnimationFrame(step);}
+      function drawLoop(){if(!drawing)return;ctx.drawImage(video,0,0,canvas.width,canvas.height);drawFrame(ctx,canvas.width,canvas.height,cfg,customImg);onProgress(Math.min(99,Math.round((video.currentTime/duration)*100)));requestAnimationFrame(drawLoop);}
       video.onended=()=>{drawing=false;onProgress(100);recorder.stop();};
-      video.currentTime=0;recorder.start();video.play().then(step);
+      video.currentTime=0;recorder.start();video.play().then(drawLoop);
     };
+    video.onerror=reject;
   });
 }
 function fillCenterShape(ctx,cx,cy,radius,cfg){
@@ -3029,104 +2968,27 @@ function loadVideoMeta(file){
     v.src=url;
   });
 }
-
-/* ===== v18.4: deteksi FPS asli video (baca metadata MP4/MOV, cadangan: ukur saat diputar) ===== */
-function normFps(f){if(!isFinite(f)||f<=0)return 0;const std=[24,25,30,48,50,60,90,120];for(const c of std){if(Math.abs(f-c)/c<0.04)return c;}return Math.min(120,Math.max(10,Math.round(f)));}
-function walkBoxes(dv,start,end,cb){let o=start;while(o+8<=end){let sz=dv.getUint32(o);const t=String.fromCharCode(dv.getUint8(o+4),dv.getUint8(o+5),dv.getUint8(o+6),dv.getUint8(o+7));let hdr=8;if(sz===1){sz=Number(dv.getBigUint64(o+8));hdr=16;}else if(sz===0){sz=end-o;}if(sz<hdr)break;cb(t,o+hdr,Math.min(end,o+sz));o+=sz;}}
-function fpsFromMoov(dv){
-  let fps=0;
-  walkBoxes(dv,0,dv.byteLength,(t,s,e)=>{
-    if(t!=='trak'||fps)return;
-    let isVideo=false,ts=0,dur=0,count=0;
-    walkBoxes(dv,s,e,(t2,s2,e2)=>{
-      if(t2!=='mdia')return;
-      walkBoxes(dv,s2,e2,(t3,s3,e3)=>{
-        if(t3==='hdlr'){isVideo=String.fromCharCode(dv.getUint8(s3+8),dv.getUint8(s3+9),dv.getUint8(s3+10),dv.getUint8(s3+11))==='vide';}
-        else if(t3==='mdhd'){if(dv.getUint8(s3)===1){ts=dv.getUint32(s3+20);dur=Number(dv.getBigUint64(s3+24));}else{ts=dv.getUint32(s3+12);dur=dv.getUint32(s3+16);}}
-        else if(t3==='minf'){walkBoxes(dv,s3,e3,(t4,s4,e4)=>{if(t4==='stbl')walkBoxes(dv,s4,e4,(t5,s5)=>{if(t5==='stsz')count=dv.getUint32(s5+8);});});}
-      });
-    });
-    if(isVideo&&ts&&dur&&count)fps=count/(dur/ts);
-  });
-  return fps;
-}
-async function mp4Fps(blob){
-  try{
-    const size=blob.size;let off=0;
-    while(off+8<=size){
-      const h=new DataView(await blob.slice(off,Math.min(size,off+16)).arrayBuffer());
-      let sz=h.getUint32(0);const t=String.fromCharCode(h.getUint8(4),h.getUint8(5),h.getUint8(6),h.getUint8(7));let hdr=8;
-      if(sz===1){sz=Number(h.getBigUint64(8));hdr=16;}else if(sz===0){sz=size-off;}
-      if(sz<hdr)break;
-      if(t==='moov'){const buf=new DataView(await blob.slice(off+hdr,off+sz).arrayBuffer());return fpsFromMoov(buf);}
-      off+=sz;
-    }
-  }catch(e){}
-  return 0;
-}
-function rvfcFps(video){
-  return new Promise(res=>{
-    if(!video.requestVideoFrameCallback)return res(0);
-    const t=[];let done=false;const wasMuted=video.muted;
-    const finish=()=>{if(done)return;done=true;try{video.pause();video.currentTime=0;}catch(e){}video.muted=wasMuted;
-      const d=[];for(let i=1;i<t.length;i++){const q=t[i]-t[i-1];if(q>0.002)d.push(q);}
-      d.sort((a,b)=>a-b);res(d.length>=4?1/d[Math.floor(d.length*0.25)]:0);};
-    const cb=(now,md)=>{t.push(md.mediaTime);if(t.length>=16)finish();else video.requestVideoFrameCallback(cb);};
-    video.muted=true;video.requestVideoFrameCallback(cb);
-    video.play().catch(()=>finish());
-    setTimeout(finish,1800);
-  });
-}
-async function detectSourceFps(blob,video){
-  let f=normFps(await mp4Fps(blob));
-  if(!f&&video)f=normFps(await rvfcFps(video));
-  return f||30;
-}
-
-/* Ukuran hasil mengikuti pengaturan sistem (Kualitas Video di admin); FPS mengikuti video asli. */
-function videoTarget(sw,sh,fps){
-  const ui=(weddingSettings&&weddingSettings.ui_config)||{};
-  const level=(ui.quality&&ui.quality.video)||'high';
-  const PR={standard:{width:1280,height:720,videoBitsPerSecond:2500000},high:{width:1920,height:1080,videoBitsPerSecond:6000000},max:{width:1920,height:1080,videoBitsPerSecond:10000000}};
-  const q=level==='custom'?Object.assign({},PR.high,(ui.quality_custom&&ui.quality_custom.video)||{}):Object.assign({},PR[level]||PR.high);
-  const maxLong=Math.min(Math.max(q.width,q.height),IS_LOW_END?1280:1920);
-  const maxShort=Math.min(Math.min(q.width,q.height),IS_LOW_END?720:1080);
-  const scale=Math.min(1,maxLong/Math.max(sw,sh),maxShort/Math.min(sw,sh));
-  const even=n=>Math.max(2,Math.round(n/2)*2);
-  const bps=Math.min(8000000,Math.round(q.videoBitsPerSecond*Math.min(1.5,Math.max(1,fps/30))));
-  return{w:even(sw*scale),h:even(sh*scale),bps};
-}
 async function processVideoWithFrame(file,onProgress){
   return new Promise(async(resolve,reject)=>{
     const url=URL.createObjectURL(file);const video=document.createElement('video');
-    video.src=url;video.muted=false;video.playsInline=true;video.preload='auto';
+    video.src=url;video.muted=false;video.playsInline=true;
     video.onloadedmetadata=async()=>{
       const duration=Math.min(video.duration,maxVideoSeconds);
-      const srcFps=await detectSourceFps(file,video);
-      const tgt=videoTarget(video.videoWidth,video.videoHeight,srcFps);
-      const vw=tgt.w,vh=tgt.h;
+      const vw=video.videoWidth,vh=video.videoHeight;
       const canvas=document.createElement('canvas');canvas.width=vw;canvas.height=vh;
       const ctx=canvas.getContext('2d');
-      const ov=document.createElement('canvas');ov.width=vw;ov.height=vh;drawFrameForType(ov.getContext('2d'),vw,vh,'video');   // bingkai digambar sekali, lalu ditempel per frame
       let audioCtx,audioTracks=[];
       try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();const src=audioCtx.createMediaElementSource(video);const dest=audioCtx.createMediaStreamDestination();src.connect(dest);audioTracks=dest.stream.getAudioTracks();}catch(e){audioCtx=null;}
-      const canvasStream=canvas.captureStream(srcFps);
+      const canvasStream=canvas.captureStream(IS_LOW_END?24:30);
       const combined=new MediaStream([...canvasStream.getVideoTracks(),...audioTracks]);
-      const recorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:tgt.bps,audioBitsPerSecond:128000});
+      const recorder=new MediaRecorder(combined,{mimeType:VIDEO_MIME.mime,videoBitsPerSecond:IS_LOW_END?2000000:5000000,audioBitsPerSecond:128000});
       const chunks=[];recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-      recorder.onstop=()=>{try{if(audioCtx)audioCtx.close();}catch(e){}video.pause();URL.revokeObjectURL(url);const blob=new Blob(chunks,{type:VIDEO_MIME.mime});const thumb=makeThumbUri(canvas,vw,vh);canvas.width=canvas.height=1;resolve({blob,thumb,w:vw,h:vh,fps:srcFps,ext:VIDEO_MIME.ext});};
+      recorder.onstop=()=>{try{if(audioCtx)audioCtx.close();}catch(e){}video.pause();URL.revokeObjectURL(url);const blob=new Blob(chunks,{type:VIDEO_MIME.mime});const thumb=makeThumbUri(canvas,vw,vh);canvas.width=canvas.height=1;resolve({blob,thumb,w:vw,h:vh,ext:VIDEO_MIME.ext});};
       let drawing=true;let stopped=false;
       function stop(){if(stopped)return;stopped=true;drawing=false;try{recorder.stop();}catch(e){}}
-      const useRvfc=typeof video.requestVideoFrameCallback==='function';
-      function step(){
-        if(!drawing)return;
-        if(video.ended||video.currentTime>=duration){stop();return;}
-        ctx.drawImage(video,0,0,vw,vh);ctx.drawImage(ov,0,0);
-        if(onProgress)onProgress(Math.min(.99,video.currentTime/duration));
-        if(useRvfc)video.requestVideoFrameCallback(step);else requestAnimationFrame(step);   // satu gambar per frame asli, tanpa lompat
-      }
+      function drawLoop(){if(!drawing)return;if(video.ended||video.currentTime>=duration){stop();return;}ctx.drawImage(video,0,0,vw,vh);drawFrameForType(ctx,vw,vh,'video');if(onProgress)onProgress(Math.min(.99,video.currentTime/duration));requestAnimationFrame(drawLoop);}
       video.currentTime=0;recorder.start();
-      try{await video.play();step();}catch(e){stop();reject(new Error('gagal memutar video'));}
+      try{await video.play();drawLoop();}catch(e){stop();reject(new Error('gagal memutar video'));}
     };
     video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('gagal muat video'));};
   });
