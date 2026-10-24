@@ -207,6 +207,72 @@
   .modal-box .modal-text{font-size:14px;color:var(--text-2);line-height:1.6;white-space:pre-line;margin-bottom:22px;}
   .modal-box .modal-ok{display:block;width:100%;padding:13px;border-radius:4px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;}
   .modal-box .modal-ok:hover{background:var(--primary-hover);}
+  /* ===== Menu Warna ===== */
+  .clbl{display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-2);}
+  .palette-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .palette-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 10px;min-width:92px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-2);}
+  .palette-btn:hover{border-color:var(--border-strong);}
+  .palette-btn.active{border-color:var(--primary);background:var(--primary-soft);color:var(--primary);}
+  .palette-btn .sw{display:flex;}
+  .palette-btn .sw i{width:16px;height:16px;border-radius:50%;margin-left:-4px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08);}
+  .palette-btn .sw i:first-child{margin-left:0;}
+  .color-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;}
+  .color-field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-2);}
+  .cf-row{display:flex;align-items:center;gap:6px;}
+  .cf-row input[type=color]{width:44px;height:40px;padding:2px;border:1.5px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;flex:none;}
+  .cf-hex{flex:1;min-width:0;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;text-transform:uppercase;background:var(--surface);color:var(--text);}
+  .cf-hex:focus{outline:none;border-color:var(--primary);}
+  .cf-hex.bad{border-color:var(--danger);}
+  .cf-reset{flex:none;width:40px;height:40px;border:1.5px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-2);font-size:16px;cursor:pointer;}
+  .cf-reset:hover{border-color:var(--border-strong);color:var(--primary);}
+  .color-field .hint{margin:6px 0 12px;}
+  .contrast-box{margin:8px 0 12px;font-size:12px;line-height:1.55;}
+  .contrast-box div{padding:7px 10px;border-radius:4px;margin-bottom:6px;}
+  .contrast-box .ok{background:#E4F0E6;color:var(--success);}
+  .contrast-box .warn{background:#FBF0D9;color:#7A5A12;}
+  .color-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .ghost-btn{padding:12px 18px;border:1.5px solid var(--border-strong);border-radius:4px;background:transparent;color:var(--text-2);font-weight:600;font-family:inherit;font-size:13px;cursor:pointer;margin-top:12px;}
+  .ghost-btn:hover{background:var(--surface-2);}
+  .cprev-wrap{flex:0 0 300px;max-width:100%;}
+  .cprev-tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:6px;margin-bottom:12px;}
+  .cprev-tabs button{flex:1;padding:8px 6px;border:none;border-radius:4px;background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;}
+  .cprev-tabs button.on{background:var(--surface);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .cprev{--bg:#F5F1EB;--surface:#FFFFFF;--surface-2:#EFE9DF;--border:#E5DDD1;--border-strong:#D6CBB8;--primary:#440808;--primary-hover:#5A1010;--primary-soft:#F2E4E4;--accent:#C9A66B;--accent-soft:#F5ECD9;--text:#1A1410;--text-2:#5A4D42;--text-3:#8A7B6E;--dark:#1A1410;--dark-2:#2A2320;--danger:#A02828;--success:#2F6B3F;
+    width:100%;aspect-ratio:9/16;border-radius:22px;overflow:hidden;border:6px solid #1c1c1c;box-shadow:0 10px 30px rgba(0,0,0,.18);position:relative;background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;}
+  .cscreen{display:none;position:absolute;inset:0;padding:14px;flex-direction:column;gap:10px;}
+  .cscreen.show{display:flex;}
+  .cscreen.kirim{background:var(--dark);color:#F5F1EB;}
+  .k-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;}
+  .k-chip{font-size:9px;padding:3px 8px;border-radius:99px;background:var(--accent);color:#fff;}
+  .k-view{flex:1;border-radius:10px;background:var(--dark-2);display:flex;align-items:center;justify-content:center;font-size:11px;color:#A99F94;}
+  .k-modes{display:flex;justify-content:center;gap:14px;font-size:10px;font-weight:700;letter-spacing:.06em;color:#A99F94;}
+  .k-modes .on{color:var(--accent);}
+  .k-shutter{display:flex;justify-content:center;}
+  .k-shutter i{width:46px;height:46px;border-radius:50%;border:3px solid var(--accent);box-shadow:inset 0 0 0 4px var(--dark);background:#fff;display:block;}
+  .k-send{text-align:center;padding:10px;border-radius:4px;background:var(--primary);color:#fff;font-size:12px;font-weight:700;}
+  .cscreen.galeri,.cscreen.album{background:var(--bg);color:var(--text);}
+  .g-head b{display:block;font-family:'Fraunces',serif;font-size:14px;color:var(--text);}
+  .g-head small{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);}
+  .g-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px;}
+  .g-tabs span{flex:1;text-align:center;padding:7px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--text-3);border-radius:4px;}
+  .g-tabs .on{background:var(--primary);color:#fff;}
+  .g-pick{border:1.5px dashed var(--border-strong);background:var(--accent-soft);border-radius:8px;padding:22px 10px;text-align:center;font-size:12px;font-weight:700;color:var(--primary);}
+  .g-pick small{display:block;font-weight:500;font-size:10px;color:var(--text-3);margin-top:4px;}
+  .g-input{padding:10px;border:1.5px solid var(--border);border-radius:4px;background:var(--surface);font-size:11px;color:var(--text-3);}
+  .g-send{text-align:center;padding:10px;border-radius:4px;background:var(--primary);color:#fff;font-size:12px;font-weight:700;}
+  .g-ok{align-self:flex-start;font-size:10px;font-weight:700;padding:5px 10px;border-radius:99px;background:#E4F0E6;color:var(--success);}
+  .a-hero{position:relative;padding-right:46px;text-align:left;padding-bottom:8px;border-bottom:1px solid var(--border);}
+  .a-crest{position:absolute;right:0;top:0;width:38px;max-height:54px;object-fit:contain;}
+  .a-hero h4{font-family:'Fraunces',serif;font-size:17px;line-height:1.1;color:var(--text);margin-bottom:4px;}
+  .a-hero p{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);}
+  .a-filters{display:flex;gap:2px;border-bottom:1px solid var(--border);}
+  .a-filters span{padding:6px 8px;font-size:10px;font-weight:500;color:var(--text-2);border-bottom:2px solid transparent;}
+  .a-filters .on{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;}
+  .a-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .a-grid div{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .a-grid i{display:block;height:54px;background:var(--surface-2);}
+  .a-grid small{display:block;padding:5px 7px;font-size:9px;color:var(--text-2);}
+  .a-chip{align-self:flex-start;font-size:10px;font-weight:700;padding:6px 12px;border-radius:4px;background:var(--primary);color:#fff;}
 </style>
 </head>
 <body>
@@ -226,6 +292,7 @@
   <div class="tab" data-tab="filter">Filter Foto</div>
   <div class="tab" data-tab="videofilter">Filter Video</div>
   <div class="tab" data-tab="tema">Tema & Frame</div>
+  <div class="tab" data-tab="warna">Warna & Logo</div>
   <div class="tab" data-tab="pengaturan">Pengaturan Umum</div>
   <div class="tab" data-tab="tautan">Bagikan</div>
   <div class="tab" data-tab="akun">Akun</div>
@@ -335,20 +402,11 @@
 
 <div class="panel" id="panel-tema">
   <h3>Tema & Bingkai Foto</h3>
-  <p class="desc">Warna dan gaya bingkai ini dipakai di halaman kirim momen, album, dan saat tamu mengunduh foto/video/suara.</p>
+  <p class="desc">Atur gaya bingkai untuk foto, video, dan suara. Warna bingkai mengikuti menu Warna.</p>
 
   <div class="theme-layout">
     <div class="theme-form">
-      <div class="color-row">
-        <div class="form-group">
-          <label>Warna Utama</label>
-          <input type="color" id="primaryColor">
-        </div>
-        <div class="form-group">
-          <label>Warna Sekunder</label>
-          <input type="color" id="secondaryColor">
-        </div>
-      </div>
+      <p class="hint" style="margin-bottom:18px;">Warna bingkai mengikuti menu <a href="#" onclick="document.querySelector('.tab[data-tab=warna]').click();return false;" style="color:var(--primary);font-weight:600;">Warna</a>.</p>
 
       <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-2);">Gaya Bingkai Bawaan</label>
       <p class="hint" style="margin-top:-4px;">Dipakai untuk jenis media manapun yang tidak memakai template custom di bawah.</p>
@@ -451,6 +509,122 @@
       </div>
       <canvas id="previewCanvas" width="600" height="600"></canvas>
       <span class="cap" id="previewCaption">Pratinjau bingkai foto</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-warna">
+  <h3>Warna & Logo Tema</h3>
+  <p class="desc">Atur warna halaman kirim momen, galeri, dan album yang dilihat tamu, juga logo di bagian atas album. Pratinjau berubah langsung. Tamu baru melihat perubahannya setelah kamu menekan Simpan.</p>
+
+  <div class="theme-layout">
+    <div class="theme-form">
+      <label class="clbl">Palet Siap Pakai</label>
+      <div class="palette-row" id="paletteRow"></div>
+
+      <label class="clbl" style="margin-top:20px;">Atur Sendiri</label>
+      <div class="color-grid">
+      <div class="color-field" data-key="primary">
+        <label for="primaryColor">Warna Utama</label>
+        <div class="cf-row">
+          <input type="color" id="primaryColor">
+          <input type="text" class="cf-hex" data-for="primaryColor" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode warna Warna Utama">
+          <button type="button" class="cf-reset" data-key="primary" title="Kembalikan ke bawaan" aria-label="Kembalikan Warna Utama ke bawaan">↺</button>
+        </div>
+        <p class="hint">Tombol utama, judul, dan penekanan.</p>
+      </div>
+      <div class="color-field" data-key="accent">
+        <label for="secondaryColor">Warna Aksen</label>
+        <div class="cf-row">
+          <input type="color" id="secondaryColor">
+          <input type="text" class="cf-hex" data-for="secondaryColor" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode warna Warna Aksen">
+          <button type="button" class="cf-reset" data-key="accent" title="Kembalikan ke bawaan" aria-label="Kembalikan Warna Aksen ke bawaan">↺</button>
+        </div>
+        <p class="hint">Ikon, garis, dan sorotan kecil.</p>
+      </div>
+      <div class="color-field" data-key="bg">
+        <label for="clr_bg">Latar Halaman</label>
+        <div class="cf-row">
+          <input type="color" id="clr_bg">
+          <input type="text" class="cf-hex" data-for="clr_bg" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode warna Latar Halaman">
+          <button type="button" class="cf-reset" data-key="bg" title="Kembalikan ke bawaan" aria-label="Kembalikan Latar Halaman ke bawaan">↺</button>
+        </div>
+        <p class="hint">Latar halaman album dan galeri.</p>
+      </div>
+      <div class="color-field" data-key="surface">
+        <label for="clr_surface">Kartu & Panel</label>
+        <div class="cf-row">
+          <input type="color" id="clr_surface">
+          <input type="text" class="cf-hex" data-for="clr_surface" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode warna Kartu & Panel">
+          <button type="button" class="cf-reset" data-key="surface" title="Kembalikan ke bawaan" aria-label="Kembalikan Kartu & Panel ke bawaan">↺</button>
+        </div>
+        <p class="hint">Kartu, kolom isian, dan tab.</p>
+      </div>
+      <div class="color-field" data-key="text">
+        <label for="clr_text">Warna Teks</label>
+        <div class="cf-row">
+          <input type="color" id="clr_text">
+          <input type="text" class="cf-hex" data-for="clr_text" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode warna Warna Teks">
+          <button type="button" class="cf-reset" data-key="text" title="Kembalikan ke bawaan" aria-label="Kembalikan Warna Teks ke bawaan">↺</button>
+        </div>
+        <p class="hint">Teks utama. Kalau tidak diubah, teks album mengikuti Warna Utama.</p>
+      </div>
+      <div class="color-field" data-key="dark">
+        <label for="clr_dark">Layar Kamera</label>
+        <div class="cf-row">
+          <input type="color" id="clr_dark">
+          <input type="text" class="cf-hex" data-for="clr_dark" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Kode warna Layar Kamera">
+          <button type="button" class="cf-reset" data-key="dark" title="Kembalikan ke bawaan" aria-label="Kembalikan Layar Kamera ke bawaan">↺</button>
+        </div>
+        <p class="hint">Latar gelap halaman kirim momen.</p>
+      </div>
+      </div>
+
+      <div class="contrast-box" id="contrastNotes" aria-live="polite"></div>
+
+      <label class="clbl" style="margin-top:22px;" for="crestUrl">Logo di Atas Album</label>
+      <input type="text" id="crestUrl" class="cf-hex" style="width:100%;text-transform:none;" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://situs-kamu.com/logo.png">
+      <p class="hint" style="margin-top:6px;">Tempel alamat https yang langsung menuju file gambar (PNG, SVG, atau WebP berlatar transparan, idealnya di bawah 50 KB). Cara ini paling cepat dimuat tamu, karena gambar diambil langsung oleh browser tanpa lewat Apps Script atau Drive. Kosongkan untuk memakai logo bawaan.</p>
+      <label class="first-check" style="display:flex;gap:8px;align-items:center;margin:4px 0 8px;font-size:13px;cursor:pointer;"><input type="checkbox" id="crestHide" style="width:18px;height:18px;accent-color:var(--primary);margin:0;"><span>Sembunyikan logo di album</span></label>
+      <div class="contrast-box" id="crestNote" aria-live="polite"></div>
+      <p class="hint">Warna sukses (hijau) dan peringatan (merah) tetap, supaya pesan penting selalu mudah dikenali tamu.</p>
+
+      <div class="color-actions">
+        <button class="save-btn" onclick="saveColors()">Simpan Warna & Logo</button>
+        <button class="ghost-btn" onclick="resetColors()">Kembalikan ke Bawaan</button>
+      </div>
+    </div>
+
+    <div class="cprev-wrap">
+      <div class="cprev-tabs" id="cprevTabs" role="tablist" aria-label="Halaman pratinjau">
+        <button type="button" class="on" data-page="kirim" role="tab">Kirim</button>
+        <button type="button" data-page="galeri" role="tab">Galeri</button>
+        <button type="button" data-page="album" role="tab">Album</button>
+      </div>
+      <div class="cprev" id="cprev">
+        <div class="cscreen kirim show" data-page="kirim">
+          <div class="k-top"><span class="k-brand">Rasya &amp; Rizky</span><span class="k-chip">Kirim Momen</span></div>
+          <div class="k-view"><span>Kamera</span></div>
+          <div class="k-modes"><span class="on">FOTO</span><span>VIDEO</span><span>SUARA</span></div>
+          <div class="k-shutter"><i></i></div>
+          <div class="k-send">Kirim Momen</div>
+        </div>
+        <div class="cscreen galeri" data-page="galeri">
+          <div class="g-head"><b>Rasya &amp; Rizky</b><small>Kirim dari Galeri</small></div>
+          <div class="g-tabs"><span class="on">FOTO</span><span>VIDEO</span><span>SUARA</span></div>
+          <div class="g-pick">Pilih Foto<small>Maksimal 5 foto sekali kirim</small></div>
+          <div class="g-input">Nama kamu</div>
+          <div class="g-send">Kirim 5 Foto</div>
+          <div class="g-ok">✓ Terkirim</div>
+        </div>
+        <div class="cscreen album" data-page="album">
+          <div class="a-hero"><img id="aCrest" class="a-crest" alt="" src="https://rasya-rizky.online/album/crest-red.png"><h4>Momen Rasya &amp; Rizky</h4><p>16 November 2026</p></div>
+          <div class="a-filters"><span class="on">Semua</span><span>Foto</span><span>Video</span><span>Suara</span></div>
+          <div class="a-grid"><div><i></i><small>Ani</small></div><div><i></i><small>Budi</small></div><div><i></i><small>Citra</small></div><div><i></i><small>Dewi</small></div></div>
+          <div class="a-chip">Unduh</div>
+        </div>
+      </div>
+      <p class="hint" style="text-align:center;margin-top:10px;">Pratinjau disederhanakan. Tampilan asli di HP tamu mengikuti warna yang sama.</p>
     </div>
   </div>
 </div>
@@ -655,6 +829,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'tema') drawPreview();
+    if (tab.dataset.tab === 'warna') refreshColors();
     if (tab.dataset.tab === 'videofilter') drawVideoSamplePhoto();
   });
 });
@@ -1527,6 +1702,194 @@ function missingColsText(data) {
   return (m && m.length) ? ('Kolom ' + m.join(', ') + ' belum ada di sheet WEDDINGS. Jalankan setupSheets() sekali di Apps Script, lalu simpan lagi.') : '';
 }
 
+/* ===== Menu Warna ===== */
+const COLOR_DEFAULTS = { primary:'#440808', accent:'#C9A66B', bg:'#F5F1EB', surface:'#FFFFFF', text:'#1A1410', dark:'#1A1410' };
+const COLOR_IDS = { primary:'primaryColor', accent:'secondaryColor', bg:'clr_bg', surface:'clr_surface', text:'clr_text', dark:'clr_dark' };
+const COLOR_LABELS = { primary:'Warna Utama', accent:'Warna Aksen', bg:'Latar Halaman', surface:'Kartu & Panel', text:'Warna Teks', dark:'Layar Kamera' };
+const COLOR_PALETTES = [
+  { name:'Marun Klasik', c:{ primary:'#440808', accent:'#C9A66B', bg:'#F5F1EB', surface:'#FFFFFF', text:'#1A1410', dark:'#1A1410' } },
+  { name:'Hijau Zaitun', c:{ primary:'#2F4A2B', accent:'#C2A25A', bg:'#F3F1E8', surface:'#FFFFFF', text:'#1D2418', dark:'#1B2117' } },
+  { name:'Biru Malam',   c:{ primary:'#1E2F55', accent:'#C9A66B', bg:'#F1F3F7', surface:'#FFFFFF', text:'#151B2B', dark:'#121826' } },
+  { name:'Rose Dusty',   c:{ primary:'#8A3B4F', accent:'#C98F7E', bg:'#FAF1EF', surface:'#FFFFFF', text:'#2B1A1E', dark:'#2A1B20' } },
+  { name:'Cokelat Latte',c:{ primary:'#5B3A29', accent:'#B98B5E', bg:'#F6EFE6', surface:'#FFFDF9', text:'#2A1D15', dark:'#241912' } },
+  { name:'Hitam Emas',   c:{ primary:'#1C1C1C', accent:'#C9A24B', bg:'#F4F2EE', surface:'#FFFFFF', text:'#1C1C1C', dark:'#121212' } }
+];
+
+/* Penurunan warna: SAMA PERSIS dengan yang dipakai halaman tamu (index.html) */
+function thHex_(h){return /^#[0-9a-fA-F]{6}$/.test(h||'');}
+function thMix_(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);return '#'+[16,8,0].map(s=>{const x=(pa>>s)&255,y=(pb>>s)&255;return Math.round(x+(y-x)*t).toString(16).padStart(2,'0');}).join('');}
+function thLum_(h){const c=[16,8,0].map(sh=>{const v=((parseInt(h.slice(1),16)>>sh)&255)/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
+function thVars_(c){
+  const v={},bgD='#F5F1EB',txD='#1A1410';
+  if(thHex_(c.primary)){let p=c.primary,g=0;while(1.05/(thLum_(p)+0.05)<4.5&&g++<12)p=thMix_(p,txD,0.15);v['--primary']=p;if(c.primary.toUpperCase()!=='#440808'){v['--primary-hover']=thMix_(p,txD,0.15);v['--primary-soft']=thMix_(p,'#FFFFFF',0.9);}}
+  if(thHex_(c.accent)){v['--accent']=c.accent;if(c.accent.toUpperCase()!=='#C9A66B')v['--accent-soft']=thMix_(c.accent,'#FFFFFF',0.8);}
+  const hasBg=thHex_(c.bg),hasSurf=thHex_(c.surface),hasText=thHex_(c.text);
+  const bg=hasBg?c.bg:bgD,tx=hasText?c.text:txD;
+  if(hasBg)v['--bg']=c.bg;
+  if(hasSurf)v['--surface']=c.surface;
+  if(hasBg||hasText){v['--surface-2']=thMix_(bg,tx,0.05);v['--border']=thMix_(bg,tx,0.10);v['--border-strong']=thMix_(bg,tx,0.17);}
+  if(hasText){v['--text']=c.text;v['--text-2']=thMix_(c.text,bg,0.29);v['--text-3']=thMix_(c.text,bg,0.5);}
+  if(thHex_(c.dark)){v['--dark']=c.dark;v['--dark-2']=thMix_(c.dark,'#FFFFFF',0.07);}
+  return v;
+}
+
+let cprevPage = 'kirim';
+function getColorValues() {
+  const o = {};
+  Object.keys(COLOR_IDS).forEach(k => { o[k] = (document.getElementById(COLOR_IDS[k]).value || COLOR_DEFAULTS[k]).toUpperCase(); });
+  return o;
+}
+// hanya warna yang berbeda dari bawaan yang disimpan; sisanya ikut tampilan bawaan
+function colorsToSave() {
+  const v = getColorValues(), o = {};
+  Object.keys(v).forEach(k => { if (thHex_(v[k]) && v[k] !== COLOR_DEFAULTS[k].toUpperCase()) o[k] = v[k]; });
+  return o;
+}
+function setColorValues(c) {
+  Object.keys(COLOR_IDS).forEach(k => {
+    const val = thHex_(c[k]) ? c[k] : COLOR_DEFAULTS[k];
+    document.getElementById(COLOR_IDS[k]).value = val.toLowerCase();
+  });
+  refreshColors();
+}
+function loadColorsFromConfig(data) {
+  const saved = (data.ui_config && data.ui_config.colors) || {};
+  const c = Object.assign({}, saved);
+  if (!thHex_(c.primary) && thHex_(data.primary_color)) c.primary = data.primary_color;
+  if (!thHex_(c.accent) && thHex_(data.secondary_color)) c.accent = data.secondary_color;
+  setColorValues(c);
+  const ui = data.ui_config || {};
+  document.getElementById('crestUrl').value = (typeof ui.crest_url === 'string') ? ui.crest_url : '';
+  document.getElementById('crestHide').checked = ui.crest_hide === true;
+  refreshCrest();
+}
+function contrastRatio(a, b) { const x = thLum_(a), y = thLum_(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function fmtRatio(r) { return r.toFixed(1).replace('.', ',') + ':1'; }
+
+function renderContrastNotes(c) {
+  const box = document.getElementById('contrastNotes');
+  const notes = [];
+  const add = (ok, text) => notes.push('<div class="' + (ok ? 'ok' : 'warn') + '">' + (ok ? '✓ ' : '⚠ ') + text + '</div>');
+  const pv = thVars_(c);
+  const bg = c.bg, surf = c.surface;
+  const galeriText = c.text, albumText = pv['--primary'] ? (document.getElementById('clr_text').value.toUpperCase() !== COLOR_DEFAULTS.text.toUpperCase() ? c.text : pv['--primary']) : c.text;
+  const worst = Math.min(contrastRatio(galeriText, bg), contrastRatio(galeriText, surf), contrastRatio(albumText, bg));
+  add(worst >= 4.5, worst >= 4.5 ? 'Teks terbaca jelas di latar halaman dan kartu (rasio ' + fmtRatio(worst) + ').'
+    : 'Teks kurang kontras dengan latar atau kartu (rasio ' + fmtRatio(worst) + ', idealnya minimal 4,5:1). Coba teks lebih gelap atau latar lebih terang.');
+  const pr = contrastRatio(c.primary, '#FFFFFF');
+  add(pr >= 4.5, pr >= 4.5 ? 'Tulisan putih di tombol utama terbaca jelas (rasio ' + fmtRatio(pr) + ').'
+    : 'Warna utama terlalu terang untuk tulisan putih (rasio ' + fmtRatio(pr) + '). Di HP tamu warnanya otomatis digelapkan sedikit.');
+  const dr = contrastRatio(c.dark, '#F5F1EB');
+  add(dr >= 4.5, dr >= 4.5 ? 'Tulisan di layar kamera terbaca jelas (rasio ' + fmtRatio(dr) + ').'
+    : 'Layar kamera terlalu terang untuk tulisan putih (rasio ' + fmtRatio(dr) + '). Pilih warna yang lebih gelap.');
+  box.innerHTML = notes.join('');
+}
+
+function renderColorPreview() {
+  const c = getColorValues();
+  const el = document.getElementById('cprev');
+  el.removeAttribute('style');
+  const toSet = {};
+  Object.keys(c).forEach(k => { if (c[k] !== COLOR_DEFAULTS[k].toUpperCase()) toSet[k] = c[k]; });
+  toSet.primary = c.primary; toSet.accent = c.accent;
+  const v = thVars_(toSet);
+  if (cprevPage === 'album' && !toSet.text) {   // teks album bawaan mengikuti warna utama
+    const p = v['--primary'] || COLOR_DEFAULTS.primary;
+    const bg = toSet.bg || COLOR_DEFAULTS.bg;
+    v['--text'] = p; v['--text-2'] = thMix_(p, '#FFFFFF', 0.18); v['--text-3'] = thMix_(p, '#FFFFFF', 0.42);
+  }
+  Object.keys(v).forEach(k => el.style.setProperty(k, v[k]));
+  document.querySelectorAll('#cprev .cscreen').forEach(s => s.classList.toggle('show', s.dataset.page === cprevPage));
+  document.querySelectorAll('#cprevTabs button').forEach(b => b.classList.toggle('on', b.dataset.page === cprevPage));
+}
+
+function renderPaletteRow() {
+  const row = document.getElementById('paletteRow');
+  const cur = getColorValues();
+  row.innerHTML = '';
+  COLOR_PALETTES.forEach((p, i) => {
+    const active = Object.keys(p.c).every(k => p.c[k].toUpperCase() === cur[k]);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'palette-btn' + (active ? ' active' : '');
+    b.innerHTML = '<span class="sw">' + ['primary','accent','bg','dark'].map(k => '<i style="background:' + p.c[k] + '"></i>').join('') + '</span><span></span>';
+    b.lastChild.textContent = p.name;
+    b.addEventListener('click', () => setColorValues(p.c));
+    row.appendChild(b);
+  });
+}
+
+function refreshColors() {
+  const c = getColorValues();
+  Object.keys(COLOR_IDS).forEach(k => {
+    const hex = document.querySelector('.cf-hex[data-for="' + COLOR_IDS[k] + '"]');
+    if (hex && document.activeElement !== hex) { hex.value = c[k]; hex.classList.remove('bad'); }
+  });
+  renderPaletteRow();
+  renderContrastNotes(c);
+  renderColorPreview();
+  redrawPreviewIfVisible();
+}
+
+Object.keys(COLOR_IDS).forEach(k => {
+  const input = document.getElementById(COLOR_IDS[k]);
+  input.addEventListener('input', refreshColors);
+});
+document.querySelectorAll('.cf-hex').forEach(h => {
+  h.addEventListener('input', () => {
+    let v = h.value.trim(); if (v && v[0] !== '#') v = '#' + v;
+    if (thHex_(v)) { h.classList.remove('bad'); document.getElementById(h.dataset.for).value = v.toLowerCase(); refreshColors(); }
+    else h.classList.add('bad');
+  });
+  h.addEventListener('blur', () => { h.classList.remove('bad'); refreshColors(); });
+});
+document.querySelectorAll('.cf-reset').forEach(b => b.addEventListener('click', () => {
+  document.getElementById(COLOR_IDS[b.dataset.key]).value = COLOR_DEFAULTS[b.dataset.key].toLowerCase();
+  refreshColors();
+}));
+document.querySelectorAll('#cprevTabs button').forEach(b => b.addEventListener('click', () => { cprevPage = b.dataset.page; renderColorPreview(); }));
+
+
+/* ----- Logo album ----- */
+const DEFAULT_CREST = 'https://rasya-rizky.online/album/crest-red.png';
+function validCrestUrl(u) { return /^https:\/\/[^\s"'()<>\\]{3,480}$/.test(u); }
+function crestUrlValue() { return (document.getElementById('crestUrl').value || '').trim(); }
+function refreshCrest() {
+  const u = crestUrlValue(), hide = document.getElementById('crestHide').checked;
+  const img = document.getElementById('aCrest'), note = document.getElementById('crestNote');
+  img.style.display = hide ? 'none' : '';
+  const say = (ok, t) => { note.innerHTML = '<div class="' + (ok ? 'ok' : 'warn') + '">' + (ok ? '✓ ' : '⚠ ') + t + '</div>'; };
+  img.onload = () => { if (u && validCrestUrl(u)) say(true, 'Logo berhasil dimuat.'); };
+  img.onerror = () => { if (u) say(false, 'Gambar belum bisa dimuat dari alamat ini. Cek alamatnya, dan pastikan filenya bisa dibuka tanpa login.'); };
+  if (!u) { note.innerHTML = ''; img.src = DEFAULT_CREST; return; }
+  if (!validCrestUrl(u)) { say(false, 'Alamat belum valid. Gunakan alamat yang diawali https:// dan tanpa spasi.'); img.src = DEFAULT_CREST; return; }
+  img.src = u;
+}
+document.getElementById('crestUrl').addEventListener('input', refreshCrest);
+document.getElementById('crestHide').addEventListener('change', refreshCrest);
+function resetColors() {
+  setColorValues(COLOR_DEFAULTS);
+  document.getElementById('crestUrl').value = ''; document.getElementById('crestHide').checked = false; refreshCrest();
+  showToast('Warna dan logo dikembalikan ke bawaan. Tekan Simpan Warna & Logo supaya tamu ikut melihatnya.', 'info');
+}
+async function saveColors() {
+  const c = getColorValues();
+  if (!thHex_(c.primary) || !thHex_(c.accent)) { showStatus('colorMsg', false, 'Kode warna belum valid. Gunakan format seperti #440808.'); return; }
+  if (crestUrlValue() && !validCrestUrl(crestUrlValue())) { showStatus('colorMsg', false, 'Alamat logo belum valid. Gunakan alamat yang diawali https:// dan tanpa spasi.'); return; }
+  const payload = {
+    action: 'updateSettings',
+    primary_color: c.primary.toLowerCase(),
+    secondary_color: c.accent.toLowerCase(),
+    ui_config: JSON.stringify(buildUiConfig())
+  };
+  try {
+    const data = await callApi(payload);
+    if (handleAuthError(data)) return;
+    showStatus('colorMsg', data.success, data.success ? 'Warna dan logo tersimpan. Tamu akan melihatnya saat membuka halaman lagi.' : (data.message || 'Warna belum tersimpan, coba lagi ya.'));
+  } catch (err) {
+    showStatus('colorMsg', false, 'Gagal terhubung ke server: ' + err.message);
+  }
+}
+
 let previewDrawToken = 0;
 function drawPreview() {
   clearInterval(previewAnimTimer);
@@ -1755,6 +2118,7 @@ async function loadSettings() {
   document.getElementById('moderation').checked = data.moderation !== false;
   const uiConfig = data.ui_config || {};
   setNameFirst(uiConfig.name_order === 'bride' ? 'bride' : 'groom');
+  loadColorsFromConfig(data);
   document.getElementById('allowPreview').checked = uiConfig.allow_preview !== false;
   document.getElementById('allowDownloadOriginal').checked = uiConfig.allow_download_original !== false;
   document.getElementById('allowDownloadFramed').checked = uiConfig.allow_download_framed !== false;
@@ -1816,6 +2180,9 @@ function buildUiConfig() {
     index_headline: document.getElementById('indexHeadline').value.trim(),
     album_headline: document.getElementById('albumHeadline').value.trim(),
     name_order: nameFirst,
+    colors: colorsToSave(),
+    crest_url: validCrestUrl(crestUrlValue()) ? crestUrlValue() : '',
+    crest_hide: document.getElementById('crestHide').checked,
     frames: frameTemplates,
     allow_preview: document.getElementById('allowPreview').checked,
     allow_download_original: document.getElementById('allowDownloadOriginal').checked,

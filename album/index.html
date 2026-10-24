@@ -785,11 +785,38 @@ async function fetchJson(qs,tries=2,timeoutMs=10000){
   }
   throw last||new Error('offline');
 }
-function applyThemeColors(s){
-  if(!s)return;
-  if(s.primary_color)document.documentElement.style.setProperty('--primary',s.primary_color);
-  if(s.secondary_color)document.documentElement.style.setProperty('--accent',s.secondary_color);
+
+/* ===== Warna tema (diatur admin di menu Warna) ===== */
+function thHex_(h){return /^#[0-9a-fA-F]{6}$/.test(h||'');}
+function thMix_(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);return '#'+[16,8,0].map(s=>{const x=(pa>>s)&255,y=(pb>>s)&255;return Math.round(x+(y-x)*t).toString(16).padStart(2,'0');}).join('');}
+function thLum_(h){const c=[16,8,0].map(sh=>{const v=((parseInt(h.slice(1),16)>>sh)&255)/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
+function thVars_(c){
+  const v={},bgD='#F5F1EB',txD='#1A1410';
+  if(thHex_(c.primary)){let p=c.primary,g=0;while(1.05/(thLum_(p)+0.05)<4.5&&g++<12)p=thMix_(p,txD,0.15);v['--primary']=p;if(c.primary.toUpperCase()!=='#440808'){v['--primary-hover']=thMix_(p,txD,0.15);v['--primary-soft']=thMix_(p,'#FFFFFF',0.9);}}
+  if(thHex_(c.accent)){v['--accent']=c.accent;if(c.accent.toUpperCase()!=='#C9A66B')v['--accent-soft']=thMix_(c.accent,'#FFFFFF',0.8);}
+  const hasBg=thHex_(c.bg),hasSurf=thHex_(c.surface),hasText=thHex_(c.text);
+  const bg=hasBg?c.bg:bgD,tx=hasText?c.text:txD;
+  if(hasBg)v['--bg']=c.bg;
+  if(hasSurf)v['--surface']=c.surface;
+  if(hasBg||hasText){v['--surface-2']=thMix_(bg,tx,0.05);v['--border']=thMix_(bg,tx,0.10);v['--border-strong']=thMix_(bg,tx,0.17);}
+  if(hasText){v['--text']=c.text;v['--text-2']=thMix_(c.text,bg,0.29);v['--text-3']=thMix_(c.text,bg,0.5);}
+  if(thHex_(c.dark)){v['--dark']=c.dark;v['--dark-2']=thMix_(c.dark,'#FFFFFF',0.07);}
+  return v;
 }
+function thApply_(s){
+  if(!s)return;
+  let ui=s.ui_config||{};if(typeof ui==='string'){try{ui=JSON.parse(ui);}catch(e){ui={};}}
+  const c=Object.assign({},ui.colors||{});
+  if(!thHex_(c.primary)&&thHex_(s.primary_color))c.primary=s.primary_color;
+  if(!thHex_(c.accent)&&thHex_(s.secondary_color))c.accent=s.secondary_color;
+  const v=thVars_(c),root=document.documentElement;
+  Object.keys(v).forEach(k=>root.style.setProperty(k,v[k]));
+  const cu=ui.crest_url;   // logo album (alamat https langsung ke gambar); kosong = logo bawaan
+  if(typeof cu==='string'&&/^https:\/\/[^\s"'()<>\\]{3,480}$/.test(cu))root.style.setProperty('--crest-url','url("'+cu+'")');
+  root.classList.toggle('no-crest',ui.crest_hide===true);
+  try{const m=window.parent.document.querySelector('meta[name="theme-color"]');if(m&&thHex_(c.primary))m.setAttribute('content',c.primary);}catch(e){}   // warna bilah browser mengikuti Warna Utama
+}
+function applyThemeColors(s){thApply_(s);}
 function applySettings(settings,filters){
   if(!settings||!settings.success)return false;
   weddingSettings=settings;
@@ -1612,8 +1639,10 @@ init();   // v18.1: sengaja di paling akhir, setelah semua let/const terdefinisi
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
   body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;touch-action:pan-y;overscroll-behavior:none;}
   .hero{position:relative;padding:64px 24px 40px;max-width:1080px;margin:0 auto;border-bottom:1px solid var(--border);--crest-w:116px;}
-  .hero::before{content:'';position:absolute;top:64px;bottom:40px;right:24px;width:var(--crest-w);background:url("https://rasya-rizky.online/album/crest-red.png") right center / contain no-repeat;pointer-events:none;}
+  .hero::before{content:'';position:absolute;top:64px;bottom:40px;right:24px;width:var(--crest-w);background:var(--crest-url,url("https://rasya-rizky.online/album/crest-red.png")) right center / contain no-repeat;pointer-events:none;}
   .hero h1,.hero p{padding-right:calc(var(--crest-w) + 16px);}
+  .no-crest .hero::before{display:none;}
+  .no-crest .hero h1,.no-crest .hero p{padding-right:0;}
   .hero h1{font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:clamp(32px,6vw,56px);line-height:1.05;letter-spacing:-0.02em;color:var(--text);margin-bottom:12px;max-width:720px;}
   .hero p{font-family:'JetBrains Mono',monospace;color:var(--text-3);font-size:12px;line-height:1.6;letter-spacing:.04em;text-transform:uppercase;}
   .topnav{max-width:1080px;margin:0 auto;padding:20px 24px 8px;text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
@@ -1806,13 +1835,39 @@ async function apiGet(params,tries=3){
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function mixHex_(x,y,t){const px=parseInt(x.slice(1),16),py=parseInt(y.slice(1),16);const ch=sh=>Math.round(((px>>sh)&255)*(1-t)+((py>>sh)&255)*t);return'#'+[16,8,0].map(sh=>ch(sh).toString(16).padStart(2,'0')).join('');}
 function lum_(hex){const c=[16,8,0].map(sh=>{const v=((parseInt(hex.slice(1),16)>>sh)&255)/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
-function applyThemeColors(s){
-  if(!s)return;
-  const ok=h=>/^#[0-9a-fA-F]{6}$/.test(h||'');
-  const root=document.documentElement;
-  if(ok(s.primary_color)){let p=s.primary_color,guard=0;while(1.05/(lum_(p)+0.05)<4.5&&guard++<12)p=mixHex_(p,'#1A1410',0.15);root.style.setProperty('--primary',p);root.style.setProperty('--primary-hover',mixHex_(p,'#1A1410',0.15));}
-  if(ok(s.secondary_color))root.style.setProperty('--accent',s.secondary_color);
+
+/* ===== Warna tema (diatur admin di menu Warna) ===== */
+function thHex_(h){return /^#[0-9a-fA-F]{6}$/.test(h||'');}
+function thMix_(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);return '#'+[16,8,0].map(s=>{const x=(pa>>s)&255,y=(pb>>s)&255;return Math.round(x+(y-x)*t).toString(16).padStart(2,'0');}).join('');}
+function thLum_(h){const c=[16,8,0].map(sh=>{const v=((parseInt(h.slice(1),16)>>sh)&255)/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
+function thVars_(c){
+  const v={},bgD='#F5F1EB',txD='#1A1410';
+  if(thHex_(c.primary)){let p=c.primary,g=0;while(1.05/(thLum_(p)+0.05)<4.5&&g++<12)p=thMix_(p,txD,0.15);v['--primary']=p;if(c.primary.toUpperCase()!=='#440808'){v['--primary-hover']=thMix_(p,txD,0.15);v['--primary-soft']=thMix_(p,'#FFFFFF',0.9);}}
+  if(thHex_(c.accent)){v['--accent']=c.accent;if(c.accent.toUpperCase()!=='#C9A66B')v['--accent-soft']=thMix_(c.accent,'#FFFFFF',0.8);}
+  const hasBg=thHex_(c.bg),hasSurf=thHex_(c.surface),hasText=thHex_(c.text);
+  const bg=hasBg?c.bg:bgD,tx=hasText?c.text:txD;
+  if(hasBg)v['--bg']=c.bg;
+  if(hasSurf)v['--surface']=c.surface;
+  if(hasBg||hasText){v['--surface-2']=thMix_(bg,tx,0.05);v['--border']=thMix_(bg,tx,0.10);v['--border-strong']=thMix_(bg,tx,0.17);}
+  if(hasText){v['--text']=c.text;v['--text-2']=thMix_(c.text,bg,0.29);v['--text-3']=thMix_(c.text,bg,0.5);}
+  if(thHex_(c.dark)){v['--dark']=c.dark;v['--dark-2']=thMix_(c.dark,'#FFFFFF',0.07);}
+  return v;
 }
+function thApply_(s){
+  if(!s)return;
+  let ui=s.ui_config||{};if(typeof ui==='string'){try{ui=JSON.parse(ui);}catch(e){ui={};}}
+  const c=Object.assign({},ui.colors||{});
+  if(!thHex_(c.primary)&&thHex_(s.primary_color))c.primary=s.primary_color;
+  if(!thHex_(c.accent)&&thHex_(s.secondary_color))c.accent=s.secondary_color;
+  const v=thVars_(c),root=document.documentElement;
+  Object.keys(v).forEach(k=>root.style.setProperty(k,v[k]));
+  const cu=ui.crest_url;   // logo album (alamat https langsung ke gambar); kosong = logo bawaan
+  if(typeof cu==='string'&&/^https:\/\/[^\s"'()<>\\]{3,480}$/.test(cu))root.style.setProperty('--crest-url','url("'+cu+'")');
+  root.classList.toggle('no-crest',ui.crest_hide===true);
+  try{const m=window.parent.document.querySelector('meta[name="theme-color"]');if(m&&thHex_(c.primary))m.setAttribute('content',c.primary);}catch(e){}   // warna bilah browser mengikuti Warna Utama
+}
+function applyThemeColors(s){thApply_(s);}
+
 async function init(){
   try{
     const s=await apiGet({action:'getSettings',wedding_id:weddingId});
@@ -2693,7 +2748,39 @@ async function init(){
     updateSendButtonState();
   }catch(err){showStatus('Belum Bisa Terhubung','Koneksi internet kurang stabil. Coba lagi ya.');}
 }
-function applyThemeColors(s){if(!s)return;if(s.primary_color)document.documentElement.style.setProperty('--primary',s.primary_color);if(s.secondary_color)document.documentElement.style.setProperty('--accent',s.secondary_color);}
+
+/* ===== Warna tema (diatur admin di menu Warna) ===== */
+function thHex_(h){return /^#[0-9a-fA-F]{6}$/.test(h||'');}
+function thMix_(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);return '#'+[16,8,0].map(s=>{const x=(pa>>s)&255,y=(pb>>s)&255;return Math.round(x+(y-x)*t).toString(16).padStart(2,'0');}).join('');}
+function thLum_(h){const c=[16,8,0].map(sh=>{const v=((parseInt(h.slice(1),16)>>sh)&255)/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
+function thVars_(c){
+  const v={},bgD='#F5F1EB',txD='#1A1410';
+  if(thHex_(c.primary)){let p=c.primary,g=0;while(1.05/(thLum_(p)+0.05)<4.5&&g++<12)p=thMix_(p,txD,0.15);v['--primary']=p;if(c.primary.toUpperCase()!=='#440808'){v['--primary-hover']=thMix_(p,txD,0.15);v['--primary-soft']=thMix_(p,'#FFFFFF',0.9);}}
+  if(thHex_(c.accent)){v['--accent']=c.accent;if(c.accent.toUpperCase()!=='#C9A66B')v['--accent-soft']=thMix_(c.accent,'#FFFFFF',0.8);}
+  const hasBg=thHex_(c.bg),hasSurf=thHex_(c.surface),hasText=thHex_(c.text);
+  const bg=hasBg?c.bg:bgD,tx=hasText?c.text:txD;
+  if(hasBg)v['--bg']=c.bg;
+  if(hasSurf)v['--surface']=c.surface;
+  if(hasBg||hasText){v['--surface-2']=thMix_(bg,tx,0.05);v['--border']=thMix_(bg,tx,0.10);v['--border-strong']=thMix_(bg,tx,0.17);}
+  if(hasText){v['--text']=c.text;v['--text-2']=thMix_(c.text,bg,0.29);v['--text-3']=thMix_(c.text,bg,0.5);}
+  if(thHex_(c.dark)){v['--dark']=c.dark;v['--dark-2']=thMix_(c.dark,'#FFFFFF',0.07);}
+  return v;
+}
+function thApply_(s){
+  if(!s)return;
+  let ui=s.ui_config||{};if(typeof ui==='string'){try{ui=JSON.parse(ui);}catch(e){ui={};}}
+  const c=Object.assign({},ui.colors||{});
+  if(!thHex_(c.primary)&&thHex_(s.primary_color))c.primary=s.primary_color;
+  if(!thHex_(c.accent)&&thHex_(s.secondary_color))c.accent=s.secondary_color;
+  const v=thVars_(c),root=document.documentElement;
+  Object.keys(v).forEach(k=>root.style.setProperty(k,v[k]));
+  const cu=ui.crest_url;   // logo album (alamat https langsung ke gambar); kosong = logo bawaan
+  if(typeof cu==='string'&&/^https:\/\/[^\s"'()<>\\]{3,480}$/.test(cu))root.style.setProperty('--crest-url','url("'+cu+'")');
+  root.classList.toggle('no-crest',ui.crest_hide===true);
+  try{const m=window.parent.document.querySelector('meta[name="theme-color"]');if(m&&thHex_(c.primary))m.setAttribute('content',c.primary);}catch(e){}   // warna bilah browser mengikuti Warna Utama
+}
+function applyThemeColors(s){thApply_(s);}
+
 async function fetchJson(qs,tries=3){
   let last;
   for(let i=0;i<tries;i++){

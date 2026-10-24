@@ -1,3 +1,29 @@
+# Yang baru di v18.8 (admin-dashboard.html, index.html, FolderSetup.gs)
+
+- **Logo album bisa diganti** lewat alamat gambar (https) di menu **Warna & Logo**, lengkap dengan pratinjau dan pilihan "Sembunyikan logo di album". Kosongkan untuk memakai logo bawaan. Disimpan di `ui_config` (`crest_url`, `crest_hide`), tanpa kolom sheet baru. Hanya alamat https yang diterima.
+- **FolderSetup.gs diperbaiki:** `setupWeddingFolders()` sebelumnya selalu berhenti karena penjaganya membandingkan dengan kode undangan yang asli, bukan dengan tulisan contoh. Sekarang hanya berhenti kalau `WEDDING_ID` kosong atau masih tulisan contoh.
+- Catatan data: kolom `max_photo` di sheet harus berisi angka (1 sampai 20). Kalau berisi TRUE, sistem memakai 5. Menyimpan dari Pengaturan Umum otomatis memperbaikinya.
+
+# Yang baru di v18.7 (admin-dashboard.html dan index.html)
+
+- **Menu baru "Warna"** di dashboard admin, terpisah dari Tema & Frame. Isinya: 6 palet siap pakai, 6 warna yang bisa diatur (Warna Utama, Warna Aksen, Latar Halaman, Kartu & Panel, Warna Teks, Layar Kamera), tombol ↺ per warna untuk kembali ke bawaan, catatan kontras otomatis, dan pratinjau langsung untuk halaman Kirim, Galeri, dan Album.
+- Warna disimpan di `ui_config.colors` (hanya warna yang berbeda dari bawaan). Warna Utama dan Aksen tetap ikut tersimpan di kolom `primary_color` dan `secondary_color`, jadi bingkai foto/video/suara otomatis memakai warna yang sama. Tidak ada kolom sheet baru.
+- Halaman tamu (Kirim, Galeri, Album) menerapkan warna lewat satu fungsi yang sama. Warna utama yang terlalu terang untuk tulisan putih otomatis digelapkan sedikit. Warna bilah browser ikut Warna Utama.
+- Warna sukses (hijau) dan peringatan (merah) sengaja tetap.
+- Kontrol warna di tab Tema & Frame dipindah ke menu Warna.
+
+# Yang baru di v18.6 (index.html saja)
+
+- **Rekam video kembali ke versi v18.3.** Perbedaan hanya dua: suara (di bawah) dan batas 24 fps untuk HP yang terbaca "spek rendah" diganti batas 30 fps hanya untuk HP ber-RAM ≤ 2 GB.
+- **Suara tidak hilang setelah ganti kamera.** Mikrofon kini dipegang terpisah dan tetap hidup saat ganti kamera depan/belakang (hanya kamera yang dibuka ulang). Kalau mikrofon tetap tidak ada saat mulai rekam, sistem memintanya lagi sebelum merekam.
+
+# Yang baru di v18.5 (index.html saja)
+
+- **Rekam video dikembalikan ke cara v18.3** (gambar kamera → kanvas apa adanya). Percobaan crop/kunci resolusi di v18.4–v18.5 dibatalkan karena membuat video Android terpotong.
+- **Suara video memakai AAC kalau browser mendukung** (sebelumnya Opus di dalam MP4, yang tidak semua pemutar bisa memutar suaranya).
+- **Voice note di Album** kini punya kontrol bawaan seperti video (putar/jeda, geser, volume, layar penuh untuk voice note berbingkai).
+- **Galeri, pilihan foto lebih dari batas:** modal punya tombol Pratinjau dan Batal. Pratinjau memasukkan foto pertama ke "Foto terpilih" tanpa mengirim; tombol di bawahnya berubah jadi "Kirim 5 Foto Dulu". Setelah terkirim, foto berikutnya langsung tampil di "Foto terpilih", dan muncul pilihan Kirim Sisanya atau Buang.
+
 # Yang baru di v18.4 (index.html saja)
 
 - **FPS video benar-benar dihormati.** Rekam di Kirim: kamera diminta merekam sesuai FPS filter video di admin, dan batas 24 fps untuk HP "berspek rendah" dihapus (iPhone terbaca berspek rendah karena Safari hanya melaporkan 4 core). Kini hanya HP dengan RAM ≤ 2 GB yang dibatasi 30 fps.
