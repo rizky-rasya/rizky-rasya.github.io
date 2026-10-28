@@ -4,25 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- META:START -->
-<title>Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri</title>
+<title>Momen Rasya &amp; Rizky - Kirim, Album &amp; Galeri</title>
 <meta name="description" content="Abadikan momen di hari bahagia Rasya &amp; Rizky. Kirim foto, video, atau ucapan langsung dari HP, pilih dari galeri, lalu lihat semuanya di album. Tanpa install aplikasi.">
 <meta name="robots" content="follow, noindex">
 <meta name="theme-color" content="#440808">
 <meta property="og:locale" content="id_ID">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri">
+<meta property="og:title" content="Momen Rasya &amp; Rizky - Kirim, Album &amp; Galeri">
 <meta property="og:description" content="Abadikan momen di hari bahagia Rasya &amp; Rizky. Kirim foto, video, atau ucapan langsung dari HP, pilih dari galeri, lalu lihat semuanya di album. Tanpa install aplikasi.">
 <meta property="og:url" content="https://rasya-rizky.online/album">
-<meta property="og:site_name" content="Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri">
+<meta property="og:site_name" content="Momen Rasya &amp; Rizky - Kirim, Album &amp; Galeri">
 <meta property="article:section" content="Wedding Album">
 <meta property="og:image" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
 <meta property="og:image:secure_url" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
 <meta property="og:image:width" content="1080">
 <meta property="og:image:height" content="1920">
-<meta property="og:image:alt" content="Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri">
+<meta property="og:image:alt" content="Momen Rasya &amp; Rizky - Kirim, Album &amp; Galeri">
 <meta property="og:image:type" content="image/webp">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Momen Rasya &amp; Rizky — Kirim, Album &amp; Galeri">
+<meta name="twitter:title" content="Momen Rasya &amp; Rizky - Kirim, Album &amp; Galeri">
 <meta name="twitter:description" content="Abadikan momen di hari bahagia Rasya &amp; Rizky. Kirim foto, video, atau ucapan langsung dari HP, pilih dari galeri, lalu lihat semuanya di album. Tanpa install aplikasi.">
 <meta name="twitter:image" content="https://rasya-rizky.online/album/CoverAlbum-v2.webp">
 <meta name="twitter:label1" content="Dibuat oleh">
@@ -636,7 +636,7 @@ function maybeShowResult(){
       secondary:{label:'Kirim Lagi',fn:closeResultModal}});
   }else if(ok>0){
     openResultModal({kind:'warn',title:'Sebagian sudah terkirim',
-      text:`${ok} berhasil, ${failed.length} belum.\nYang belum terkirim masih aman di HP-mu — coba kirim lagi ya.`,
+      text:`${ok} berhasil, ${failed.length} belum.\nYang belum terkirim masih aman di HP-mu - coba kirim lagi ya.`,
       primary:{label:'Kirim Ulang',fn:retryFailed},secondary:{label:'Nanti Saja',fn:closeResultModal}});
   }else{
     openResultModal({kind:'error',title:fatalMsg?'Pengiriman ditutup':'Belum berhasil terkirim',
@@ -2013,7 +2013,7 @@ function renderItems(list,append,startIndex){
     const uid='m_'+item.media_id;
     const thumb=item.thumbnail_url||'';
     let mediaHtml='';
-    if(!previewOn){mediaHtml=`<div class="media-box" style="flex-direction:column;gap:6px;color:var(--text-3);"><span style="font-size:26px;">${TYPE_ICON[item.media_type]}</span><span style="font-size:11px;">${TYPE_LABEL[item.media_type]} — unduh untuk melihat</span></div>`;}
+    if(!previewOn){mediaHtml=`<div class="media-box" style="flex-direction:column;gap:6px;color:var(--text-3);"><span style="font-size:26px;">${TYPE_ICON[item.media_type]}</span><span style="font-size:11px;">${TYPE_LABEL[item.media_type]} - unduh untuk melihat</span></div>`;}
     else if(item.media_type==='photo'){mediaHtml=thumb?`<div class="media-box" data-act="view" style="cursor:zoom-in"><img src="${thumb}" decoding="async" alt="Foto dari ${escapeAttr(item.guest_name)}"></div>`:`<div class="media-box" data-act="view" style="cursor:zoom-in"><span class="spinner">Ketuk untuk melihat foto</span></div>`;}
     else if(item.media_type==='video'){mediaHtml=`<div class="media-box" id="${uid}_box" style="${thumb?'':'background:#2A2320;'}">${thumb?`<img src="${thumb}" decoding="async" alt="">`:''}<button class="video-poster-btn" data-act="playvideo" aria-label="Putar video">▶</button></div>`;}
     else{mediaHtml=`<div class="audio-box" id="${uid}_box"><div class="wave">🎵</div><button class="play-toggle" data-act="playaudio" id="${uid}_btn" aria-label="Putar suara">▶</button></div>`;}
@@ -2637,13 +2637,13 @@ if(weddingId)watchPending();
     <input type="file" id="videoInput" accept="video/*" hidden>
     <button class="pick-btn" id="pickVideoBtn">
       <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-6 4 6 4V8z"/></svg>
-      <span>Pilih Video dari Galeri<small>MP4, WebM, MOV — otomatis dibingkai</small></span>
+      <span>Pilih Video dari Galeri<small>MP4, WebM, MOV - otomatis dibingkai</small></span>
     </button>
     <div class="preview" id="videoPreview" style="display:none;">
       <div class="preview-media"><video id="videoPreviewEl" playsinline controls></video></div>
       <div class="preview-info">
-        <span>Durasi: <strong id="videoDims">—</strong></span>
-        <span>Orientasi: <strong id="videoOrient">—</strong></span>
+        <span>Durasi: <strong id="videoDims">-</strong></span>
+        <span>Orientasi: <strong id="videoOrient">-</strong></span>
       </div>
     </div>
     <p id="videoTrimNote" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;text-align:center;"></p>
