@@ -24,189 +24,6 @@ Soal `config.js` di situs publik: itu dipisah **hanya untuk kerapian kode**, buk
 
 ---
 
-## 🆕 Revisi Terbaru (Tahap 2)
-
-### Apa yang berubah
-| # | Perubahan | Di mana mengaturnya |
-|---|---|---|
-| 1 | **Loading** memakai GIF (cincin emas + hati berdenyut), bukan ring CSS | Ganti file `assets/loading.gif` (GIF transparan ±96×96 px) |
-| 2 | **Statistik acara** di dashboard: Total Orang Hadir, Hadir Akad, Hadir Resepsi, Hadir Ngunduh Mantu (jumlah orang + jumlah konfirmasi). Daftar konfirmasi terbaru juga menampilkan jumlah & acara | Dashboard > Ringkasan (otomatis dari kolom `acara_hadir` & `jumlah_hadir`) |
-| 3 | **Bunga di belakang foto mempelai**. Wanita: `floral-left1` kiri-atas, `floral-right` kanan-bawah. Pria: `floral-right1` kanan-atas, `floral-left` kiri-bawah. Ikut bergoyang bila animasi daun aktif | Tetap (CSS `.arch-flower`); posisi/ukuran bisa diubah di CSS |
-| 4 | **Tampilan Ngunduh Mantu** disamakan dengan Akad & Resepsi: tanggal (gaya `serif` emas), kartu acara (`.agenda .item` + ornamen bunga), Dress Code, dan kartu **Tempat Acara** (alamat, peta embed, tombol Maps). Bagian yang kosong (dress code / waktu) otomatis disembunyikan; tombol & peta punya `aria-label` | Dashboard > Data Mempelai > Acara Ngunduh Mantu |
-| 5 | **Detail tampilan Ucapan & Doa** bisa on/off per bagian: nama, badge kehadiran, jumlah, acara, teks, tombol Ubah/Hapus | Dashboard > Tampilan Undangan > 💬 Detail Tampilan Ucapan & Doa |
-| 6 | **Tata letak kartu ucapan** baru: badge kehadiran persis di kanan nama; jumlah, acara, dan teks ucapan berada dalam satu kotak; tombol Ubah/Hapus di bawahnya | Otomatis |
-| 7 | **Logo bank** di kartu hadiah (bank pria & wanita/bank 1 & 2) | Dashboard > Data Mempelai > Hadiah: `bank_logo`, `bank_logo_2` (URL gambar langsung) |
-| 8 | **Footer mengikuti tema**: warna footer tidak lagi berdiri sendiri, ia melanjutkan pola warna bergantian section dan ikut mode terang/gelap | Otomatis |
-| 9 | **Detail footer** di bawah garis ornamen: "Build with ♥ Nama dev" + tautan Instagram + Music (ikon inline, tanpa Font Awesome). Kosong = tidak tampil; bila nama dev kosong dipakai teks bawaan | Dashboard > Data Mempelai > 🦶 Footer: `footer_dev_nama`, `footer_instagram_url`, `footer_musik_url` |
-
-### Field/kolom baru di Spreadsheet (sudah ada di xlsx terbaru)
-- **`DataMempelai`**: `bank_logo`, `bank_logo_2`, `footer_dev_nama`, `footer_instagram_url`, `footer_musik_url`.
-- **`PengaturanTema`**: `komentar_nama`, `komentar_presensi`, `komentar_jumlah`, `komentar_acara`, `komentar_teks`, `komentar_aksi` (semua `on`/`off`).
-- Baris otomatis dibuat juga bila Anda mengisinya dari dashboard, jadi mengetik manual tidak wajib.
-
-### Langkah update
-1. Ganti `Code.gs` → **Deploy > Manage deployments > Edit > New version**.
-2. Upload ulang ke GitHub: `index.html`, `rahasia/index.html`, dan folder `assets/` (ada file baru `loading.gif`).
-3. Dashboard → isi field baru → **Tampilan Undangan → Simpan Tampilan**.
-
-> Catatan: mematikan **Tombol Ubah/Hapus** membuat tamu tidak bisa lagi mengubah/menghapus ucapannya sendiri.
-
----
-
-## 📚 Daftar Lengkap Fitur
-
-**Halaman tamu**
-- Cover *Buka Uleman* dengan nama tamu dari link (`?to=Nama`), animasi **gerbang + asap** saat dibuka, musik latar yang langsung menyala & tidak restart.
-- Loading GIF; mode **terang/gelap** (bisa dikunci ke satu mode); tombol musik (bisa dimatikan).
-- Mempelai (foto berbingkai lengkung + bunga, nama orang tua, tombol **Instagram**), kutipan, kisah cinta, **Acara** (Akad & Resepsi + peta embed + tombol Maps + Dress Code), **Ngunduh Mantu**, **hitung mundur**, **Live Streaming** (Instagram / YouTube / Zoom), galeri, **hadiah** (rekening + logo bank, salin nomor, alamat kirim), **Ucapan & Doa** (RSVP), footer dengan kredit developer.
-- **RSVP**: pilih Hadir / Tidak Hadir / Masih Ragu; bila hadir pilih **acara** (Akad / Resepsi / Ngunduh Mantu, boleh lebih dari satu) dan **jumlah 1–10**; tamu bisa **mengubah/menghapus** ucapannya sendiri.
-- **Warna section dinamis** (bergantian otomatis meski ada section dimatikan), animasi masuk **Motion (Framer Motion)**, daun/bunga bergoyang, scroll halus.
-
-**Dashboard admin (`rahasia/`)**
-- Ringkasan & **statistik** kehadiran (total tamu, hadir/tidak/ragu, WA terkirim, total orang, per acara).
-- Kelola **daftar tamu** & kirim undangan via WhatsApp; kelola **Data Mempelai** (semua teks, foto, hadiah, footer, Ngunduh Mantu, Live).
-- **Tampilan Undangan**: preset tema & warna kustom, bentuk & font, bagian yang ditampilkan (on/off), detail kartu ucapan, fitur (musik, mode), animasi + pratinjau. Tersimpan di sheet `PengaturanTema`, tanpa upload ulang file.
-- **Atur Metadata**: judul, deskripsi & gambar share (SEO/Open Graph/Twitter Card), tiap tag bisa di on/off, dengan pratinjau kartu share dan kode siap tempel ke `index.html`.
-- **Preview**: buka undangan (Base URL) di tab baru, satu klik dari sidebar.
-- **Modal konfirmasi & notifikasi** bergaya sama dengan undangan (bukan popup bawaan browser).
-
-**Backend (Google Apps Script + Sheets)**
-- Sheet: `DataMempelai`, `DaftarTamu`, `KonfirmasiTamuUndangan` (kolom `acara_hadir`), `PengaturanTema`.
-- Kolom sheet lama diperbaiki otomatis; tamu hanya bisa mengubah ucapannya sendiri lewat `edit_token`.
-
----
-
-## 🆕 Revisi Terbaru (Tahap 3)
-
-### Apa yang berubah
-| # | Perubahan | Di mana mengaturnya |
-|---|---|---|
-| 1 | **Menu "🏷️ Atur Metadata"** baru di dashboard: judul, deskripsi, gambar, dan seluruh tag Open Graph/Twitter Card (gaya Rank Math) bisa diatur **per tag on/off** + isi teksnya, lengkap dengan pratinjau kartu share dan kode `<head>` siap tempel | Dashboard > Atur Metadata |
-| 2 | **Bug tombol musik di halaman "Buka Uleman" diperbaiki.** Sebelumnya tombol musik tidak bisa diklik karena tombol berada di dalam kontainer yang diberi atribut `inert` sebelum undangan dibuka. Sekarang tombol musik & tema aktif sejak awal | Otomatis |
-| 3 | **Menu "Preview"** di sidebar (di atas menu Akun): sekali klik langsung membuka **Base URL Situs Undangan** di tab baru. Jika Base URL belum diisi, muncul peringatan | Dashboard > Data Mempelai > Teknis, isi `base_url` dulu |
-| 4 | **Logika kartu 🎁 Hadiah** diperbaiki: <br>• Nama bank diisi, logo kosong → tampil **teks nama bank**.<br>• Nama bank & logo **dua-duanya diisi** → tampil **logo saja** (nama bank jadi `alt` teks, tidak tampil dobel).<br>• **Logo diisi tapi nama bank kosong** → saat *Simpan*, muncul **popup peringatan** minta nama bank diisi dulu (berlaku utuk rekening 1/pria & 2/wanita) | Dashboard > Data Mempelai > Hadiah |
-| 5 | **Modal dashboard admin disamakan gaya visualnya** dengan modal di `index.html` undangan (ikon lingkaran, judul serif emas, tombol pil). Semua `confirm()` bawaan browser (hapus tamu, hapus akun, reset tema, dsb.) sekarang memakai modal kustom ini | Otomatis |
-| 6 | **📋 Variabel yang Tersedia** di Template Pesan diperbarui total — sekarang mencakup semua field baru (Instagram, Ngunduh Mantu, Live Streaming, dll.), dan sumber datanya **sama persis** dengan yang dipakai pratinjau pesan & pengiriman WA, jadi tidak akan meleset lagi | Dashboard > Template Pesan |
-
-### Field baru "Atur Metadata" (disatukan ke sheet `DataMempelai`, sesuai posisi pengaturan pengaya lain)
-Untuk tiap tag di bawah ada 2 kolom: `meta_<nama>` (isi teks, boleh kosong = pakai default) dan `meta_<nama>_aktif` (`on`/`off`).
-
-| Tag | Field isi | Keterangan |
-|---|---|---|
-| `<title>` | `meta_title` | Judul tab browser |
-| `meta description` | `meta_description` | Deskripsi SEO |
-| `meta robots` | `meta_robots` | Default `follow, noindex` |
-| `og:locale` | `meta_og_locale` | |
-| `og:type` | `meta_og_type` | |
-| `og:title` | `meta_og_title` | |
-| `og:description` | `meta_og_description` | |
-| `og:url` | `meta_og_url` | Kosong = **otomatis** memakai link undangan tamu yang sedang dibuka |
-| `og:site_name` | `meta_og_site_name` | |
-| `article:section` | `meta_article_section` | |
-| `og:image`, `og:image:secure_url` | `meta_og_image`, `meta_og_image_secure_url` | Kosong = **otomatis** memakai URL Foto Cover |
-| `og:image:width/height/alt/type` | `meta_og_image_width` dst. | |
-| `twitter:card/title/description/image` | `meta_twitter_*` | `twitter:image` kosong = otomatis Foto Cover |
-| `twitter:label1/data1/label2/data2` | `meta_twitter_label1` dst. | |
-
-**Variabel** yang bisa dipakai di teks metadata: `$namatamu`, `$namapria`, `$namawanita` (panggilan), `$nama_pria`, `$nama_wanita` (nama lengkap), `$tanggal`, `$lokasi`.
-
-> ⚠️ **Penting — batas hosting statis:** Dashboard mengganti judul & tag metadata **secara langsung di browser (JavaScript)** begitu undangan dibuka, jadi cukup untuk tab judul dan SEO umum. Namun aplikasi pembuat pratinjau tautan (WhatsApp, Facebook, Telegram, dll.) **mengambil metadata dari HTML mentah sebelum JavaScript berjalan**, dan karena situs ini file statis (bukan server), pratinjau share **tidak bisa otomatis berbeda per tamu**. Solusinya: setelah mengatur & menyimpan di tab **Atur Metadata**, salin kode dari kotak **"📋 Kode `<head>` untuk index.html"**, tempel ke `index.html` (menimpa bagian di antara `<!-- META:START -->` dan `<!-- META:END -->`), lalu upload ulang. Pratinjau share akan memakai sapaan tamu umum ("Bapak/Ibu/Saudara/i"), bukan nama tamu spesifik.
-
-### Langkah update
-1. Ganti `Code.gs` → **Deploy > Manage deployments > Edit > New version** (tidak ada perubahan skema wajib kali ini, tapi tetap disarankan pakai versi terbaru).
-2. Upload ulang `index.html` dan `rahasia/index.html` ke GitHub.
-3. Dashboard → **Atur Metadata** → isi/pilih tag yang diinginkan → **Simpan Metadata** → salin kode `<head>` → tempel ke `index.html` → upload ulang.
-4. Cek **Data Mempelai > Hadiah**: kalau ada URL logo tanpa nama bank, Anda akan diminta melengkapi nama bank saat menyimpan.
-
----
-
-## 🆕 Pembaruan Versi Ini (Revisi Musik, Gerbang, Ngunduh Mantu, Live, RSVP, Animasi)
-
-### Ringkasan file yang berubah
-| File | Perubahan |
-|---|---|
-| `index.html` | Semua fitur baru di bawah |
-| `assets/gate-left.png`, `assets/gate-right.png` | **Baru** — gerbang (dipotong dari `asset-sheet.png`) untuk animasi buka undangan |
-| `assets/motion.min.js`, `assets/lenis.min.js` | **Baru** — pustaka animasi & scroll halus (dilokalkan, tidak bergantung CDN). **Wajib ikut di-upload ke GitHub** |
-| `Code.gs` | Kolom `acara_hadir`, default tema baru. **Wajib di-deploy ulang** (Deploy > Manage deployments > Edit > New version) |
-| `rahasia/index.html` (dashboard) | Field baru, sakelar Fitur, pengaturan Animasi + pratinjau |
-| `Undangan_Pernikahan_RasyaRizky.xlsx` | Baris & kolom baru (lihat "Perubahan Spreadsheet") |
-
-### Perubahan Spreadsheet (PANDU MANUAL kalau Anda pakai Sheet sendiri, bukan file xlsx ini)
-1. **`KonfirmasiTamuUndangan`** → tambah kolom **`acara_hadir`** di paling kanan (setelah `id_tamu`). Berisi acara yang dipilih tamu, mis. `Akad, Resepsi, Ngunduh Mantu`. *(Code.gs juga menambahkannya otomatis saat ada ucapan pertama masuk.)*
-2. **`DataMempelai`** → tambah baris (kolom `field` | `value`) berikut, atau cukup isi lewat Dashboard > Data Mempelai (baris dibuat otomatis):
-
-| Field | Isi | Keterangan |
-|---|---|---|
-| `instagram_pria`, `instagram_wanita` | `rizky` | Username tanpa @. Kosong = tombol tidak tampil |
-| `link_maps_embed` | URL/kode iframe | Peta embed Akad & Resepsi |
-| `link_maps_embed_aktif` | `on` / `off` | `off` = peta embed disembunyikan |
-| `ngunduh_tanggal_tampil` | Minggu, 22 November 2026 | |
-| `waktu_ngunduh_mantu` | 10.00 - Selesai | |
-| `ngunduh_nama_lokasi`, `ngunduh_alamat_lokasi` | | |
-| `ngunduh_link_maps` | link Google Maps | Untuk tombol |
-| `ngunduh_link_maps_embed` | URL/kode iframe | |
-| `ngunduh_embed_aktif` | `on` / `off` | |
-| `ngunduh_dress_code` | | |
-| `live_channels` | `instagram,youtube,zoom` | Pilih satu atau banyak (pisah koma) |
-| `live_instagram` | username | tanpa @ |
-| `live_youtube`, `live_zoom` | link | |
-
-3. **`PengaturanTema`** → baris baru (dibuat otomatis saat klik *Simpan Tampilan*): `section_livestream`, `section_ngunduh`, `fitur_musik`, `fitur_mode`, `anim_aktif`, `anim_gaya`, `anim_kecepatan`, `anim_daun`, `anim_smooth`.
-
-> Cara mengambil peta embed: Google Maps → cari lokasi → **Bagikan → Sematkan peta → Salin HTML**. Boleh tempel seluruh kode `<iframe ...>` atau hanya isi `src`-nya.
-
-### 1. Musik langsung menyala & tidak restart
-- Begitu link dibuka, musik langsung dicoba diputar. Browser (terutama HP) sering menolak suara otomatis sebelum ada interaksi; jika ditolak, musik tetap **berjalan senyap** lalu **otomatis dibunyikan pada sentuhan/klik pertama di mana pun** (termasuk tombol *Buka Uleman*).
-- Saat *Buka Uleman* ditekan, musik **tidak diulang dari awal** (`currentTime = 0` sudah dihapus) — lanjut mulus dari posisi terakhir.
-- Tamu yang menekan tombol 🔇 sendiri **tidak** akan dibunyikan paksa lagi.
-
-### 2. Animasi gerbang + asap saat Buka Uleman
-Gerbang (aset lengkung bunga dari `asset-sheet.png`) menutup layar → terbelah ke kiri & kanan sambil 9 gumpalan asap mengepul → isi undangan terungkap. Musik tidak terpengaruh. Untuk mengganti gerbang, timpa `assets/gate-left.png` & `assets/gate-right.png` (dua PNG transparan, separuh kiri & kanan). Durasi total ±3 detik; ubah di CSS `.gate-door` (`transition`) dan `.puff` (`animation`).
-
-### 3. Instagram mempelai
-Isi `instagram_pria` / `instagram_wanita` di Dashboard > Data Mempelai > *Mempelai*. Tombol berlogo IG + `@username` muncul di bawah nama orang tua (ukuran font sama dengan status "Putra/Putri ke-…"). Kosong = tombol tidak tampil.
-
-### 4. Warna section dinamis (Bagian yang Ditampilkan)
-Warna latar tiap section **tidak lagi manual**. Sistem menghitung ulang setiap kali ada section dimatikan: section yang tampil diberi warna **bergantian** (`--bg` ↔ `--surface-2`) secara berurutan, jadi dua section bersebelahan **tidak pernah sewarna**. Pratinjau di dashboard juga ikut bergantian. (Efek samping: latar dekoratif lama pada *Mempelai*, *Kisah Cinta* dan *Galeri* diganti warna bergantian ini — sekalian memperbaiki *Kisah Cinta* yang warnanya tidak cocok di mode gelap.)
-
-### 5. Sakelar Musik & Mode Terang/Gelap
-Dashboard > **Tampilan Undangan > 🔧 Fitur Undangan**:
-- **Musik latar** on/off — off: tidak ada audio & tombol musik hilang.
-- **Mode**: *Terang & Gelap* (tombol ☀️/🌙 tampil di pojok kanan bawah), *Terang saja* atau *Gelap saja* (mode dikunci & tombol hilang).
-Klik **Simpan Tampilan**.
-
-### 6. Acara Ngunduh Mantu
-Dashboard > Data Mempelai > **🎊 Acara Ngunduh Mantu** (field di tabel di atas). Kartu tampil **di bawah tombol lokasi Akad & Resepsi**. Peta embed-nya bisa dimatikan lewat `ngunduh_embed_aktif`; seluruh kartu bisa dimatikan lewat *Bagian yang Ditampilkan > Ngunduh Mantu*. Kartu otomatis tersembunyi bila tanggal, waktu, dan lokasinya kosong.
-
-### 7. Peta embed Akad & Resepsi
-Ada field baru **Link Peta Embed** + sakelar **Tampilkan peta embed** (`link_maps_embed_aktif`). Bila embed kosong, peta dibuat otomatis dari alamat.
-
-### 8. Live Streaming
-Section baru di antara *Menghitung Hari* dan *Galeri* (bisa di-on/off di *Bagian yang Ditampilkan*). Di Dashboard > Data Mempelai > **📡 Live Streaming** centang salah satu/banyak: **Instagram, YouTube, Zoom**, lalu isi username/link-nya. Tiap pilihan tampil sebagai tombol berikon (font seukuran status mempelai). Kalau tidak ada tautan terisi, section otomatis tersembunyi.
-
-### 9. Form Ucapan & Doa (RSVP)
-- Jika memilih **Hadir**: muncul kartu pilihan acara (boleh **1 atau lebih**): 💍 *Akad*, 🥂🍽️ *Resepsi*, ❤️ *Ngunduh Mantu* (ikon di atas, nama di bawah). *Ngunduh Mantu* hanya muncul bila kartunya aktif.
-- **Jumlah yang Hadir** kini **dropdown 1–10** (server juga membatasi maks. 10).
-- Hadir wajib memilih minimal 1 acara & jumlah. Pilihan tersimpan di kolom `acara_hadir` dan tampil di kartu ucapan. Saat tamu memilih **Ubah**, pilihan acara ikut terisi.
-
-### 10. Animasi (Framer Motion) & scroll halus
-Situs undangan berupa HTML statis (bukan React), jadi dipakai **Motion** — versi vanilla dari **Framer Motion** (mesin & kurva animasi yang sama, tanpa perlu React/build) — plus **Lenis** untuk scroll berinersia yang halus. Dikontrol di Dashboard > Tampilan Undangan > **✨ Animasi**:
-- **Aktifkan animasi**: section, kartu, foto, teks, tombol, hitung mundur, ucapan masuk dengan efek saat digulir.
-- **Gaya masuk**: Naik / Pudar / Zoom / Geser. **Kecepatan**: Cepat / Normal / Lambat. Item bersaudara muncul berurutan (stagger).
-- **Daun & bunga bergoyang**: semua aset floral/daun bergoyang pelan seperti tertiup angin.
-- **Scroll halus** antar section.
-- Ada kotak **Pratinjau** + tombol *▶ Putar Ulang* di dashboard untuk melihat efeknya sebelum disimpan.
-Pengguna dengan pengaturan sistem "kurangi gerakan" otomatis tidak diberi animasi.
-
-### Langkah update
-1. Ganti `Code.gs` di Apps Script → **Deploy > Manage deployments > Edit > New version**.
-2. Perbarui Sheet (lihat "Perubahan Spreadsheet") atau pakai xlsx terbaru.
-3. Upload ke GitHub Pages: `index.html`, `config.js`, dan **folder `assets/` lengkap** (ada 4 file baru).
-4. Buka Dashboard → isi field baru → **Tampilan Undangan** → *Simpan Tampilan*.
-
----
-
 ## 1. Buat Google Sheet
 
 Buat 1 Spreadsheet baru, lalu buat **4 sheet (tab)** dengan nama PERSIS seperti berikut (huruf besar/kecil berpengaruh):
@@ -235,8 +52,10 @@ Field yang bisa Anda ubah di sini (semua diambil dari template undangan Anda):
 | `galeri_url` | url1,url2,url3 (pisahkan koma) | Galeri foto |
 | `bank_nama`, `bank_rekening`, `bank_atas_nama`, `qris_image_url` | | Love Gift — rekening 1 |
 | `bank_nama_2`, `bank_rekening_2`, `bank_atas_nama_2` | | Love Gift — rekening 2 (opsional, kosongkan semua kalau cuma 1 rekening) |
-| `musik_url` | | Opsional, musik latar (on/off dari Dashboard > Tampilan > Fitur). **Wajib link file mp3 langsung**, lihat catatan di bawah tabel |
+| `musik_url` | | Opsional, musik latar. **Wajib link file mp3 langsung**, lihat catatan di bawah tabel |
 | `gift_nama`, `gift_hp`, `gift_alamat` | | Love Gift — kirim hadiah fisik |
+| `bukti_tf_enabled` | `on` / `off` | **BARU** — tampilkan form upload bukti transfer / resi kado di bawah alamat kirim kado (bawaan: `off`) |
+| `bukti_tf_drive_link` | `https://drive.google.com/drive/folders/XXXX` | **BARU** — folder Google Drive tempat foto bukti disimpan. Kosong = dibuat otomatis ("Bukti Transfer Undangan"). Field ini **tidak** ikut ke respons publik |
 | `base_url` | `https://rizky-rasya.github.io/amplop/` | **Wajib**, dipakai membuat link tamu (`$link_undangan`) |
 | `apps_script_url` | (isi setelah langkah 2) | referensi Anda sendiri |
 | `template_pesan_wa` | (dikosongkan) | **Diisi/diubah otomatis lewat dashboard**, bukan manual |
@@ -278,7 +97,7 @@ Import **`sheet-template/NamaTamuUndangan.csv`**.
 > Kalau sheet Anda **sudah terlanjur** memakai id lama yang berurutan (`T1`, `T2`, ...) dan **belum ada undangan yang benar-benar terkirim** ke tamu asli, jalankan **`regenerateAllGuestIds`** sekali (juga dari dropdown fungsi Apps Script) untuk mengganti SEMUA id jadi token acak baru sekaligus. Kalau sudah ada tamu yang menerima link lamanya, regenerate akan memutus deteksi-absen-otomatis untuk link yang sudah terkirim itu (linknya tetap bisa dibuka, cuma bagian absen-otomatisnya yang perlu link baru dikirim ulang).
 
 ### c. `KonfirmasiTamuUndangan`
-Kolom: `timestamp | comment_id | nama | presensi | jumlah_hadir | ucapan_doa | edit_token | id_tamu | acara_hadir`
+Kolom: `timestamp | comment_id | nama | presensi | jumlah_hadir | ucapan_doa | edit_token | id_tamu`
 Import **`sheet-template/KonfirmasiTamuUndangan.csv`** (cukup header — baris di bawahnya terisi otomatis dari form "Ucapan & Doa" di situs publik).
 
 - **`comment_id`**: token acak, ditampilkan ke publik lewat daftar ucapan (dipakai untuk menunjuk "ucapan yang mana").
@@ -291,6 +110,16 @@ Kolom: `username | password`
 Import **`sheet-template/AkunAdmin.csv`**, lalu **ganti password contohnya** dengan yang Anda mau. Bisa tambah lebih dari satu baris kalau lebih dari satu orang perlu akses dashboard.
 
 > Password di sini tersimpan sebagai teks biasa di sheet Anda sendiri (bukan hal baru — Anda sudah punya akses penuh ke sheet ini). Yang penting: jangan bagikan akses "edit" sheet ke orang yang tidak seharusnya tahu kredensial dashboard.
+
+### e. `BuktiTransfer` — daftar bukti transfer / resi kado (BARU)
+Kolom: `timestamp | bukti_id | id_tamu | nama | tujuan | file_name | file_url | file_id`
+**Tidak perlu dibuat manual** — sheet ini dibuat otomatis begitu bukti pertama masuk (atau Anda boleh import **`sheet-template/BuktiTransfer.csv`** untuk header-nya). Setiap tamu yang mengunggah menambah 1 baris:
+- `id_tamu`: diambil otomatis dari parameter `k` di link undangan (kosong kalau tamu membuka link umum tanpa `k`, atau id-nya tidak ada di daftar tamu).
+- `nama`: nama yang diketik tamu di form (boleh beda dari `nama_tamu` di undangan).
+- `tujuan`: `pria` atau `wanita` (mempelai yang dituju).
+- `file_url` / `file_id`: lokasi file di Google Drive.
+
+> Jangan edit kolom `bukti_id` dan `file_id` secara manual — dipakai tombol Hapus di dashboard.
 
 ---
 
@@ -307,6 +136,8 @@ Import **`sheet-template/AkunAdmin.csv`**, lalu **ganti password contohnya** den
 6. Tempelkan URL itu ke baris `apps_script_url` di sheet `DataMempelai` (arsip), ke `config.js` (langkah 3), dan ke `APPS_SCRIPT_URL` di `dashboard.html` (sudah terisi URL Anda saat ini — cukup diperiksa ulang tiap kali Anda deploy ulang).
 
 > Setiap kali Anda mengubah `Code.gs`, jalankan lagi **Deploy > Manage deployments > Edit (pensil) > Version: New version > Deploy** supaya perubahan aktif di URL yang sama.
+
+> **Khusus fitur upload bukti transfer:** `Code.gs` sekarang memakai Google Drive, jadi butuh izin baru. Sebelum deploy versi baru, di editor Apps Script pilih fungsi **`authorizeDrive`** pada dropdown lalu klik **Run**, dan izinkan akses Drive. Baru setelah itu **Deploy > Manage deployments > Edit > New version > Deploy**. Kalau langkah ini terlewat, upload dari situs akan gagal dengan pesan error izin.
 
 ---
 
@@ -328,7 +159,7 @@ Import **`sheet-template/AkunAdmin.csv`**, lalu **ganti password contohnya** den
 
 ### Ucapan & Doa — jumlah hadir, ubah, dan hapus
 
-Saat tamu memilih **Hadir** di form Ucapan & Doa, muncul pilihan **acara yang dihadiri** (Akad / Resepsi / Ngunduh Mantu) dan dropdown **"Jumlah yang Hadir"** (1–10) — hilang otomatis kalau mereka pilih Tidak Hadir/Masih Ragu, karena memang tidak relevan.
+Saat tamu memilih **Hadir** di form Ucapan & Doa, muncul field tambahan **"Jumlah yang Hadir"** (minimal 1, tanpa batas atas) — hilang otomatis kalau mereka pilih Tidak Hadir/Masih Ragu, karena memang tidak relevan.
 
 Setelah mengirim, tamu bisa **Ubah** atau **Hapus** ucapannya sendiri kapan saja — tombolnya otomatis muncul di kartu ucapan miliknya sendiri (dideteksi lewat token tersimpan di browser mereka, bukan lewat login). Kalau mereka membuka situs dari **browser/perangkat lain**, tombol itu tidak akan muncul (token hanya ada di perangkat tempat mereka pertama mengirim) — itu wajar dan sesuai desain keamanannya.
 
@@ -342,7 +173,7 @@ Setelah mengirim, tamu bisa **Ubah** atau **Hapus** ucapannya sendiri kapan saja
 
 Buka file, login dengan username/password dari sheet `AkunAdmin`. Sesi berlaku **6 jam**, setelah itu Anda perlu login ulang (server menolak token lama secara otomatis).
 
-Ada 7 halaman lewat sidebar:
+Halaman yang tersedia lewat sidebar:
 
 **Dashboard** — kartu statistik Total Tamu, Hadir, Tidak Hadir, Masih Ragu (dengan persentase dari total yang merespons), Sudah Kirim WA, Belum Kirim WA, plus panel **Konfirmasi Terbaru** (10 ucapan terbaru secara default, dengan kontrol paginasi — lihat di bawah).
 
@@ -361,6 +192,8 @@ Ada 7 halaman lewat sidebar:
 - **Reset Status** — mengembalikan status_kirim semua tamu ke "Belum" di sheet (ada konfirmasi, tidak bisa dibatalkan).
 
 **Paginasi** (Dashboard > Konfirmasi Terbaru, Daftar Tamu, Kirim WA): tiap panel punya kontrol jumlah baris per halaman — **10 / 50 / 100 / All** — plus tombol **‹ Sebelumnya** dan **Berikutnya ›**. Defaultnya 10 baris terbaru.
+
+**Bukti Transfer** (BARU) — tabel semua bukti transfer / resi kado yang diunggah tamu: waktu, **ID tamu**, **siapa yang transfer** (nama yang diketik; kalau beda dari nama di undangan, nama undangannya ikut ditampilkan kecil di bawahnya), **dikirim ke** mempelai pria/wanita, dan tombol **🔗 Buka** untuk membuka foto di Google Drive. Ada filter tujuan (pria/wanita), pencarian nama/ID, paginasi 10/50/100/All, serta tombol 🗑️ hapus (baris dihapus dan file Drive dipindah ke Sampah, masih bisa dipulihkan). Kalau form upload sedang dimatikan, muncul peringatan kuning di atas tabel.
 
 **Template Pesan** — edit format pesan WA, tersimpan ke sheet `DataMempelai` (field `template_pesan_wa`), jadi konsisten dipakai baik dibuka dari perangkat mana pun. Variabel yang tersedia:
 
@@ -410,9 +243,87 @@ Klik **Simpan Tampilan** untuk menyimpannya ke sheet, atau **Reset ke Preset Baw
 
 ---
 
+## Fitur Upload Bukti Transfer / Resi Kado (BARU)
+
+### Tampilan untuk tamu
+Di bagian **Hadiah** situs undangan, tepat di bawah alamat kirim kado, muncul kartu **"Konfirmasi Transfer / Kirim Kado"** berisi:
+1. **Nama** — terisi otomatis dari nama di link undangan (`?to=`), tetap bisa diubah.
+2. **ID tamu** — diambil otomatis dari parameter `k` di link undangan, **tidak ditampilkan** ke tamu.
+3. **Dikirim ke** — pilihan radio berupa dua kartu foto: mempelai wanita (kiri) dan mempelai pria (kanan), lengkap dengan nama panggilan dari Data Mempelai.
+4. **Bukti transfer atau resi kado** — pilih/ambil foto. Pratinjau, nama file, dan ukuran akhir langsung tampil.
+5. Tombol **Kirim Bukti**; hasilnya tampil di popup modal (lihat bagian Tampilan & perilaku form).
+
+### Tampilan & perilaku form (UI/UX)
+- **Terlipat saat pertama dibuka.** Kartu hanya menampilkan judul dan penjelasan singkat; detail form (nama, tujuan, foto, tombol kirim) tersembunyi di dalam `<details>`. Tamu menekan tombol **"Unggah bukti transfer / resi kado"** (berlabel **Buka** dengan ikon maximize, berubah jadi **Tutup** dengan ikon minimize saat terbuka) untuk membuka atau melipat form. Bisa dioperasikan dengan keyboard (Enter/Spasi) dan terbaca pembaca layar sebagai kontrol buka-tutup.
+- **Semua hasil tampil di popup modal** yang sama dengan modal sistem lainnya (backdrop blur, ikon status, tema terang/gelap, fokus terkunci, tombol Esc). Tidak ada lagi teks `form-msg` di bawah tombol; yang tersisa hanya baris progres kecil ("Memproses foto…" / "Mengunggah bukti…").
+  - **Validasi** (nama kosong, tujuan belum dipilih, foto belum dipilih) → modal galat; setelah ditutup, kursor otomatis pindah ke kolom yang bermasalah.
+  - **Gagal** (server menolak, koneksi putus, foto tidak bisa dikecilkan) → modal "Bukti belum terkirim" / "Foto belum bisa diproses". Isi form dan foto tetap ada, jadi tamu tinggal menekan kirim lagi.
+  - **Berhasil** → modal sukses berisi ucapan terima kasih **dan doa**, lalu form dikosongkan dan kartu terlipat kembali.
+- **Isi ucapan & doa disusun dari data sistem**, bukan teks tetap:
+  - Judul: `Terima kasih, {nama tamu}` (nama yang diketik di form).
+  - Kalimat konfirmasi menyebut penerima sesuai pilihan radio, memakai `nama_panggilan_pria` atau `nama_panggilan_wanita` dari Data Mempelai.
+  - Doa memuat nama tamu serta kedua nama panggilan mempelai (`{pria} & {wanita}`), dengan lafaz *Jazakumullahu khairan* (جَزَاكُمُ اللّٰهُ خَيْرًا), doa keberkahan untuk tamu, dan doa sakinah, mawaddah, wa rahmah untuk mempelai. Tombol penutupnya berlabel **Aamiin**.
+  - Kalau ingin mengubah redaksi doa, edit fungsi `proofThanks()` di `index.html`.
+
+### Foto pada pilihan "Dikirim ke"
+Kartu pilihan memakai foto mempelai dalam bingkai kubah yang senada dengan foto di bagian Mempelai (bukan ikon). Tanda terpilih ditunjukkan dengan border emas **dan** centang di pojok kartu, jadi tidak hanya mengandalkan warna.
+- **File foto:** `assets/Rasya_Radio.webp` (wanita) dan `assets/Rizky_Radio.webp` (pria). Kalau salah satu file tidak ada, otomatis dipakai `foto_wanita_url` / `foto_pria_url` dari Data Mempelai; kalau itu pun gagal, bingkai foto disembunyikan dan kartu tetap berfungsi dengan teks saja.
+- **Ukuran tampil:** 76–108 px (menyesuaikan lebar layar), rasio mengikuti foto asli 1950×1978, sehingga tidak ada lompatan tata letak.
+- **Hemat data:** foto baru diunduh saat tamu membuka form (kartu tertutup di awal, dan gambar memakai `loading="lazy"`).
+- **Sebaiknya perkecil file aslinya.** Browser memang menampilkannya kecil, tetapi tetap mengunduh file 1950 px penuh. Untuk tampilan maksimal 108 px (layar retina ±2–3×), cukup **±400 px**. Contoh dengan Python (Pillow):
+  ```python
+  from PIL import Image
+  for n in ["Rasya_Radio", "Rizky_Radio"]:
+      im = Image.open(f"assets/{n}.webp"); im.thumbnail((400, 406))
+      im.save(f"assets/{n}.webp", "WEBP", quality=82, method=6)
+  ```
+  atau dengan ImageMagick: `magick Rasya_Radio.webp -resize 400x -quality 82 Rasya_Radio.webp`. Hasilnya biasanya hanya 15–40 KB per foto.
+- Teks alternatif foto sengaja dikosongkan (`alt=""`) karena nama mempelai sudah terbaca dari label di sebelahnya; jika diisi, pembaca layar akan mengucapkan nama dua kali.
+
+**Kompresi otomatis:** foto JPG/PNG/WebP/GIF yang sudah ≤ 100 KB dikirim apa adanya. Foto yang lebih besar (atau format gambar lain yang bisa dibaca browser) dikecilkan **di browser tamu** menjadi JPEG ≤ 100 KB: kualitas diturunkan bertahap lalu dimensi dikecilkan (maks. 1400 px) sampai ukurannya cukup. PNG transparan diberi latar putih. File non-gambar ditolak.
+
+### Pengaturan di dashboard
+1. **Data Mempelai → 🎁 Hadiah**:
+   - Centang **"Tampilkan form upload bukti transfer / resi kado…"** untuk menampilkan form (bawaan mati). Hilangkan centang untuk menyembunyikannya; server juga menolak unggahan saat fitur mati.
+   - Isi **"Link folder Google Drive tujuan bukti TF"** dengan link folder Drive Anda (mis. `https://drive.google.com/drive/folders/1AbC…`). **Kosongkan** kalau ingin dibuatkan otomatis folder bernama "Bukti Transfer Undangan" di Drive Anda — linknya lalu diisikan ke kolom ini.
+   - Klik **Simpan Semua Perubahan**.
+2. Menu **Bukti Transfer** untuk melihat daftar bukti masuk.
+
+### Panduan perubahan spreadsheet (apa yang perlu Anda lakukan)
+| Sheet | Perubahan | Tindakan |
+|---|---|---|
+| `DataMempelai` | 2 baris baru: `bukti_tf_enabled`, `bukti_tf_drive_link` | Tidak perlu manual — cukup isi lewat dashboard (Data Mempelai → Hadiah → Simpan), baris dibuat otomatis. Atau tambah sendiri dua baris itu di bawah tabel (field di kolom A, nilai di kolom B). |
+| `BuktiTransfer` | Sheet baru | Dibuat otomatis saat bukti pertama masuk. Opsional: import `sheet-template/BuktiTransfer.csv`. |
+| `NamaTamuUndangan`, `KonfirmasiTamuUndangan`, `AkunAdmin`, `PengaturanTema` | Tidak berubah | — |
+
+### Langkah deploy
+1. Timpa `Code.gs` di Apps Script dengan versi terbaru.
+2. Jalankan fungsi **`authorizeDrive`** sekali (Run) dan izinkan akses Google Drive.
+3. **Deploy > Manage deployments > Edit > New version > Deploy**.
+4. Upload `index.html` terbaru (situs publik) dan buka `dashboard.html` terbaru (admin).
+5. Di dashboard: aktifkan toggle bukti TF + (opsional) isi link folder Drive → Simpan.
+6. Tes: buka link undangan personal (`?to=Nama&k=TOKEN`), unggah foto dari HP, lalu cek menu **Bukti Transfer** dan folder Drive.
+
+### Keamanan & batasan
+- File di Drive **tidak dibuat publik**; hanya pemilik Drive yang bisa membukanya. Tautan "Buka" di dashboard butuh Anda login ke akun Google pemilik Drive.
+- Server memeriksa ulang: fitur harus `on`, ukuran ≤ 150 KB (toleransi), jenis file asli lewat *magic bytes* (JPG/PNG/GIF/WebP) — bukan sekadar ekstensi, tujuan harus `pria`/`wanita`.
+- Anti-spam: jeda 15 detik per `id_tamu`, maksimal 10 unggahan per `id_tamu`, dan batas total 200 unggahan per ±6 jam.
+- `id_tamu` hanya dipercaya kalau ada di sheet `NamaTamuUndangan`; kalau tidak, bukti tetap tersimpan tapi `id_tamu` dikosongkan.
+- Link folder Drive **tidak** ikut ke respons publik `action=config` (hanya terkirim ke dashboard yang sudah login).
+- Folder dari link harus milik akun pemilik Apps Script, atau dibagikan ke akun itu sebagai **Editor** — kalau tidak, muncul pesan "Folder Google Drive tidak bisa diakses".
+
+### Masalah umum
+- **Form tidak muncul di undangan** → toggle belum dicentang/belum disimpan, atau `index.html` lama masih terpasang (refresh keras).
+- **"Tidak dapat terhubung ke server"** → `APPS_SCRIPT_URL` salah, atau belum deploy versi baru.
+- **Error izin / DriveApp** → jalankan `authorizeDrive` lalu deploy versi baru.
+- **"Foto sulit dikecilkan"** → coba foto lain atau tangkapan layar (screenshot) bukti transfer.
+- **Foto HEIC dari iPhone** → biasanya terbaca browser dan dikonversi ke JPEG otomatis; kalau gagal, ubah pengaturan kamera ke "Most Compatible".
+
+---
+
 ## Tema Terang / Gelap (situs publik)
 
-Tombol bulat di pojok kanan bawah halaman (☀️/🌙) mengganti tema **light (day)** ↔ **night** — bisa dikunci ke satu mode (tombol hilang) dari Dashboard > Tampilan Undangan > Fitur. Pilihan disimpan di browser tamu; kalau belum pernah memilih, otomatis mengikuti preferensi sistem perangkat mereka.
+Tombol bulat di pojok kanan bawah halaman ( ◐ ) mengganti tema **light (day)** ↔ **night**. Pilihan disimpan di browser tamu; kalau belum pernah memilih, otomatis mengikuti preferensi sistem perangkat mereka.
 
 ## Catatan keamanan & teknis
 
