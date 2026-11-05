@@ -1929,13 +1929,13 @@ function proofThanks(nama, tujuan){
   const pria = String(CFG.nama_panggilan_pria || '').trim();
   const wanita = String(CFG.nama_panggilan_wanita || '').trim();
   const penerima = tujuan === 'wanita' ? (wanita || 'mempelai wanita') : (pria || 'mempelai pria');
-  const pasangan = (pria && wanita) ? pria + ' & ' + wanita : 'kedua mempelai';
+  const pasangan = (wanita && pria) ? wanita + ' & ' + pria : 'kedua mempelai';
   return {
     title: nama ? 'Terima kasih, ' + nama : 'Terima kasih',
     message: 'Bukti transfer / resi kado Anda untuk ' + penerima + ' sudah kami terima dengan baik.',
     arabic: 'جَزَاكُمُ اللّٰهُ خَيْرًا',
-    doa: 'Jazakumullahu khairan. Semoga Allah membalas kebaikan ' + (nama || 'Anda') +
-         ' dengan sebaik-baik balasan, melapangkan rezeki, serta memberkahi keluarga Anda. ' +
+    doa: 'Jazakumullahu khairan katsiran. Semoga Allah membalas kebaikan ' + (nama || 'Anda') +
+         ' dengan sebaik-baik balasan, melapangkan rezeki, serta memberkahi Anda. ' +
          'Semoga pernikahan ' + pasangan + ' senantiasa diberkahi dan dikaruniai sakinah, mawaddah, wa rahmah. Aamiin.'
   };
 }
